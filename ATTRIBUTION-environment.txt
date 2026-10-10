@@ -1,0 +1,483 @@
+Current outdoor procedural models
+
+Broadleaf geometric normal detail (v49)
+The existing six-view leaf atlas now has a matching linear tangent normal atlas,
+baked from the original Island Tree 01 leafy-twig geometry documented below.
+The distant live-broadleaf normal tiles were rebaked from those same prepared
+families. Albedo, alpha coverage, pine and leafless tiles remain unchanged.
+These derived files retain the source asset's CC0 attribution.
+
+Living trees use seeded branch graphs, swept trunks and photographed leaf sprays.
+Grass blades and low ground-cover leaves are generated as meshes; distant colour
+and normal atlases are baked from those same meshes during loading.
+Outdoor resource rocks use seeded geological fracture and weathering fields.
+These are newly generated shapes, with bounded shared families and mesh LODs.
+Existing source models remain in use for other scenery and fixed locations.
+Tree bark/leaf photographs and rock surface photographs retain their CC0 sources
+listed below. Procedural geometry and grass atlas generation are original to
+KUMARIM. The following sections document the retained source asset preparation.
+
+KUMARIM forest asset preparation — CC0 source models and photographs
+
+Pine and pine LOD (current conifer assets)
+  CC0 sources, Poly Haven:
+  https://polyhaven.com/a/fir_tree_01 — photographed fir needles and original twig placement.
+  https://polyhaven.com/a/pine_tree_01 — original scanned trunk and woody branches.
+  https://polyhaven.com/a/bark_brown_02 — continuous diffuse and OpenGL normal bark maps.
+  License: https://polyhaven.com/license
+  1,716 compact photographed twig clusters follow the source's natural branch positions.
+  Three crossed views per near cluster; one per distant cluster with matching coverage.
+  Near: 13,756 triangles; LOD: 4,679 triangles. Self-contained embedded 2048px needle atlas.
+  Pine Tree 01: Rob Tuytel and Rico Cilliers. Bark Brown 02: Rob Tuytel.
+  Original wood geometry retained; continuous cylindrical bark UVs replace discontinuous branch UVs.
+
+Shrub
+  Source: https://polyhaven.com/a/shrub_01
+  Created by Rico Cilliers.
+  CC0 license: https://creativecommons.org/publicdomain/zero/1.0/
+  Native source LOD mesh, rebuilt PBR cutout material, embedded 1k textures.
+
+All outputs use meters and glTF Y-up, with the lowest geometry at Y=0.
+Photographic color + alpha, normal maps, and rough surfaces are included.
+Use glTF material settings as exported: foliage double-sided, MASK alpha.
+Suggested tree LOD transition: approximately 35–55 m (tune for camera/FOV).
+The conifer combines an irregular mature woody silhouette with compact photographed fir fronds.
+Native shrub height is 0.37m; scale placement as desired.
+Individual *.metadata.json and *-metadata.json files contain source and geometry details.
+validation.json records final bounds, triangle counts, sizes and SHA-256 hashes.
+
+
+Ancient Broadleaf — real-time forest tree, derived from Poly Haven CC0 assets.
+
+Source model: Island Tree 01
+https://polyhaven.com/a/island_tree_01
+Photography, scanning and processing: Rob Tuytel
+Cleanup and processing: Rico Cilliers
+License: CC0 1.0
+https://creativecommons.org/publicdomain/zero/1.0/
+https://polyhaven.com/license
+
+Final models:
+  broadleaf.glb — 7,272 triangles; 3,949,528 bytes.
+  Dimensions (glTF X/Y/Z): 15.808799 × 21.005705 × 15.680277 meters.
+  Node Ancient_Broadleaf; two material primitives.
+
+  broadleaf_lod.glb — 2,536 triangles; 1,780,480 bytes.
+  Dimensions (glTF X/Y/Z): 16.066736 × 21.200207 × 15.536204 meters.
+  Node Ancient_Broadleaf_LOD; two material primitives.
+
+Both use glTF Y-up in meters, with the lowest vertex at Y=0 and origin at the source trunk-root center.
+
+Materials:
+  island_tree_01 — opaque scanned trunk and major boughs, original UVs,
+    base color and OpenGL normal textures (2048px near; 1024px LOD), roughness .86.
+  Broadleaf_Leaf_Clusters — double-sided alpha-mask cutout, threshold .35,
+    1536×1024 source-derived RGBA atlas, roughness .86.
+
+Processing:
+  Source root flare, scanned trunk, thick boughs and natural source branch distribution retained.
+  Tree rescaled to mature forest proportions. Trunk mesh reduced to 4,200 triangles near / 1,000 LOD.
+  Six 512px albedo views of actual source leafy twigs baked into a transparent atlas.
+  Two crossed, complete cluster cards replace individual modeled leaves near the camera.
+  LOD retains one complete view per cluster and modestly increases coverage.
+  Fine rendered twig geometry omitted after using it to compute the original source leaf placements.
+  All textures embedded. JPEG bark maps recompressed for web delivery.
+  No images or meshes copied from game screenshots; reference imagery was inspected only for direction.
+
+Validation: final imported GLBs rendered and inspected; buffer bounds, UV coordinates,
+embedded textures, grounded coordinates, and masked two-sided foliage checked.
+See validation.json and individual metadata JSON files for SHA-256 checksums.
+
+Preview implementation note: offline Cycles renders of dense alpha-card canopies need
+transparent_max_bounces=64; its default 8 can create artificial black interior regions.
+This is a path-tracing preview limit, not a restriction on Three.js alpha-test rendering.
+
+
+Fallen Log A — forest-v4 supplementary asset
+
+Source asset: Dead Tree Trunk 02
+Source URL: https://polyhaven.com/a/dead_tree_trunk_02
+Source files manifest: https://api.polyhaven.com/files/dead_tree_trunk_02
+Photography: Jenelle van Heerden
+Processing: Rico Cilliers
+License: Creative Commons CC0 1.0 Universal (public domain dedication)
+License URLs:
+  https://polyhaven.com/license
+  https://creativecommons.org/publicdomain/zero/1.0/
+
+Derivative: fallen_log.glb
+Reduced original scan geometry from 83,128 to 3,799 triangles, preserving UVs,
+natural irregular trunk silhouette, jagged end, knots and broken branch stubs.
+Rotated onto a stable support face for natural ground contact at three separated points.
+Uniformly scaled to 4.8 meters in length. Centered X/Z and grounded at native Y=0.
+Includes the original 1024 x 1024 source JPEG diffuse, OpenGL normal, and ARM
+textures, embedded in the GLB; AO uses ARM's R channel and roughness its G channel.
+All texture pixels are source-provided. No third-party game art is used.
+GLB uses glTF Y-up, meters, opaque double-sided nonmetallic material.
+
+Rebuild: blender --background --factory-startup --python build_fallen_log.py
+Preview: blender --background --factory-startup --threads 8 --python render_fallen_log.py
+Preview floor, lights and camera exist only in the render script, not in the asset.
+
+
+All assets licensed CC0 1.0 Universal. Source license: https://polyhaven.com/license
+
+Forest Leaves 02 — Rob Tuytel — https://polyhaven.com/a/forest_leaves_02
+Forest Ground 04 — Rob Tuytel, Rico Cilliers — https://polyhaven.com/a/forest_ground_04
+Mossy Stone Wall — Amal Kumar — https://polyhaven.com/a/mossy_stone_wall
+Snow 02 — Rob Tuytel — https://polyhaven.com/a/snow_02
+Rock Moss Set 01 (individual optimized rock variants 01–06) — Kless Gyzen — https://polyhaven.com/a/rock_moss_set_01
+
+Processing: exported individual scanned rocks as embedded GLB; centered horizontally and grounded; decimated maximum geometry to 6500 triangles per asset; retained original UVs and 2K texture atlas for standard quality. High quality uses genuine per-rock crops from the original 8K source maps (2616×2766, 2787×2633, 2438×2777), without upscaling. Geometry is unchanged between texture quality levels. Model #03 retains its original 5000 triangles. Coordinates are meters, Y-up.
+Recommended primary rock: models/moss-rock-04.glb. Preview: source/moss-rock-04-preview.png.
+Dark Rock — Amal Kumar — https://polyhaven.com/a/dark_rock — CC0 1.0 Universal
+
+
+Ruin V3 Assets — CC0 1.0 Universal
+Original generated asset geometry and generated forged-iron maps dedicated to CC0 1.0.
+Third-party scanned materials from Poly Haven are CC0. License: https://polyhaven.com/license
+
+Mossy Stone Wall — Amal Kumar — https://polyhaven.com/a/mossy_stone_wall
+Rock Face 03 — Dario Barresi (photography), Rico Cilliers (processing) — https://polyhaven.com/a/rock_face_03
+Weathered Brown Planks — Dimitrios Savva (photography), Rico Cilliers (processing) — https://polyhaven.com/a/weathered_brown_planks
+
+Files: ruin-arch.glb, ruin-pillar.glb, chest.glb. Self-contained embedded 1K maps, Y-up meters, ground Y=0.
+Arch opening approximately 8 m wide × 6 m high in XY plane; exterior depth along Z. Chest front faces +Z; static closed lid.
+See asset-manifest.json for dimensions, triangles, source links and checksums.
+
+
+KUMARIM guardian model
+
+Source work: Forest Monster
+Author: Čestmír Dammer (CDmir)
+Source: https://opengameart.org/content/forest-monster
+Download: https://opengameart.org/sites/default/files/forest-monster_0.7z
+License: CC0 1.0 Universal
+License URL: https://creativecommons.org/publicdomain/zero/1.0/
+Original project: Kelgar (www.kelgar.org)
+Original idea: Torben
+Original UV texture derives from textures by Rick Hoppmann.
+
+The downloaded archive contains Licenses.txt identifying the asset as CC0.
+The OpenGameArt listing is CC0. An older comment mentions a noncommercial
+texture; the author subsequently replied on 2015-08-31: "I changed tree texture.
+Now is all under CC0 license." This export also removes that separate tree
+attachment entirely. The source page and source license are retained here.
+
+Adaptation for KUMARIM, 2026-09-30:
+- Removed separate tree canopy mesh.
+- Baked native IK and skeletal animations into glTF bone transforms.
+- Converted legacy Blender materials to standard glTF PBR using source diffuse
+  and normal textures; resized normal texture to 1024px.
+- Renamed Dying to Death and Melee_Hold to Threaten.
+- Scaled body to 3.4 metres and centered/grounded it at idle frame 0.
+- Exported GLB for Three.js GLTFLoader, glTF Y-up, facing +Z.
+
+Attribution is provided voluntarily; the CC0 dedication does not require it.
+No Elder Scrolls, Skyrim, Oblivion, or other proprietary game assets are used.
+
+
+KUMARIM stone guardian — material refinement, 2026-09-30
+
+CHARACTER, ORIGINAL TEXTURES, AND ANIMATION
+Forest Monster
+Author: Čestmír Dammer (CDmir)
+Source: https://opengameart.org/content/forest-monster
+Archive: https://opengameart.org/sites/default/files/forest-monster_0.7z
+License: CC0 1.0 Universal
+License URL: https://creativecommons.org/publicdomain/zero/1.0/
+Original project: Kelgar (www.kelgar.org)
+Original idea: Torben
+Original UV texture derives from textures by Rick Hoppmann.
+The source archive's Licenses.txt is retained as CHARACTER-SOURCE-LICENSE.txt.
+The original archive and adaptation records are retained with the development sources.
+
+STONE SURFACE DETAIL
+Rock Face 03, Poly Haven
+https://polyhaven.com/a/rock_face_03
+Dario Barresi — Photography
+Rico Cilliers — Processing
+License: CC0 1.0 Universal
+License URL: https://polyhaven.com/license
+Source maps: original 2048 x 2048 diffuse, OpenGL normal, and roughness JPEGs.
+Verified source hashes and download URLs: rock-detail-source-manifest.json.
+
+V4 MODIFICATIONS
+- Baked the original and CC0 stone detail maps into the existing 2048px UV atlas.
+- Retained the authored face, moss-covered crown, body folds, and dark claws.
+- Lifted the darkest limb diffuse values and added low-saturation stone cracks.
+- Combined the original 2048px normals with matched stone detail normals.
+- Added a packed glTF metallic-roughness texture with varied matte roughness.
+- Encoded base color and roughness as JPEG; normal as high-quality 4:4:4 JPEG.
+- Repacked the existing GLB without re-exporting its mesh or skeleton.
+
+All existing non-image GLB bufferView payloads, mesh/accessor definitions,
+skin weights, inverse-bind matrices, bones/nodes, transforms, scenes, and
+animation definitions are preserved byte-for-byte or JSON-identically.
+See validation.json for the per-buffer SHA-256 checks.
+
+Attribution is provided voluntarily; CC0 does not require it.
+No Elder Scrolls, Skyrim, Oblivion, or other proprietary game assets are used.
+
+
+Ruin V4 assets — CC0 1.0 Universal
+Original project-authored geometry and modifications dedicated to CC0 1.0.
+
+Rock Face 03 — Dario Barresi (photography), Rico Cilliers (processing) — https://polyhaven.com/a/rock_face_03
+Mossy Stone Wall (stump foundation only) — Amal Kumar — https://polyhaven.com/a/mossy_stone_wall
+Poly Haven license: https://polyhaven.com/license
+
+Files: pillar-stump.glb, rubble-1.glb, rubble-2.glb, rubble-3.glb.
+All Y-up, meters, exact ground Y=0, with self-contained 1K maps.
+See asset-manifest.json for dimensions, budgets, checksums and source details.
+
+
+Rock Face 03 color and normal maps also provide rock microdetail and slope material variation. Source: https://polyhaven.com/a/rock_face_03 (CC0, Dario Barresi / Rico Cilliers).
+
+
+Knight material refinement v4
+Animated Defender AKA Brigand
+Concept: Konstantin Maystrenko
+Model: AnthonyMyers (Anthony Myers)
+Retopology, rigging and animation: Danimal
+License: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+License URL: https://creativecommons.org/licenses/by/3.0/
+Source page: https://opengameart.org/content/animated-defender-aka-brigand
+Original rig archive: https://opengameart.org/sites/default/files/Defender.zip
+Original higher-resolution texture source: https://opengameart.org/content/brigand
+Original higher-resolution texture archive: https://opengameart.org/sites/default/files/Dude.zip
+
+Material refinement v4 uses only the original model author's supplied textures:
+- Original 2048px body and weapon color atlases restored from AnthonyMyers original Brigand archive. The Defender derivative source edge-pixel corrections were preserved over 0.612% of the body atlas to avoid a collar UV seam; remaining imagery is the original authored painting.
+- Existing lower-resolution texture bytes remain untouched in the preserved original BIN prefix.
+- Original Spec.png and DoneWeps_Spec.png inform new roughness/metalness data maps.
+- The original NMoverlay2.png (2048px) is restored as the body normal texture.
+- The original 11-clip GLB's full BIN chunk is retained byte-for-byte, with new maps appended.
+- Nodes, meshes, skins, UVs, accessors and animation JSON remain unchanged.
+
+Changes: original 2048px color atlases restored, conversion of authored legacy specular information to material-region-specific PBR roughness/metalness data, original high-resolution body normal restored, restrained normal strength adjustment. No new painted detail or changed geometry.
+
+Preview renders use the actual before/after GLBs, the same IdleLoop pose and the same Blender Cycles scene. They are renders, not screenshots of the game.
+Preview lighting uses the existing project misty_pines_1k.hdr (Poly Haven, CC0). This HDR is not included inside knight.glb.
+
+
+Fern material restoration v4
+Fern 02 — Rob Tuytel (scanning), Rico Cilliers (modeling)
+https://polyhaven.com/a/fern_02
+CC0 1.0 Universal — https://polyhaven.com/license
+
+Current verified geometry retained byte-identical. Original alpha, OpenGL normal and roughness channels restored; decoded albedo RGB unchanged.
+Material correction and independent comparison authored for this project.
+See asset-manifest.json for hashes, material settings, audit measurements and verification.
+
+FIRST-PERSON ARMS AND HALBERD — V1 HISTORICAL CONVERSION
+Derived from Animated Defender AKA Brigand: concept Konstantin Maystrenko; model AnthonyMyers; retopology, rigging and source animations Danimal.
+https://opengameart.org/content/animated-defender-aka-brigand
+CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
+Original forearm/hand/weapon geometry, UVs and native 2K textures retained. Source-textured sleeves extended offscreen; other body surfaces removed. New camera-relative idle, walking, sprinting, alternating strikes, dodge and recoil clips preserve the native grip.
+
+NATIVE 2K TERRAIN MATERIALS
+Forest Ground 04: Rob Tuytel (Photography, Processing), Rico Cilliers (Minor adjustment). https://polyhaven.com/a/forest_ground_04
+Rock Face 03: Dario Barresi (Photography), Rico Cilliers (Processing). https://polyhaven.com/a/rock_face_03
+Rocky Terrain: Amal Kumar. https://polyhaven.com/a/rocky_terrain
+All CC0 1.0 https://polyhaven.com/license
+Native 2048px diffuse, OpenGL normal and roughness; encoded as AVIF or JPEG without resizing. Native JPEG fallbacks accompany AVIF. Steep surfaces use matched triplanar projection, with soil at3.15m/tile and cliff at2.7m/tile. Rocky Terrain uses deliberate4.6m art scale.
+
+KUMARIM campfire proposal v1
+
+Photographic source:
+  Poly Haven — bark_brown_02
+  Source: https://polyhaven.com/a/bark_brown_02
+  License: CC0 1.0 Universal — https://creativecommons.org/publicdomain/zero/1.0/
+  Existing local source files:
+    /workspace/assets/bark/bark_brown_02_diff_1k.jpg
+    /workspace/assets/bark/bark_brown_02_nor_gl_1k.jpg
+
+Derivatives:
+  charcoal-bark.jpg: charcoal/ash grade of photographic bark detail, downsampled to512².
+  charcoal-normal.jpg: source OpenGL normal map downsampled to512².
+  charcoal-emissive.png: sparse glowing fissures derived from the source bark's local contrast.
+
+Original authored work:
+  charcoal-end.jpg: procedural radial end grain and charred cracks.
+  campfire.js: flame/ember GLSL, geometry, animation, log/coal meshes.
+  create_assets.py, preview.html, capture_preview.py: authoring and verification scripts.
+  All original code and textures in this directory are dedicated under CC0 1.0 Universal.
+
+No game assets, reference-image pixels, generated images, or unlicensed fire photographs were used.
+Runtime files are campfire.js plus four charcoal texture files. Preview captures and authoring scripts are optional review artifacts.
+
+FIRST-PERSON ARMS V2 — KUMARIM
+
+Inherited arms, hands, sleeve texture, skeleton and animation:
+Animated Defender AKA Brigand
+Concept: Konstantin Maystrenko
+Model and original textures: AnthonyMyers (Anthony Myers)
+Retopology, original rigging and animation: Danimal
+License: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+https://creativecommons.org/licenses/by/3.0/
+Rigged source: https://opengameart.org/content/animated-defender-aka-brigand
+Original texture source: https://opengameart.org/content/brigand
+
+The first-person derivative retains the original forearms/hands with original-textured sleeve continuations. It uses the seven fixed-grip first-person presentation clips from first-person-v1. The original full source binary prefix, nodes, skin and animation data are preserved byte-for-byte.
+
+V2 changes: replaced the original shared-atlas weapon primitive with a new halberd authored specifically for this project. New geometry includes a beveled axe plate, sharpened perimeter, ridged spear, rear beak, forged socket, retaining straps/pins, thin collar bands, an ash shaft and overlapping leather wrapping. Dedicated PBR textures are original deterministic procedural work: forging scale, directional abrasion, metallic/roughness variations, weathered wood and leather grain. No downloaded or generated photographic imagery was used for these additions. Existing CC BY 3.0 attribution above remains required for the combined model.
+
+Reproducible source: build.py, refine_steel.py, frame.py and inspect_weapon.py.
+Preview renders: actual isolated Three.js r170 WebGL renders of the exported GLB with the project's forest HDR environment, correctly populated PMREM and camera-relative environment transform. Close-ups use a perspective camera view offset. These are not generated promotional images, retouched pictures or full-world acceptance captures.
+
+WORLD AVATAR WITH V2 HALBERD
+
+Full-body character, original body textures, skeleton and animation:
+Animated Defender AKA Brigand
+Concept: Konstantin Maystrenko
+Model and original textures: AnthonyMyers (Anthony Myers)
+Retopology, original rigging and animation: Danimal
+License: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+https://creativecommons.org/licenses/by/3.0/
+Rigged source: https://opengameart.org/content/animated-defender-aka-brigand
+Original texture source: https://opengameart.org/content/brigand
+
+Changes: replaced only the original halberd material primitive with the exact newly authored geometry and PBR materials from the frozen first-person-v2 asset. The weapon was transformed into the native full-body bind space and attached to the same RightFingerBase joint. New halberd geometry and procedural textures were authored specifically for this project; no external texture sources were used. All original full-body nodes, skin, body geometry, original binary bytes and 11 animation clips remain unchanged. Existing source attribution above remains required.
+
+Preview PNGs are actual isolated Three.js r170 renders of the original and exported GLBs with identical lighting/camera/clip times. They are not retouched images or full-world acceptance captures.
+
+
+FIRST-PERSON ARMS AND MATCHING WORLD AVATAR V4 — KUMARIM
+
+Inherited character geometry, original color/normal artwork, skeleton and source animation:
+Animated Defender AKA Brigand
+Concept: Konstantin Maystrenko
+Model and original textures: AnthonyMyers (Anthony Myers)
+Retopology, original rigging and animation: Danimal
+License: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+https://creativecommons.org/licenses/by/3.0/
+Rigged source: https://opengameart.org/content/animated-defender-aka-brigand
+Original texture source: https://opengameart.org/content/brigand
+
+V1 derived first-person arms and fixed-grip presentation clips; V2 replaced the shared-atlas weapon with an original authored halberd and procedural PBR maps; V3 corrected steel conductor reflectance and separated black-oxide coating from bare steel. V4 adds a modeled shallow forged crown/spine and curved grinding face, geometry-based local ambient occlusion, original-atlas glove normal/roughness refinement, and lighter weathered ash. The authored additions use no external photographic textures. Existing CC BY 3.0 attribution remains required for these combined derivative models.
+
+Native glove color artwork is unchanged. Glove grain is original deterministic procedural normal/roughness detail restricted to the two actual glove atlas islands; broader creases derive from the licensed native artwork. The original 2K normal atlas is retained with local detail blended and normals normalized before encoding. No generated marketing images or rendered appearance is embedded in a material.
+
+Actual previews use Three.js r170 WebGL, an actually rendered PMREM of the existing project forest HDR, shared fixed camera/lights and ACES exposure .98. The head and glove close-ups use perspective camera view offsets and are explicitly isolated close-ups. Default 1280x800 views use a 1920x1200 drawing buffer. No screenshot retouching or Site editing was performed. These offline previews do not constitute integrated gameplay acceptance or native-GPU performance measurements.
+
+Reproducible source: common.py, author.py, bake_ao.py and finish.py in this directory. Dependencies are the frozen V3 GLBs and V2 canonical weapon frame. bake_ao.py ran Blender with -t 2. The live Site and frozen V1/V2/V3 assets were not modified.
+
+
+CRYSTAL RESOURCE V1
+Original procedural crystal geometry, growth-band/inclusion textures and material shaders authored for KUMARIM. Photographic host-rock material reuses the existing credited CC0 rock texture.
+
+
+Footstep recordings refresh: Kenney Impact Sounds / RPG Audio, CC0 1.0.
+Grass, dirt, stone and snow use four processed source recordings each.
+Source links, processing and file hashes: audio/footstep-manifest.json.
+License texts: audio/FOOTSTEP-LICENSE.txt.
+
+
+KUMARIM Wind Memory Monuments, 2026-09-30
+Original authored broken wheel, bevel/chip geometry, wind rune alphabet, seal art,
+particle animation and monument assembly code: dedicated to CC0 1.0 Universal.
+No external fantasy artwork, logos, or proprietary game assets are used.
+
+Reuses existing KUMARIM CC0 environment assets without altering their maps:
+- Rock Face 03, Poly Haven. Photography: Dario Barresi; processing: Rico Cilliers.
+  https://polyhaven.com/a/rock_face_03
+  Files reused: textures/rock-detail-diff.jpg, rock-detail-nor_gl.jpg.
+- Dark Rock, Poly Haven. Amal Kumar. https://polyhaven.com/a/dark_rock
+  File reused: textures/dark_rock_rough_1k.jpg.
+- Original KUMARIM Ruin V3 geometry: ruin-pillar.glb, pillar-stump.glb,
+  rubble-1.glb, rubble-2.glb, rubble-3.glb. Original geometry CC0; embedded maps
+  retain existing credits to Mossy Stone Wall (Amal Kumar) and Rock Face 03.
+  https://polyhaven.com/a/mossy_stone_wall
+License: https://creativecommons.org/publicdomain/zero/1.0/
+
+
+KUMARIM varied understory and ground integration
+
+Original work: ecology.js, integration/build/validation scripts. CC0-1.0.
+
+Existing licensed inputs, reused without adding new asset downloads:
+  Fern 02 — https://polyhaven.com/a/fern_02
+  Authors: Rob Tuytel (scanning), Rico Cilliers (modeling).
+  Source geometry/photographic maps from the current fern-restored.glb derivative.
+
+  Forest Leaves 02 — https://polyhaven.com/a/forest_leaves_02
+  Existing forest_leaves_02_diffuse_1k.jpg and forest_leaves_02_nor_gl_1k.jpg.
+
+  Rocky Terrain — https://polyhaven.com/a/rocky_terrain
+  Existing terrain rock color/normal texture objects.
+
+  Rock Face 03 — https://polyhaven.com/a/rock_face_03
+  Existing terrain cliff color/normal texture objects, reused for small chips.
+
+All listed Poly Haven assets are CC0 1.0 Universal:
+  https://polyhaven.com/license
+  https://creativecommons.org/publicdomain/zero/1.0/
+
+No reference-image pixels, generated images, or game assets are used.
+
+
+KUMARIM material and grounding refinements, 2026-09-30
+
+First-person/world-avatar V5 retains the Animated Defender AKA Brigand
+CC BY 3.0 attribution above. Original project-authored PBR maps add an
+oxide/forge-scale coating, polished cutting edge, weathered ash grain,
+leather wrapping and localized glove-atlas refinements. Geometry, rig
+and existing animation data are preserved. No external weapon artwork
+or reference-game texture pixels are used.
+
+Pine root UV refinement reuses the credited Pine Tree 01 geometry and
+Bark Brown 02 maps (Poly Haven, CC0). Only lower-root texture coordinates
+change; geometry, foliage and image data remain unchanged.
+
+Guardian V5/V6 reuses the existing credited guardian and Rock Face 03
+surface inputs. Authored medium-scale fracture/roughness variation and
+a small original forearm-shape refinement preserve the original rig
+and clips. No new external art sources are introduced.
+
+Worn ruin courts, exact surface-support queries, and projected guardian
+contact geometry are original project code/geometry. Courts reuse the
+existing CC0 soil, grass and Rock Face 03 textures credited above.
+
+
+Terrain-v5 packed textures
+
+CC0-1.0, Poly Haven: https://polyhaven.com/license
+Source materials: forest_ground_04, forest_leaves_02, rocky_terrain, rock_face_03.
+https://polyhaven.com/a/forest_ground_04
+https://polyhaven.com/a/forest_leaves_02
+https://polyhaven.com/a/rocky_terrain
+https://polyhaven.com/a/rock_face_03
+
+Existing licensed diffuse/normal/roughness photographs were repacked losslessly.
+RGB albedo + linear roughness A; normal RGB + true source displacement A for soil and litter.
+Source height maps were calibrated at fixed 1st/99th percentiles and quantized to 8-bit for packing; RGB normal data was preserved.
+New height sources:
+https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/forest_ground_04/forest_ground_04_disp_2k.png
+https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/forest_leaves_02/forest_leaves_02_disp_1k.png
+
+
+Rock Face03 photographed ambient occlusion (rock_face_03_ao_1k.jpg): Dario Barresi (photography), Rico Cilliers (processing), Poly Haven, CC0. https://polyhaven.com/a/rock_face_03 . Exact source AO complements the already credited color and normal photos; no new lighting is baked into base color.
+
+
+KUMARIM bare first-person hands, v91.3 (2026-10)
+
+The first-person arms are now original procedural work: bare hands built at
+load time from a signed distance field (bare-hand-mesh.js) and a plain cloth
+sleeve, with procedural skin, nail and weave shading (bare-arms.js). CC0-1.0.
+The Animated Defender AKA Brigand derived arms (models/arms.glb and its
+shared textures) are no longer included; together with the v91.1 removal of
+the world avatar, no asset derived from that model ships with the game. The
+historical credits above are kept as a record.
+
+
+KUMARIM v91.4 (2026-10)
+
+The tools' swing and blow sounds, the wrong-tool knocks, the sound of taking
+a tool in hand, a body falling and a body being looked over are synthesised
+by scripts/synth-survival-sfx.py (original work, CC0-1.0); they replace the
+earlier shared weapon swing for the tools. The distant tree pictures of the
+proxy layer are baked at load from the island's own procedural trees
+(distant-tree-bake.js); the pinned atlas files are unchanged and still serve
+the far trees. Creature ragdolls (ragdoll.js) move the existing deer and
+guardian rigs; no new assets.

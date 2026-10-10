@@ -1,0 +1,26 @@
+KUMARIM AUDIO ASSET ATTRIBUTION
+
+Kenney audio selections: Kenney Vleugels (Kenney.nl). CC0 1.0.
+https://kenney.nl/assets/rpg-audio
+https://kenney.nl/assets/impact-sounds
+https://kenney.nl/assets/interface-sounds
+
+creature_*.mp3: Ghost Monster Voice Moaning Growling by qubodup. CC0 1.0. https://opengameart.org/content/ghost-monster-voice-moaning-growling
+
+wind.mp3: Wind loop, original by Jonathan Shaw (InspectorJ), loop adaptation by AntumDeluge. CC BY 3.0.
+https://freesound.org/people/InspectorJ/sounds/376415/
+https://opengameart.org/content/wind-loop
+https://creativecommons.org/licenses/by/3.0/
+Modified for KUMARIM: converted to MP3, level adjusted and overlap crossfaded.
+
+river.mp3: Nature Sounds Pack by Antoine Goumain (Antoinemax). CC BY 4.0.
+https://antoinegoumain.fr/
+https://opengameart.org/content/nature-sounds-pack
+https://creativecommons.org/licenses/by/4.0/
+Modified for KUMARIM: converted to MP3, level adjusted and overlap crossfaded.
+
+CC0 public domain dedication: https://creativecommons.org/publicdomain/zero/1.0/
+
+The packaged manifest.json records source filenames, authorship, licenses and modifications.
+
+All selected sounds were resampled to 44.1 kHz where needed and level adjusted / peak limited for the game mix.

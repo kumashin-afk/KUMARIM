@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KUMARIM</title>
+<meta name="description" content="海と断崖に囲まれた島 KUMARIM で、一日でも長く生き延びる。草や枝を集め、道具を作り、火を絶やさずに夜を越える一人称サバイバル。">
+<meta name="theme-color" content="#0d1819">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23101d1c'/%3E%3Cpath d='M16 3 27 24 16 19 5 24Z M16 10v18' stroke='%23d7bf83' fill='none' stroke-width='1.5'/%3E%3C/svg%3E">
+<style>html,body{margin:0;padding:0}</style>
+</head>
+<body>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap');
+:root{color-scheme:dark;--gold:#dcc89a;--gold-dim:#a39571;--ink:#101c1d;--white:#f1efe3;--muted:#b5bbb5;--line:#e1d8b630}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0d171a;color:var(--white);font:14px 'Noto Sans JP',sans-serif}button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}button:focus-visible,a:focus-visible,canvas:focus-visible{outline:2px solid var(--gold);outline-offset:5px}button:disabled{opacity:.5;cursor:wait}button:hover{color:var(--gold)}button:active{transform:translateY(1px)}kbd{font:11px 'Noto Sans JP',sans-serif;border:1px solid #cbd2c047;padding:3px 5px;line-height:1.2;border-radius:2px;background:#13202042}#game,#world,.vignette,#damageFlash{position:absolute;inset:0;width:100%;height:100%}#world{display:block;outline:none;touch-action:none}.vignette{pointer-events:none;background:radial-gradient(ellipse at 53% 44%,transparent 30%,#06101425 66%,#060d1433 100%),linear-gradient(0deg,#061012b3,transparent 29%,transparent 75%,#0912184d);z-index:1}#damageFlash{pointer-events:none;box-shadow:inset 0 0 110px 60px #ab282899;opacity:0;z-index:5;transition:opacity .15s}.topbar{position:absolute;top:30px;left:40px;right:40px;display:flex;justify-content:space-between;align-items:center;z-index:3;pointer-events:none}.topbar a,.topbar button{pointer-events:auto}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--white);font:500 22px 'Noto Serif JP','Cormorant Garamond',Georgia,serif;letter-spacing:5px}.brand-mark{color:var(--gold);font-size:48px;transform:rotate(90deg);line-height:1}.brand small{display:block;font:10px 'Noto Serif JP',serif;letter-spacing:5px;margin-top:5px;color:var(--gold-dim)}.compass{position:absolute;left:50%;top:5px;transform:translateX(-50%);display:flex;align-items:center;gap:22px;width:325px;justify-content:center;font:12px Georgia,serif;color:#dce0d099;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}.compass strong{color:var(--gold);font-weight:400;font-size:17px}.compass i{height:7px;width:1px;background:#dce0d066}.compass b{position:absolute;top:26px;color:var(--gold);font-weight:400;font-size:13px}.top-actions{display:flex;gap:10px;align-items:center}.top-actions button{display:flex;align-items:center;gap:10px;padding:10px;color:#e1e4d8}.top-actions .icon{font-size:23px;font-weight:400}.region{position:absolute;z-index:2;right:50px;top:121px;text-align:right;text-shadow:0 2px 10px #0008}.eyebrow{font-size:11px;letter-spacing:2.6px;color:var(--gold);font-weight:400}.region .eyebrow{display:flex;align-items:center;justify-content:flex-end;gap:12px;font-size:12px;letter-spacing:1px}.tiny-sun{font-size:20px}.divider{opacity:.45;margin:0 3px}#biomeName{font:500 19px 'Noto Serif JP',serif;letter-spacing:2px;margin:11px 0 8px}.region small{font-size:10px;letter-spacing:2.3px;color:#d2d9cb9e}.intro{position:absolute;z-index:3;left:7.2%;top:42%;transform:translateY(-12%);text-shadow:0 2px 28px #061111bd}.intro .eyebrow{font-size:12px;letter-spacing:4px}.intro h1{font:400 clamp(26px,3vw,46px)/1.65 'Noto Serif JP',serif;letter-spacing:5px;margin:24px 0 20px}.intro-note{font-size:13px;line-height:2.2;letter-spacing:1.2px;color:#dee2d5cb;margin-bottom:28px}.primary{display:flex;align-items:center;justify-content:space-between;gap:48px;background:linear-gradient(120deg,#e3d6b4,#c2ad7c);color:#26342e;padding:17px 24px;min-width:238px;font-weight:500;letter-spacing:2px;box-shadow:0 2px 28px #0a171344;border:1px solid #ebdcbb;transition:filter .2s,transform .2s}.primary:hover{filter:brightness(1.12);color:#17251b}.button-ornament{font-size:20px}.intro-controls{margin-top:18px;font-size:11px;color:#d2d9c9a8;display:flex;align-items:center;gap:9px}.intro-controls kbd{font-size:10px}.intro-controls>span{margin:0 6px}.bottom-hud{position:absolute;bottom:75px;left:43px;right:43px;display:flex;align-items:flex-end;justify-content:space-between;z-index:3;pointer-events:none}.bottom-hud button{pointer-events:auto}.world-status{display:flex;align-items:center;gap:13px;margin-left:auto}.world-sigil{font-size:31px;color:var(--gold);line-height:1}.world-status strong{font:400 12px 'Noto Serif JP',serif;letter-spacing:2px}.world-status small{display:block;font-size:11px;color:#c4cfc1b3;margin-top:7px}.seed{font-size:9px;letter-spacing:1.5px;color:#c6d1c382;border-left:1px solid var(--line);padding-left:20px;margin-left:10px}.seed b{display:block;font-weight:400;margin-top:8px;color:#cfdbc6b8;letter-spacing:2px}.play-ui{opacity:0;visibility:hidden;transition:opacity .7s}body.playing .play-ui{opacity:1;visibility:visible}body.playing .intro{opacity:0;pointer-events:none;transition:opacity .5s}.quest{position:absolute;left:43px;top:138px;z-index:3;border-left:1px solid #d7c59a6b;padding-left:19px;text-shadow:0 2px 12px #0009}.quest .eyebrow{margin:0;font-size:10px}.quest h2{font:400 18px 'Noto Serif JP',serif;letter-spacing:2px;margin:13px 0 9px}.quest>p:not(.eyebrow){font-size:12px;color:#dce3d1c4;margin:0}.quest-distance{display:flex;align-items:center;gap:8px;color:#ccbf9a;font-size:11px;margin-top:13px}.vitals{width:247px}.character-line{display:flex;align-items:center;gap:12px;margin-bottom:17px}.level-medallion{width:38px;height:38px;display:grid;place-items:center;border:1px solid #ccbb8580;transform:rotate(0deg);font:24px 'Cormorant Garamond',Georgia,serif;background:#12232180;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}.character-line strong{font:400 13px 'Noto Serif JP',serif;letter-spacing:2px}.character-line small{display:block;font-size:10px;color:#ced7c1a9;margin-top:6px}.stat{display:flex;gap:9px;align-items:center;margin-top:8px}.stat>span{font:10px Georgia,serif;color:#cccebc;width:17px;letter-spacing:1px}.stat-track{height:5px;background:#05120fe0;flex:1;box-shadow:0 0 0 1px #cbd0ab20}.stat-track i{display:block;height:100%;width:100%;transition:width .15s;background:linear-gradient(90deg,#914b3f,#d08b77)}.stat small{font:9px Georgia,serif;letter-spacing:.5px;width:52px;text-align:right}.hotbar{position:absolute;bottom:0;left:50%;transform:translateX(-50%);display:flex;gap:9px}.slot{position:relative;width:73px;height:82px;display:flex;align-items:center;flex-direction:column;justify-content:center;background:linear-gradient(#0b181c66,#0c1b1dcc);border:1px solid #ced0a829}.slot.active{border-color:#d5c0938f;box-shadow:inset 0 0 20px #c1aa4520}.slot kbd{position:absolute;top:-8px;left:5px;font-size:10px;background:#192623}.slot>span{font-size:30px;color:var(--gold);line-height:1.3}.slot small{font-size:10px;margin-top:6px;color:#d5dac9}.slot b{font-weight:400;margin-left:4px}.help-strip{position:absolute;bottom:22px;left:43px;right:43px;display:flex;justify-content:center;gap:24px;font-size:10px;z-index:3;color:#c2ccbaa6;align-items:center}.help-strip>span{display:flex;gap:7px;align-items:center}.help-strip button{font-size:10px;position:absolute;right:0;color:#bfc8b8}.help-strip kbd{font-size:9px}.aim{position:absolute;top:50%;left:50%;width:3px;height:3px;background:#efedce99;border-radius:50%;z-index:2;pointer-events:none}.interaction{position:absolute;z-index:3;bottom:29%;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:13px;background:linear-gradient(90deg,transparent,#0a161ccc,transparent);padding:15px 50px;min-width:290px}.interaction>kbd{font:19px Georgia,serif;padding:9px 13px;color:var(--gold);border-color:#d6c49a77}.interaction small{display:block;font-size:10px;letter-spacing:2px;color:var(--gold-dim);margin-bottom:5px}.interaction strong{font:400 15px 'Noto Serif JP',serif;white-space:nowrap}.hidden{display:none!important}.toasts{position:absolute;right:44px;top:38%;z-index:6;display:flex;flex-direction:column;gap:8px;pointer-events:none}.toast{background:linear-gradient(90deg,#13211bdf,#12221bac);border-left:2px solid var(--gold);padding:13px 20px;min-width:210px;font-size:12px;animation:toastIn .3s ease}.toast small{display:block;color:var(--gold);font-size:10px;margin-bottom:5px;letter-spacing:1.5px}@keyframes toastIn{from{opacity:0;transform:translateX(15px)}to{opacity:1;transform:translateX(0)}}.discovery{position:absolute;top:24%;left:50%;transform:translateX(-50%);z-index:4;text-align:center;pointer-events:none;opacity:0;transition:opacity 1s;text-shadow:0 3px 30px #000}.discovery.show{opacity:1}.discovery small{color:var(--gold);font-size:11px;letter-spacing:4px}.discovery h2{font:400 34px 'Noto Serif JP',serif;letter-spacing:6px;margin:17px 0}.discovery>span{font-size:12px;color:var(--gold-dim)}.boss-hud{position:absolute;top:96px;left:50%;transform:translateX(-50%);text-align:center;z-index:4;width:min(440px,60vw)}.boss-hud p{font-size:10px;letter-spacing:3px;color:var(--gold);margin:0}.boss-hud h2{font:400 22px 'Noto Serif JP',serif;letter-spacing:5px;margin:7px 0 11px}.boss-track{background:#17201d;height:5px;border:1px solid #c2b48855}.boss-track i{display:block;width:100%;height:100%;background:#b27458;transition:width .2s}.boss-hud small{display:block;margin-top:8px;font-size:11px;color:#e2d6b7}.combat-text{position:absolute;left:50%;top:42%;z-index:5;pointer-events:none;font:500 30px 'Cormorant Garamond',serif;color:#f0cd8e;text-shadow:0 1px 5px #000;transition:opacity .2s}dialog{background:linear-gradient(140deg,#172a2df2,#0c181df9);color:var(--white);border:1px solid #cab98850;padding:32px;width:min(680px,calc(100vw - 32px));max-height:85vh;box-shadow:0 25px 150px #02090999;backdrop-filter:blur(24px);border-radius:2px}dialog::backdrop{background:#030b1066;backdrop-filter:blur(5px)}.panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid var(--line)}.panel-header .eyebrow{margin:0 0 10px;font-size:10px}.panel-header h2{font:400 26px 'Noto Serif JP',serif;letter-spacing:3px;margin:0}.panel-header button{font-size:20px;padding:10px;color:var(--gold)}.inventory-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.item{border:1px solid #c9c6a129;background:#0a191944;padding:18px 14px}.item .item-icon{font-size:27px;color:var(--gold);margin-bottom:13px}.item h3{font-size:13px;font-weight:400;margin:5px 0}.item p{font-size:11px;color:var(--muted);margin:7px 0}.item strong{font:21px 'Cormorant Garamond',serif;color:var(--gold)}.craft-block{border-top:1px solid var(--line);margin-top:25px;padding-top:22px}.craft-block h3{font:17px 'Noto Serif JP',serif;margin:0 0 10px}.craft-block p,.panel-copy{font-size:13px;line-height:1.9;color:var(--muted)}.craft-actions{display:flex;gap:10px;margin-top:16px}.outline-button{border:1px solid #c3b28166;padding:12px 16px;font-size:12px;background:#9d935310}.outline-button:disabled{cursor:not-allowed}.map-canvas{width:100%;height:auto;aspect-ratio:1.6;background:#172c29;border:1px solid #99a57f36}.map-key{display:flex;gap:18px;justify-content:center;margin-top:14px;color:var(--muted);font-size:11px}.map-key b{color:var(--gold)}.map-travel{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}.settings-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 0;border-bottom:1px solid var(--line)}.settings-row label{font-size:14px}.settings-row small{display:block;font-size:11px;color:var(--muted);margin-top:6px}.settings-row select{font:12px inherit;background:#1d3030;color:var(--white);padding:9px 12px;border:1px solid var(--line);max-width:180px}.settings-row input{accent-color:var(--gold);width:135px}.guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 28px}.guide-grid>div{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);gap:15px}.guide-grid kbd{font-size:11px;color:var(--white)}.journal-entry{padding:18px 0;border-bottom:1px solid var(--line)}.journal-entry h3{font:400 16px 'Noto Serif JP',serif;color:var(--gold)}.journal-entry p{font-size:13px;color:var(--muted);line-height:1.9}.death-screen{position:absolute;inset:0;background:#09171fe0;backdrop-filter:blur(10px);z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center}.death-screen h2{font:36px 'Noto Serif JP',serif;letter-spacing:7px}.death-screen>p:not(.eyebrow){font-size:13px;color:var(--muted);margin-bottom:40px}.touch-controls{display:none}#loading{position:absolute;inset:0;z-index:30;background:#102021;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .8s}.loading-mark{color:var(--gold);font-size:74px;transform:rotate(90deg)}.wordmark{font:500 28px 'Noto Serif JP','Cormorant Garamond',serif;letter-spacing:12px;color:var(--gold);margin-top:15px}#loadText{font:12px 'Noto Serif JP',serif;letter-spacing:4px;color:#dce2d099;margin-top:22px}.load-track{width:180px;height:1px;background:#ccbb8326;margin-top:22px}.load-track i{display:block;height:1px;background:var(--gold);width:35%;animation:load 1.5s infinite ease-in-out}@keyframes load{0%{transform:translateX(0)}50%{transform:translateX(120px)}100%{transform:translateX(0)}}
+@media(min-width:1700px){.intro{left:9%;top:46%}.intro h1{font-size:50px}.topbar{top:40px;left:54px;right:54px}.region{right:65px}.bottom-hud{left:55px;right:55px;bottom:85px}}
+@media(max-width:900px){.topbar{left:22px;right:20px;top:21px}.brand{font-size:19px;letter-spacing:3px}.brand small{font-size:9px;letter-spacing:3px}.brand-mark{font-size:36px}.compass{width:210px;gap:13px;top:12px}.top-actions{gap:0}.nav-label,.top-actions kbd{display:none}.region{right:26px;top:99px}.intro{left:7%;top:37%}.intro h1{font-size:32px}.world-status .seed{display:none}.bottom-hud{left:25px;right:25px;bottom:62px}.world-status{max-width:185px}.world-status strong{font-size:11px}.world-status small{font-size:10px}.vitals{width:190px}.help-strip{left:25px;right:25px;gap:16px;bottom:18px}.help-strip>span:nth-child(2),.help-strip>span:nth-child(4){display:none}.quest{left:25px;top:115px}.hotbar{gap:6px}.slot{width:61px;height:70px}.toasts{right:25px}.region #biomeName{font-size:16px}}
+@media(max-width:600px){.topbar{left:17px;right:12px;top:17px}.brand{font-size:17px;letter-spacing:3px;gap:8px}.brand small{font-size:8px;letter-spacing:2px}.brand-mark{font-size:31px}.compass{top:71px;left:50%;width:200px;gap:13px}.region{top:133px;right:20px}#biomeName{font-size:14px!important;letter-spacing:1px}.region small{font-size:8px}.region .eyebrow{font-size:10px;gap:8px}.intro{top:auto;bottom:17%;left:8%;transform:none}.intro h1{font-size:29px;letter-spacing:2px;margin:18px 0}.intro .eyebrow{font-size:9px;letter-spacing:3px}.intro-note{font-size:11px}.intro-controls{display:none}.primary{min-width:217px;padding:15px 20px;font-size:13px}.bottom-hud{bottom:29px;left:20px;right:20px}.world-status strong{font-size:10px}.world-status small{font-size:9px}.world-sigil{font-size:25px}.world-status{max-width:unset}.quest{top:136px;left:20px;max-width:190px;padding-left:12px}.quest h2{font-size:14px;letter-spacing:1px}.quest>p:not(.eyebrow){font-size:10px;max-width:150px}.quest .eyebrow{font-size:8px}.quest-distance{font-size:10px}.vitals{width:153px}.character-line{margin-bottom:10px;gap:8px}.character-line strong{font-size:10px}.character-line small{font-size:9px}.level-medallion{width:30px;height:30px;font-size:19px}.stat small{font-size:8px;width:45px}.stat{gap:5px}.hotbar{left:auto;right:0;transform:none;gap:6px}.slot{width:50px;height:60px}.slot>span{font-size:23px}.slot small{font-size:8px}.slot kbd{font-size:8px}body.playing .world-status{display:none}.help-strip{display:none}.touch-controls{display:block;position:absolute;inset:0;pointer-events:none;z-index:3}#joystick{position:absolute;left:27px;bottom:145px;width:98px;height:98px;border-radius:50%;background:#b3c7ac10;border:1px solid #c8d1b42c;pointer-events:auto;touch-action:none}#stick{position:absolute;top:28px;left:28px;width:40px;height:40px;background:#d2d2b526;border:1px solid #d5d6be77;border-radius:50%}.touch-actions{position:absolute;right:22px;bottom:150px;width:127px;height:104px}.touch-actions button{position:absolute;width:53px;height:53px;border-radius:50%;background:#20302ea8;border:1px solid #c6c1a34d;font-size:11px;pointer-events:auto;touch-action:none}#touchAttack{right:0;top:0;border-color:#d1bd89a3}#touchInteract{left:0;bottom:0}#touchJump{right:0;bottom:-16px}.interaction{bottom:34%;min-width:210px;padding:12px 25px}.interaction>kbd{font-size:14px}.interaction strong{font-size:12px}.toasts{right:16px;top:29%;max-width:240px}.toast{font-size:11px;padding:11px 14px;min-width:170px}.boss-hud{top:111px;width:65vw}.boss-hud h2{font-size:19px}.boss-hud p{font-size:8px}body.boss-active .region,body.boss-active .quest{opacity:0}.discovery h2{font-size:24px;white-space:nowrap}.discovery small{font-size:10px}.panel-header{padding-bottom:17px;margin-bottom:20px}dialog{padding:23px 20px;max-height:84vh}.inventory-grid{gap:6px}.item{padding:12px 9px}.item h3{font-size:11px}.item p{font-size:9px}.item .item-icon{font-size:22px}.craft-actions{flex-direction:column}.guide-grid{grid-template-columns:1fr}.panel-header h2{font-size:22px}.death-screen h2{font-size:26px;letter-spacing:3px}.death-screen>p:not(.eyebrow){font-size:11px}.settings-row{gap:12px}.settings-row label{font-size:12px}.settings-row input{width:110px}}
+@media(max-height:570px){.intro{top:29%;bottom:auto}.intro h1{font-size:25px;margin:12px 0}.intro-note{margin-bottom:15px}.intro-controls{display:none}.intro .eyebrow{font-size:9px}.region{top:100px}.bottom-hud{bottom:37px}.world-status{display:none}.help-strip{bottom:9px}.quest{top:100px}.compass{top:5px}.touch-controls #joystick{bottom:110px}.touch-actions{bottom:115px}.boss-hud{top:70px}}
+
+.asset-credits{margin-top:22px;border-top:1px solid var(--line);padding-top:18px;font-size:12px;color:var(--muted);line-height:1.9}.asset-credits summary{cursor:pointer;color:var(--gold)}.asset-credits a{color:var(--gold)}
+
+.intro-touch-note{display:none}.touch-device .intro-touch-note{display:block;font-size:12px;color:var(--gold);line-height:1.8}.touch-device .intro-controls{display:none}.touch-device .touch-controls{display:block;position:absolute;inset:0;pointer-events:none;z-index:4}.touch-device button,.touch-device a{-webkit-user-select:none;user-select:none;touch-action:manipulation}.touch-device #joystick{position:absolute;left:max(24px,env(safe-area-inset-left));bottom:calc(132px + env(safe-area-inset-bottom));width:112px;height:112px;border-radius:50%;background:#17302a4d;border:1px solid #d4d9be66;pointer-events:auto;touch-action:none}.touch-device #stick{position:absolute;top:34px;left:34px;width:42px;height:42px;background:#d2d2b544;border:1px solid #e4dec199;border-radius:50%}.touch-device .touch-actions{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:calc(127px + env(safe-area-inset-bottom));width:174px;height:160px}.touch-device .touch-actions button{position:absolute;width:54px;height:54px;border-radius:50%;background:#142925bf;border:1px solid #cfc59a80;color:#f2e9d0;font-size:12px;pointer-events:auto;touch-action:none;box-shadow:0 2px 12px #05110f40}.touch-device .touch-actions button:active,.touch-device .touch-actions button[aria-pressed=true]{background:#77673ac9;border-color:#f1d392}.touch-device #touchAttack{right:0;top:35px;width:64px;height:64px;border-color:#dcc792;background:#334535d6;font-size:14px}.touch-device #touchJump{right:13px;bottom:0;top:auto}.touch-device #touchInteract{left:5px;top:56px;bottom:auto}.touch-device #touchSkill{left:53px;top:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.touch-device #touchSkill span{font-size:20px;line-height:1}.touch-device #touchSkill small{font-size:10px;margin-top:3px}.touch-device #touchSprint{left:0;bottom:0}.touch-device .touch-actions button:disabled{opacity:.38;cursor:default}.touch-device .help-strip{display:none}.touch-device .bottom-hud{bottom:calc(20px + env(safe-area-inset-bottom))}.touch-device .world-status{display:none}.touch-device .interaction{bottom:36%;pointer-events:none}.touch-device .interaction>kbd{font-size:0;width:36px;height:36px;padding:6px}.touch-device .interaction>kbd:after{content:'◎';font-size:20px}.touch-device .hotbar kbd{display:none}.touch-device .slot{min-width:48px;min-height:58px}.touch-device .top-actions button{min-width:46px;min-height:46px}.touch-device dialog{max-height:calc(100dvh - 36px - env(safe-area-inset-top));overflow:auto;overscroll-behavior:contain}.touch-device .settings-row input{height:44px}.touch-device .toasts{max-width:230px;top:29%}.touch-device .toasts .toast:nth-last-child(n+3){display:none}
+@media(max-width:600px){.touch-device .region{top:84px;right:18px}.touch-device .region .eyebrow,.touch-device .region small{display:none}.touch-device .compass{top:45px;width:160px;font-size:10px}.touch-device .quest{top:124px;max-width:205px}.touch-device .quest h2{margin:7px 0}.touch-device .region #biomeName{font-size:12px!important}.touch-device .bottom-hud{left:16px;right:16px}.touch-device .character-line strong{font-size:11px}.touch-device .vitals{width:145px}.touch-device .slot small{font-size:9px}.touch-device .hotbar{gap:5px}.touch-device .discovery{top:25%}.touch-device .intro{bottom:19%}.touch-device .intro h1{font-size:27px}.touch-device .intro-note{font-size:12px}}
+@media(pointer:coarse) and (orientation:landscape), (max-height:560px) and (min-width:601px){.touch-device .topbar{top:max(8px,env(safe-area-inset-top));left:max(22px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right))}.touch-device .brand small{display:none}.touch-device .compass{top:9px}.touch-device .region{top:67px;right:22px}.touch-device .region .eyebrow,.touch-device .region small{display:none}.touch-device .quest{top:74px;left:26px}.touch-device .quest .eyebrow{display:none}.touch-device .quest h2{font-size:14px;margin:0 0 6px}.touch-device .quest-distance{margin-top:6px}.touch-device #joystick{bottom:37px;left:max(34px,env(safe-area-inset-left));width:104px;height:104px}.touch-device #stick{left:30px;top:30px}.touch-device .touch-actions{bottom:24px;right:max(22px,env(safe-area-inset-right))}.touch-device .bottom-hud{bottom:16px;left:165px;right:205px}.touch-device .vitals{width:146px}.touch-device .character-line{display:none}.touch-device .hotbar{position:static;transform:none;margin-left:auto;gap:6px}.touch-device .slot{width:48px;height:56px}.touch-device .slot>span{font-size:22px}.touch-device .slot small{font-size:9px}.touch-device .toasts{top:19%;max-width:240px}.touch-device .interaction{bottom:27%;padding:7px 20px}.touch-device .intro{top:21%;bottom:auto;left:8%;transform:none}.touch-device .intro h1{font-size:23px;line-height:1.45;margin:10px 0}.touch-device .intro-note{display:none}.touch-device .primary{padding:12px 18px;min-width:210px}.touch-device .intro-touch-note{font-size:11px}.touch-device .boss-hud{top:65px;width:40vw}.touch-device .discovery{top:21%}.touch-device .discovery h2{font-size:24px}}
+@media(max-width:360px){.touch-device #joystick{left:15px;width:96px;height:96px}.touch-device #stick{left:26px;top:26px}.touch-device .touch-actions{right:12px;width:165px}.touch-device .vitals{width:130px}.touch-device .slot{width:44px;min-width:44px}.touch-device .hotbar{gap:3px}.touch-device .character-line strong{font-size:10px}}
+body:not(.touch-device) .touch-controls{display:none}
+/* Keep the playable view clear; individual HUD elements provide their own contrast. */
+body.playing .vignette{background:radial-gradient(ellipse at 50% 45%,transparent 68%,#07121615 100%),linear-gradient(0deg,#06101230,transparent 14%,transparent 88%,#09121818)}
+
+/* A small, legible aim point for the first-person camera. */
+.aim{width:5px;height:5px;transform:translate(-50%,-50%);border:1px solid #f8efcecc;background:#fff8df55;box-shadow:0 0 2px #10201a;border-radius:50%}.aim.targeted{width:9px;height:9px;border-color:#e9d39c;background:#d9c58744}
+
+/* Text remains readable when the free-look camera points at the sky. */
+.topbar,.region,.quest{text-shadow:0 1px 2px #071014,0 0 7px #071014e6}.compass{color:#e5e5d8}.brand small,.region small{color:#d4cdaf}
+
+/* Passive HUD labels must not interrupt free mouse look. */
+.quest,.region,.boss-hud,.interaction,.vitals,.discovery,.world-status,.help-strip>span{pointer-events:none}
+
+/* Resolution is independent of the page UI scale. */
+#renderResolution{max-width:min(58%,260px)}
+.resolution-note{margin-top:10px}
+#renderResolutionValue{color:var(--white);font-variant-numeric:tabular-nums}
+
+.performance-hud{position:absolute;right:max(30px,env(safe-area-inset-right));top:225px;z-index:3;margin:0;max-width:calc(100vw - 32px);padding:10px 13px;border:1px solid #d7c59a38;border-radius:3px;background:#081514d9;color:#e9ecd9;white-space:pre-wrap;font:11px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace;font-variant-numeric:tabular-nums;pointer-events:none;text-shadow:0 1px 2px #000}.performance-hud[hidden]{display:none}.performance-hud[data-mode=basic]{font-size:12px;padding:7px 11px}
+@media(max-width:700px){.performance-hud{right:16px;top:215px;font-size:10px}}
+
+/* The loading bar represents completed named stages; detailed units stay textual. */
+#loading .loading-progress-status{width:min(520px,calc(100vw - 48px));text-align:center}
+#loading #loadText{color:#e5e6d9;letter-spacing:1.5px;line-height:1.8;margin:24px 0 10px;font-size:14px}
+#loadDetail{font-size:12px;line-height:1.8;color:#b9c9c3;min-height:1.8em;margin:0 0 12px}
+#loadCounts{font-size:12px;color:#dcc89a;line-height:1.8;margin:0;font-variant-numeric:tabular-nums}
+#loadEta{font-size:12px;color:#e5e6d9;line-height:1.8;margin:6px 0 18px;min-height:1.8em;font-variant-numeric:tabular-nums}
+#loadProgress{appearance:none;-webkit-appearance:none;width:min(420px,calc(100vw - 64px));height:5px;border:0;border-radius:2px;background:#ccbb8326;overflow:hidden}
+#loadProgress::-webkit-progress-bar{background:#ccbb8326}
+#loadProgress::-webkit-progress-value{background:#dcc89a;transition:width .2s ease}
+#loadProgress::-moz-progress-bar{background:#dcc89a}
+#loadStages{list-style:none;padding:0;margin:16px 24px 0;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;max-width:580px;font-size:11px;line-height:1.8;color:#839a93}
+#loadStages li::before{content:'○';margin-right:5px}
+#loadStages li[data-status="running"]{color:#e7dcc0}
+#loadStages li[data-status="running"]::before{content:'●'}
+#loadStages li[data-status="done"]{color:#b3d1bd}
+#loadStages li[data-status="done"]::before{content:'✓'}
+@media(prefers-reduced-motion:reduce){#loadProgress::-webkit-progress-value{transition:none}}
+
+/* Surveyed island atlas: actual terrain relief, water and discovered places. */
+dialog.atlas-dialog{width:min(1220px,calc(100vw - 40px));max-height:94vh;padding:24px 26px 18px;background:linear-gradient(135deg,#172a29f7,#0e1c20fc);border-color:#ccb98b66;overflow:auto}.atlas-dialog .panel-header{margin-bottom:16px;padding-bottom:16px}.atlas-dialog .panel-header h2{font-size:25px}.atlas-dialog .panel-header .eyebrow{letter-spacing:3px}.atlas-toolbar{height:43px;display:flex;align-items:center;gap:12px;margin-bottom:10px;border-bottom:1px solid #c8b58224;padding-bottom:10px}.atlas-view-switch{display:flex;gap:8px}.atlas-toolbar button{height:32px;border:1px solid #c7b7843d;padding:4px 14px;font-size:12px;letter-spacing:.6px;background:#0b191a66}.atlas-toolbar button:hover,.atlas-toolbar button[aria-pressed=true]{background:#c6b37e1c;border-color:#cdbb8680;color:#e6d7ac}.atlas-zoom{margin-left:auto;min-width:42px;font:14px Georgia,serif;color:#cbbb96;letter-spacing:1px;text-align:center}.atlas-zoom-buttons{display:flex;gap:5px}.atlas-zoom-buttons button{width:32px;padding:0;font-size:20px}.atlas-zoom-buttons button:disabled{cursor:default;opacity:.3}.atlas-body{display:grid;grid-template-columns:minmax(0,1fr) 232px;gap:18px}.atlas-sheet{position:relative;min-width:0;overflow:hidden;border:1px solid #c3b28252;box-shadow:inset 0 0 24px #020b0bc0,0 8px 30px #020b0b35;background:#365b65}.atlas-canvas{display:block;width:100%;height:min(62vh,calc(100dvh - 270px),640px);min-height:240px;cursor:grab;touch-action:none;outline-offset:-5px!important}.atlas-canvas.is-dragging{cursor:grabbing}.atlas-map-loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#10292de8;border:1px solid #e0ca9a66;padding:18px 24px;text-align:center;color:#e0d4b3;font:12px 'Noto Serif JP',serif;letter-spacing:1px;white-space:nowrap}.atlas-map-loading[hidden]{display:none}.atlas-corner{position:absolute;pointer-events:none;width:22px;height:22px;border-color:#ecd7a480;border-style:solid}.atlas-corner.top-left{top:6px;left:6px;border-width:1px 0 0 1px}.atlas-corner.bottom-right{bottom:6px;right:6px;border-width:0 1px 1px 0}.atlas-notes{display:flex;flex-direction:column;min-height:0;max-height:min(62vh,calc(100dvh - 270px),640px);color:#d4d2bb}.atlas-location{padding:11px 0 21px;border-bottom:1px solid #c8b58230}.atlas-location .eyebrow{font-size:9px;letter-spacing:3px;margin:0 0 10px}.atlas-location h3{font:400 19px 'Noto Serif JP',serif;margin:0 0 10px;letter-spacing:1.5px}.atlas-location p:last-child{font-size:10px;line-height:1.8;color:#c3c6b18c;margin:0}.atlas-places-heading{display:flex;justify-content:space-between;padding:18px 0 12px;font-size:11px;color:#bfc3ad;letter-spacing:1px}.atlas-places-heading b{font:14px Georgia,serif;color:#d9c59a}.atlas-place-list{overflow:auto;min-height:65px;max-height:230px;scrollbar-width:thin;scrollbar-color:#b5a77b44 transparent;flex:1}.atlas-place{display:flex;width:100%;align-items:center;gap:12px;padding:11px 8px;text-align:left;border-bottom:1px solid #d4c7a21a}.atlas-place:hover,.atlas-place[aria-pressed=true]{background:#c6b37e12}.atlas-place-icon{width:22px;flex:none;text-align:center;font-size:20px;color:#d5c08f}.atlas-place strong{display:block;font:400 12px 'Noto Serif JP',serif;color:#dedbc5;line-height:1.7}.atlas-place small{display:block;margin-top:3px;font:11px Georgia,serif;color:#afbba29e;letter-spacing:.4px}.atlas-selection{margin-top:14px;padding:16px 13px;background:#0817195e;border:1px solid #c6b78327;min-height:112px;text-align:center}.atlas-selection>small{font-size:9px;color:#b6b59b;letter-spacing:1px}.atlas-selection h3{font:400 14px/1.65 'Noto Serif JP',serif;margin:8px 0;color:#e2d7b8}.atlas-selection p{font-size:10px;color:#b9c1ab;line-height:1.9;margin:7px 0}.atlas-small-ornament{color:#d7be87;font-size:20px}.atlas-travel{margin-top:8px;width:100%;padding:11px 8px;font-size:11px;color:#eadcb8;border:1px solid #d2bb8160;background:#b1995520}.atlas-journal{display:flex;justify-content:space-between;margin-top:14px;padding:9px 2px;font-size:10px;color:#b9baa3}.atlas-journal span{color:#dbc799}.atlas-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;flex-wrap:wrap}.atlas-legend{display:flex;flex-wrap:wrap;gap:13px;font-size:9px;color:#c9cab393}.atlas-legend span{display:flex;align-items:center;gap:6px}.atlas-legend i{font-style:normal;color:#cfbe90;font-size:12px}.atlas-legend .atlas-legend-player{color:#eee0b5}.atlas-legend-water{width:12px;height:5px;background:#598e94;border:1px solid #a6bca74d}.atlas-legend-contour{width:13px;height:7px;border-top:1px solid #c4b082;border-bottom:1px solid #c4b082;transform:skewY(-12deg);opacity:.6}.atlas-footer p{font-size:9px;color:#b8c2af80;margin:0;line-height:1.9}.atlas-footer p span{padding:0 6px;color:#d6c29760}.atlas-footer kbd{font-size:9px;padding:1px 4px}.atlas-empty{font-size:11px;line-height:1.9;color:#bac2af99}.atlas-dialog #panelContent{overflow:visible}
+@media(max-width:850px){dialog.atlas-dialog{padding:18px;width:calc(100vw - 24px)}.atlas-body{grid-template-columns:minmax(0,1fr) 188px;gap:12px}.atlas-canvas{min-height:240px;height:min(58vh,calc(100dvh - 270px))}.atlas-notes{max-height:min(58vh,calc(100dvh - 270px))}.atlas-place{padding:9px 4px;gap:7px}.atlas-selection{padding:10px 8px}.atlas-location h3{font-size:16px}.atlas-location{padding-bottom:14px}}
+@media(max-width:600px){.atlas-body{grid-template-columns:1fr}.atlas-notes{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:none}.atlas-location{padding:8px 0;border:0}.atlas-places-heading,.atlas-journal{display:none}.atlas-place-list{max-height:115px}.atlas-selection{grid-column:1/-1;min-height:0;margin:0;padding:8px}.atlas-selection>p{margin:0}.atlas-canvas{height:52vh;min-height:280px}.atlas-toolbar button{padding:4px 10px}.atlas-footer{gap:10px}.atlas-location p:last-child{font-size:9px}.atlas-travel{max-width:240px}.atlas-dialog .panel-header h2{font-size:22px}}
+/* Keep the map and its controls inside short desktop viewports. */
+dialog.atlas-dialog{height:min(850px,calc(100dvh - 32px));max-height:calc(100dvh - 32px);overflow:hidden}
+dialog.atlas-dialog[open]{display:flex;flex-direction:column}
+.atlas-dialog .panel-header{flex:0 0 auto}
+.atlas-dialog #panelContent{display:flex;flex:1;min-height:0;overflow:hidden}
+.atlas-dialog .atlas{display:flex;flex:1;flex-direction:column;min-height:0;min-width:0}
+.atlas-dialog .atlas-toolbar,.atlas-dialog .atlas-footer{flex:0 0 auto}
+.atlas-dialog .atlas-body{flex:1;min-height:0}
+.atlas-dialog .atlas-sheet{height:100%;min-height:0}
+.atlas-dialog .atlas-canvas{height:100%;min-height:0}
+.atlas-dialog .atlas-notes{height:100%;max-height:none;overflow:auto;scrollbar-width:thin;scrollbar-color:#b5a77b44 transparent}
+.atlas-dialog .atlas-location,.atlas-dialog .atlas-places-heading,.atlas-dialog .atlas-selection,.atlas-dialog .atlas-journal{flex:0 0 auto}
+@media(max-width:600px){.atlas-dialog .atlas-body{grid-template-rows:minmax(220px,1fr) auto;overflow:auto}.atlas-dialog .atlas-sheet{min-height:220px}.atlas-dialog .atlas-notes{height:auto;max-height:190px;overflow:auto}}
+
+/* v91.2: free look after a panel closes (no cursor until the lock is taken). */
+body.hover-look,body.hover-look *{cursor:none!important}
+.tree-tiers{margin-top:18px;border-top:1px solid var(--line);padding-top:14px;font-size:13px}
+.tree-tiers summary{cursor:pointer;color:var(--gold)}
+.tree-tier{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px;line-height:1.5}
+.tree-tier input{accent-color:var(--gold);width:18px;height:18px;margin:1px 0 0;flex:none}
+.tree-tier b{font-weight:600}
+.tree-tier .tree-tier-range{color:var(--gold-dim);font-size:12px;margin-left:4px}
+.tree-tier small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.tree-tier.unused{opacity:.5}
+/* Survival HUD (v91): clock, meters, the fifteen-slot bar, veils, crafting. */
+.survival-hud{position:absolute;inset:0;z-index:3;pointer-events:none}
+.sv-status{position:absolute;top:92px;right:40px;display:flex;align-items:flex-start;gap:14px}
+.sv-meters{display:flex;gap:9px;padding-top:12px}
+.sv-meter{position:relative;width:54px;text-align:center;color:#e0605a;filter:drop-shadow(0 2px 6px #0009)}
+.sv-meter.hunger{color:#e6a64c}
+.sv-meter.sanity{color:#b9a2ec}
+.sv-meter svg{width:54px;height:54px;display:block}
+.sv-meter .track{fill:#0b1517d0;stroke:#00000080;stroke-width:5}
+.sv-meter .fill{fill:none;stroke:currentColor;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .35s}
+.sv-meter b{display:block;font:600 11px/1 'Noto Sans JP',sans-serif;color:#efe9da;margin-top:3px;letter-spacing:.5px}
+.sv-meter .trend{position:absolute;top:-3px;right:-3px;font-style:normal;font-size:10px;color:currentColor}
+.sv-meter.low svg{animation:svPulse 1s ease-in-out infinite}
+@keyframes svPulse{50%{transform:scale(1.09);filter:brightness(1.35)}}
+.sv-clock{position:relative;width:96px;height:96px;filter:drop-shadow(0 3px 10px #000a)}
+.sv-clock svg{width:96px;height:96px;display:block}
+.sv-clock .face{fill:#0b1517e0;stroke:#e1d8b64a;stroke-width:1}
+.sv-clock .arc{fill:none;stroke-width:9}
+.sv-clock .arc.day{stroke:#d7b259}
+.sv-clock .arc.dusk{stroke:#b25f39}
+.sv-clock .arc.night{stroke:#2b3f6c}
+.sv-clock .hand{stroke:#f6eed6;stroke-width:3;stroke-linecap:round}
+.sv-clock .moon{transform:translate(0px,23px)}
+.sv-clock .moon-dark{fill:#1a2231;stroke:#8c97ad;stroke-width:.7}
+.sv-clock .moon-lit{fill:#ece6cf}
+.sv-clock.full-moon .moon-lit{filter:drop-shadow(0 0 3px #fff8)}
+.sv-day{position:absolute;left:0;right:0;top:25px;text-align:center;line-height:1}
+.sv-day b{display:block;font:500 22px/1 'Noto Serif JP',serif;color:#f4ecd4}
+.sv-day small{font-size:9px;letter-spacing:1px;color:#c9c1a8}
+.sv-phase{position:absolute;left:0;right:0;bottom:-17px;text-align:center;font-size:10px;letter-spacing:3px;color:#dcc89a;text-shadow:0 1px 6px #000}
+.sv-clock[data-phase="dusk"] .sv-phase{color:#e59a6a}
+.sv-clock[data-phase="night"] .sv-phase{color:#9fb1df}
+.sv-note{position:absolute;top:214px;right:40px;font:500 12px 'Noto Sans JP',sans-serif;letter-spacing:1px;color:#f3dcae;text-shadow:0 1px 8px #000,0 0 2px #000;opacity:0;transition:opacity .4s;text-align:right;max-width:330px}
+.sv-note.show{opacity:1}
+.sv-held{position:absolute;bottom:118px;left:50%;transform:translateX(-50%);text-align:center;text-shadow:0 1px 8px #000;white-space:nowrap}
+.sv-held strong{display:block;font:400 14px 'Noto Serif JP',serif;letter-spacing:1px;color:#f1ecdc}
+.sv-held small{display:block;font-size:10.5px;color:#c9cfbf;margin-top:4px;letter-spacing:.5px}
+.sv-bar{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);display:flex;gap:4px;pointer-events:auto;padding:6px 7px;background:linear-gradient(#08121480,#081214c0);border:1px solid #e1d8b622;border-radius:10px}
+.sv-slot{position:relative;width:50px;height:50px;padding:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(#13232699,#0c1a1dd9);border:1px solid #ced0a830;border-radius:7px;cursor:pointer;transition:transform .12s,border-color .12s}
+.sv-slot img{width:38px;height:38px;pointer-events:none}
+.sv-slot.empty img{visibility:hidden}
+.sv-slot kbd{position:absolute;top:1px;left:4px;font-size:9px;line-height:1;color:#d7d3c3;opacity:.55;background:none;border:0;padding:0;box-shadow:none}
+.sv-slot .count{position:absolute;right:4px;bottom:3px;font:700 11px/1 'Noto Sans JP',sans-serif;color:#fff;text-shadow:0 1px 2px #000,0 0 3px #000}
+.sv-slot .meter{position:absolute;left:6px;right:6px;bottom:3px;height:3px;background:#000a;border-radius:2px;overflow:hidden}
+.sv-slot .meter[hidden]{display:none}
+.sv-slot .meter i{display:block;height:100%}
+.sv-slot.selected{border-color:#e4cf98;background:linear-gradient(#2a3a33d9,#16262ae6);box-shadow:0 0 0 1px #e4cf9866 inset,0 -3px 14px #e4cf9833;transform:translateY(-4px)}
+.sv-veil{position:absolute;inset:0;pointer-events:none;opacity:0}
+.sv-veil.dark{z-index:2;background:radial-gradient(ellipse at 50% 52%,transparent 12%,#000000b8 52%,#000 88%)}
+.sv-veil.mind{z-index:2;background:radial-gradient(ellipse at 50% 50%,transparent 38%,#2b0f3c80 72%,#120518d9 100%)}
+/* Only while it shows, and by transform (the compositor alone, no repaint). */
+.sv-veil.mind.active{animation:svMind 5s ease-in-out infinite}
+@keyframes svMind{50%{transform:scale(1.06) translate(-1%,1.5%)}}
+.sv-veil.sleep{z-index:7;background:#000;transition:opacity 1.1s}
+/* Crafting (the game's dialog). */
+.craft-v91{display:grid;gap:18px}
+.recipe-group{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:6px 10px;align-items:stretch}
+.recipe-group .group-title{grid-column:1/-1;font:400 13px 'Noto Serif JP',serif;letter-spacing:3px;color:var(--gold);margin:0 0 8px}
+.recipe{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;padding:10px 12px;background:#0c1a1d99;border:1px solid #e1d8b61f;border-radius:8px}
+.recipe.ready{border-color:#d5c09355;background:#13241f99}
+.recipe-icon{width:48px;height:48px}
+.recipe h3{font:400 14px 'Noto Serif JP',serif;margin:0 0 3px}
+.recipe p{font-size:11px;color:#bfc6b8;margin:0 0 6px;line-height:1.6}
+.recipe .needs{display:flex;flex-wrap:wrap;gap:6px 12px}
+.recipe .need{display:flex;align-items:center;gap:4px;font-size:11px;color:#d8dccf}
+.recipe .need img{width:20px;height:20px}
+.recipe .need.ok b{color:#9fd27f}
+.recipe .need.short b{color:#e9876a}
+.recipe button{min-width:76px}
+/* The end of an island. */
+.death-screen .death-cause{font-size:14px;color:#e6d6b8;margin:6px 0 10px}
+.death-screen .death-record{font-size:12px;color:var(--muted);margin-bottom:34px;letter-spacing:1px}
+.death-screen .death-record span{opacity:.75}
+.death-screen .death-note{font-size:11px;color:#9aa49c;margin-top:18px}
+@media (max-width:900px){
+  .sv-status{top:78px;right:20px;gap:10px}
+  .sv-meter,.sv-meter svg{width:44px}
+  .sv-meter svg{height:44px}
+  .sv-clock,.sv-clock svg{width:80px;height:80px}
+  .sv-day{top:20px}
+  .sv-note{top:186px;right:20px}
+  .sv-bar{max-width:calc(100vw - 24px);overflow-x:auto;gap:3px;padding:4px}
+  .sv-slot{width:40px;height:40px;flex:none}
+  .sv-slot img{width:30px;height:30px}
+  .sv-held{bottom:104px}
+}
+/* Touch screens: the bar sits above the stick and the action buttons. */
+body.touch-device .sv-bar{bottom:150px}
+body.touch-device .sv-held{bottom:202px}
+/* The region name moves under the title (the survival cluster takes the right). */
+.region{left:40px;right:auto;top:96px;text-align:left}
+.region .eyebrow{justify-content:flex-start}
+@media (max-width:900px){.region{left:20px;right:auto;top:84px}}
+/* Messages sit below the survival cluster; the key strip stays short. */
+.toasts{top:262px;right:40px}
+@media (max-width:1280px){.help-strip>span:nth-of-type(n+5){display:none}}
+@media (max-width:900px){.toasts{top:240px;right:20px}}
+/* The prompt sits beside the crosshair, not over what it names. */
+.interaction{left:calc(50% + 34px);top:calc(50% + 16px);bottom:auto;transform:none;padding:8px 22px 8px 10px;min-width:0;gap:10px;background:linear-gradient(90deg,#0a161cd9,#0a161c99 70%,transparent)}
+.interaction>kbd{font-size:14px;padding:5px 9px}
+.interaction strong{font-size:13px}
+.interaction small{font-size:9.5px;margin-bottom:3px}
+</style>
+<style>html,body{height:100%;background:#0d1819}</style>
+<main id="game" aria-label="KUMARIM サバイバル">
+    <canvas id="world" tabindex="0" aria-label="ゲーム画面。WASDで移動、マウスで見回す、左クリックで道具を使う、右クリックで食べる、Eで拾う、Tabでつくる。"></canvas>
+    <div class="vignette"></div><div class="sv-veil mind" id="mindVeil"></div><div class="sv-veil dark" id="darkVeil"></div><div id="damageFlash"></div><div class="sv-veil sleep" id="sleepVeil"></div>
+    <div id="loading" aria-busy="true">
+      <div class="loading-mark" aria-hidden="true">⋈</div><div class="wordmark">KUMARIM</div>
+      <div class="loading-progress-status" role="status" aria-live="polite" aria-atomic="true">
+        <p id="loadText">世界の準備を始めています</p><p id="loadDetail">必要な処理を確認しています</p>
+        <p id="loadCounts">完了した工程 0 / 6</p><p id="loadEta">残り時間を計算中</p>
+      </div>
+      <progress id="loadProgress" max="6" value="0" aria-label="完了した準備工程"></progress>
+      <ol id="loadStages" aria-label="世界を準備する工程"></ol>
+    </div>
+
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="メニューを開く" id="brandButton"><span class="brand-mark">⋈</span><span>KUMARIM</span></a>
+      <div class="compass"><span>W</span><i></i><span>NW</span><i></i><strong id="heading">N</strong><i></i><span>NE</span><i></i><span>E</span><b>◇</b></div>
+      <nav class="top-actions" aria-label="ゲームメニュー"><button data-panel="map" title="地図 (M)"><span class="icon">⌖</span><span class="nav-label">地図</span><kbd>M</kbd></button><button id="settingsButton" title="設定"><span class="icon">⚙︎</span></button></nav>
+    </header>
+
+    <pre id="performanceHUD" class="performance-hud" aria-label="パフォーマンス表示" aria-live="off" hidden></pre>
+
+    <div class="region"><div class="eyebrow"><span class="tiny-sun">☼</span><span id="weather">晴れ</span></div><div id="biomeName">エルダーウッドの渓谷</div><small id="regionSub">TEMPERATE FOREST</small></div>
+
+    <section id="intro" class="intro">
+      <p class="eyebrow">DON'T LET THE FIRE GO OUT</p>
+      <h1>この島で、<br>一日でも長く生き延びる。</h1>
+      <p class="intro-note">手ぶらで島に降り立つ。草と枝を集め、道具を作り、<br>日が暮れる前に火を起こそう。闇の中には、何かがいる。</p>
+      <p class="development-note" style="font-size:11px;line-height:1.7;opacity:.75;margin:8px 0 12px">開発版 v93.1（試作） · 「生き延びる土台」：ゲームをサバイバルに作り直しました。1日は16分（昼10分・夕方3分・夜3分）。体力・空腹・正気の3つのメーター。草・小枝・蒼輝石（青い水晶）・ベリー・きのこ・花を手で集め、斧・つるはし・松明・焚き火・石のかまど・縄・寝ござ・軟膏を作れます。夜は灯りのない所にいると「闇に潜むもの」に襲われます（満月の夜だけは安全）。肉や人参は火で焼け、食べ物は日がたつと腐ります。倒れたら島ごと終わり、新しい島から（何日生き延びたかを記録）。レベル・経験値・回復薬・以前のクラフトはなくしました。敵とランドマークは今のままです。木は v89 の表現に戻しています（v90.1）。v91.1：影と水に映る自分の体を軽い簡易な体に取り換え、公開用のファイルをまとめて軽くしました。v91.2：弓と矢を追加（長押しで引き絞って放ち、刺さった矢は拾える）。手に持った物が見え、食べる・拾う・置く・作る・持ち替えの動きが付きました。斧・つるはし・松明を打ち欠いた石と縄で作り直し、拾える物の見た目と光の当たり方を改善。倒木や切り株のそばのきのこと落ち枝も拾え、切り倒しても残ります。効果音を作り直し、かまどの石組みと灰を改善。メニューを閉じた後はクリックしなくても見回せます。v91.3：木を切り倒すと、切り株を残して斧と反対側へ倒れ（巻き込まれると痛い）、倒れた幹は斧で半分に割り、さらに割ると木材になります（切り株も掘り起こせる）。木の枝ぶりを島ごとに変わる自然な形にし、斜面で根元が浮かないようにして、木の描画を軽くしました。手を騎士の籠手から素手と布の袖に作り直し（腕のモデルと4MB余りの素材を削除）、火に燃料をくべる音、倒木・割る音を追加しました。設定の「木の表示（確認用）」で、距離ごと（6段階）に木を消して確かめられます。v91.4：遠景の木の絵をその島の木から作るようにしました。弓は左手で持ち、右手で弦を引き絞ります（飛ぶ矢は大きめで光の筋が残ります）。道具ごとの振る音と当たる音、斧・つるはしの頭を大きくし、持った角度のまま斜めに振り下ろします。左クリック長押しで続けて振れます。ベリーは森の低木に実り、火打ち石の代わりに青く光る蒼輝石を使います（キャンプのそばにも2つ）。倒した敵はラグドールで倒れて残り、E で調べると肉や石が取れます。v92：島の形がシードごとに変わり（三日月形・双子の島・岬・入り江・小島）、どの島にも霧の沼地ができます。明るさに目が慣れる（自動露光）を足しました。v93：採取した時と歩いている時のかくつきを減らしました（採った時の火花のシェーダーの作り直し、地面の情報や遠景の作り直しを少しずつ分けて行う、沼の水面を一瞬で作る など）。遠くの草原を落ち着いた色にし、鳥を作り直しました（地面すれすれを飛ばない・近くで見る形・影）。沼地を、立ち枯れの林と木道があり、濃いもやに包まれた陰気な湿原にしました。v93.1：タイトルを KUMARIM にしました。</p>
+      <button id="startButton" class="primary" disabled><span>島に降り立つ</span><span class="button-ornament">◇</span></button>
+      <p class="intro-touch-note">左スティックで移動 · 画面ドラッグで見回す</p><p class="intro-controls"><kbd>W A S D</kbd> 移動 <span>·</span> <kbd>E</kbd> 拾う <span>·</span> <kbd>Tab</kbd> つくる <span>·</span> <kbd>右クリック</kbd> 食べる</p>
+    </section>
+
+    <div id="discovery" class="discovery"><small>新たな場所を発見</small><h2></h2><span>──────── ◇ ────────</span></div>
+    <div id="bossHUD" class="boss-hud hidden"><p>古き森の守護者</p><h2>ヴァルドラン</h2><div class="boss-track"><i id="bossBar"></i></div><small id="bossPhase">石の眠りから目覚める</small></div>
+
+    <div id="interaction" class="interaction hidden"><kbd>E</kbd><div><small id="interactType">調べる</small><strong id="interactName">古い焚き火</strong></div></div>
+    <div id="aim" class="aim play-ui"></div>
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+    <div id="combatText" class="combat-text"></div>
+
+    <div id="survivalHud" class="survival-hud play-ui" aria-label="体力・空腹・正気、時刻、持ち物"></div>
+    <div id="helpStrip" class="help-strip play-ui"><span><kbd>E</kbd> 拾う・火にくべる</span><span><kbd>Tab</kbd> つくる</span><span><kbd>右クリック</kbd> 食べる・使う</span><span><kbd>1–0</kbd> 持ち替え</span><span><kbd>クリック</kbd> 道具を使う</span><span><kbd>Q</kbd> 置く</span><span><kbd>WASD</kbd> 移動</span><button id="helpButton">操作ガイド <kbd>?</kbd></button></div>
+    <div class="touch-controls play-ui"><div id="joystick"><div id="stick"></div></div><div class="touch-actions"><button id="touchJump" aria-label="ジャンプ">ジャンプ</button><button id="touchAttack" aria-label="道具を使う、長押しで続けて振る">振る</button><button id="touchInteract" aria-label="拾う・調べる">拾う</button><button id="touchUse" aria-label="食べる・使う">食べる</button><button id="touchSprint" aria-label="ダッシュ切り替え" aria-pressed="false">走る</button></div></div>
+
+    <dialog id="panel"><div class="panel-header"><div><p class="eyebrow" id="panelEyebrow">旅の支度</p><h2 id="panelTitle">持ち物</h2></div><button id="closePanel" aria-label="閉じる">✕</button></div><div id="panelContent"></div></dialog>
+    <div id="deathScreen" class="death-screen hidden"></div>
+  </main>
+  <script>globalThis.KUMARIM_MODEL_PACK='gltf-json';globalThis.KUMARIM_BUILD='v93.1-d32d2a8101';</script>
+  <script type="module">
+import('./game-bootstrap-JC4IGE27.js').catch(error => { console.error('KUMARIM startup failed', error); const d = document.getElementById('loadDetail'); if (d) d.textContent = '読み込みに失敗しました。再読み込みしてください。（' + (error?.message || error) + '）'; });
+</script>
+</body>
+</html>

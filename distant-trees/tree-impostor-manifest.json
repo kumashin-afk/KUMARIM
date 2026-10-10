@@ -1,0 +1,3318 @@
+{
+  "familyGeometry": {
+    "pine:0": {
+      "seedKey": "728194:1:pine:0",
+      "nearBytes": 623178,
+      "nearSHA256": "0c871ecea563e969b1f6f51bbd7bd8170e979374aac72d12ade1cf457f9f0cf4"
+    },
+    "pine:1": {
+      "seedKey": "728194:1:pine:1",
+      "nearBytes": 613156,
+      "nearSHA256": "04a1cab2bd10f05004a8fa6739ba76497592cb481efa6a078aded1d921726b43"
+    },
+    "pine:2": {
+      "seedKey": "728194:1:pine:2",
+      "nearBytes": 643794,
+      "nearSHA256": "7728543d57477bff8105112d3d02ab37df0f4c5c61db181cc06f25622b3dc77c"
+    },
+    "pine:3": {
+      "seedKey": "728194:1:pine:3",
+      "nearBytes": 657264,
+      "nearSHA256": "e694dfc2c7103dd0ec687ba5cc5ac5fa8250299a92ac7e4d1ca83a5a2c99ce81"
+    },
+    "pine:4": {
+      "seedKey": "728194:1:pine:4",
+      "nearBytes": 693398,
+      "nearSHA256": "e2dcaf99752f8d8f9250bd0ca7bd9db0f7328b41767df11c71b6d5e8d0ba98da"
+    },
+    "pine:5": {
+      "seedKey": "728194:1:pine:5",
+      "nearBytes": 667510,
+      "nearSHA256": "6630744acc917b09ca383c49f924a3cd3782d53727a31207831126db1e957ace"
+    },
+    "pine:6": {
+      "seedKey": "728194:1:pine:6",
+      "nearBytes": 656974,
+      "nearSHA256": "25d22c6623d78279837bbf52cdc8b81f02e8df9597c039327fd35f6eb7a339a4"
+    },
+    "pine:7": {
+      "seedKey": "728194:1:pine:7",
+      "nearBytes": 715854,
+      "nearSHA256": "b5df887e0836e324beb0ae841ed950408744332e7bda62093a344af75edf2f38"
+    },
+    "broadleaf:0": {
+      "seedKey": "728194:1:broadleaf:0",
+      "nearBytes": 329020,
+      "nearSHA256": "fe3745a78f2bd3a5eb815a02c4dcf65ca08ee6ca95d64851a01447d6f68ff643"
+    },
+    "broadleaf:1": {
+      "seedKey": "728194:1:broadleaf:1",
+      "nearBytes": 329020,
+      "nearSHA256": "eef6e9289d4acb2147a342968c4e212c1dd85fb1450a21d5a9eed3a5bae4b991"
+    },
+    "broadleaf:2": {
+      "seedKey": "728194:1:broadleaf:2",
+      "nearBytes": 392374,
+      "nearSHA256": "eed8d00af729b37e94129a769780fd63a1a409f8115837335ee2f921bce91358"
+    },
+    "broadleaf:3": {
+      "seedKey": "728194:1:broadleaf:3",
+      "nearBytes": 329020,
+      "nearSHA256": "946c626f1d9998cbe687208629b207e6f4c256beeda194e5ef725d4896342eaa"
+    },
+    "broadleaf:4": {
+      "seedKey": "728194:1:broadleaf:4",
+      "nearBytes": 329020,
+      "nearSHA256": "efc6f530ebaf7c9a78fb13f3e94a555c37a50cbc238cb53c53fd13d8f5f5b6bd"
+    },
+    "broadleaf:5": {
+      "seedKey": "728194:1:broadleaf:5",
+      "nearBytes": 329020,
+      "nearSHA256": "2fe742be10f39853f9b295f8dd27a8e6437222ba8d8d321b8ca4598ed21a1dc0"
+    },
+    "broadleaf:6": {
+      "seedKey": "728194:1:broadleaf:6",
+      "nearBytes": 329020,
+      "nearSHA256": "c3dfe8e007a938f2e893236a82d76789324808532cd04840b53f36a228a22745"
+    },
+    "broadleaf:7": {
+      "seedKey": "728194:1:broadleaf:7",
+      "nearBytes": 329020,
+      "nearSHA256": "94cbebb6d7bc892745ea97515e1126b49cf9d079da042c491cef52f642a94b5d"
+    }
+  },
+  "format": "seeded-tree-impostor-v1",
+  "seed": 728194,
+  "baseDistManifestSHA256": "d8ef98ecf84ea3a8dc9acd0c3d5dbc69ca76979445fac4de3360912e29609230",
+  "sourceFiles": {
+    "tree-generator.js": {
+      "bytes": 26593,
+      "sha256": "6ed9774ef672ad6bf305a72370c41279631b8926d410ad47b49ea71422cf7402"
+    },
+    "tree-sprays.js": {
+      "bytes": 2377,
+      "sha256": "625d847aa8ea73c8efe5ed894938d4799006c1d2d68ec4da979c1b5e258f5b7d"
+    },
+    "tree-materials.js": {
+      "bytes": 9252,
+      "sha256": "47f8bd77cad8df81ad231e3650f7bac32b2ac7213caab30641217d8e4830bf0b"
+    },
+    "tree-worker.js": {
+      "bytes": 760,
+      "sha256": "cb114bf08985e759e9e05505f875ce64481d337553b759d5069c855699c42ac2"
+    },
+    "tree-pools.js": {
+      "bytes": 18928,
+      "sha256": "d0e329ec30c3fac9397c4ec1694214c1d25e1cf362588d8762947a0c0542cedd"
+    },
+    "leaf-coverage.js": {
+      "bytes": 2366,
+      "sha256": "b489639133f4a2016ea0a6e6885cecd65d2e99bc188b14122feb20229b913e69"
+    },
+    "vegetation-climate.js": {
+      "bytes": 1403,
+      "sha256": "4e57380d18d9e9610b72ee050556008188d4ff1ef70269961f5e53ab9c518c62"
+    },
+    "island-biomes.js": {
+      "bytes": 17659,
+      "sha256": "71e57aa0de1322a65bd95d7a07e6c0e22ddad8fb6f272af0371a0fb5125c8b59"
+    },
+    "nature.js": {
+      "bytes": 24385,
+      "sha256": "a5835f3fad0b1f76940cc95aa414c894f5e483a536f31cb3ca028efeb0d76840"
+    },
+    "models/pine.glb": {
+      "bytes": 4307968,
+      "sha256": "09cd9a47a1fbf886b3520aeeda76c990f22a391dbca58a21be9334bb5fbcf0a2"
+    },
+    "models/broadleaf.glb": {
+      "bytes": 3949528,
+      "sha256": "8bc40cf932d568218a01a7d1b45aa5a7b24d2b012b187c52fdecf4c90108358e"
+    },
+    "vendor/three.module.js": {
+      "bytes": 1314681,
+      "sha256": "ce1fa418de16a19495a9f72495580e3015d7745c296d3ce0485897f902ddedfb"
+    },
+    "vendor/GLTFLoader.js": {
+      "bytes": 110278,
+      "sha256": "458b025b12213713958b07012b48aa5e84aebb562c92cfe53ea82d41bda2fd42"
+    },
+    "vendor/BufferGeometryUtils.js": {
+      "bytes": 31780,
+      "sha256": "3de832095679e56578beddf70f3e90846a47ec8a886fa8eb21c973cdaef88922"
+    },
+    "tree-leaf-lighting.js": {
+      "bytes": 2433,
+      "sha256": "09d2a3d11a1b79aa7630c11cd6abc8919fc03fb0ad0890c3772bfbccc8236fb6"
+    },
+    "world-seed.js": {
+      "bytes": 760,
+      "sha256": "368c447aab3a8ec175db2788da22c101fd49346f42f34a020b26dea5cc35e4ca"
+    },
+    "broadleaf-geometric-normal.png": {
+      "bytes": 578502,
+      "sha256": "57173293019077f7d56ae6dd08652603cb9532b2ae6949be72d4b52daf538c78"
+    },
+    "__qa/accepted-source-manifest.json": {
+      "bytes": 41030,
+      "sha256": "69dfac7e2c9f5c99b48cd46a0fbf8738e81c755d9871d8197771437faae8b501"
+    },
+    "__qa/atlas-calibration.mjs": {
+      "bytes": 17236,
+      "sha256": "459e96133c4f7ef182f565dfd1b8694cd0394987a2b84c7dded4cf03e4e91b21"
+    },
+    "__qa/bake-bindings.mjs": {
+      "bytes": 686,
+      "sha256": "8ed0ea5baa47f245c4ae4ee089bb1f1ff40ed013886c683ee6915a0bb848ee96"
+    },
+    "__qa/bootstrap.mjs": {
+      "bytes": 4847,
+      "sha256": "536a6103003a298bc8a3d961c7b548bc5d444e9d7e84cd76c082c0ed8f9b7124"
+    },
+    "__qa/index.html": {
+      "bytes": 202,
+      "sha256": "97e8f399832b930aac21008a62afd853ad4c0f5a23766b75ec7746e41e8c3469"
+    },
+    "__qa/nature-template-exact.mjs": {
+      "bytes": 3479,
+      "sha256": "dd06137ebe6d898bc1b9c089b0bde8c63a0d82c3b8c779868c0e5e2e02ddcb43"
+    },
+    "__qa/normal-calibration.mjs": {
+      "bytes": 12690,
+      "sha256": "6307f7092d44d973298ee993709298c68284c949905f210abc70169b5bbdfc52"
+    },
+    "__qa/rgba-png.mjs": {
+      "bytes": 1395,
+      "sha256": "9c0af2837d3ba0097fce354448f32ca950b9b225da58036d4b337b4ad5a9ab10"
+    },
+    "__qa/runtime/broadleaf-bake-normals.mjs": {
+      "bytes": 2601,
+      "sha256": "e3fc25acf3d07bbfdb55af706a8a756e565f1c935cbf70dd209d29848f7215c1"
+    },
+    "__qa/runtime/broadleaf-geometric-normal.mjs": {
+      "bytes": 8079,
+      "sha256": "f9b1e41014ed42953c1e9b0c01a8aa829dca65d657e6905db96f2c2ab939decd"
+    },
+    "__qa/runtime/rgba-png.mjs": {
+      "bytes": 1395,
+      "sha256": "9c0af2837d3ba0097fce354448f32ca950b9b225da58036d4b337b4ad5a9ab10"
+    },
+    "__qa/runtime/tree-impostor-bake-adapter.mjs": {
+      "bytes": 16344,
+      "sha256": "109db843549a5c5c34b1e8a98e585280df86dd7c725723d950289a24b1f6bf2a"
+    }
+  },
+  "bake": {
+    "tile": 128,
+    "gutter": 4,
+    "columns": 16,
+    "rows": 8,
+    "azimuthCount": 4,
+    "states": [
+      "live",
+      "leafless"
+    ],
+    "families": 16,
+    "atlasWidth": 2048,
+    "atlasHeight": 1024,
+    "maximumCombinedPngBytes": 4194304,
+    "maximumTextureBytesWithMipmaps": 22369624
+  },
+  "provenance": "Isolated v48 geometric-normal r3 calibration revision derived from frozen r2 source; exact near runtime/atlas preserved; all six source tiles calibrated; no reference-game imagery.",
+  "broadleafGeometricNormal": {
+    "sourceFile": "broadleaf-geometric-normal.png",
+    "bytes": 578502,
+    "sha256": "57173293019077f7d56ae6dd08652603cb9532b2ae6949be72d4b52daf538c78"
+  },
+  "status": "OFFLINE_ATLAS_BAKE_NOT_ART_ACCEPTANCE",
+  "verifiedSources": {
+    "tree-generator.js": {
+      "bytes": 26593,
+      "sha256": "6ed9774ef672ad6bf305a72370c41279631b8926d410ad47b49ea71422cf7402"
+    },
+    "tree-sprays.js": {
+      "bytes": 2377,
+      "sha256": "625d847aa8ea73c8efe5ed894938d4799006c1d2d68ec4da979c1b5e258f5b7d"
+    },
+    "tree-materials.js": {
+      "bytes": 9252,
+      "sha256": "47f8bd77cad8df81ad231e3650f7bac32b2ac7213caab30641217d8e4830bf0b"
+    },
+    "tree-worker.js": {
+      "bytes": 760,
+      "sha256": "cb114bf08985e759e9e05505f875ce64481d337553b759d5069c855699c42ac2"
+    },
+    "tree-pools.js": {
+      "bytes": 18928,
+      "sha256": "d0e329ec30c3fac9397c4ec1694214c1d25e1cf362588d8762947a0c0542cedd"
+    },
+    "leaf-coverage.js": {
+      "bytes": 2366,
+      "sha256": "b489639133f4a2016ea0a6e6885cecd65d2e99bc188b14122feb20229b913e69"
+    },
+    "vegetation-climate.js": {
+      "bytes": 1403,
+      "sha256": "4e57380d18d9e9610b72ee050556008188d4ff1ef70269961f5e53ab9c518c62"
+    },
+    "island-biomes.js": {
+      "bytes": 17659,
+      "sha256": "71e57aa0de1322a65bd95d7a07e6c0e22ddad8fb6f272af0371a0fb5125c8b59"
+    },
+    "nature.js": {
+      "bytes": 24385,
+      "sha256": "a5835f3fad0b1f76940cc95aa414c894f5e483a536f31cb3ca028efeb0d76840"
+    },
+    "models/pine.glb": {
+      "bytes": 4307968,
+      "sha256": "09cd9a47a1fbf886b3520aeeda76c990f22a391dbca58a21be9334bb5fbcf0a2"
+    },
+    "models/broadleaf.glb": {
+      "bytes": 3949528,
+      "sha256": "8bc40cf932d568218a01a7d1b45aa5a7b24d2b012b187c52fdecf4c90108358e"
+    },
+    "vendor/three.module.js": {
+      "bytes": 1314681,
+      "sha256": "ce1fa418de16a19495a9f72495580e3015d7745c296d3ce0485897f902ddedfb"
+    },
+    "vendor/GLTFLoader.js": {
+      "bytes": 110278,
+      "sha256": "458b025b12213713958b07012b48aa5e84aebb562c92cfe53ea82d41bda2fd42"
+    },
+    "vendor/BufferGeometryUtils.js": {
+      "bytes": 31780,
+      "sha256": "3de832095679e56578beddf70f3e90846a47ec8a886fa8eb21c973cdaef88922"
+    },
+    "tree-leaf-lighting.js": {
+      "bytes": 2433,
+      "sha256": "09d2a3d11a1b79aa7630c11cd6abc8919fc03fb0ad0890c3772bfbccc8236fb6"
+    },
+    "world-seed.js": {
+      "bytes": 760,
+      "sha256": "368c447aab3a8ec175db2788da22c101fd49346f42f34a020b26dea5cc35e4ca"
+    },
+    "broadleaf-geometric-normal.png": {
+      "bytes": 578502,
+      "sha256": "57173293019077f7d56ae6dd08652603cb9532b2ae6949be72d4b52daf538c78"
+    },
+    "__qa/accepted-source-manifest.json": {
+      "bytes": 41030,
+      "sha256": "69dfac7e2c9f5c99b48cd46a0fbf8738e81c755d9871d8197771437faae8b501"
+    },
+    "__qa/atlas-calibration.mjs": {
+      "bytes": 17236,
+      "sha256": "459e96133c4f7ef182f565dfd1b8694cd0394987a2b84c7dded4cf03e4e91b21"
+    },
+    "__qa/bake-bindings.mjs": {
+      "bytes": 686,
+      "sha256": "8ed0ea5baa47f245c4ae4ee089bb1f1ff40ed013886c683ee6915a0bb848ee96"
+    },
+    "__qa/bootstrap.mjs": {
+      "bytes": 4847,
+      "sha256": "536a6103003a298bc8a3d961c7b548bc5d444e9d7e84cd76c082c0ed8f9b7124"
+    },
+    "__qa/index.html": {
+      "bytes": 202,
+      "sha256": "97e8f399832b930aac21008a62afd853ad4c0f5a23766b75ec7746e41e8c3469"
+    },
+    "__qa/nature-template-exact.mjs": {
+      "bytes": 3479,
+      "sha256": "dd06137ebe6d898bc1b9c089b0bde8c63a0d82c3b8c779868c0e5e2e02ddcb43"
+    },
+    "__qa/normal-calibration.mjs": {
+      "bytes": 12690,
+      "sha256": "6307f7092d44d973298ee993709298c68284c949905f210abc70169b5bbdfc52"
+    },
+    "__qa/rgba-png.mjs": {
+      "bytes": 1395,
+      "sha256": "9c0af2837d3ba0097fce354448f32ca950b9b225da58036d4b337b4ad5a9ab10"
+    },
+    "__qa/runtime/broadleaf-bake-normals.mjs": {
+      "bytes": 2601,
+      "sha256": "e3fc25acf3d07bbfdb55af706a8a756e565f1c935cbf70dd209d29848f7215c1"
+    },
+    "__qa/runtime/broadleaf-geometric-normal.mjs": {
+      "bytes": 8079,
+      "sha256": "f9b1e41014ed42953c1e9b0c01a8aa829dca65d657e6905db96f2c2ab939decd"
+    },
+    "__qa/runtime/rgba-png.mjs": {
+      "bytes": 1395,
+      "sha256": "9c0af2837d3ba0097fce354448f32ca950b9b225da58036d4b337b4ad5a9ab10"
+    },
+    "__qa/runtime/tree-impostor-bake-adapter.mjs": {
+      "bytes": 16344,
+      "sha256": "109db843549a5c5c34b1e8a98e585280df86dd7c725723d950289a24b1f6bf2a"
+    }
+  },
+  "framebufferSamples": 4,
+  "frames": [
+    {
+      "tile": 0,
+      "family": "pine:0",
+      "familySeedKey": "728194:1:pine:0",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.6345381797693894,
+        10.29878890864183,
+        0.44536277093638454
+      ],
+      "halfSpan": 10.710740464987504,
+      "uvMin": [
+        0.001953125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.060546875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 11431,
+      "coveredPixelEquivalent": 1580.5176470588235
+    },
+    {
+      "tile": 1,
+      "family": "pine:0",
+      "familySeedKey": "728194:1:pine:0",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.6345381797693894,
+        10.29878890864183,
+        0.44536277093638454
+      ],
+      "halfSpan": 10.710740464987504,
+      "uvMin": [
+        0.064453125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.123046875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 11431,
+      "coveredPixelEquivalent": 1549.6823529411765
+    },
+    {
+      "tile": 2,
+      "family": "pine:0",
+      "familySeedKey": "728194:1:pine:0",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.6345381797693894,
+        10.29878890864183,
+        0.44536277093638454
+      ],
+      "halfSpan": 10.710740464987504,
+      "uvMin": [
+        0.126953125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.185546875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 11431,
+      "coveredPixelEquivalent": 1579.5411764705882
+    },
+    {
+      "tile": 3,
+      "family": "pine:0",
+      "familySeedKey": "728194:1:pine:0",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.6345381797693894,
+        10.29878890864183,
+        0.44536277093638454
+      ],
+      "halfSpan": 10.710740464987504,
+      "uvMin": [
+        0.189453125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.248046875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 11431,
+      "coveredPixelEquivalent": 1550.9450980392157
+    },
+    {
+      "tile": 4,
+      "family": "pine:0",
+      "familySeedKey": "728194:1:pine:0",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.6345381797693894,
+        10.29878890864183,
+        0.44536277093638454
+      ],
+      "halfSpan": 10.710740464987504,
+      "uvMin": [
+        0.251953125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.310546875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 4399,
+      "coveredPixelEquivalent": 331.28627450980395
+    },
+    {
+      "tile": 5,
+      "family": "pine:0",
+      "familySeedKey": "728194:1:pine:0",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.6345381797693894,
+        10.29878890864183,
+        0.44536277093638454
+      ],
+      "halfSpan": 10.710740464987504,
+      "uvMin": [
+        0.314453125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.373046875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 4399,
+      "coveredPixelEquivalent": 332.54117647058825
+    },
+    {
+      "tile": 6,
+      "family": "pine:0",
+      "familySeedKey": "728194:1:pine:0",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.6345381797693894,
+        10.29878890864183,
+        0.44536277093638454
+      ],
+      "halfSpan": 10.710740464987504,
+      "uvMin": [
+        0.376953125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.435546875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 4399,
+      "coveredPixelEquivalent": 328.01960784313724
+    },
+    {
+      "tile": 7,
+      "family": "pine:0",
+      "familySeedKey": "728194:1:pine:0",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.6345381797693894,
+        10.29878890864183,
+        0.44536277093638454
+      ],
+      "halfSpan": 10.710740464987504,
+      "uvMin": [
+        0.439453125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.498046875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 4399,
+      "coveredPixelEquivalent": 326.2549019607843
+    },
+    {
+      "tile": 8,
+      "family": "pine:1",
+      "familySeedKey": "728194:1:pine:1",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.5111139067313439,
+        10.265539242401669,
+        0.13434217465169485
+      ],
+      "halfSpan": 10.676160812097736,
+      "uvMin": [
+        0.501953125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.560546875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 11238,
+      "coveredPixelEquivalent": 1607.3176470588235
+    },
+    {
+      "tile": 9,
+      "family": "pine:1",
+      "familySeedKey": "728194:1:pine:1",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.5111139067313439,
+        10.265539242401669,
+        0.13434217465169485
+      ],
+      "halfSpan": 10.676160812097736,
+      "uvMin": [
+        0.564453125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.623046875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 11238,
+      "coveredPixelEquivalent": 1491.7529411764706
+    },
+    {
+      "tile": 10,
+      "family": "pine:1",
+      "familySeedKey": "728194:1:pine:1",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.5111139067313439,
+        10.265539242401669,
+        0.13434217465169485
+      ],
+      "halfSpan": 10.676160812097736,
+      "uvMin": [
+        0.626953125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.685546875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 11238,
+      "coveredPixelEquivalent": 1604.070588235294
+    },
+    {
+      "tile": 11,
+      "family": "pine:1",
+      "familySeedKey": "728194:1:pine:1",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.5111139067313439,
+        10.265539242401669,
+        0.13434217465169485
+      ],
+      "halfSpan": 10.676160812097736,
+      "uvMin": [
+        0.689453125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.748046875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 11238,
+      "coveredPixelEquivalent": 1491.2588235294118
+    },
+    {
+      "tile": 12,
+      "family": "pine:1",
+      "familySeedKey": "728194:1:pine:1",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.5111139067313439,
+        10.265539242401669,
+        0.13434217465169485
+      ],
+      "halfSpan": 10.676160812097736,
+      "uvMin": [
+        0.751953125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.810546875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 4308,
+      "coveredPixelEquivalent": 343.5529411764706
+    },
+    {
+      "tile": 13,
+      "family": "pine:1",
+      "familySeedKey": "728194:1:pine:1",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.5111139067313439,
+        10.265539242401669,
+        0.13434217465169485
+      ],
+      "halfSpan": 10.676160812097736,
+      "uvMin": [
+        0.814453125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.873046875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 4308,
+      "coveredPixelEquivalent": 335.87450980392157
+    },
+    {
+      "tile": 14,
+      "family": "pine:1",
+      "familySeedKey": "728194:1:pine:1",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.5111139067313439,
+        10.265539242401669,
+        0.13434217465169485
+      ],
+      "halfSpan": 10.676160812097736,
+      "uvMin": [
+        0.876953125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.935546875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 4308,
+      "coveredPixelEquivalent": 337.54901960784315
+    },
+    {
+      "tile": 15,
+      "family": "pine:1",
+      "familySeedKey": "728194:1:pine:1",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.5111139067313439,
+        10.265539242401669,
+        0.13434217465169485
+      ],
+      "halfSpan": 10.676160812097736,
+      "uvMin": [
+        0.939453125,
+        0.00390625
+      ],
+      "uvMax": [
+        0.998046875,
+        0.12109375
+      ],
+      "borrowedNearTriangles": 4308,
+      "coveredPixelEquivalent": 332.8588235294118
+    },
+    {
+      "tile": 16,
+      "family": "pine:2",
+      "familySeedKey": "728194:1:pine:2",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.3366059704458664,
+        10.294669363919583,
+        0.15545954876211088
+      ],
+      "halfSpan": 10.706456138476367,
+      "uvMin": [
+        0.001953125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.060546875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 11731,
+      "coveredPixelEquivalent": 1583.2274509803922
+    },
+    {
+      "tile": 17,
+      "family": "pine:2",
+      "familySeedKey": "728194:1:pine:2",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.3366059704458664,
+        10.294669363919583,
+        0.15545954876211088
+      ],
+      "halfSpan": 10.706456138476367,
+      "uvMin": [
+        0.064453125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.123046875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 11731,
+      "coveredPixelEquivalent": 1567.4627450980392
+    },
+    {
+      "tile": 18,
+      "family": "pine:2",
+      "familySeedKey": "728194:1:pine:2",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.3366059704458664,
+        10.294669363919583,
+        0.15545954876211088
+      ],
+      "halfSpan": 10.706456138476367,
+      "uvMin": [
+        0.126953125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.185546875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 11731,
+      "coveredPixelEquivalent": 1582.7450980392157
+    },
+    {
+      "tile": 19,
+      "family": "pine:2",
+      "familySeedKey": "728194:1:pine:2",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.3366059704458664,
+        10.294669363919583,
+        0.15545954876211088
+      ],
+      "halfSpan": 10.706456138476367,
+      "uvMin": [
+        0.189453125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.248046875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 11731,
+      "coveredPixelEquivalent": 1567.929411764706
+    },
+    {
+      "tile": 20,
+      "family": "pine:2",
+      "familySeedKey": "728194:1:pine:2",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.3366059704458664,
+        10.294669363919583,
+        0.15545954876211088
+      ],
+      "halfSpan": 10.706456138476367,
+      "uvMin": [
+        0.251953125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.310546875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 4411,
+      "coveredPixelEquivalent": 350.30980392156863
+    },
+    {
+      "tile": 21,
+      "family": "pine:2",
+      "familySeedKey": "728194:1:pine:2",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.3366059704458664,
+        10.294669363919583,
+        0.15545954876211088
+      ],
+      "halfSpan": 10.706456138476367,
+      "uvMin": [
+        0.314453125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.373046875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 4411,
+      "coveredPixelEquivalent": 353.278431372549
+    },
+    {
+      "tile": 22,
+      "family": "pine:2",
+      "familySeedKey": "728194:1:pine:2",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.3366059704458664,
+        10.294669363919583,
+        0.15545954876211088
+      ],
+      "halfSpan": 10.706456138476367,
+      "uvMin": [
+        0.376953125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.435546875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 4411,
+      "coveredPixelEquivalent": 358.3254901960784
+    },
+    {
+      "tile": 23,
+      "family": "pine:2",
+      "familySeedKey": "728194:1:pine:2",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.3366059704458664,
+        10.294669363919583,
+        0.15545954876211088
+      ],
+      "halfSpan": 10.706456138476367,
+      "uvMin": [
+        0.439453125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.498046875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 4411,
+      "coveredPixelEquivalent": 355.06666666666666
+    },
+    {
+      "tile": 24,
+      "family": "pine:3",
+      "familySeedKey": "728194:1:pine:3",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.3857747217054046,
+        10.276615621839245,
+        -0.45180442429039847
+      ],
+      "halfSpan": 10.687680246712814,
+      "uvMin": [
+        0.501953125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.560546875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 12040,
+      "coveredPixelEquivalent": 1658.5411764705882
+    },
+    {
+      "tile": 25,
+      "family": "pine:3",
+      "familySeedKey": "728194:1:pine:3",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.3857747217054046,
+        10.276615621839245,
+        -0.45180442429039847
+      ],
+      "halfSpan": 10.687680246712814,
+      "uvMin": [
+        0.564453125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.623046875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 12040,
+      "coveredPixelEquivalent": 1671.278431372549
+    },
+    {
+      "tile": 26,
+      "family": "pine:3",
+      "familySeedKey": "728194:1:pine:3",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.3857747217054046,
+        10.276615621839245,
+        -0.45180442429039847
+      ],
+      "halfSpan": 10.687680246712814,
+      "uvMin": [
+        0.626953125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.685546875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 12040,
+      "coveredPixelEquivalent": 1661.7960784313725
+    },
+    {
+      "tile": 27,
+      "family": "pine:3",
+      "familySeedKey": "728194:1:pine:3",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.3857747217054046,
+        10.276615621839245,
+        -0.45180442429039847
+      ],
+      "halfSpan": 10.687680246712814,
+      "uvMin": [
+        0.689453125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.748046875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 12040,
+      "coveredPixelEquivalent": 1673.3058823529411
+    },
+    {
+      "tile": 28,
+      "family": "pine:3",
+      "familySeedKey": "728194:1:pine:3",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.3857747217054046,
+        10.276615621839245,
+        -0.45180442429039847
+      ],
+      "halfSpan": 10.687680246712814,
+      "uvMin": [
+        0.751953125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.810546875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 4612,
+      "coveredPixelEquivalent": 349.3058823529412
+    },
+    {
+      "tile": 29,
+      "family": "pine:3",
+      "familySeedKey": "728194:1:pine:3",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.3857747217054046,
+        10.276615621839245,
+        -0.45180442429039847
+      ],
+      "halfSpan": 10.687680246712814,
+      "uvMin": [
+        0.814453125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.873046875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 4612,
+      "coveredPixelEquivalent": 352.05882352941177
+    },
+    {
+      "tile": 30,
+      "family": "pine:3",
+      "familySeedKey": "728194:1:pine:3",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.3857747217054046,
+        10.276615621839245,
+        -0.45180442429039847
+      ],
+      "halfSpan": 10.687680246712814,
+      "uvMin": [
+        0.876953125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.935546875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 4612,
+      "coveredPixelEquivalent": 345.78823529411767
+    },
+    {
+      "tile": 31,
+      "family": "pine:3",
+      "familySeedKey": "728194:1:pine:3",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.3857747217054046,
+        10.276615621839245,
+        -0.45180442429039847
+      ],
+      "halfSpan": 10.687680246712814,
+      "uvMin": [
+        0.939453125,
+        0.12890625
+      ],
+      "uvMax": [
+        0.998046875,
+        0.24609375
+      ],
+      "borrowedNearTriangles": 4612,
+      "coveredPixelEquivalent": 350.54901960784315
+    },
+    {
+      "tile": 32,
+      "family": "pine:4",
+      "familySeedKey": "728194:1:pine:4",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.5038777616790653,
+        10.31198366114236,
+        -0.15973885876147875
+      ],
+      "halfSpan": 10.724463007588055,
+      "uvMin": [
+        0.001953125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.060546875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 12617,
+      "coveredPixelEquivalent": 1723.3529411764705
+    },
+    {
+      "tile": 33,
+      "family": "pine:4",
+      "familySeedKey": "728194:1:pine:4",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.5038777616790653,
+        10.31198366114236,
+        -0.15973885876147875
+      ],
+      "halfSpan": 10.724463007588055,
+      "uvMin": [
+        0.064453125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.123046875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 12617,
+      "coveredPixelEquivalent": 1720.0901960784313
+    },
+    {
+      "tile": 34,
+      "family": "pine:4",
+      "familySeedKey": "728194:1:pine:4",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.5038777616790653,
+        10.31198366114236,
+        -0.15973885876147875
+      ],
+      "halfSpan": 10.724463007588055,
+      "uvMin": [
+        0.126953125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.185546875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 12617,
+      "coveredPixelEquivalent": 1723.8078431372548
+    },
+    {
+      "tile": 35,
+      "family": "pine:4",
+      "familySeedKey": "728194:1:pine:4",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.5038777616790653,
+        10.31198366114236,
+        -0.15973885876147875
+      ],
+      "halfSpan": 10.724463007588055,
+      "uvMin": [
+        0.189453125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.248046875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 12617,
+      "coveredPixelEquivalent": 1727.1019607843136
+    },
+    {
+      "tile": 36,
+      "family": "pine:4",
+      "familySeedKey": "728194:1:pine:4",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.5038777616790653,
+        10.31198366114236,
+        -0.15973885876147875
+      ],
+      "halfSpan": 10.724463007588055,
+      "uvMin": [
+        0.251953125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.310546875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 4727,
+      "coveredPixelEquivalent": 358.33725490196076
+    },
+    {
+      "tile": 37,
+      "family": "pine:4",
+      "familySeedKey": "728194:1:pine:4",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.5038777616790653,
+        10.31198366114236,
+        -0.15973885876147875
+      ],
+      "halfSpan": 10.724463007588055,
+      "uvMin": [
+        0.314453125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.373046875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 4727,
+      "coveredPixelEquivalent": 357.6235294117647
+    },
+    {
+      "tile": 38,
+      "family": "pine:4",
+      "familySeedKey": "728194:1:pine:4",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.5038777616790653,
+        10.31198366114236,
+        -0.15973885876147875
+      ],
+      "halfSpan": 10.724463007588055,
+      "uvMin": [
+        0.376953125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.435546875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 4727,
+      "coveredPixelEquivalent": 356.8509803921569
+    },
+    {
+      "tile": 39,
+      "family": "pine:4",
+      "familySeedKey": "728194:1:pine:4",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.5038777616790653,
+        10.31198366114236,
+        -0.15973885876147875
+      ],
+      "halfSpan": 10.724463007588055,
+      "uvMin": [
+        0.439453125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.498046875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 4727,
+      "coveredPixelEquivalent": 368.3843137254902
+    },
+    {
+      "tile": 40,
+      "family": "pine:5",
+      "familySeedKey": "728194:1:pine:5",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        0.11573551163065421,
+        10.297776554942965,
+        0.3677991295997485
+      ],
+      "halfSpan": 10.709687617140684,
+      "uvMin": [
+        0.501953125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.560546875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 12153,
+      "coveredPixelEquivalent": 1741.5843137254901
+    },
+    {
+      "tile": 41,
+      "family": "pine:5",
+      "familySeedKey": "728194:1:pine:5",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        0.11573551163065421,
+        10.297776554942965,
+        0.3677991295997485
+      ],
+      "halfSpan": 10.709687617140684,
+      "uvMin": [
+        0.564453125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.623046875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 12153,
+      "coveredPixelEquivalent": 1781.9843137254902
+    },
+    {
+      "tile": 42,
+      "family": "pine:5",
+      "familySeedKey": "728194:1:pine:5",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        0.11573551163065421,
+        10.297776554942965,
+        0.3677991295997485
+      ],
+      "halfSpan": 10.709687617140684,
+      "uvMin": [
+        0.626953125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.685546875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 12153,
+      "coveredPixelEquivalent": 1743.3254901960784
+    },
+    {
+      "tile": 43,
+      "family": "pine:5",
+      "familySeedKey": "728194:1:pine:5",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        0.11573551163065421,
+        10.297776554942965,
+        0.3677991295997485
+      ],
+      "halfSpan": 10.709687617140684,
+      "uvMin": [
+        0.689453125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.748046875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 12153,
+      "coveredPixelEquivalent": 1780.270588235294
+    },
+    {
+      "tile": 44,
+      "family": "pine:5",
+      "familySeedKey": "728194:1:pine:5",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        0.11573551163065421,
+        10.297776554942965,
+        0.3677991295997485
+      ],
+      "halfSpan": 10.709687617140684,
+      "uvMin": [
+        0.751953125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.810546875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 4557,
+      "coveredPixelEquivalent": 352.5607843137255
+    },
+    {
+      "tile": 45,
+      "family": "pine:5",
+      "familySeedKey": "728194:1:pine:5",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        0.11573551163065421,
+        10.297776554942965,
+        0.3677991295997485
+      ],
+      "halfSpan": 10.709687617140684,
+      "uvMin": [
+        0.814453125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.873046875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 4557,
+      "coveredPixelEquivalent": 368.4
+    },
+    {
+      "tile": 46,
+      "family": "pine:5",
+      "familySeedKey": "728194:1:pine:5",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        0.11573551163065421,
+        10.297776554942965,
+        0.3677991295997485
+      ],
+      "halfSpan": 10.709687617140684,
+      "uvMin": [
+        0.876953125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.935546875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 4557,
+      "coveredPixelEquivalent": 353.3176470588235
+    },
+    {
+      "tile": 47,
+      "family": "pine:5",
+      "familySeedKey": "728194:1:pine:5",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        0.11573551163065421,
+        10.297776554942965,
+        0.3677991295997485
+      ],
+      "halfSpan": 10.709687617140684,
+      "uvMin": [
+        0.939453125,
+        0.25390625
+      ],
+      "uvMax": [
+        0.998046875,
+        0.37109375
+      ],
+      "borrowedNearTriangles": 4557,
+      "coveredPixelEquivalent": 363.64313725490194
+    },
+    {
+      "tile": 48,
+      "family": "pine:6",
+      "familySeedKey": "728194:1:pine:6",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        0.08932507965721115,
+        10.307975135791537,
+        -0.5411470302052113
+      ],
+      "halfSpan": 10.7202941412232,
+      "uvMin": [
+        0.001953125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.060546875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 11997,
+      "coveredPixelEquivalent": 1697.035294117647
+    },
+    {
+      "tile": 49,
+      "family": "pine:6",
+      "familySeedKey": "728194:1:pine:6",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        0.08932507965721115,
+        10.307975135791537,
+        -0.5411470302052113
+      ],
+      "halfSpan": 10.7202941412232,
+      "uvMin": [
+        0.064453125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.123046875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 11997,
+      "coveredPixelEquivalent": 1684.8823529411766
+    },
+    {
+      "tile": 50,
+      "family": "pine:6",
+      "familySeedKey": "728194:1:pine:6",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        0.08932507965721115,
+        10.307975135791537,
+        -0.5411470302052113
+      ],
+      "halfSpan": 10.7202941412232,
+      "uvMin": [
+        0.126953125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.185546875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 11997,
+      "coveredPixelEquivalent": 1692.2941176470588
+    },
+    {
+      "tile": 51,
+      "family": "pine:6",
+      "familySeedKey": "728194:1:pine:6",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        0.08932507965721115,
+        10.307975135791537,
+        -0.5411470302052113
+      ],
+      "halfSpan": 10.7202941412232,
+      "uvMin": [
+        0.189453125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.248046875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 11997,
+      "coveredPixelEquivalent": 1683.9137254901962
+    },
+    {
+      "tile": 52,
+      "family": "pine:6",
+      "familySeedKey": "728194:1:pine:6",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        0.08932507965721115,
+        10.307975135791537,
+        -0.5411470302052113
+      ],
+      "halfSpan": 10.7202941412232,
+      "uvMin": [
+        0.251953125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.310546875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 4545,
+      "coveredPixelEquivalent": 338.956862745098
+    },
+    {
+      "tile": 53,
+      "family": "pine:6",
+      "familySeedKey": "728194:1:pine:6",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        0.08932507965721115,
+        10.307975135791537,
+        -0.5411470302052113
+      ],
+      "halfSpan": 10.7202941412232,
+      "uvMin": [
+        0.314453125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.373046875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 4545,
+      "coveredPixelEquivalent": 332.05882352941177
+    },
+    {
+      "tile": 54,
+      "family": "pine:6",
+      "familySeedKey": "728194:1:pine:6",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        0.08932507965721115,
+        10.307975135791537,
+        -0.5411470302052113
+      ],
+      "halfSpan": 10.7202941412232,
+      "uvMin": [
+        0.376953125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.435546875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 4545,
+      "coveredPixelEquivalent": 337.9647058823529
+    },
+    {
+      "tile": 55,
+      "family": "pine:6",
+      "familySeedKey": "728194:1:pine:6",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        0.08932507965721115,
+        10.307975135791537,
+        -0.5411470302052113
+      ],
+      "halfSpan": 10.7202941412232,
+      "uvMin": [
+        0.439453125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.498046875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 4545,
+      "coveredPixelEquivalent": 328.7921568627451
+    },
+    {
+      "tile": 56,
+      "family": "pine:7",
+      "familySeedKey": "728194:1:pine:7",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.3344488585160228,
+        10.296836183043622,
+        0.40229285922464486
+      ],
+      "halfSpan": 10.708709630365368,
+      "uvMin": [
+        0.501953125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.560546875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 13021,
+      "coveredPixelEquivalent": 1748.521568627451
+    },
+    {
+      "tile": 57,
+      "family": "pine:7",
+      "familySeedKey": "728194:1:pine:7",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.3344488585160228,
+        10.296836183043622,
+        0.40229285922464486
+      ],
+      "halfSpan": 10.708709630365368,
+      "uvMin": [
+        0.564453125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.623046875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 13021,
+      "coveredPixelEquivalent": 1837.3176470588235
+    },
+    {
+      "tile": 58,
+      "family": "pine:7",
+      "familySeedKey": "728194:1:pine:7",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.3344488585160228,
+        10.296836183043622,
+        0.40229285922464486
+      ],
+      "halfSpan": 10.708709630365368,
+      "uvMin": [
+        0.626953125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.685546875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 13021,
+      "coveredPixelEquivalent": 1741.8039215686274
+    },
+    {
+      "tile": 59,
+      "family": "pine:7",
+      "familySeedKey": "728194:1:pine:7",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.3344488585160228,
+        10.296836183043622,
+        0.40229285922464486
+      ],
+      "halfSpan": 10.708709630365368,
+      "uvMin": [
+        0.689453125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.748046875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 13021,
+      "coveredPixelEquivalent": 1835.870588235294
+    },
+    {
+      "tile": 60,
+      "family": "pine:7",
+      "familySeedKey": "728194:1:pine:7",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.3344488585160228,
+        10.296836183043622,
+        0.40229285922464486
+      ],
+      "halfSpan": 10.708709630365368,
+      "uvMin": [
+        0.751953125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.810546875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 4873,
+      "coveredPixelEquivalent": 359.0470588235294
+    },
+    {
+      "tile": 61,
+      "family": "pine:7",
+      "familySeedKey": "728194:1:pine:7",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.3344488585160228,
+        10.296836183043622,
+        0.40229285922464486
+      ],
+      "halfSpan": 10.708709630365368,
+      "uvMin": [
+        0.814453125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.873046875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 4873,
+      "coveredPixelEquivalent": 377.6823529411765
+    },
+    {
+      "tile": 62,
+      "family": "pine:7",
+      "familySeedKey": "728194:1:pine:7",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.3344488585160228,
+        10.296836183043622,
+        0.40229285922464486
+      ],
+      "halfSpan": 10.708709630365368,
+      "uvMin": [
+        0.876953125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.935546875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 4873,
+      "coveredPixelEquivalent": 354.5450980392157
+    },
+    {
+      "tile": 63,
+      "family": "pine:7",
+      "familySeedKey": "728194:1:pine:7",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.3344488585160228,
+        10.296836183043622,
+        0.40229285922464486
+      ],
+      "halfSpan": 10.708709630365368,
+      "uvMin": [
+        0.939453125,
+        0.37890625
+      ],
+      "uvMax": [
+        0.998046875,
+        0.49609375
+      ],
+      "borrowedNearTriangles": 4873,
+      "coveredPixelEquivalent": 374.92549019607844
+    },
+    {
+      "tile": 64,
+      "family": "broadleaf:0",
+      "familySeedKey": "728194:1:broadleaf:0",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.6307500415326182,
+        10.333975104675664,
+        -0.7319225055913048
+      ],
+      "halfSpan": 11.299018809427166,
+      "uvMin": [
+        0.001953125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.060546875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2355.4901960784314
+    },
+    {
+      "tile": 65,
+      "family": "broadleaf:0",
+      "familySeedKey": "728194:1:broadleaf:0",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.6307500415326182,
+        10.333975104675664,
+        -0.7319225055913048
+      ],
+      "halfSpan": 11.299018809427166,
+      "uvMin": [
+        0.064453125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.123046875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2397.654901960784
+    },
+    {
+      "tile": 66,
+      "family": "broadleaf:0",
+      "familySeedKey": "728194:1:broadleaf:0",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.6307500415326182,
+        10.333975104675664,
+        -0.7319225055913048
+      ],
+      "halfSpan": 11.299018809427166,
+      "uvMin": [
+        0.126953125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.185546875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2349.235294117647
+    },
+    {
+      "tile": 67,
+      "family": "broadleaf:0",
+      "familySeedKey": "728194:1:broadleaf:0",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.6307500415326182,
+        10.333975104675664,
+        -0.7319225055913048
+      ],
+      "halfSpan": 11.299018809427166,
+      "uvMin": [
+        0.189453125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.248046875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2399.2392156862743
+    },
+    {
+      "tile": 68,
+      "family": "broadleaf:0",
+      "familySeedKey": "728194:1:broadleaf:0",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.6307500415326182,
+        10.333975104675664,
+        -0.7319225055913048
+      ],
+      "halfSpan": 11.299018809427166,
+      "uvMin": [
+        0.251953125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.310546875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 502.69803921568626
+    },
+    {
+      "tile": 69,
+      "family": "broadleaf:0",
+      "familySeedKey": "728194:1:broadleaf:0",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.6307500415326182,
+        10.333975104675664,
+        -0.7319225055913048
+      ],
+      "halfSpan": 11.299018809427166,
+      "uvMin": [
+        0.314453125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.373046875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 483.90588235294115
+    },
+    {
+      "tile": 70,
+      "family": "broadleaf:0",
+      "familySeedKey": "728194:1:broadleaf:0",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.6307500415326182,
+        10.333975104675664,
+        -0.7319225055913048
+      ],
+      "halfSpan": 11.299018809427166,
+      "uvMin": [
+        0.376953125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.435546875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 503.9647058823529
+    },
+    {
+      "tile": 71,
+      "family": "broadleaf:0",
+      "familySeedKey": "728194:1:broadleaf:0",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.6307500415326182,
+        10.333975104675664,
+        -0.7319225055913048
+      ],
+      "halfSpan": 11.299018809427166,
+      "uvMin": [
+        0.439453125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.498046875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 480.63529411764705
+    },
+    {
+      "tile": 72,
+      "family": "broadleaf:1",
+      "familySeedKey": "728194:1:broadleaf:1",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        1.1605663031518745,
+        10.485349578519932,
+        -1.067588467971596
+      ],
+      "halfSpan": 11.487251536171577,
+      "uvMin": [
+        0.501953125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.560546875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2251.2549019607845
+    },
+    {
+      "tile": 73,
+      "family": "broadleaf:1",
+      "familySeedKey": "728194:1:broadleaf:1",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        1.1605663031518745,
+        10.485349578519932,
+        -1.067588467971596
+      ],
+      "halfSpan": 11.487251536171577,
+      "uvMin": [
+        0.564453125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.623046875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2237.235294117647
+    },
+    {
+      "tile": 74,
+      "family": "broadleaf:1",
+      "familySeedKey": "728194:1:broadleaf:1",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        1.1605663031518745,
+        10.485349578519932,
+        -1.067588467971596
+      ],
+      "halfSpan": 11.487251536171577,
+      "uvMin": [
+        0.626953125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.685546875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2250.9803921568628
+    },
+    {
+      "tile": 75,
+      "family": "broadleaf:1",
+      "familySeedKey": "728194:1:broadleaf:1",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        1.1605663031518745,
+        10.485349578519932,
+        -1.067588467971596
+      ],
+      "halfSpan": 11.487251536171577,
+      "uvMin": [
+        0.689453125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.748046875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2244.133333333333
+    },
+    {
+      "tile": 76,
+      "family": "broadleaf:1",
+      "familySeedKey": "728194:1:broadleaf:1",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        1.1605663031518745,
+        10.485349578519932,
+        -1.067588467971596
+      ],
+      "halfSpan": 11.487251536171577,
+      "uvMin": [
+        0.751953125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.810546875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 441.39607843137253
+    },
+    {
+      "tile": 77,
+      "family": "broadleaf:1",
+      "familySeedKey": "728194:1:broadleaf:1",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        1.1605663031518745,
+        10.485349578519932,
+        -1.067588467971596
+      ],
+      "halfSpan": 11.487251536171577,
+      "uvMin": [
+        0.814453125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.873046875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 437.3450980392157
+    },
+    {
+      "tile": 78,
+      "family": "broadleaf:1",
+      "familySeedKey": "728194:1:broadleaf:1",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        1.1605663031518745,
+        10.485349578519932,
+        -1.067588467971596
+      ],
+      "halfSpan": 11.487251536171577,
+      "uvMin": [
+        0.876953125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.935546875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 447.92549019607844
+    },
+    {
+      "tile": 79,
+      "family": "broadleaf:1",
+      "familySeedKey": "728194:1:broadleaf:1",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        1.1605663031518745,
+        10.485349578519932,
+        -1.067588467971596
+      ],
+      "halfSpan": 11.487251536171577,
+      "uvMin": [
+        0.939453125,
+        0.50390625
+      ],
+      "uvMax": [
+        0.998046875,
+        0.62109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 435.03137254901964
+    },
+    {
+      "tile": 80,
+      "family": "broadleaf:2",
+      "familySeedKey": "728194:1:broadleaf:2",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.3379014910785618,
+        10.484545029904375,
+        -0.5177330954447563
+      ],
+      "halfSpan": 11.365049680709074,
+      "uvMin": [
+        0.001953125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.060546875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 8985,
+      "coveredPixelEquivalent": 2615.9607843137255
+    },
+    {
+      "tile": 81,
+      "family": "broadleaf:2",
+      "familySeedKey": "728194:1:broadleaf:2",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.3379014910785618,
+        10.484545029904375,
+        -0.5177330954447563
+      ],
+      "halfSpan": 11.365049680709074,
+      "uvMin": [
+        0.064453125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.123046875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 8985,
+      "coveredPixelEquivalent": 2410.564705882353
+    },
+    {
+      "tile": 82,
+      "family": "broadleaf:2",
+      "familySeedKey": "728194:1:broadleaf:2",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.3379014910785618,
+        10.484545029904375,
+        -0.5177330954447563
+      ],
+      "halfSpan": 11.365049680709074,
+      "uvMin": [
+        0.126953125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.185546875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 8985,
+      "coveredPixelEquivalent": 2614.956862745098
+    },
+    {
+      "tile": 83,
+      "family": "broadleaf:2",
+      "familySeedKey": "728194:1:broadleaf:2",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.3379014910785618,
+        10.484545029904375,
+        -0.5177330954447563
+      ],
+      "halfSpan": 11.365049680709074,
+      "uvMin": [
+        0.189453125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.248046875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 8985,
+      "coveredPixelEquivalent": 2410.2980392156865
+    },
+    {
+      "tile": 84,
+      "family": "broadleaf:2",
+      "familySeedKey": "728194:1:broadleaf:2",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.3379014910785618,
+        10.484545029904375,
+        -0.5177330954447563
+      ],
+      "halfSpan": 11.365049680709074,
+      "uvMin": [
+        0.251953125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.310546875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 5673,
+      "coveredPixelEquivalent": 461.40784313725493
+    },
+    {
+      "tile": 85,
+      "family": "broadleaf:2",
+      "familySeedKey": "728194:1:broadleaf:2",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.3379014910785618,
+        10.484545029904375,
+        -0.5177330954447563
+      ],
+      "halfSpan": 11.365049680709074,
+      "uvMin": [
+        0.314453125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.373046875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 5673,
+      "coveredPixelEquivalent": 435.62745098039215
+    },
+    {
+      "tile": 86,
+      "family": "broadleaf:2",
+      "familySeedKey": "728194:1:broadleaf:2",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.3379014910785618,
+        10.484545029904375,
+        -0.5177330954447563
+      ],
+      "halfSpan": 11.365049680709074,
+      "uvMin": [
+        0.376953125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.435546875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 5673,
+      "coveredPixelEquivalent": 461.921568627451
+    },
+    {
+      "tile": 87,
+      "family": "broadleaf:2",
+      "familySeedKey": "728194:1:broadleaf:2",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.3379014910785618,
+        10.484545029904375,
+        -0.5177330954447563
+      ],
+      "halfSpan": 11.365049680709074,
+      "uvMin": [
+        0.439453125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.498046875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 5673,
+      "coveredPixelEquivalent": 425.84705882352944
+    },
+    {
+      "tile": 88,
+      "family": "broadleaf:3",
+      "familySeedKey": "728194:1:broadleaf:3",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.04032843916992901,
+        10.418486888728426,
+        0.09589540235521632
+      ],
+      "halfSpan": 11.307914734015624,
+      "uvMin": [
+        0.501953125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.560546875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2259.713725490196
+    },
+    {
+      "tile": 89,
+      "family": "broadleaf:3",
+      "familySeedKey": "728194:1:broadleaf:3",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.04032843916992901,
+        10.418486888728426,
+        0.09589540235521632
+      ],
+      "halfSpan": 11.307914734015624,
+      "uvMin": [
+        0.564453125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.623046875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2354.0823529411764
+    },
+    {
+      "tile": 90,
+      "family": "broadleaf:3",
+      "familySeedKey": "728194:1:broadleaf:3",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.04032843916992901,
+        10.418486888728426,
+        0.09589540235521632
+      ],
+      "halfSpan": 11.307914734015624,
+      "uvMin": [
+        0.626953125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.685546875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2261.4901960784314
+    },
+    {
+      "tile": 91,
+      "family": "broadleaf:3",
+      "familySeedKey": "728194:1:broadleaf:3",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.04032843916992901,
+        10.418486888728426,
+        0.09589540235521632
+      ],
+      "halfSpan": 11.307914734015624,
+      "uvMin": [
+        0.689453125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.748046875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2355.894117647059
+    },
+    {
+      "tile": 92,
+      "family": "broadleaf:3",
+      "familySeedKey": "728194:1:broadleaf:3",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.04032843916992901,
+        10.418486888728426,
+        0.09589540235521632
+      ],
+      "halfSpan": 11.307914734015624,
+      "uvMin": [
+        0.751953125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.810546875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 460.61960784313726
+    },
+    {
+      "tile": 93,
+      "family": "broadleaf:3",
+      "familySeedKey": "728194:1:broadleaf:3",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.04032843916992901,
+        10.418486888728426,
+        0.09589540235521632
+      ],
+      "halfSpan": 11.307914734015624,
+      "uvMin": [
+        0.814453125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.873046875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 458.8666666666667
+    },
+    {
+      "tile": 94,
+      "family": "broadleaf:3",
+      "familySeedKey": "728194:1:broadleaf:3",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.04032843916992901,
+        10.418486888728426,
+        0.09589540235521632
+      ],
+      "halfSpan": 11.307914734015624,
+      "uvMin": [
+        0.876953125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.935546875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 464.6392156862745
+    },
+    {
+      "tile": 95,
+      "family": "broadleaf:3",
+      "familySeedKey": "728194:1:broadleaf:3",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.04032843916992901,
+        10.418486888728426,
+        0.09589540235521632
+      ],
+      "halfSpan": 11.307914734015624,
+      "uvMin": [
+        0.939453125,
+        0.62890625
+      ],
+      "uvMax": [
+        0.998046875,
+        0.74609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 456.3137254901961
+    },
+    {
+      "tile": 96,
+      "family": "broadleaf:4",
+      "familySeedKey": "728194:1:broadleaf:4",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        -1.3220113250252172,
+        10.335284889742127,
+        -0.807631847864144
+      ],
+      "halfSpan": 12.206637882819987,
+      "uvMin": [
+        0.001953125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.060546875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 1966.0666666666666
+    },
+    {
+      "tile": 97,
+      "family": "broadleaf:4",
+      "familySeedKey": "728194:1:broadleaf:4",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -1.3220113250252172,
+        10.335284889742127,
+        -0.807631847864144
+      ],
+      "halfSpan": 12.206637882819987,
+      "uvMin": [
+        0.064453125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.123046875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 1989.6470588235295
+    },
+    {
+      "tile": 98,
+      "family": "broadleaf:4",
+      "familySeedKey": "728194:1:broadleaf:4",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -1.3220113250252172,
+        10.335284889742127,
+        -0.807631847864144
+      ],
+      "halfSpan": 12.206637882819987,
+      "uvMin": [
+        0.126953125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.185546875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 1966.7803921568627
+    },
+    {
+      "tile": 99,
+      "family": "broadleaf:4",
+      "familySeedKey": "728194:1:broadleaf:4",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -1.3220113250252172,
+        10.335284889742127,
+        -0.807631847864144
+      ],
+      "halfSpan": 12.206637882819987,
+      "uvMin": [
+        0.189453125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.248046875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 1979.6549019607844
+    },
+    {
+      "tile": 100,
+      "family": "broadleaf:4",
+      "familySeedKey": "728194:1:broadleaf:4",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        -1.3220113250252172,
+        10.335284889742127,
+        -0.807631847864144
+      ],
+      "halfSpan": 12.206637882819987,
+      "uvMin": [
+        0.251953125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.310546875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 380.7921568627451
+    },
+    {
+      "tile": 101,
+      "family": "broadleaf:4",
+      "familySeedKey": "728194:1:broadleaf:4",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -1.3220113250252172,
+        10.335284889742127,
+        -0.807631847864144
+      ],
+      "halfSpan": 12.206637882819987,
+      "uvMin": [
+        0.314453125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.373046875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 418.321568627451
+    },
+    {
+      "tile": 102,
+      "family": "broadleaf:4",
+      "familySeedKey": "728194:1:broadleaf:4",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -1.3220113250252172,
+        10.335284889742127,
+        -0.807631847864144
+      ],
+      "halfSpan": 12.206637882819987,
+      "uvMin": [
+        0.376953125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.435546875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 382.80392156862746
+    },
+    {
+      "tile": 103,
+      "family": "broadleaf:4",
+      "familySeedKey": "728194:1:broadleaf:4",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -1.3220113250252172,
+        10.335284889742127,
+        -0.807631847864144
+      ],
+      "halfSpan": 12.206637882819987,
+      "uvMin": [
+        0.439453125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.498046875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 419.54901960784315
+    },
+    {
+      "tile": 104,
+      "family": "broadleaf:5",
+      "familySeedKey": "728194:1:broadleaf:5",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.7282604831625861,
+        10.498369620476666,
+        -0.1979766179186413
+      ],
+      "halfSpan": 11.745268580220081,
+      "uvMin": [
+        0.501953125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.560546875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2122.690196078431
+    },
+    {
+      "tile": 105,
+      "family": "broadleaf:5",
+      "familySeedKey": "728194:1:broadleaf:5",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.7282604831625861,
+        10.498369620476666,
+        -0.1979766179186413
+      ],
+      "halfSpan": 11.745268580220081,
+      "uvMin": [
+        0.564453125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.623046875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2273.5529411764705
+    },
+    {
+      "tile": 106,
+      "family": "broadleaf:5",
+      "familySeedKey": "728194:1:broadleaf:5",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.7282604831625861,
+        10.498369620476666,
+        -0.1979766179186413
+      ],
+      "halfSpan": 11.745268580220081,
+      "uvMin": [
+        0.626953125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.685546875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2127.41568627451
+    },
+    {
+      "tile": 107,
+      "family": "broadleaf:5",
+      "familySeedKey": "728194:1:broadleaf:5",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.7282604831625861,
+        10.498369620476666,
+        -0.1979766179186413
+      ],
+      "halfSpan": 11.745268580220081,
+      "uvMin": [
+        0.689453125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.748046875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2279.6235294117646
+    },
+    {
+      "tile": 108,
+      "family": "broadleaf:5",
+      "familySeedKey": "728194:1:broadleaf:5",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        -0.7282604831625861,
+        10.498369620476666,
+        -0.1979766179186413
+      ],
+      "halfSpan": 11.745268580220081,
+      "uvMin": [
+        0.751953125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.810546875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 428.60392156862747
+    },
+    {
+      "tile": 109,
+      "family": "broadleaf:5",
+      "familySeedKey": "728194:1:broadleaf:5",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        -0.7282604831625861,
+        10.498369620476666,
+        -0.1979766179186413
+      ],
+      "halfSpan": 11.745268580220081,
+      "uvMin": [
+        0.814453125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.873046875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 453.8666666666667
+    },
+    {
+      "tile": 110,
+      "family": "broadleaf:5",
+      "familySeedKey": "728194:1:broadleaf:5",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        -0.7282604831625861,
+        10.498369620476666,
+        -0.1979766179186413
+      ],
+      "halfSpan": 11.745268580220081,
+      "uvMin": [
+        0.876953125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.935546875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 429.88235294117646
+    },
+    {
+      "tile": 111,
+      "family": "broadleaf:5",
+      "familySeedKey": "728194:1:broadleaf:5",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        -0.7282604831625861,
+        10.498369620476666,
+        -0.1979766179186413
+      ],
+      "halfSpan": 11.745268580220081,
+      "uvMin": [
+        0.939453125,
+        0.75390625
+      ],
+      "uvMax": [
+        0.998046875,
+        0.87109375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 460.88235294117646
+    },
+    {
+      "tile": 112,
+      "family": "broadleaf:6",
+      "familySeedKey": "728194:1:broadleaf:6",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        1.330417900770056,
+        10.56834519517373,
+        -0.6587728911256203
+      ],
+      "halfSpan": 11.40368658084709,
+      "uvMin": [
+        0.001953125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.060546875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2181.541176470588
+    },
+    {
+      "tile": 113,
+      "family": "broadleaf:6",
+      "familySeedKey": "728194:1:broadleaf:6",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        1.330417900770056,
+        10.56834519517373,
+        -0.6587728911256203
+      ],
+      "halfSpan": 11.40368658084709,
+      "uvMin": [
+        0.064453125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.123046875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2392.4
+    },
+    {
+      "tile": 114,
+      "family": "broadleaf:6",
+      "familySeedKey": "728194:1:broadleaf:6",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        1.330417900770056,
+        10.56834519517373,
+        -0.6587728911256203
+      ],
+      "halfSpan": 11.40368658084709,
+      "uvMin": [
+        0.126953125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.185546875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2183.635294117647
+    },
+    {
+      "tile": 115,
+      "family": "broadleaf:6",
+      "familySeedKey": "728194:1:broadleaf:6",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        1.330417900770056,
+        10.56834519517373,
+        -0.6587728911256203
+      ],
+      "halfSpan": 11.40368658084709,
+      "uvMin": [
+        0.189453125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.248046875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2390.1019607843136
+    },
+    {
+      "tile": 116,
+      "family": "broadleaf:6",
+      "familySeedKey": "728194:1:broadleaf:6",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        1.330417900770056,
+        10.56834519517373,
+        -0.6587728911256203
+      ],
+      "halfSpan": 11.40368658084709,
+      "uvMin": [
+        0.251953125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.310546875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 439.3607843137255
+    },
+    {
+      "tile": 117,
+      "family": "broadleaf:6",
+      "familySeedKey": "728194:1:broadleaf:6",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        1.330417900770056,
+        10.56834519517373,
+        -0.6587728911256203
+      ],
+      "halfSpan": 11.40368658084709,
+      "uvMin": [
+        0.314453125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.373046875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 468.878431372549
+    },
+    {
+      "tile": 118,
+      "family": "broadleaf:6",
+      "familySeedKey": "728194:1:broadleaf:6",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        1.330417900770056,
+        10.56834519517373,
+        -0.6587728911256203
+      ],
+      "halfSpan": 11.40368658084709,
+      "uvMin": [
+        0.376953125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.435546875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 444.38823529411764
+    },
+    {
+      "tile": 119,
+      "family": "broadleaf:6",
+      "familySeedKey": "728194:1:broadleaf:6",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        1.330417900770056,
+        10.56834519517373,
+        -0.6587728911256203
+      ],
+      "halfSpan": 11.40368658084709,
+      "uvMin": [
+        0.439453125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.498046875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 467.60392156862747
+    },
+    {
+      "tile": 120,
+      "family": "broadleaf:7",
+      "familySeedKey": "728194:1:broadleaf:7",
+      "state": "live",
+      "azimuthRadians": 0,
+      "centre": [
+        1.329561403285362,
+        10.354089901160998,
+        1.358675141461434
+      ],
+      "halfSpan": 11.5380742377071,
+      "uvMin": [
+        0.501953125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.560546875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2368.211764705882
+    },
+    {
+      "tile": 121,
+      "family": "broadleaf:7",
+      "familySeedKey": "728194:1:broadleaf:7",
+      "state": "live",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        1.329561403285362,
+        10.354089901160998,
+        1.358675141461434
+      ],
+      "halfSpan": 11.5380742377071,
+      "uvMin": [
+        0.564453125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.623046875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2205.823529411765
+    },
+    {
+      "tile": 122,
+      "family": "broadleaf:7",
+      "familySeedKey": "728194:1:broadleaf:7",
+      "state": "live",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        1.329561403285362,
+        10.354089901160998,
+        1.358675141461434
+      ],
+      "halfSpan": 11.5380742377071,
+      "uvMin": [
+        0.626953125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.685546875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2364.443137254902
+    },
+    {
+      "tile": 123,
+      "family": "broadleaf:7",
+      "familySeedKey": "728194:1:broadleaf:7",
+      "state": "live",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        1.329561403285362,
+        10.354089901160998,
+        1.358675141461434
+      ],
+      "halfSpan": 11.5380742377071,
+      "uvMin": [
+        0.689453125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.748046875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 7626,
+      "coveredPixelEquivalent": 2207.0745098039215
+    },
+    {
+      "tile": 124,
+      "family": "broadleaf:7",
+      "familySeedKey": "728194:1:broadleaf:7",
+      "state": "leafless",
+      "azimuthRadians": 0,
+      "centre": [
+        1.329561403285362,
+        10.354089901160998,
+        1.358675141461434
+      ],
+      "halfSpan": 11.5380742377071,
+      "uvMin": [
+        0.751953125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.810546875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 477.1372549019608
+    },
+    {
+      "tile": 125,
+      "family": "broadleaf:7",
+      "familySeedKey": "728194:1:broadleaf:7",
+      "state": "leafless",
+      "azimuthRadians": 1.5707963267948966,
+      "centre": [
+        1.329561403285362,
+        10.354089901160998,
+        1.358675141461434
+      ],
+      "halfSpan": 11.5380742377071,
+      "uvMin": [
+        0.814453125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.873046875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 466.38039215686274
+    },
+    {
+      "tile": 126,
+      "family": "broadleaf:7",
+      "familySeedKey": "728194:1:broadleaf:7",
+      "state": "leafless",
+      "azimuthRadians": 3.141592653589793,
+      "centre": [
+        1.329561403285362,
+        10.354089901160998,
+        1.358675141461434
+      ],
+      "halfSpan": 11.5380742377071,
+      "uvMin": [
+        0.876953125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.935546875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 477.3411764705882
+    },
+    {
+      "tile": 127,
+      "family": "broadleaf:7",
+      "familySeedKey": "728194:1:broadleaf:7",
+      "state": "leafless",
+      "azimuthRadians": 4.71238898038469,
+      "centre": [
+        1.329561403285362,
+        10.354089901160998,
+        1.358675141461434
+      ],
+      "halfSpan": 11.5380742377071,
+      "uvMin": [
+        0.939453125,
+        0.87890625
+      ],
+      "uvMax": [
+        0.998046875,
+        0.99609375
+      ],
+      "borrowedNearTriangles": 4890,
+      "coveredPixelEquivalent": 468.9019607843137
+    }
+  ],
+  "transparentColorDilationPixels": 4,
+  "pngEncoding": "raw straight RGBA8 PNG; filter0; zlib; zero-alpha RGB preserved",
+  "normalEncoding": "octahedral bake-view normal RG; leaf identity B; resolved sample coverage A; linear data",
+  "albedoEncoding": "unlit source albedo in sRGB plus resolved sample coverage; no fixed sun/fog",
+  "uvOrigin": "bottom-left",
+  "textureFlipY": true,
+  "coverageEncoding": "independent raw RGB=1 sample-occupancy pass; output alpha=c, RGB=resolved RGB/c; GL rows flipped once into PNG",
+  "files": {
+    "albedo": {
+      "bytes": 582658,
+      "sha256": "658322ff0afdb1ba4b070ff7439b8ae61c888a400977e73aacb1febf67463de3"
+    },
+    "normal": {
+      "bytes": 733438,
+      "sha256": "44a71e76bd7138689d045f33a3db7b95b53fba94750d43ddf0bf616cb60f8063"
+    }
+  },
+  "combinedBytes": 1316096,
+  "elapsedMilliseconds": 15824.399999976158,
+  "limitations": [
+    "No atlas has been visually accepted by generation alone.",
+    "128px tiles and four azimuths require fixed-view and moving-transition comparison.",
+    "Alpha remains unchanged; four-pixel tile-local RGB/normal/identity dilation protects mip1/bilinear silhouettes. Runtime must clamp to each frame and cap mip footprint.",
+    "Owner-run native alpha-ramp/normal/PNG-edge calibration remains required; source math alone does not establish pixel acceptance."
+  ]
+}

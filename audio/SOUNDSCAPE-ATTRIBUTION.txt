@@ -1,0 +1,90 @@
+KUMARIM NATURAL SOUNDSCAPE — ATTRIBUTION ADDENDUM
+
+These short, music-free clips are edited from the recordings listed below.
+Source recordings and displayed license evidence are retained in the asset workspace.
+
+sc-bird-song-a1.mp3, sc-bird-song-a2.mp3, sc-bird-song-a3.mp3
+“Ambient Bird Sounds” by isaiah658. CC0-1.0.
+https://opengameart.org/content/ambient-bird-sounds
+https://creativecommons.org/publicdomain/zero/1.0/
+Modifications: excerpts, mono conversion, filtering, level adjustment, fades or loop overlap crossfades, and MP3 encoding.
+
+sc-bird-song-b1.mp3
+“Bird chirping sounds” by syncopika. CC0-1.0.
+https://opengameart.org/content/bird-chirping-sounds
+https://creativecommons.org/publicdomain/zero/1.0/
+Modifications: excerpts, mono conversion, filtering, level adjustment, fades or loop overlap crossfades, and MP3 encoding.
+
+sc-crow.mp3
+“Crow caw” by zeroisnotnull. CC0-1.0.
+https://opengameart.org/content/crow-caw
+https://creativecommons.org/publicdomain/zero/1.0/
+Modifications: excerpts, mono conversion, filtering, level adjustment, fades or loop overlap crossfades, and MP3 encoding.
+
+sc-owl-hoot-1.mp3, sc-owl-hoot-2.mp3
+“Owl-3” by SyntaxSeed. CC0-1.0.
+https://freesound.org/people/SyntaxSeed/sounds/871239/
+https://creativecommons.org/publicdomain/zero/1.0/
+Modifications: excerpts, mono conversion, filtering, level adjustment, fades or loop overlap crossfades, and MP3 encoding.
+
+sc-crickets.mp3
+“Crickets Ambient Noise - loopable” by Ted Kerr (Wolfgang_). CC0-1.0.
+https://opengameart.org/content/crickets-ambient-noise-loopable
+https://creativecommons.org/publicdomain/zero/1.0/
+Modifications: excerpts, mono conversion, filtering, level adjustment, fades or loop overlap crossfades, and MP3 encoding.
+
+sc-branch-snap.mp3
+“branch break snap crunch nice.wav” by kyles. CC0-1.0.
+https://freesound.org/people/kyles/sounds/452109/
+https://creativecommons.org/publicdomain/zero/1.0/
+Modifications: excerpts, mono conversion, filtering, level adjustment, fades or loop overlap crossfades, and MP3 encoding.
+
+sc-wood-creak-1.mp3, sc-wood-creak-2.mp3
+“A tree is creaking in the patagonian forest of Argentina in a deep creaky sound.” by Félix Blume (felix.blume). CC0-1.0.
+https://freesound.org/people/felix.blume/sounds/140047/
+https://creativecommons.org/publicdomain/zero/1.0/
+Modifications: excerpts, mono conversion, filtering, level adjustment, fades or loop overlap crossfades, and MP3 encoding.
+
+sc-cave-drip.mp3
+“Dripping Water” by spookymodem. CC-BY-3.0.
+https://opengameart.org/content/dripping-water
+https://creativecommons.org/licenses/by/3.0/
+Modifications: excerpts, mono conversion, filtering, level adjustment, fades or loop overlap crossfades, and MP3 encoding.
+
+sc-rain-light.mp3, sc-thunder-distant.mp3
+“Rain + Long Thunder” by WuxiaScrub. CC0-1.0.
+https://opengameart.org/content/rain-long-thunder
+https://creativecommons.org/publicdomain/zero/1.0/
+Modifications: excerpts, mono conversion, filtering, level adjustment, fades or loop overlap crossfades, and MP3 encoding.
+
+sc-leaf-rustle.mp3
+“Nature Sounds Pack” by Antoine Goumain (Antoinemax). CC-BY-4.0.
+https://opengameart.org/content/nature-sounds-pack
+https://creativecommons.org/licenses/by/4.0/
+Modifications: excerpts, mono conversion, filtering, level adjustment, fades or loop overlap crossfades, and MP3 encoding.
+
+sc-campfire.mp3
+“campfire.wav” by Spandau. CC0-1.0.
+https://freesound.org/people/Spandau/sounds/40699/
+https://creativecommons.org/publicdomain/zero/1.0/
+Modifications: excerpts, mono conversion, filtering, level adjustment, fades or loop overlap crossfades, and MP3 encoding.
+
+CC0 public domain dedication: https://creativecommons.org/publicdomain/zero/1.0/
+Full per-file timing, processing and validation data is recorded in soundscape-manifest.json.
+Unidentified songbirds are intentionally not given a species label.
+
+water-step-left.mp3 / water-step-right.mp3
+“Water Step Splashes (Yo Frankie!)” by Blender Foundation. CC BY 3.0.
+https://opengameart.org/content/water-step-splashes-yo-frankie
+https://creativecommons.org/licenses/by/3.0/
+Converted FLAC to mono MP3; filtered below65Hz/above10kHz, short fade-in and loudness normalization.
+
+water-stroke-1.mp3 / water-stroke-2.mp3
+“Water Splash and Sand Footsteps” by Peludo. CC0-1.0.
+https://opengameart.org/content/water-splash-and-sand-footsteps
+https://creativecommons.org/publicdomain/zero/1.0/
+Recorded splashes converted to mono MP3, filtered and normalized for swimming strokes.
+
+sc-frog-1.mp3 / sc-frog-2.mp3 / sc-frog-3.mp3 / sc-frog-4.mp3
+Synthesised for this game (v92) by scripts/synth-marsh-sfx.py: no recordings.
+Marsh frogs: buzzy pulses through vocal-sac formants, fixed seeds; mono MP3.
