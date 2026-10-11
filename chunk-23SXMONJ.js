@@ -1648,6 +1648,31 @@ function treeLeafLightingChunk(source2) {
       ${TREE_LEAF_TRANSMISSION_GLSL});`);
 }
 
+// png-canonical.js
+var SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+function criticalPngBytes(buffer) {
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  if (bytes.length < 8 || SIGNATURE.some((v, i) => bytes[i] !== v)) return buffer;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength), keep = [[0, 8]];
+  let at = 8, dropped = false;
+  while (at < bytes.length) {
+    if (at + 12 > bytes.length) return buffer;
+    const end = at + 12 + view.getUint32(at);
+    if (end > bytes.length) return buffer;
+    if (bytes[at + 4] & 32) dropped = true;
+    else keep.push([at, end]);
+    at = end;
+  }
+  if (!dropped) return buffer;
+  const out = new Uint8Array(keep.reduce((n, [a, b]) => n + b - a, 0));
+  let o = 0;
+  for (const [a, b] of keep) {
+    out.set(bytes.subarray(a, b), o);
+    o += b - a;
+  }
+  return out.buffer;
+}
+
 // day-night-clock.js
 var DAY_NIGHT_REAL_SECONDS = 3600;
 var DAY_NIGHT_RATES = Object.freeze([
@@ -3210,7 +3235,7 @@ async function loadDistantTreeAtlas(THREE, { manifestUrl, albedoUrl, normalUrl, 
     for (const [kind, url] of [["albedo", albedoUrl], ["normal", normalUrl]]) {
       const fileResponse = await fetch(url, { signal });
       if (!fileResponse.ok) throw Error("Distant atlas unavailable: " + kind);
-      const bytes = await fileResponse.arrayBuffer(), file = { bytes: bytes.byteLength, sha256: await digest(bytes) };
+      const bytes = criticalPngBytes(await fileResponse.arrayBuffer()), file = { bytes: bytes.byteLength, sha256: await digest(bytes) };
       if (!equal(file, manifest.files?.[kind])) throw Error("Distant atlas checksum mismatch: " + kind);
       const objectUrl = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
       let texture;
@@ -38095,7 +38120,7 @@ async function loadBroadleafGeometricNormal(THREE, { url = new URL("../broadleaf
   if (!/^[a-f0-9]{64}$/.test(sha256 || "")) throw Error("Expected pinned broadleaf normal SHA-256");
   const response = await fetchImpl(url, { cache: "no-store" });
   if (!response.ok) throw Error("Missing broadleaf geometric normal " + url);
-  const bytes = await response.arrayBuffer();
+  const bytes = criticalPngBytes(await response.arrayBuffer());
   const actual = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((v) => v.toString(16).padStart(2, "0")).join("");
   if (actual !== sha256) throw Error("Broadleaf normal source pin mismatch");
   const objectURL = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
@@ -38283,7 +38308,7 @@ async function loadPineNeedleNormal(THREE, {
 } = {}) {
   const response = await fetchImpl(url, { cache: "no-store" });
   if (!response.ok) throw Error("Missing pine needle normal " + url);
-  const bytes = await response.arrayBuffer();
+  const bytes = criticalPngBytes(await response.arrayBuffer());
   const sha256 = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((v) => v.toString(16).padStart(2, "0")).join("");
   if (sha256 !== PINE_NORMAL_CONTRACT.sha256) throw Error("Pine needle normal source pin mismatch");
   const objectURL = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
