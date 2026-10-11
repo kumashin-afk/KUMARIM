@@ -582,6 +582,7 @@ var REACH = 6.5;
 var OUTLET_REACH = 2.5;
 var OUTLET_ZONE = 26;
 var MAX_VERTICES = 200;
+var CORE_MARGIN = 0.6;
 function signedArea(ring) {
   let a = 0;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) a += ring[j].x * ring[i].z - ring[i].x * ring[j].z;
@@ -648,7 +649,7 @@ function lakeOutline(lake, grid) {
   if (!Number.isFinite(minX)) return null;
   const pad = REACH + 2 * STEP, ox = minX - pad, oz = minZ - pad, W = Math.ceil((maxX - minX + 2 * pad) / STEP) + 1, H = Math.ceil((maxZ - minZ + 2 * pad) / STEP) + 1;
   const mask = new Uint8Array(W * H), r = Math.ceil(REACH / STEP) + 1;
-  const outlet = lake.outlet;
+  const outlet = lake.outlet, core = cell / 2 + CORE_MARGIN;
   for (const i of lake.nodes) {
     const x = x0 + i % nx * cell, z = z0 + Math.floor(i / nx) * cell, cx = (x - ox) / STEP, cz = (z - oz) / STEP;
     const reach = outlet && Math.hypot(x - outlet.x, z - outlet.z) < OUTLET_ZONE ? OUTLET_REACH : REACH;
@@ -656,7 +657,7 @@ function lakeOutline(lake, grid) {
       const gx = Math.round(cx) + dx, gz = Math.round(cz) + dz;
       if (gx < 1 || gz < 1 || gx >= W - 1 || gz >= H - 1) continue;
       const px = ox + gx * STEP, pz = oz + gz * STEP;
-      if (Math.hypot(px - x, pz - z) <= reach) mask[gz * W + gx] = 1;
+      if (Math.max(Math.abs(px - x), Math.abs(pz - z)) <= core || Math.hypot(px - x, pz - z) <= reach) mask[gz * W + gx] = 1;
     }
   }
   const next = /* @__PURE__ */ new Map(), key = (a, b) => a * 65536 + b;

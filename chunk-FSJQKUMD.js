@@ -592,10 +592,161 @@ function buildTreeFamily(seed, species, familyIndex, version, attempt) {
   return { species, index: familyIndex, seedKey, height: H, trunkRings, near: { wood: finish(near.wood), leaf: finish(near.leaf) }, far: { wood: finish(far.wood), leaf: finish(far.leaf) }, far2: { wood: finish(far2.wood), leaf: finish(far2.leaf) }, skeleton: data.graph, anchors: data.anchors, rootAnchors: data.roots, bounds: { min: nearBounds.min.map((v, k) => Math.min(v, farBounds.min[k])), max: nearBounds.max.map((v, k) => Math.max(v, farBounds.max[k])) }, far2Bounds, metadata: metrics };
 }
 
+// tree-crown-light.js
+var CROWN_LIGHT = Object.freeze({
+  revision: "crown-light-v1",
+  // Leaf density grid: cell size (m) and the light stopped per square metre
+  // of leaf card in a cubic metre (the cards' leaf share, the leaves' mean
+  // projection and their overlap; set so a crown's heart keeps about a fifth
+  // of the light and its sunny face most of it).
+  cell: 0.75,
+  extinction: 0.042,
+  // Broadleaf crowns hold their leaves in a wider, thinner shell of fewer
+  // cards: denser per card, so they shade like the pines.
+  density: Object.freeze({ pine: 1, broadleaf: 1.5 }),
+  // Rays per point (evenly over the sphere: leaves, wood); march step in cells.
+  rays: 24,
+  woodRays: 12,
+  step: 1,
+  // A leaf on the crown's surface sees about this much of the sky (the crown
+  // hides the rest): the sky light is measured against it.
+  openSky: 0.7,
+  // Ground shadow patterns (m per texel, at the shape's own height) and the
+  // lowest sun they are made for (below it the field and the clouds have it).
+  patternTexel: 0.5,
+  patternMinSun: 0.14
+});
+var C = CROWN_LIGHT;
+var crownLightUniforms = Object.freeze({
+  treeCrownSun: { value: { x: 0, y: 1, z: 0, w: 0 } },
+  treeCrownTune: { value: { x: 0, y: 0, z: 0, w: 1 } }
+});
+var CROWN_LIGHT_STRENGTH = Object.freeze({ sky: 0.85, sun: 0.9 });
+function crownDirections(count = C.rays) {
+  const out = new Float32Array(count * 3), golden = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < count; i++) {
+    const y = 1 - (i + 0.5) * 2 / count, r = Math.sqrt(Math.max(0, 1 - y * y)), a = i * golden;
+    out[i * 3] = Math.cos(a) * r;
+    out[i * 3 + 1] = y;
+    out[i * 3 + 2] = Math.sin(a) * r;
+  }
+  return out;
+}
+var DIRECTIONS = crownDirections();
+var WOOD_DIRECTIONS = crownDirections(C.woodRays);
+function crownGrid(leaf, cell = C.cell, density = 1) {
+  const p = leaf.position, cards = Math.floor(p.length / 12);
+  let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+  for (let i = 0; i < p.length; i += 3) {
+    minX = Math.min(minX, p[i]);
+    maxX = Math.max(maxX, p[i]);
+    minY = Math.min(minY, p[i + 1]);
+    maxY = Math.max(maxY, p[i + 1]);
+    minZ = Math.min(minZ, p[i + 2]);
+    maxZ = Math.max(maxZ, p[i + 2]);
+  }
+  if (!cards || !Number.isFinite(minX)) return null;
+  const x0 = minX - cell, y0 = minY - cell, z0 = minZ - cell;
+  const nx = Math.ceil((maxX - x0) / cell) + 2, ny = Math.ceil((maxY - y0) / cell) + 2, nz = Math.ceil((maxZ - z0) / cell) + 2;
+  const data = new Float32Array(nx * ny * nz), k = C.extinction * density / (cell * cell * cell);
+  for (let c = 0; c < cards; c++) {
+    const o = c * 12;
+    const ax = p[o + 3] - p[o], ay = p[o + 4] - p[o + 1], az = p[o + 5] - p[o + 2], bx = p[o + 9] - p[o], by = p[o + 10] - p[o + 1], bz = p[o + 11] - p[o + 2];
+    const area = Math.hypot(ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx);
+    const cx = (p[o] + p[o + 3] + p[o + 6] + p[o + 9]) / 4, cy = (p[o + 1] + p[o + 4] + p[o + 7] + p[o + 10]) / 4, cz = (p[o + 2] + p[o + 5] + p[o + 8] + p[o + 11]) / 4;
+    const gx = (cx - x0) / cell - 0.5, gy = (cy - y0) / cell - 0.5, gz = (cz - z0) / cell - 0.5;
+    const ix = Math.floor(gx), iy = Math.floor(gy), iz = Math.floor(gz), fx = gx - ix, fy = gy - iy, fz = gz - iz;
+    for (let dz = 0; dz < 2; dz++) for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 2; dx++) {
+      const x = ix + dx, y = iy + dy, z = iz + dz;
+      if (x < 0 || y < 0 || z < 0 || x >= nx || y >= ny || z >= nz) continue;
+      data[(z * ny + y) * nx + x] += area * k * (dx ? fx : 1 - fx) * (dy ? fy : 1 - fy) * (dz ? fz : 1 - fz);
+    }
+  }
+  return { x0, y0, z0, cell, nx, ny, nz, data };
+}
+function crownTransmittance(g, px, py, pz, dx, dy, dz) {
+  const step = g.cell * C.step, inv = 1 / g.cell;
+  let near = 0, far = Infinity;
+  for (const [p, d, lo, n] of [[px, dx, g.x0, g.nx], [py, dy, g.y0, g.ny], [pz, dz, g.z0, g.nz]]) {
+    const hi = lo + n * g.cell;
+    if (Math.abs(d) < 1e-9) {
+      if (p < lo || p > hi) return 1;
+      continue;
+    }
+    const a = (lo - p) / d, b = (hi - p) / d;
+    near = Math.max(near, Math.min(a, b));
+    far = Math.min(far, Math.max(a, b));
+  }
+  if (!(far > near)) return 1;
+  let tau = 0;
+  for (let t = near + step * 0.5; t < far; t += step) {
+    const x = Math.floor((px + dx * t - g.x0) * inv), y = Math.floor((py + dy * t - g.y0) * inv), z = Math.floor((pz + dz * t - g.z0) * inv);
+    if (x < 0 || y < 0 || z < 0 || x >= g.nx || y >= g.ny || z >= g.nz) continue;
+    tau += g.data[(z * g.ny + y) * g.nx + x];
+  }
+  return Math.exp(-tau * step);
+}
+function lightAt(g, x, y, z, out, o, directions = DIRECTIONS) {
+  let a = 0, bx = 0, by = 0, bz = 0;
+  const n = directions.length / 3;
+  for (let i = 0; i < n; i++) {
+    const dx = directions[i * 3], dy = directions[i * 3 + 1], dz = directions[i * 3 + 2], t = crownTransmittance(g, x, y, z, dx, dy, dz);
+    a += t;
+    bx += t * dx;
+    by += t * dy;
+    bz += t * dz;
+  }
+  out[o] = 3 * bx / n;
+  out[o + 1] = 3 * by / n;
+  out[o + 2] = 3 * bz / n;
+  out[o + 3] = a / n;
+}
+function crownLight(g, mesh, leaf) {
+  const p = mesh.position, count = p.length / 3, out = new Float32Array(count * 4);
+  if (leaf) {
+    for (let v = 0; v + 3 < count; v += 4) {
+      const o = v * 3;
+      lightAt(g, (p[o] + p[o + 3] + p[o + 6] + p[o + 9]) / 4, (p[o + 1] + p[o + 4] + p[o + 7] + p[o + 10]) / 4, (p[o + 2] + p[o + 5] + p[o + 8] + p[o + 11]) / 4, out, v * 4);
+      for (let k = 1; k < 4; k++) out.copyWithin((v + k) * 4, v * 4, v * 4 + 4);
+    }
+  } else for (let v = 0; v < count; v++) lightAt(g, p[v * 3], p[v * 3 + 1], p[v * 3 + 2], out, v * 4, WOOD_DIRECTIONS);
+  return out;
+}
+function bakeCrownLight(family) {
+  const g = crownGrid(family.near.leaf, C.cell, C.density[family.species] ?? 1);
+  if (!g) return family;
+  for (const lod of [family.near, family.far, family.far2]) if (lod) {
+    lod.leaf.crownLight = crownLight(g, lod.leaf, true);
+    lod.wood.crownLight = crownLight(g, lod.wood, false);
+  }
+  family.crownGrid = g;
+  return family;
+}
+function crownShadowPattern(g, sy, texel = C.patternTexel) {
+  const s = Math.max(C.patternMinSun, Math.min(1, sy)), c = Math.sqrt(1 - s * s), tan = s / Math.max(c, 1e-4);
+  const top = g.y0 + g.ny * g.cell, reach = c > 1e-4 ? Math.max(0, top) / tan : 0;
+  const minX = g.x0 - reach, maxX = g.x0 + g.nx * g.cell, minZ = g.z0, maxZ = g.z0 + g.nz * g.cell;
+  const width = Math.max(2, Math.ceil((maxX - minX) / texel)), depth = Math.max(2, Math.ceil((maxZ - minZ) / texel));
+  const data = new Float32Array(width * depth);
+  for (let j = 0; j < depth; j++) {
+    const z = minZ + (j + 0.5) * texel;
+    for (let i = 0; i < width; i++) {
+      const x = minX + (i + 0.5) * texel;
+      data[j * width + i] = crownTransmittance(g, x, 0, z, c, s, 0);
+    }
+  }
+  return { width, depth, texel, minX, minZ, data, sun: s };
+}
+
 export {
   TREE_SPRAYS,
   TREE_HEIGHTS,
   curvePoint,
   treeRadiusAt,
-  generateTreeFamily
+  generateTreeFamily,
+  CROWN_LIGHT,
+  crownLightUniforms,
+  CROWN_LIGHT_STRENGTH,
+  bakeCrownLight,
+  crownShadowPattern
 };
