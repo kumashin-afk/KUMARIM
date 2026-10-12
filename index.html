@@ -91,6 +91,21 @@ body.hover-look,body.hover-look *{cursor:none!important}
 .tree-tier .tree-tier-range{color:var(--gold-dim);font-size:12px;margin-left:4px}
 .tree-tier small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
 .tree-tier.unused{opacity:.5}
+/* v95: the settings in groups - グラフィック (the overall choice, its details folded), 音, 操作, 記録, then デバッグ folded. */
+.settings-group+.settings-group{margin-top:30px}
+.settings-group>h3{font:400 17px 'Noto Serif JP',serif;letter-spacing:2px;color:var(--gold);margin:0 0 4px}
+.settings-details{margin-top:14px;border:1px solid var(--line);padding:0 16px;background:#0b16171f}
+.settings-details>summary{cursor:pointer;color:var(--gold);padding:14px 0;font-size:14px;letter-spacing:1px}
+.settings-details[open]>summary{border-bottom:1px solid var(--line)}
+.settings-details>.craft-actions:last-child,.settings-details>section:last-child{margin-bottom:18px}
+.settings-details .settings-row:last-of-type{border-bottom:0}
+.debug-settings{margin-top:30px}
+.debug-settings>summary{color:var(--gold-dim)}
+.debug-settings .craft-block:first-of-type,.debug-settings [data-slot]:first-of-type>.craft-block{margin-top:14px}
+.time-input{display:flex;gap:8px;align-items:center}
+.time-input input{width:110px;font:inherit;padding:7px;color:inherit;background:var(--ink);border:1px solid var(--line)}
+.time-input .outline-button{padding:9px 14px;white-space:nowrap;flex:none}
+.time-presets{flex-wrap:wrap}
 /* Survival HUD (v91): clock, meters, the fifteen-slot bar, veils, crafting. */
 .survival-hud{position:absolute;inset:0;z-index:3;pointer-events:none}
 .sv-status{position:absolute;top:92px;right:40px;display:flex;align-items:flex-start;gap:14px}
@@ -180,10 +195,15 @@ body.hover-look,body.hover-look *{cursor:none!important}
 /* Touch screens: the bar sits above the stick and the action buttons. */
 body.touch-device .sv-bar{bottom:150px}
 body.touch-device .sv-held{bottom:202px}
-/* The region name moves under the title (the survival cluster takes the right). */
-.region{left:40px;right:auto;top:96px;text-align:left}
+/* The region name takes the top left (the survival cluster takes the right;
+   v95: no title above it), the performance readout sits below it, clear of
+   the messages on the right. */
+.region{left:40px;right:auto;top:34px;text-align:left}
 .region .eyebrow{justify-content:flex-start}
-@media (max-width:900px){.region{left:20px;right:auto;top:84px}}
+@media (max-width:900px){.region{left:20px;right:auto;top:24px}}
+.top-actions{margin-left:auto}
+.performance-hud{left:max(40px,env(safe-area-inset-left));right:auto;top:132px}
+@media (max-width:900px){.performance-hud{left:20px;right:auto;top:116px}}
 /* Messages sit below the survival cluster; the key strip stays short. */
 .toasts{top:262px;right:40px}
 @media (max-width:1280px){.help-strip>span:nth-of-type(n+5){display:none}}
@@ -209,9 +229,8 @@ body.touch-device .sv-held{bottom:202px}
     </div>
 
     <header class="topbar">
-      <a class="brand" href="#" aria-label="メニューを開く" id="brandButton"><span class="brand-mark">⋈</span><span>KUMARIM</span></a>
       <div class="compass"><span>W</span><i></i><span>NW</span><i></i><strong id="heading">N</strong><i></i><span>NE</span><i></i><span>E</span><b>◇</b></div>
-      <nav class="top-actions" aria-label="ゲームメニュー"><button data-panel="map" title="地図 (M)"><span class="icon">⌖</span><span class="nav-label">地図</span><kbd>M</kbd></button><button id="settingsButton" title="設定"><span class="icon">⚙︎</span></button></nav>
+      <nav class="top-actions" aria-label="ゲームメニュー"><button data-panel="journal" title="記録 (J)"><span class="icon">❖</span><span class="nav-label">記録</span><kbd>J</kbd></button><button data-panel="map" title="地図 (M)"><span class="icon">⌖</span><span class="nav-label">地図</span><kbd>M</kbd></button><button id="settingsButton" title="設定"><span class="icon">⚙︎</span></button></nav>
     </header>
 
     <pre id="performanceHUD" class="performance-hud" aria-label="パフォーマンス表示" aria-live="off" hidden></pre>
@@ -222,7 +241,7 @@ body.touch-device .sv-held{bottom:202px}
       <p class="eyebrow">DON'T LET THE FIRE GO OUT</p>
       <h1>この島で、<br>一日でも長く生き延びる。</h1>
       <p class="intro-note">手ぶらで島に降り立つ。草と枝を集め、道具を作り、<br>日が暮れる前に火を起こそう。闇の中には、何かがいる。</p>
-      <p class="development-note" style="font-size:11px;line-height:1.7;opacity:.75;margin:8px 0 12px">開発版 v94（試作） · 「生き延びる土台」：ゲームをサバイバルに作り直しました。1日は16分（昼10分・夕方3分・夜3分）。体力・空腹・正気の3つのメーター。草・小枝・蒼輝石（青い水晶）・ベリー・きのこ・花を手で集め、斧・つるはし・松明・焚き火・石のかまど・縄・寝ござ・軟膏を作れます。夜は灯りのない所にいると「闇に潜むもの」に襲われます（満月の夜だけは安全）。肉や人参は火で焼け、食べ物は日がたつと腐ります。倒れたら島ごと終わり、新しい島から（何日生き延びたかを記録）。レベル・経験値・回復薬・以前のクラフトはなくしました。敵とランドマークは今のままです。木は v89 の表現に戻しています（v90.1）。v91.1：影と水に映る自分の体を軽い簡易な体に取り換え、公開用のファイルをまとめて軽くしました。v91.2：弓と矢を追加（長押しで引き絞って放ち、刺さった矢は拾える）。手に持った物が見え、食べる・拾う・置く・作る・持ち替えの動きが付きました。斧・つるはし・松明を打ち欠いた石と縄で作り直し、拾える物の見た目と光の当たり方を改善。倒木や切り株のそばのきのこと落ち枝も拾え、切り倒しても残ります。効果音を作り直し、かまどの石組みと灰を改善。メニューを閉じた後はクリックしなくても見回せます。v91.3：木を切り倒すと、切り株を残して斧と反対側へ倒れ（巻き込まれると痛い）、倒れた幹は斧で半分に割り、さらに割ると木材になります（切り株も掘り起こせる）。木の枝ぶりを島ごとに変わる自然な形にし、斜面で根元が浮かないようにして、木の描画を軽くしました。手を騎士の籠手から素手と布の袖に作り直し（腕のモデルと4MB余りの素材を削除）、火に燃料をくべる音、倒木・割る音を追加しました。設定の「木の表示（確認用）」で、距離ごと（6段階）に木を消して確かめられます。v91.4：遠景の木の絵をその島の木から作るようにしました。弓は左手で持ち、右手で弦を引き絞ります（飛ぶ矢は大きめで光の筋が残ります）。道具ごとの振る音と当たる音、斧・つるはしの頭を大きくし、持った角度のまま斜めに振り下ろします。左クリック長押しで続けて振れます。ベリーは森の低木に実り、火打ち石の代わりに青く光る蒼輝石を使います（キャンプのそばにも2つ）。倒した敵はラグドールで倒れて残り、E で調べると肉や石が取れます。v92：島の形がシードごとに変わり（三日月形・双子の島・岬・入り江・小島）、どの島にも霧の沼地ができます。明るさに目が慣れる（自動露光）を足しました。v93：採取した時と歩いている時のかくつきを減らしました（採った時の火花のシェーダーの作り直し、地面の情報や遠景の作り直しを少しずつ分けて行う、沼の水面を一瞬で作る など）。遠くの草原を落ち着いた色にし、鳥を作り直しました（地面すれすれを飛ばない・近くで見る形・影）。沼地を、立ち枯れの林と木道があり、濃いもやに包まれた陰気な湿原にしました。v93.1：タイトルを KUMARIM にしました。v93.2：画像に情報が書き足されていても起動できるようにしました（GitHub 版が起動しなかった件）。v93.3：湖の水面が途切れて湖底が見えていた所を直しました（湖の出口側。そこに木も生えていました）。持ち物をホイールで切り替えた時のかくつきを直しました。v94：木々の間から差す光の筋と、明るい所の光のにじみ（ブルーム）を足しました。木の葉の茂みが日の当たる側で明るく、内側と陰の側で暗くなり、遠くの木も地面に影を落とすようにしました（どれも設定で切れます）。鹿が岩や木をすり抜けないようにしました。</p>
+      <p class="development-note" style="font-size:11px;line-height:1.7;opacity:.75;margin:8px 0 12px">開発版 v96.2（試作） · 「生き延びる土台」：ゲームをサバイバルに作り直しました。1日は16分（昼10分・夕方3分・夜3分）。体力・空腹・正気の3つのメーター。草・小枝・蒼輝石（青い水晶）・ベリー・きのこ・花を手で集め、斧・つるはし・松明・焚き火・石のかまど・縄・寝ござ・軟膏を作れます。夜は灯りのない所にいると「闇に潜むもの」に襲われます（満月の夜だけは安全）。肉や人参は火で焼け、食べ物は日がたつと腐ります。倒れたら島ごと終わり、新しい島から（何日生き延びたかを記録）。レベル・経験値・回復薬・以前のクラフトはなくしました。敵とランドマークは今のままです。木は v89 の表現に戻しています（v90.1）。v91.1：影と水に映る自分の体を軽い簡易な体に取り換え、公開用のファイルをまとめて軽くしました。v91.2：弓と矢を追加（長押しで引き絞って放ち、刺さった矢は拾える）。手に持った物が見え、食べる・拾う・置く・作る・持ち替えの動きが付きました。斧・つるはし・松明を打ち欠いた石と縄で作り直し、拾える物の見た目と光の当たり方を改善。倒木や切り株のそばのきのこと落ち枝も拾え、切り倒しても残ります。効果音を作り直し、かまどの石組みと灰を改善。メニューを閉じた後はクリックしなくても見回せます。v91.3：木を切り倒すと、切り株を残して斧と反対側へ倒れ（巻き込まれると痛い）、倒れた幹は斧で半分に割り、さらに割ると木材になります（切り株も掘り起こせる）。木の枝ぶりを島ごとに変わる自然な形にし、斜面で根元が浮かないようにして、木の描画を軽くしました。手を騎士の籠手から素手と布の袖に作り直し（腕のモデルと4MB余りの素材を削除）、火に燃料をくべる音、倒木・割る音を追加しました。設定の「木の表示（確認用）」で、距離ごと（6段階）に木を消して確かめられます。v91.4：遠景の木の絵をその島の木から作るようにしました。弓は左手で持ち、右手で弦を引き絞ります（飛ぶ矢は大きめで光の筋が残ります）。道具ごとの振る音と当たる音、斧・つるはしの頭を大きくし、持った角度のまま斜めに振り下ろします。左クリック長押しで続けて振れます。ベリーは森の低木に実り、火打ち石の代わりに青く光る蒼輝石を使います（キャンプのそばにも2つ）。倒した敵はラグドールで倒れて残り、E で調べると肉や石が取れます。v92：島の形がシードごとに変わり（三日月形・双子の島・岬・入り江・小島）、どの島にも霧の沼地ができます。明るさに目が慣れる（自動露光）を足しました。v93：採取した時と歩いている時のかくつきを減らしました（採った時の火花のシェーダーの作り直し、地面の情報や遠景の作り直しを少しずつ分けて行う、沼の水面を一瞬で作る など）。遠くの草原を落ち着いた色にし、鳥を作り直しました（地面すれすれを飛ばない・近くで見る形・影）。沼地を、立ち枯れの林と木道があり、濃いもやに包まれた陰気な湿原にしました。v93.1：タイトルを KUMARIM にしました。v93.2：画像に情報が書き足されていても起動できるようにしました（GitHub 版が起動しなかった件）。v93.3：湖の水面が途切れて湖底が見えていた所を直しました（湖の出口側。そこに木も生えていました）。持ち物をホイールで切り替えた時のかくつきを直しました。v94：木々の間から差す光の筋と、明るい所の光のにじみ（ブルーム）を足しました。木の葉の茂みが日の当たる側で明るく、内側と陰の側で暗くなり、遠くの木も地面に影を落とすようにしました（どれも設定で切れます）。鹿が岩や木をすり抜けないようにしました。v95：太陽のまわりの白いにじみと、森で太陽の方を見た時のもやを抑えました（太陽が視界に入ると目が少し絞られます）。昼の明るさへの目の慣れを分かりやすくしました。設定を「グラフィック（全体と詳細設定）・音・操作・記録・デバッグ」にまとめ、デバッグに時刻の変更と時間を止める設定を戻しました。左上のロゴを消し、パフォーマンス表示を左に移しました（記録は J キー）。何も持っていない手を少し開き、持ち物がいっぱいの時などの効果音を作り直しました。遠くの木の地面の影を GPU で描き、遠くの木が他の木の影に入るようにしました。葉のない木の幹の明るさを直し、遠くの山や斜面の模様の繰り返しを目立たなくしました。v96：森の地面に立体の落ち葉と苔のじゅうたんを敷き、目の高さに若木・茂み・背の高いシダを足し、松の幹に枯れ枝を残しました。岩と幹の根元にシダを生やし、ひときわ太い古木・傾いた木・枯れ木と、木ごとに違う樹皮の色を足しました。蝶・小鳥・リスが現れます（小鳥は近づくと飛び立ち、リスは木に駆け上がります）。v96.1：落ち葉は葉だけにして（松葉・小枝なし）、描く距離を半分にした分だけ密度を上げました。地面を這う根・木陰の照り返し・広葉樹の低く垂れる枝・岩と幹の苔はやめました。生き物は数はそのままで、行く先の近くに現れ、少し近くまで寄れるようにしました。v96.2：森の岩の苔と、幹の根元の苔を戻しました（岩の根元の土の線はなしのままです）。森の地面の苔のじゅうたんはやめました。起動した直後などに、遠くの木の地面の影と木どうしの影が更新されなくなることがある不具合を直しました。</p>
       <button id="startButton" class="primary" disabled><span>島に降り立つ</span><span class="button-ornament">◇</span></button>
       <p class="intro-touch-note">左スティックで移動 · 画面ドラッグで見回す</p><p class="intro-controls"><kbd>W A S D</kbd> 移動 <span>·</span> <kbd>E</kbd> 拾う <span>·</span> <kbd>Tab</kbd> つくる <span>·</span> <kbd>右クリック</kbd> 食べる</p>
     </section>
@@ -242,9 +261,9 @@ body.touch-device .sv-held{bottom:202px}
     <dialog id="panel"><div class="panel-header"><div><p class="eyebrow" id="panelEyebrow">旅の支度</p><h2 id="panelTitle">持ち物</h2></div><button id="closePanel" aria-label="閉じる">✕</button></div><div id="panelContent"></div></dialog>
     <div id="deathScreen" class="death-screen hidden"></div>
   </main>
-  <script>globalThis.KUMARIM_MODEL_PACK='gltf-json';globalThis.KUMARIM_BUILD='v94-d7c44b52b2';</script>
+  <script>globalThis.KUMARIM_MODEL_PACK='gltf-json';globalThis.KUMARIM_BUILD='v96.2-5e53ca8dc7';</script>
   <script type="module">
-import('./game-bootstrap-LG2CONAM.js').catch(error => { console.error('KUMARIM startup failed', error); const d = document.getElementById('loadDetail'); if (d) d.textContent = '読み込みに失敗しました。再読み込みしてください。（' + (error?.message || error) + '）'; });
+import('./game-bootstrap-NRVOODAK.js').catch(error => { console.error('KUMARIM startup failed', error); const d = document.getElementById('loadDetail'); if (d) d.textContent = '読み込みに失敗しました。再読み込みしてください。（' + (error?.message || error) + '）'; });
 </script>
 </body>
 </html>

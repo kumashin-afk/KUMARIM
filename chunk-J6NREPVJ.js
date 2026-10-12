@@ -71,6 +71,7 @@ function frames(dir, roll = 0) {
 function local(f, v) {
   return add(add(mul(f.right, v[0]), mul(f.dir, v[1])), mul(f.up, v[2]));
 }
+var PINE_STUBS = Object.freeze({ count: Object.freeze([4, 9]), from: 1.5, to: 0.9, length: Object.freeze([0.3, 1.15]) });
 function pineGraph(r, H) {
   const graph = [], anchors = [], roots = [];
   const main = edge(graph, 0, -1, trunkPine(r, H), 0.285 + r() * 0.025, 0.016, "trunk", { rootLobes: 5, phase: r() * TAU });
@@ -103,6 +104,12 @@ function pineGraph(r, H) {
   for (let i = 0; i < 5; i++) {
     const a = main.phase + i * TAU / 5;
     roots.push([Math.cos(a) * 0.58, 0, Math.sin(a) * 0.58]);
+  }
+  const S = PINE_STUBS, stubs = S.count[0] + Math.floor(r() * (S.count[1] - S.count[0] + 1));
+  for (let k = 0; k < stubs; k++) {
+    const y = S.from + r() * Math.max(0.5, start * S.to - S.from), t = clamp(y / (H - 0.65), 0, 0.9), base = curvePoint(main, t), az = r() * TAU, dir = [Math.cos(az), 0, Math.sin(az)];
+    const len = (S.length[0] + r() * (S.length[1] - S.length[0])) * (0.55 + 0.45 * clamp(y / start, 0, 1)) * (r() < 0.3 ? 0.45 : 1), sag = -(0.08 + r() * 0.3) * len;
+    edge(graph, graph.length, main.id, [base, add(base, [dir[0] * len * 0.34, 0.02, dir[2] * len * 0.34]), add(base, [dir[0] * len * 0.7, sag * 0.45, dir[2] * len * 0.7]), add(base, [dir[0] * len, sag, dir[2] * len])], 0.018 + r() * 0.016, 4e-3, "primary", { parentT: t, stub: true });
   }
   return { graph, anchors, roots };
 }

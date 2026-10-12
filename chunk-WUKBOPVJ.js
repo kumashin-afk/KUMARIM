@@ -25,7 +25,7 @@ import {
   Vector2,
   Vector4,
   three_module_exports
-} from "./chunk-7DPYFN6K.js";
+} from "./chunk-2ABRGHYR.js";
 
 // worldgen/world-cache.js
 var DB_NAME = "kumarim-worldgen";

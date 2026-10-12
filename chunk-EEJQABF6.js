@@ -30,7 +30,7 @@ import {
   sampleIslandBiome,
   stepMeadowWind,
   worldModel
-} from "./chunk-CQ6X37JL.js";
+} from "./chunk-WUKBOPVJ.js";
 import {
   createRenderDiagnostics
 } from "./chunk-LADITFF5.js";
@@ -56,7 +56,7 @@ import {
   curvePoint,
   generateTreeFamily,
   treeRadiusAt
-} from "./chunk-FSJQKUMD.js";
+} from "./chunk-J6NREPVJ.js";
 import {
   createRockDust,
   createRockShatter,
@@ -80,7 +80,7 @@ import {
   mirrorHand,
   paintHandToolTextures,
   paintPickableAtlas
-} from "./chunk-5NZIC2GL.js";
+} from "./chunk-7PWMME35.js";
 import {
   getStartupLoadingProgress
 } from "./chunk-YLTSGCSZ.js";
@@ -88,7 +88,7 @@ import {
   GLTFLoader,
   mergeGeometries,
   mergeVertices
-} from "./chunk-RLLM4NEF.js";
+} from "./chunk-OXYAMCCO.js";
 import {
   ACESFilmicToneMapping,
   AddEquation,
@@ -145,6 +145,7 @@ import {
   MathUtils,
   Matrix3,
   Matrix4,
+  MaxEquation,
   Mesh,
   MeshBasicMaterial,
   MeshDepthMaterial,
@@ -183,6 +184,7 @@ import {
   ShapeUtils,
   Sphere,
   SphereGeometry,
+  SrcColorFactor,
   Texture,
   TextureLoader,
   TorusGeometry,
@@ -200,8 +202,9 @@ import {
   WebGLCubeRenderTarget,
   WebGLRenderTarget,
   WebGLRenderer,
+  ZeroFactor,
   three_module_exports
-} from "./chunk-7DPYFN6K.js";
+} from "./chunk-2ABRGHYR.js";
 import "./chunk-MLKGABMK.js";
 
 // natural-collision-bounds.js
@@ -436,7 +439,10 @@ function vegetationSpecies(climate3, choice) {
   return choice > broadThreshold ? "broadleaf" : "pine";
 }
 function vegetationLeafless(climate3, choice) {
-  return climate3.ash > 0.84 || climate3.swamp > 0.62 && choice > 0.89;
+  return climate3.ash > 0.84 || climate3.swamp > 0.62 && choice > 0.89 || climate3.ash < 0.3 && climate3.snow < 0.3 && climate3.swamp < 0.4 && choice > 0.972;
+}
+function vegetationTint(climate3, leafless) {
+  return climate3.snow > 0.7 ? 13884890 : climate3.ash > 0.7 ? 11511179 : climate3.swamp > 0.6 ? 12765609 : leafless ? 11709346 : 16777215;
 }
 var chunkClimate = {};
 function vegetationChunkCover(functions, cx, cz) {
@@ -835,8 +841,8 @@ function planChunkPreparation({ x, z, vx = 0, vz = 0, headingX = 0, headingZ = -
     if (allowed(r)) required.push(r);
   }
   const moving2 = Math.hypot(vx, vz) > 0.1, dx = moving2 ? vx : headingX, dz = moving2 ? vz : headingZ, axis2 = Math.abs(dx) > Math.abs(dz) ? "x" : "z", direction = (axis2 === "x" ? dx : dz) >= 0 ? 1 : -1;
-  for (let cross9 = -radius; cross9 <= radius; cross9++) {
-    const r = axis2 === "x" ? request2(cx + direction * (radius + 1), cz + cross9) : request2(cx + cross9, cz + direction * (radius + 1));
+  for (let cross10 = -radius; cross10 <= radius; cross10++) {
+    const r = axis2 === "x" ? request2(cx + direction * (radius + 1), cz + cross10) : request2(cx + cross10, cz + direction * (radius + 1));
     if (allowed(r)) ahead.push(r);
   }
   required.sort((a, b) => a.priority - b.priority || a.key.localeCompare(b.key));
@@ -1130,6 +1136,15 @@ function addPlainVariants(world2, geometry3, material2, depthMaterial = null, na
 // tree-pools.js
 var OWNER = /* @__PURE__ */ Symbol("procedural-tree-pool-ref");
 var TREE_FAR2_START = Object.freeze({ full: 140, reduced: 100 });
+var INSTANCE_FLOATS = 5;
+var BARK_TINTS = Object.freeze([[1, 1, 1], [1.08, 0.97, 0.87], [0.9, 0.93, 0.98], [0.8, 0.77, 0.74], [1.1, 0.91, 0.83], [1.12, 1.1, 1.04]].map(Object.freeze));
+var BARK_SHARES = [0.3, 0.2, 0.18, 0.12, 0.1, 0.1];
+var BROADLEAF_BARK = Object.freeze([0.9, 0.94, 0.99]);
+function barkTint(choice) {
+  let t = choice, k = 0;
+  for (; k < BARK_SHARES.length - 1 && t > BARK_SHARES[k]; k++) t -= BARK_SHARES[k];
+  return BARK_TINTS[k];
+}
 var TREE_LOD_RANGES = Object.freeze({ near: Object.freeze({ ultra: 60, high: 42 }), far2Start: TREE_FAR2_START, end: Object.freeze({ full: 215, reduced: 155 }) });
 function treeFamilyIndex(seed, tree, species) {
   const hash12 = (...tokens) => {
@@ -1154,7 +1169,7 @@ function treeBurial(world2, tree, species, family, scale5 = tree.h / (family?.he
     const a = k / 8 * Math.PI * 2, y = height2(tree.x + Math.cos(a) * reach, tree.z + Math.sin(a) * reach);
     if (Number.isFinite(y)) lowest = Math.min(lowest, y);
   }
-  return Math.max(base, tree.y - lowest + 0.08);
+  return Math.max(base, tree.y - lowest + 0.08) + reach * Math.abs(Math.sin(tree.lean * 0.45));
 }
 function createTreePools(THREE, world2, families) {
   if (!Number.isInteger(world2.proceduralTreeSeed)) throw new Error("Tree pools require an explicit integer world seed.");
@@ -1245,9 +1260,10 @@ function createTreePools(THREE, world2, families) {
       mesh2.count = count;
     };
     mesh2.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    const data = new THREE.InstancedInterleavedBuffer(new Float32Array(capacity * 4), 4).setUsage(THREE.DynamicDrawUsage);
+    const data = new THREE.InstancedInterleavedBuffer(new Float32Array(capacity * INSTANCE_FLOATS), INSTANCE_FLOATS).setUsage(THREE.DynamicDrawUsage);
     mesh2.instanceColor = new THREE.InterleavedBufferAttribute(data, 3, 0);
     mesh2.geometry.setAttribute("distantTreeHandoff", new THREE.InterleavedBufferAttribute(data, 1, 3));
+    mesh2.geometry.setAttribute("treeBare", new THREE.InterleavedBufferAttribute(data, 1, 4));
     mesh2.getColorAt = (index2, out2) => out2.fromBufferAttribute(mesh2.instanceColor, index2);
     mesh2.setColorAt = (index2, value) => mesh2.instanceColor.setXYZ(index2, value.r, value.g, value.b);
     if (pool.part.customDepthMaterial) mesh2.customDepthMaterial = poolDepthMaterials.get(pool.part.customDepthMaterial) || pool.part.customDepthMaterial;
@@ -1294,8 +1310,9 @@ function createTreePools(THREE, world2, families) {
     for (let i = 0; i < next.length; i++) {
       const entry = next[i];
       pool.mesh.instanceMatrix.array.set(entry.record.matrix, i * 16);
-      pool.mesh.instanceColor.array.set(entry.record.color, i * 4);
-      pool.mesh.instanceColor.array[i * 4 + 3] = entry.record.distantHandoff;
+      pool.mesh.instanceColor.array.set(pool.part.leaf ? entry.record.color : entry.record.woodColor, i * INSTANCE_FLOATS);
+      pool.mesh.instanceColor.array[i * INSTANCE_FLOATS + 3] = entry.record.distantHandoff;
+      pool.mesh.instanceColor.array[i * INSTANCE_FLOATS + 4] = entry.record.bare;
       entry.ref.index = i;
       entry.ref.mesh = pool.mesh;
     }
@@ -1306,11 +1323,11 @@ function createTreePools(THREE, world2, families) {
       pool.mesh.instanceMatrix.clearUpdateRanges();
       pool.mesh.instanceMatrix.addUpdateRange(0, next.length * 16);
       pool.mesh.instanceColor.data.clearUpdateRanges();
-      pool.mesh.instanceColor.data.addUpdateRange(0, next.length * 4);
+      pool.mesh.instanceColor.data.addUpdateRange(0, next.length * INSTANCE_FLOATS);
       pool.mesh.instanceMatrix.needsUpdate = true;
       pool.mesh.instanceColor.needsUpdate = true;
       counters.uploads++;
-      counters.uploadedBytes += next.length * 20 * 4;
+      counters.uploadedBytes += next.length * (16 + INSTANCE_FLOATS) * 4;
     }
   }
   function gone(record2) {
@@ -1342,8 +1359,8 @@ function createTreePools(THREE, world2, families) {
       if (records.has(tree.id)) throw new Error("Tree ID attached by two live chunks: " + tree.id);
       const object2 = objects.get(tree.id);
       if (!object2?.refs || object2.gone || object2.refs.gone) continue;
-      const local = vegetationClimate(world2.terrainFunctions, tree.x, tree.z, tree.y, climate3), dry = local.ash, winter = local.snow;
-      const species = vegetationSpecies(local, world2.terrainFunctions.hash(tree.x, tree.z)), leafless = vegetationLeafless(local, world2.terrainFunctions.hash(tree.x + 83, tree.z - 47));
+      const local2 = vegetationClimate(world2.terrainFunctions, tree.x, tree.z, tree.y, climate3), dry = local2.ash, winter = local2.snow;
+      const species = vegetationSpecies(local2, world2.terrainFunctions.hash(tree.x, tree.z)), leafless = vegetationLeafless(local2, world2.terrainFunctions.hash(tree.x + 83, tree.z - 47));
       const source2 = world2.nature[species], family = families.get(species + ":" + treeFamilyIndex(seed, tree, species));
       const scale5 = tree.h / source2.height;
       object2.collisionRadius = species === "broadleaf" ? Math.max(0.7, scale5 * tree.width * 0.95) : Math.max(0.42, scale5 * tree.width * 0.32);
@@ -1352,11 +1369,12 @@ function createTreePools(THREE, world2, families) {
       transform3.rotation.set(0, tree.r * Math.PI * 2, tree.lean * 0.45);
       transform3.scale.set(scale5 * tree.width, scale5, scale5 * tree.width);
       transform3.updateMatrix();
-      color3.set(winter > 0.7 ? 13884890 : dry > 0.7 ? 11511179 : local.swamp > 0.6 ? 12765609 : 16777215);
+      color3.set(vegetationTint(local2, leafless));
       const box4 = new THREE.Box3(new THREE.Vector3().fromArray(family.bounds.min), new THREE.Vector3().fromArray(family.bounds.max));
       const sphere2 = box4.getBoundingSphere(new THREE.Sphere()).applyMatrix4(transform3.matrix);
       sphere2.radius += Math.max(0.35, scale5 * tree.width * 0.4, tree.h * 0.03 + 0.1);
-      const record2 = { id: tree.id, tree, object: object2, family, matrix: new Float32Array(transform3.matrix.elements), color: new Float32Array([color3.r, color3.g, color3.b]), sphere: sphere2, entries: [], chunk, distantHandoff: 0 };
+      const bark = barkTint(world2.terrainFunctions.hash(tree.x * 1.7 + 5.3, tree.z * 2.3 - 1.1)), grey = species === "broadleaf" ? BROADLEAF_BARK : [1, 1, 1];
+      const record2 = { id: tree.id, tree, object: object2, family, matrix: new Float32Array(transform3.matrix.elements), color: new Float32Array([color3.r, color3.g, color3.b]), woodColor: new Float32Array([color3.r * bark[0] * grey[0], color3.g * bark[1] * grey[1], color3.b * bark[2] * grey[2]]), sphere: sphere2, entries: [], chunk, distantHandoff: 0, bare: leafless ? 1 : 0 };
       records.set(record2.id, record2);
       attached.push(record2);
       recordOrderDirty = true;
@@ -1443,7 +1461,7 @@ function createTreePools(THREE, world2, families) {
     record2.distantHandoff = code;
     handoffCounters.handoffEvents++;
     for (const entry of record2.entries) if (entry.ref.index >= 0) {
-      const data = entry.ref.mesh.instanceColor.data, offset = entry.ref.index * 4 + 3;
+      const data = entry.ref.mesh.instanceColor.data, offset = entry.ref.index * INSTANCE_FLOATS + 3;
       data.array[offset] = code;
       let start2 = offset, end = offset + 1;
       for (const range of data.updateRanges) {
@@ -1590,7 +1608,7 @@ function createTreePools(THREE, world2, families) {
       group.remove(pool.mesh);
       pool.mesh.dispose();
     }
-    for (const pool of pools2.values()) if (pool.part.geometry.getAttribute("distantTreeHandoff")?.data === pool.mesh.instanceColor.data) pool.part.geometry.deleteAttribute("distantTreeHandoff");
+    for (const pool of pools2.values()) for (const name of ["distantTreeHandoff", "treeBare"]) if (pool.part.geometry.getAttribute(name)?.data === pool.mesh.instanceColor.data) pool.part.geometry.deleteAttribute(name);
     handoff.dispose();
     lodFade.dispose();
     for (const material2 of poolMaterials.values()) material2.dispose();
@@ -1685,6 +1703,400 @@ function criticalPngBytes(buffer) {
     o += b - a;
   }
   return out2.buffer;
+}
+
+// fine-shade-gpu.js
+var VERTEX = `
+in vec2 corner;in vec4 iTree;in vec2 iKind;
+uniform vec4 patA[16];uniform vec4 patB[16];uniform vec2 sun;uniform vec3 area;uniform vec2 atlasSize;
+out vec2 vUv;out float vKeep;
+void main(){
+ int k=int(iKind.x+.5);vec4 a=patA[k],b=patB[k];
+ // The shape's frame: x toward the sun, z across it (metres at its own size).
+ vec2 local=a.xy+corner*a.zw;
+ vec2 w=iTree.xy+local.x*iTree.z*sun+local.y*iTree.w*vec2(-sun.y,sun.x);
+ vUv=(b.xy+corner*b.zw)/atlasSize;vKeep=iKind.y;
+ gl_Position=vec4((w-area.xy)*area.z*2.-1.,0.,1.);
+}`;
+var FRAGMENT = `
+precision highp float;
+uniform sampler2D patterns;in vec2 vUv;in float vKeep;out vec4 shade;
+void main(){float t=texture(patterns,vUv).r;shade=vec4(vec3(1.-vKeep*(1.-t)),1.);}`;
+function packFinePatterns(patterns) {
+  let width = 4, height2 = 0;
+  const places = [];
+  for (let k = 0; k < 16; k++) {
+    const p = patterns.get(k);
+    if (!p) {
+      places.push(null);
+      continue;
+    }
+    places.push({ x: 1, y: height2 + 1, p });
+    width = Math.max(width, p.width + 2);
+    height2 += p.depth + 2;
+  }
+  height2 = Math.max(4, height2);
+  const data = new Uint8Array(width * height2).fill(255);
+  for (const place of places) if (place) {
+    const { p, x, y } = place;
+    for (let j = 0; j < p.depth; j++) for (let i = 0; i < p.width; i++) data[(y + j) * width + x + i] = Math.round(Math.max(0, Math.min(1, p.data[j * p.width + i])) * 255);
+  }
+  return { width, height: height2, data, places };
+}
+function createFineShadeGpu(renderer, { size, cell }) {
+  if (!renderer?.capabilities?.isWebGL2 || typeof renderer.getContext !== "function") return null;
+  const gl = renderer.getContext();
+  const target = new WebGLRenderTarget(size, size, { type: HalfFloatType, format: RGFormat, depthBuffer: false, stencilBuffer: false, generateMipmaps: false, minFilter: NearestFilter, magFilter: NearestFilter });
+  target.texture.name = "fine-shade-gpu";
+  const geometry3 = new InstancedBufferGeometry();
+  geometry3.setAttribute("corner", new Float32BufferAttribute([0, 0, 1, 0, 0, 1, 1, 1], 2));
+  geometry3.setIndex([0, 1, 2, 2, 1, 3]);
+  let capacity = 0, trees = null, kinds = null, patternTexture = null;
+  const uniforms = {
+    patterns: { value: null },
+    patA: { value: Array.from({ length: 16 }, () => new Vector4()) },
+    patB: { value: Array.from({ length: 16 }, () => new Vector4()) },
+    sun: { value: new Vector2(1, 0) },
+    area: { value: new Vector3() },
+    atlasSize: { value: new Vector2(1, 1) }
+  };
+  const material2 = new RawShaderMaterial({
+    glslVersion: GLSL3,
+    uniforms,
+    vertexShader: VERTEX,
+    fragmentShader: FRAGMENT,
+    depthTest: false,
+    depthWrite: false,
+    blending: CustomBlending,
+    blendEquation: AddEquation,
+    blendSrc: ZeroFactor,
+    blendDst: SrcColorFactor
+  });
+  const mesh2 = new Mesh(geometry3, material2);
+  mesh2.frustumCulled = false;
+  const scene = new Scene();
+  scene.add(mesh2);
+  const camera = new Camera(), white = new Color(1, 1, 1), clear = new Color();
+  const state2 = { ok: true, checked: false, drawn: 0, copies: 0, copiedVersion: -1, count: 0, lastMs: 0, error: null };
+  function ensure4(n) {
+    if (trees && n <= capacity) return;
+    capacity = Math.max(1024, 2 ** Math.ceil(Math.log2(Math.max(1, n))));
+    trees = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(DynamicDrawUsage);
+    kinds = new InstancedBufferAttribute(new Float32Array(capacity * 2), 2).setUsage(DynamicDrawUsage);
+    geometry3.setAttribute("iTree", trees);
+    geometry3.setAttribute("iKind", kinds);
+  }
+  function setPatterns(patterns) {
+    const packed = packFinePatterns(patterns);
+    if (!patternTexture || patternTexture.image.width !== packed.width || patternTexture.image.height !== packed.height) {
+      patternTexture?.dispose();
+      patternTexture = new DataTexture(packed.data, packed.width, packed.height, RedFormat, UnsignedByteType);
+      patternTexture.colorSpace = NoColorSpace;
+      patternTexture.minFilter = patternTexture.magFilter = LinearFilter;
+      patternTexture.generateMipmaps = false;
+      patternTexture.wrapS = patternTexture.wrapT = ClampToEdgeWrapping;
+      patternTexture.unpackAlignment = 1;
+    } else patternTexture.image.data.set(packed.data);
+    patternTexture.needsUpdate = true;
+    uniforms.patterns.value = patternTexture;
+    uniforms.atlasSize.value.set(packed.width, packed.height);
+    packed.places.forEach((place, k) => {
+      const a = uniforms.patA.value[k], b = uniforms.patB.value[k];
+      if (!place) {
+        a.set(0, 0, 0, 0);
+        b.set(0, 0, 0, 0);
+        return;
+      }
+      const { p, x, y } = place;
+      a.set(p.minX, p.minZ, p.width * p.texel, p.depth * p.texel);
+      b.set(x, y, p.width, p.depth);
+    });
+  }
+  function setTrees(count, write) {
+    ensure4(count);
+    const t = trees.array, k = kinds.array;
+    let n = 0;
+    write((x, z, along, across2, kind, keep) => {
+      t[n * 4] = x;
+      t[n * 4 + 1] = z;
+      t[n * 4 + 2] = along;
+      t[n * 4 + 3] = across2;
+      k[n * 2] = kind;
+      k[n * 2 + 1] = keep;
+      n++;
+    });
+    trees.clearUpdateRanges();
+    trees.addUpdateRange(0, n * 4);
+    trees.needsUpdate = true;
+    kinds.clearUpdateRanges();
+    kinds.addUpdateRange(0, n * 2);
+    kinds.needsUpdate = true;
+    geometry3.instanceCount = n;
+    state2.count = n;
+  }
+  function draw(x0, z0, sx, sz) {
+    const started = performance.now(), previous = renderer.getRenderTarget(), alpha = renderer.getClearAlpha();
+    renderer.getClearColor(clear);
+    uniforms.sun.value.set(sx, sz);
+    uniforms.area.value.set(x0 - cell / 2, z0 - cell / 2, 1 / (size * cell));
+    try {
+      renderer.setRenderTarget(target);
+      renderer.setClearColor(white, 1);
+      renderer.clear(true, false, false);
+      if (geometry3.instanceCount > 0 && uniforms.patterns.value) renderer.render(scene, camera);
+      if (!state2.checked) {
+        state2.checked = true;
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+          state2.ok = false;
+          state2.error = "incomplete";
+        }
+      }
+    } finally {
+      renderer.setRenderTarget(previous);
+      renderer.setClearColor(clear, alpha);
+    }
+    state2.drawn++;
+    state2.copiedVersion = -1;
+    state2.lastMs = +(performance.now() - started).toFixed(2);
+    return state2.ok;
+  }
+  function copyInto(texture, row2) {
+    if (!state2.ok || !state2.drawn) return false;
+    renderer.initTexture(texture);
+    const handle = renderer.properties.get(texture).__webglTexture;
+    if (!handle) return false;
+    const previous = renderer.getRenderTarget(), first = state2.copies === 0;
+    if (first) while (gl.getError() !== gl.NO_ERROR) {
+    }
+    try {
+      renderer.setRenderTarget(target);
+      renderer.state.bindTexture(gl.TEXTURE_2D, handle);
+      gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, row2, 0, 0, size, size);
+      renderer.state.unbindTexture();
+    } finally {
+      renderer.setRenderTarget(previous);
+    }
+    if (first) {
+      const error = gl.getError();
+      if (error !== gl.NO_ERROR) {
+        state2.ok = false;
+        state2.error = "copy " + error;
+        return false;
+      }
+    }
+    state2.copies++;
+    state2.copiedVersion = texture.version;
+    return true;
+  }
+  function dispose() {
+    target.dispose();
+    geometry3.dispose();
+    material2.dispose();
+    patternTexture?.dispose();
+    state2.ok = false;
+  }
+  return { state: state2, target, setPatterns, setTrees, draw, copyInto, dispose, get capacity() {
+    return capacity;
+  } };
+}
+
+// crown-shadow-map.js
+var CROWN_SHADOW = Object.freeze({
+  revision: "crown-shadow-v1",
+  // Texels across and metres of ground covered (centred on the player).
+  size: 2048,
+  span: 840,
+  // Redraw after the player moved this far (m) or the sun turned this much.
+  recentre: 40,
+  sunStep: 0.5 * Math.PI / 180,
+  // Share of the crown (as the records give it) drawn solid, across and up.
+  across: 0.82,
+  up: 0.8,
+  // Sun the shading crowns stop (they are not solid: light gets through).
+  darkness: 0.62,
+  // The shade softens over this much depth (m) past the receiver's own crown.
+  soft: 2.5,
+  // Lowest sun (sine of its elevation) and the fade in to the second.
+  sun: Object.freeze([0.12, 0.2])
+});
+var crownShadowUniforms = {
+  land_crownShadow: { value: null },
+  land_crownShadowMatrix: { value: new Matrix4() },
+  land_crownShadowTune: { value: new Vector4(CROWN_SHADOW.darkness, CROWN_SHADOW.soft, 0, 0) }
+};
+var CROWN_SHADOW_GLSL = `
+#ifdef LAND_CROWN_SHADOW
+uniform sampler2D land_crownShadow;uniform mat4 land_crownShadowMatrix;uniform vec4 land_crownShadowTune;
+// Sun the other crowns leave at p (1: none), the point moved shift metres toward the sun.
+float landCrownLight(vec3 p,float shift){
+ if(land_crownShadowTune.w<=0.)return 1.;
+ vec3 q=(land_crownShadowMatrix*vec4(p,1.)).xyz;
+ vec2 rim=min(q.xy,1.-q.xy);if(min(rim.x,rim.y)<=0.)return 1.;
+ // Four texels compared and blended (soft edges).
+ vec2 size=vec2(textureSize(land_crownShadow,0)),t=q.xy*size-.5,f=fract(t);ivec2 i=ivec2(floor(t));
+ float level=q.z+shift,s=land_crownShadowTune.y;
+ vec4 front=vec4(texelFetch(land_crownShadow,clamp(i,ivec2(0),ivec2(size)-1),0).r,texelFetch(land_crownShadow,clamp(i+ivec2(1,0),ivec2(0),ivec2(size)-1),0).r,
+  texelFetch(land_crownShadow,clamp(i+ivec2(0,1),ivec2(0),ivec2(size)-1),0).r,texelFetch(land_crownShadow,clamp(i+ivec2(1,1),ivec2(0),ivec2(size)-1),0).r);
+ vec4 shade=smoothstep(level,level+s,front);
+ float k=mix(mix(shade.x,shade.y,f.x),mix(shade.z,shade.w,f.x),f.y)*smoothstep(0.,.04,min(rim.x,rim.y));
+ return 1.-land_crownShadowTune.x*land_crownShadowTune.w*k;
+}
+#endif
+`;
+var VERTEX2 = `
+in vec2 corner;in vec4 iCrown;in vec2 iShape;
+uniform vec3 axisR;uniform vec3 axisU;uniform vec3 axisS;uniform vec3 origin;uniform vec4 extent;
+out vec2 vLocal;flat out vec4 vCrown;flat out vec2 vShape;
+void main(){
+ // The crown's silhouette from the sun: along R its radius, along U its support.
+ float a=iShape.x,b=iShape.y,ru=sqrt(a*a*(axisU.x*axisU.x+axisU.z*axisU.z)+b*b*axisU.y*axisU.y);
+ vec3 c=iCrown.xyz-origin;vec2 centre=vec2(dot(c,axisR),dot(c,axisU));
+ vLocal=(corner*2.-1.)*vec2(a,ru)*1.02;vCrown=vec4(centre,dot(c,axisS),0.);vShape=iShape;
+ vec2 p=centre+vLocal;
+ gl_Position=vec4((p-extent.xy)*extent.zw*2.-1.,0.,1.);
+}`;
+var FRAGMENT2 = `
+precision highp float;
+uniform vec3 axisR;uniform vec3 axisU;uniform vec3 axisS;
+in vec2 vLocal;flat in vec4 vCrown;flat in vec2 vShape;out vec4 front;
+void main(){
+ // Ray toward the sun through this texel, in the ellipsoid's unit space.
+ vec3 inv=vec3(1./vShape.x,1./vShape.y,1./vShape.x);
+ vec3 q=(axisR*vLocal.x+axisU*vLocal.y)*inv,s=axisS*inv;
+ float ss=dot(s,s),qs=dot(q,s),disc=qs*qs-ss*(dot(q,q)-1.);
+ if(disc<0.)discard;
+ front=vec4(vCrown.z+(-qs+sqrt(disc))/ss,0.,0.,1.);
+}`;
+function createCrownShadowMap(renderer, { size = CROWN_SHADOW.size } = {}) {
+  if (!renderer?.capabilities?.isWebGL2) return null;
+  const gl = renderer.getContext();
+  const target = new WebGLRenderTarget(size, size, { type: HalfFloatType, format: RedFormat, depthBuffer: false, stencilBuffer: false, generateMipmaps: false, minFilter: NearestFilter, magFilter: NearestFilter });
+  target.texture.name = "crown-shadow-map";
+  const geometry3 = new InstancedBufferGeometry();
+  geometry3.setAttribute("corner", new Float32BufferAttribute([0, 0, 1, 0, 0, 1, 1, 1], 2));
+  geometry3.setIndex([0, 1, 2, 2, 1, 3]);
+  const uniforms = { axisR: { value: new Vector3() }, axisU: { value: new Vector3() }, axisS: { value: new Vector3() }, origin: { value: new Vector3() }, extent: { value: new Vector4() } };
+  const material2 = new RawShaderMaterial({
+    glslVersion: GLSL3,
+    uniforms,
+    vertexShader: VERTEX2,
+    fragmentShader: FRAGMENT2,
+    depthTest: false,
+    depthWrite: false,
+    blending: CustomBlending,
+    blendEquation: MaxEquation,
+    blendSrc: OneFactor,
+    blendDst: OneFactor
+  });
+  const mesh2 = new Mesh(geometry3, material2);
+  mesh2.frustumCulled = false;
+  const scene = new Scene();
+  scene.add(mesh2);
+  const camera = new Camera(), empty = new Color(-1e4, 0, 0), clear = new Color();
+  let capacity = 0, crowns = null, shapes = null;
+  const state2 = { ok: true, checked: false, drawn: 0, count: 0, lastMs: 0, error: null };
+  const R = new Vector3(), U = new Vector3(), S = new Vector3(), up7 = new Vector3(0, 1, 0), corner2 = new Vector3();
+  function ensure4(n) {
+    if (crowns && n <= capacity) return;
+    capacity = Math.max(2048, 2 ** Math.ceil(Math.log2(Math.max(1, n))));
+    crowns = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(DynamicDrawUsage);
+    shapes = new InstancedBufferAttribute(new Float32Array(capacity * 2), 2).setUsage(DynamicDrawUsage);
+    geometry3.setAttribute("iCrown", crowns);
+    geometry3.setAttribute("iShape", shapes);
+  }
+  function setCrowns(count, write) {
+    ensure4(count);
+    const c2 = crowns.array, s = shapes.array;
+    let n = 0;
+    write((x, y, z, a, b) => {
+      c2[n * 4] = x;
+      c2[n * 4 + 1] = y;
+      c2[n * 4 + 2] = z;
+      s[n * 2] = a;
+      s[n * 2 + 1] = b;
+      n++;
+    });
+    crowns.clearUpdateRanges();
+    crowns.addUpdateRange(0, n * 4);
+    crowns.needsUpdate = true;
+    shapes.clearUpdateRanges();
+    shapes.addUpdateRange(0, n * 2);
+    shapes.needsUpdate = true;
+    geometry3.instanceCount = n;
+    state2.count = n;
+  }
+  function draw(sun, cx, cz, low, high, span = CROWN_SHADOW.span) {
+    const started = performance.now();
+    S.copy(sun).normalize();
+    U.copy(up7).addScaledVector(S, -S.y);
+    if (U.lengthSq() < 1e-6) U.set(0, 0, 1);
+    U.normalize();
+    R.crossVectors(U, S).normalize();
+    const origin = uniforms.origin.value.set(cx, (low + high) / 2, cz);
+    let r0 = Infinity, r1 = -Infinity, u0 = Infinity, u1 = -Infinity;
+    for (const x of [-span / 2, span / 2]) for (const z of [-span / 2, span / 2]) for (const y of [low, high]) {
+      corner2.set(cx + x, y, cz + z).sub(origin);
+      const r = corner2.dot(R), u = corner2.dot(U);
+      r0 = Math.min(r0, r);
+      r1 = Math.max(r1, r);
+      u0 = Math.min(u0, u);
+      u1 = Math.max(u1, u);
+    }
+    uniforms.axisR.value.copy(R);
+    uniforms.axisU.value.copy(U);
+    uniforms.axisS.value.copy(S);
+    uniforms.extent.value.set(r0, u0, 1 / (r1 - r0), 1 / (u1 - u0));
+    const m = crownShadowUniforms.land_crownShadowMatrix.value, kr = 1 / (r1 - r0), ku = 1 / (u1 - u0);
+    m.set(
+      R.x * kr,
+      R.y * kr,
+      R.z * kr,
+      -(origin.dot(R) + r0) * kr,
+      U.x * ku,
+      U.y * ku,
+      U.z * ku,
+      -(origin.dot(U) + u0) * ku,
+      S.x,
+      S.y,
+      S.z,
+      -origin.dot(S),
+      0,
+      0,
+      0,
+      1
+    );
+    const previous = renderer.getRenderTarget(), alpha = renderer.getClearAlpha();
+    renderer.getClearColor(clear);
+    try {
+      renderer.setRenderTarget(target);
+      renderer.setClearColor(empty, 1);
+      renderer.clear(true, false, false);
+      if (geometry3.instanceCount > 0) renderer.render(scene, camera);
+      if (!state2.checked) {
+        state2.checked = true;
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+          state2.ok = false;
+          state2.error = "incomplete";
+        }
+      }
+    } finally {
+      renderer.setRenderTarget(previous);
+      renderer.setClearColor(clear, alpha);
+    }
+    crownShadowUniforms.land_crownShadow.value = state2.ok ? target.texture : null;
+    state2.drawn++;
+    state2.lastMs = +(performance.now() - started).toFixed(2);
+    return state2.ok;
+  }
+  function dispose() {
+    if (crownShadowUniforms.land_crownShadow.value === target.texture) crownShadowUniforms.land_crownShadow.value = null;
+    crownShadowUniforms.land_crownShadowTune.value.w = 0;
+    target.dispose();
+    geometry3.dispose();
+    material2.dispose();
+    state2.ok = false;
+  }
+  return { state: state2, target, setCrowns, draw, dispose };
 }
 
 // day-night-clock.js
@@ -1876,7 +2288,7 @@ function createLocalLights() {
   const lights = /* @__PURE__ */ new Set(), records = [], frustum = new Frustum(), viewProjection = new Matrix4(), sphere2 = new Sphere(), at = new Vector3();
   const value = localLightUniforms.land_localLight.value;
   const stats = { registered: 0, candidates: 0, used: 0, dropped: 0 };
-  function add3(light) {
+  function add4(light) {
     if (!light?.isPointLight) return light;
     light.layers.set(LOCAL_LIGHT_LAYER);
     lights.add(light);
@@ -1945,7 +2357,7 @@ function createLocalLights() {
     stats.used = used;
     stats.dropped = count - used;
   }
-  return { add: add3, remove, update, clear, has: (light) => lights.has(light), stats: () => ({ ...stats }) };
+  return { add: add4, remove, update, clear, has: (light) => lights.has(light), stats: () => ({ ...stats }) };
 }
 var CANOPY_SHADOW = Object.freeze({
   size: 512,
@@ -2081,7 +2493,9 @@ var canopyUniforms = {
   // v94: the crowns' fine shade (SUN_FIELD.fine) in the same texture: uv =
   // xz * map.xy + map.zw; the grid's centre x, z, half span (m) and weight (0: off).
   land_sunFine: { value: new Vector4() },
-  land_sunFineArea: { value: new Vector4() }
+  land_sunFineArea: { value: new Vector4() },
+  // v95: the crowns' shade on other crowns (crown-shadow-map.js; trees only).
+  ...crownShadowUniforms
 };
 var sunFieldUniforms = Object.fromEntries(Object.entries(canopyUniforms).filter(([name]) => name.startsWith("land_sun") || name === "land_contact"));
 var f1 = (v) => v.toFixed(3);
@@ -2155,6 +2569,7 @@ float landSunGround(vec3 p){
  if(fine.y>0.)shade=mix(shade,max(smoothstep(land_sunTune.x,land_sunTune.x+land_sunTune.y,depth)*landSunDeep(depth),1.-fine.x),fine.y);
  return cloud*(1.-land_sunDir.w*shade);
 }
+${CROWN_SHADOW_GLSL}
 // Sun left at a point p above the ground (crowns, rocks, characters).
 float landSunAt(vec3 p){
  float cloud=landCloudSun(p);
@@ -2165,6 +2580,11 @@ float landSunAt(vec3 p){
  // Things near the ground (rocks, plants) take the crowns' fine shade too.
  vec2 fine=landSunFine(p.xz);fine.y*=1.-smoothstep(1.5,4.,p.y-ground);
  if(fine.y>0.)shade=mix(shade,max(below*deep,1.-fine.x),fine.y);
+ #ifdef LAND_CROWN_SHADOW
+ // v95: a crown past the shadow map in the shade of other crowns.
+ {float crownWeight=smoothstep(land_sunNear.z-land_sunNear.w,land_sunNear.z,distance(p.xz,land_sunNear.xy));
+  if(crownWeight>0.)shade=max(shade,(1.-landCrownLight(p,LAND_CROWN_SHIFT))*crownWeight);}
+ #endif
  return cloud*(1.-land_sunDir.w*shade);
 }
 // Light an object keeps at p (x: sky, y: sun): less sky at its foot (the
@@ -2250,7 +2670,7 @@ function patchCanopyTreeMaterial(shader, height2) {
   vCanopyTree=vec4((modelMatrix*vec4(transformed,1.)).xyz,clamp(transformed.y/${height2.toFixed(4)},0.,1.));
   vCanopyShift=${(height2 * 0.3 + 2).toFixed(4)};
   #endif`);
-  shader.fragmentShader = "varying vec4 vCanopyTree;varying float vCanopyShift;\n" + CANOPY_TREE_PARS + CANOPY_TREE_SHADE + shader.fragmentShader.replace("#include <lights_fragment_end>", `#include <lights_fragment_end>
+  shader.fragmentShader = "\n#define LAND_CROWN_SHADOW\n#define LAND_CROWN_SHIFT (vCanopyShift*1.2)\nvarying vec4 vCanopyTree;varying float vCanopyShift;\n" + CANOPY_TREE_PARS + CANOPY_TREE_SHADE + shader.fragmentShader.replace("#include <lights_fragment_end>", `#include <lights_fragment_end>
   {
    float canopyFar=smoothstep(${CANOPY_SHADOW.fadeStart.toFixed(1)},${CANOPY_SHADOW.fadeEnd.toFixed(1)},distance(cameraPosition,vCanopyTree.xyz));
    if(canopyFar>0.){
@@ -2598,11 +3018,15 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
     job = null;
     finish3(done);
   }
-  const F = SUN_FIELD, n = F.size, cell = F.cell, fieldHalf = n * cell / 2;
-  const FN = F.fine, fineHalf = FN.size * FN.cell / 2;
+  const F3 = SUN_FIELD, n = F3.size, cell = F3.cell, fieldHalf = n * cell / 2;
+  const FN = F3.fine, fineHalf = FN.size * FN.cell / 2;
   function fieldAtlas(nx, nz) {
     const width = Math.max(n, nx, FN.size), height2 = n + nz + FN.size;
     const t = new DataTexture(new Uint16Array(width * height2 * 2), width, height2, RGFormat, HalfFloatType);
+    {
+      const data2 = t.image.data, one = toHalf(1);
+      for (let i = (n + nz) * width * 2; i < data2.length; i += 2) data2[i] = one;
+    }
     t.colorSpace = NoColorSpace;
     t.magFilter = t.minFilter = LinearFilter;
     t.generateMipmaps = false;
@@ -2656,7 +3080,7 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
     const { nx, nz, x0, z0, step } = grid, count = nx * nz, roof = new Float32Array(count), surface4 = new Float32Array(count);
     for (let i = 0; i < count; i++) {
       const ground = grid.height[i];
-      roof[i] = ground > 1.5 ? F.islandRoof * (options.roof ?? 1) * (1 - 0.22 * grid.swamp[i]) * (1 - 0.45 * grid.snow[i]) * smooth3((grid.density[i] - 0.3) / 0.4) : 0;
+      roof[i] = ground > 1.5 ? F3.islandRoof * (options.roof ?? 1) * (1 - 0.22 * grid.swamp[i]) * (1 - 0.45 * grid.snow[i]) * smooth3((grid.density[i] - 0.3) / 0.4) : 0;
       surface4[i] = ground + roof[i];
     }
     atlas = fieldAtlas(nx, nz);
@@ -2713,7 +3137,7 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
       if ((iz & 3) === 3) yield;
     }
     const source2 = world2.distantTrees?.canopySource?.();
-    let crowns = 0;
+    let crowns2 = 0;
     sun.phase = "near crowns";
     if (source2?.payload) {
       const { payload, highWater } = source2;
@@ -2726,11 +3150,11 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
         if (!(h > 1)) continue;
         const width = Math.min(1.6, Math.max(0.6, payload[o + 4])), radius = h * (pine ? 0.2 : 0.3) * width;
         if (leafless) h *= 0.7;
-        stampCrown(s, n, cell, x0, z0, payload[o], payload[o + 1], payload[o + 2], h * (options.crowns ?? F.crownScale), radius, pine);
-        crowns++;
+        stampCrown(s, n, cell, x0, z0, payload[o], payload[o + 1], payload[o + 2], h * (options.crowns ?? F3.crownScale), radius, pine);
+        crowns2++;
       }
     }
-    sun.stats.crowns = crowns;
+    sun.stats.crowns = crowns2;
     sun.stats.nearSurfaces++;
   }
   function* fieldJob(dir, player) {
@@ -2764,7 +3188,7 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
     yield* sweepShadeCeiling(near.surface, n, n, cell, dir.x, dir.z, dir.tan, near.ceiling, beyond);
     sun.phase = "near soften";
     for (let i = 0; i < n * n; i++) near.depth[i] = Math.max(0, near.ceiling[i] - near.ground[i]);
-    yield* softenShade(near.depth, n, n, options.soften ?? F.soften, F.bias - F.soft, 2 * F.soft, near.shade, near.spare);
+    yield* softenShade(near.depth, n, n, options.soften ?? F3.soften, F3.bias - F3.soft, 2 * F3.soft, near.shade, near.spare);
     sun.phase = "near encode";
     yield* encode(near, n, n, 0);
     atlas.texture.needsUpdate = true;
@@ -2781,7 +3205,7 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
   function sunPump() {
     sun.handle = null;
     if (disposed || !sun.job) return;
-    const start2 = performance.now(), deadline = start2 + F.sliceMs, stats2 = sun.stats;
+    const start2 = performance.now(), deadline = start2 + F3.sliceMs, stats2 = sun.stats;
     stats2.slices++;
     for (let now = start2; now < deadline; ) {
       const done = sun.job.next().done, after = performance.now();
@@ -2811,9 +3235,17 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
     handle: null,
     patterns: /* @__PURE__ */ new Map(),
     patternSin: NaN,
+    patternsChanged: true,
+    // v95: drawn on the GPU (fine-shade-gpu.js) where it can; null: the CPU stamps it.
+    gpu: void 0,
+    list: new Float32Array(6 * 4096),
     built: { x: NaN, z: NaN, sx: NaN, sz: NaN, sin: NaN, revision: NaN, source: null },
-    stats: { builds: 0, trees: 0, lastMs: 0, slices: 0, cpuMs: 0 }
+    stats: { builds: 0, trees: 0, lastMs: 0, slices: 0, cpuMs: 0, gpuMs: 0 }
   };
+  function fineGpu() {
+    if (fine.gpu === void 0) fine.gpu = options.fineGpu === false ? null : createFineShadeGpu(world2.renderer, { size: FN.size, cell: FN.cell });
+    return fine.gpu?.state.ok ? fine.gpu : null;
+  }
   function* fineJob(sx, sz, sin, player) {
     const started = performance.now(), size2 = FN.size, c2 = FN.cell, light = fine.light;
     if (!(Math.abs(sin - fine.patternSin) < 1e-4)) {
@@ -2824,37 +3256,79 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
         yield;
       }
       fine.patternSin = sin;
+      fine.patternsChanged = true;
     }
     const x0 = Math.round(player.x / 8) * 8 - fineHalf, z0 = Math.round(player.z / 8) * 8 - fineHalf;
-    light.fill(1);
-    yield;
     const source2 = world2.distantTrees?.canopySource?.();
     let trees = 0;
-    if (source2?.payload) {
-      const { payload, highWater } = source2, margin = 100, x1 = x0 + 2 * fineHalf, z1 = z0 + 2 * fineHalf;
-      for (let k = 0; k < highWater; k++) {
-        if ((k & 15) === 15) yield;
-        const o = k * 12;
-        if (payload[o + 11] === -1) continue;
-        const tx = payload[o], tz = payload[o + 2];
-        if (tx < x0 - margin || tz < z0 - margin || tx > x1 + margin || tz > z1 + margin) continue;
-        const code = payload[o + 7], pattern = fine.patterns.get(Math.floor(code / 8)), scale5 = payload[o + 3];
-        if (!pattern || !(scale5 > 0.05)) continue;
-        const width2 = Math.min(1.6, Math.max(0.6, payload[o + 4]));
-        if (splatCrownShadow(light, size2, c2, x0, z0, tx, tz, sx, sz, pattern, scale5 * Math.sqrt(width2), scale5 * width2, code % 8 >= 4 ? 0.3 : 1)) trees++;
+    const gpu = fineGpu();
+    if (gpu) {
+      const tan = sin / Math.sqrt(Math.max(1e-6, 1 - sin * sin)), margin = Math.min(260, 100 + 30 / Math.max(tan, 0.14)), x1 = x0 + 2 * fineHalf, z1 = z0 + 2 * fineHalf;
+      let list = fine.list, n2 = 0;
+      if (source2?.payload) {
+        const { payload, highWater } = source2;
+        for (let k = 0; k < highWater; k++) {
+          if ((k & 1023) === 1023) yield;
+          const o = k * 12;
+          if (payload[o + 11] === -1) continue;
+          const tx = payload[o], tz = payload[o + 2];
+          if (tx < x0 - margin || tz < z0 - margin || tx > x1 + margin || tz > z1 + margin) continue;
+          const code = payload[o + 7], kind = Math.floor(code / 8), scale5 = payload[o + 3];
+          if (!fine.patterns.has(kind) || !(scale5 > 0.05)) continue;
+          const width2 = Math.min(1.6, Math.max(0.6, payload[o + 4]));
+          if ((n2 + 1) * 6 > list.length) {
+            const grown = new Float32Array(list.length * 2);
+            grown.set(list);
+            list = fine.list = grown;
+          }
+          list.set([tx, tz, scale5 * Math.sqrt(width2), scale5 * width2, kind, code % 8 >= 4 ? 0.3 : 1], n2 * 6);
+          n2++;
+        }
       }
-    }
-    const out2 = atlas.texture.image.data, width = atlas.width, row0 = atlas.fineRow;
-    for (let j = 0; j < size2; j++) {
-      const o = (row0 + j) * width, r = j * size2;
-      for (let i = 0; i < size2; i++) {
-        const t = (o + i) * 2;
-        out2[t] = toHalf(light[r + i]);
-        out2[t + 1] = 0;
+      if (fine.patternsChanged) {
+        gpu.setPatterns(fine.patterns);
+        fine.patternsChanged = false;
       }
-      if ((j & 15) === 15) yield;
+      gpu.setTrees(n2, (put2) => {
+        for (let i = 0; i < n2; i++) {
+          const o = i * 6;
+          put2(list[o], list[o + 1], list[o + 2], list[o + 3], list[o + 4], list[o + 5]);
+        }
+      });
+      if (gpu.draw(x0, z0, sx, sz) && gpu.copyInto(atlas.texture, atlas.fineRow)) trees = n2;
+      fine.stats.gpuMs = gpu.state.lastMs;
     }
-    atlas.texture.needsUpdate = true;
+    if (!fine.gpu?.state.ok) {
+      fine.gpu = null;
+      light.fill(1);
+      yield;
+      if (source2?.payload) {
+        const { payload, highWater } = source2, margin = 100, x1 = x0 + 2 * fineHalf, z1 = z0 + 2 * fineHalf;
+        for (let k = 0; k < highWater; k++) {
+          if ((k & 15) === 15) yield;
+          const o = k * 12;
+          if (payload[o + 11] === -1) continue;
+          const tx = payload[o], tz = payload[o + 2];
+          if (tx < x0 - margin || tz < z0 - margin || tx > x1 + margin || tz > z1 + margin) continue;
+          const code = payload[o + 7], pattern = fine.patterns.get(Math.floor(code / 8)), scale5 = payload[o + 3];
+          if (!pattern || !(scale5 > 0.05)) continue;
+          const width3 = Math.min(1.6, Math.max(0.6, payload[o + 4]));
+          if (splatCrownShadow(light, size2, c2, x0, z0, tx, tz, sx, sz, pattern, scale5 * Math.sqrt(width3), scale5 * width3, code % 8 >= 4 ? 0.3 : 1)) trees++;
+        }
+      }
+      const out2 = atlas.texture.image.data, width2 = atlas.width, row02 = atlas.fineRow;
+      for (let j = 0; j < size2; j++) {
+        const o = (row02 + j) * width2, r = j * size2;
+        for (let i = 0; i < size2; i++) {
+          const t = (o + i) * 2;
+          out2[t] = toHalf(light[r + i]);
+          out2[t + 1] = 0;
+        }
+        if ((j & 15) === 15) yield;
+      }
+      atlas.texture.needsUpdate = true;
+    }
+    const width = atlas.width, row0 = atlas.fineRow;
     fine.x0 = x0;
     fine.z0 = z0;
     fine.ready = true;
@@ -2871,16 +3345,116 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
   function finePump() {
     fine.handle = null;
     if (disposed || !fine.job) return;
-    const start2 = performance.now(), deadline = start2 + F.sliceMs;
+    const start2 = performance.now(), deadline = start2 + F3.sliceMs;
     fine.stats.slices++;
-    while (performance.now() < deadline) if (fine.job.next().done) {
+    try {
+      while (performance.now() < deadline) if (fine.job.next().done) {
+        fine.job = null;
+        break;
+      }
+    } catch (error) {
       fine.job = null;
-      break;
+      fine.stats.errors = (fine.stats.errors || 0) + 1;
+      console.warn("Fine crown shade job failed", error);
+      return;
     }
     fine.stats.cpuMs = +(fine.stats.cpuMs + performance.now() - start2).toFixed(1);
     if (fine.job) fine.handle = scheduleTask(finePump);
   }
+  const crowns = {
+    gpu: void 0,
+    job: null,
+    handle: null,
+    ready: false,
+    list: new Float32Array(5 * 8192),
+    built: { x: NaN, z: NaN, sx: NaN, sy: NaN, sz: NaN, revision: NaN, source: null },
+    stats: { builds: 0, crowns: 0, lastMs: 0, gpuMs: 0, slices: 0 }
+  };
+  function crownMap() {
+    if (crowns.gpu === void 0) crowns.gpu = options.crownShadow === false ? null : createCrownShadowMap(world2.renderer);
+    return crowns.gpu?.state.ok ? crowns.gpu : null;
+  }
+  function* crownJob(sun2, player) {
+    const started = performance.now(), map = crownMap();
+    if (!map) return;
+    const source2 = world2.distantTrees?.canopySource?.(), half = CROWN_SHADOW.span / 2 + 40;
+    let list = crowns.list, n2 = 0, low = Infinity, high = -Infinity;
+    if (source2?.payload) {
+      const { payload, highWater } = source2;
+      for (let k = 0; k < highWater; k++) {
+        if ((k & 1023) === 1023) yield;
+        const o = k * 12;
+        if (payload[o + 11] === -1) continue;
+        const x = payload[o], y = payload[o + 1], z = payload[o + 2], code = payload[o + 7];
+        if (Math.abs(x - player.x) > half || Math.abs(z - player.z) > half || code % 8 >= 4) continue;
+        const pine = Math.floor(code / 8) < 8, h = payload[o + 3] * TREE_HEIGHTS[pine ? "pine" : "broadleaf"];
+        if (!(h > 2)) continue;
+        const width = Math.min(1.6, Math.max(0.6, payload[o + 4])), base = h * (pine ? F3.pineBase : F3.broadleafBase);
+        if ((n2 + 1) * 5 > list.length) {
+          const grown = new Float32Array(list.length * 2);
+          grown.set(list);
+          list = crowns.list = grown;
+        }
+        list[n2 * 5] = x;
+        list[n2 * 5 + 1] = y + (base + h) / 2;
+        list[n2 * 5 + 2] = z;
+        list[n2 * 5 + 3] = h * (pine ? 0.2 : 0.3) * width * CROWN_SHADOW.across;
+        list[n2 * 5 + 4] = (h - base) / 2 * CROWN_SHADOW.up;
+        n2++;
+        low = Math.min(low, y);
+        high = Math.max(high, y + h);
+      }
+    }
+    map.setCrowns(n2, (put2) => {
+      for (let i = 0; i < n2; i++) {
+        const o = i * 5;
+        put2(list[o], list[o + 1], list[o + 2], list[o + 3], list[o + 4]);
+      }
+    });
+    if (!Number.isFinite(low)) {
+      low = (player.y ?? 0) - 20;
+      high = low + 40;
+    }
+    map.draw(sun2, player.x, player.z, low - 2, high + 2);
+    crowns.ready = map.state.ok;
+    Object.assign(crowns.stats, { builds: crowns.stats.builds + 1, crowns: n2, gpuMs: map.state.lastMs, lastMs: Math.round(performance.now() - started) });
+    world2.needsFrame = true;
+  }
+  function crownPump() {
+    crowns.handle = null;
+    if (disposed || !crowns.job) return;
+    const deadline = performance.now() + F3.sliceMs;
+    crowns.stats.slices++;
+    try {
+      while (performance.now() < deadline) if (crowns.job.next().done) {
+        crowns.job = null;
+        break;
+      }
+    } catch (error) {
+      crowns.job = null;
+      crowns.stats.errors = (crowns.stats.errors || 0) + 1;
+      console.warn("Crown shadow job failed", error);
+      return;
+    }
+    if (crowns.job) crowns.handle = scheduleTask(crownPump);
+  }
+  function updateCrowns(player) {
+    const u = canopyUniforms.land_sunDir.value, tune = crownShadowUniforms.land_crownShadowTune.value, sin = u.z / Math.sqrt(1 + u.z * u.z), C2 = CROWN_SHADOW;
+    const on = enabled && world2.crownLightEnabled !== false && !world2.inDungeon && world2.quality !== "low" && u.w > 0 && sin >= C2.sun[0] && !!world2.distantTrees?.canopySource;
+    tune.w = on && crowns.ready ? smooth3((sin - C2.sun[0]) / (C2.sun[1] - C2.sun[0])) : 0;
+    if (!on || crowns.job || !crownMap()) return;
+    const cos = Math.sqrt(Math.max(0, 1 - sin * sin)), sx = u.x * cos, sy = sin, sz = u.y * cos;
+    const b = crowns.built, source2 = world2.distantTrees.canopySource();
+    const turned = !(sx * b.sx + sy * b.sy + sz * b.sz > Math.cos(C2.sunStep));
+    const moved = !(Math.abs(player.x - b.x) < C2.recentre && Math.abs(player.z - b.z) < C2.recentre);
+    const changed = (source2?.payload ?? null) !== b.source || (source2?.revision ?? 0) !== b.revision;
+    if (crowns.ready && !turned && !moved && !changed) return;
+    Object.assign(b, { x: player.x, z: player.z, sx, sy, sz, revision: source2?.revision ?? 0, source: source2?.payload ?? null });
+    crowns.job = crownJob(new Vector3(sx, sy, sz), { x: player.x, y: player.y, z: player.z });
+    crowns.handle = scheduleTask(crownPump);
+  }
   function updateFine(player) {
+    if (fine.ready && fine.gpu?.state.ok && atlas && fine.gpu.state.copiedVersion !== atlas.texture.version) fine.gpu.copyInto(atlas.texture, atlas.fineRow);
     const u = canopyUniforms.land_sunDir.value, area = canopyUniforms.land_sunFineArea.value, sin = u.z / Math.sqrt(1 + u.z * u.z);
     const on = enabled && world2.crownLightEnabled !== false && !world2.inDungeon && !!atlas && u.w > 0 && sin >= FN.sun[0] && !!world2.proceduralTrees?.family && !!world2.distantTrees?.canopySource;
     area.w = on && fine.ready ? smooth3((sin - FN.sun[0]) / (FN.sun[1] - FN.sun[0])) : 0;
@@ -2916,7 +3490,7 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
       const [d, g] = fieldAt(player.x + u.x * reach, player.z + u.y * reach);
       depth = d + g - reach * u.z - ground;
     }
-    return cloud * (1 - u.w * smooth3((depth - (F.bias - F.soft)) / (2 * F.soft)));
+    return cloud * (1 - u.w * smooth3((depth - (F3.bias - F3.soft)) / (2 * F3.soft)));
   }
   const installed2 = /* @__PURE__ */ new WeakSet();
   function installMaterial(material2) {
@@ -2929,7 +3503,7 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
       patchSunField(shader, "object");
     };
     material2.customProgramCacheKey = function() {
-      return (custom ? custom.call(this) : previousSource) + "|" + F.revision;
+      return (custom ? custom.call(this) : previousSource) + "|" + F3.revision;
     };
     material2.userData.sunField = "object";
     material2.needsUpdate = true;
@@ -2955,15 +3529,15 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
     const length = Math.hypot(sx, sy, sz) || 1, flat = Math.hypot(sx, sz) / length, y = sy / length;
     const reach = world2.quality === "low" || world2.renderer?.shadowMap?.enabled === false ? 0 : ["high", "ultra"].includes(world2.quality) ? 95 : 60;
     canopyUniforms.land_sunNear.value.set(player.x, player.z, reach, Math.max(1, reach * 0.25));
-    canopyUniforms.land_contact.value.x = enabled && !world2.inDungeon ? F.contact.foot : 0;
+    canopyUniforms.land_contact.value.x = enabled && !world2.inDungeon ? F3.contact.foot : 0;
     if (time - sun.lastScan > 1) {
       sun.lastScan = time;
       if (!world2.inDungeon) installMaterials();
     }
     const island = islandGrid();
-    const rate = Math.max(0, world2.dayNight?.rate ?? 1), keepsUp = rate <= F.maxRate;
+    const rate = Math.max(0, world2.dayNight?.rate ?? 1), keepsUp = rate <= F3.maxRate;
     if (!keepsUp) sun.stale = true;
-    const fade = smooth3((performance.now() - sun.freshAt) / (1e3 * F.fadeIn));
+    const fade = smooth3((performance.now() - sun.freshAt) / (1e3 * F3.fadeIn));
     const strength = enabled && keepsUp && !sun.stale && !world2.inDungeon && island?.ready && y > 0.03 ? smooth3((y - 0.03) / 0.12) * fade : 0;
     if (flat > 1e-4) u.set(sx / length / flat, sz / length / flat, Math.min(1e3, y / flat), strength);
     else u.set(0, 1, 1e3, strength);
@@ -2973,7 +3547,7 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
       if (!sun.job && (!enabled || !keepsUp || y <= 0.03)) sun.stale = true;
       return;
     }
-    const step = Math.max(F.sunStep, rate * 2 * Math.PI / DAY_NIGHT_REAL_SECONDS);
+    const step = Math.max(F3.sunStep, rate * 2 * Math.PI / DAY_NIGHT_REAL_SECONDS);
     const turned = sun.stale || (sx * sun.builtDir.x + sy * sun.builtDir.y + sz * sun.builtDir.z) / length < Math.cos(step);
     const moved = !(Math.abs(Math.round(player.x / 64) * 64 - fieldHalf - near.x0) < recentre && Math.abs(Math.round(player.z / 64) * 64 - fieldHalf - near.z0) < recentre);
     if (!turned && !moved && !sun.dirtySurface && island.ready) return;
@@ -2990,6 +3564,7 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
     if (!enabled) sunUniform.w = 0;
     updateSun(player, sunDirection, time);
     updateFine(player);
+    updateCrowns(player);
     if (!enabled || job || world2.inDungeon) return;
     const source2 = world2.distantTrees?.canopySource?.();
     if (!source2 || !source2.payload) return;
@@ -3013,7 +3588,14 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
     cancelTask(fine.handle);
     fine.handle = null;
     fine.job = null;
+    fine.gpu?.dispose();
+    fine.gpu = null;
     canopyUniforms.land_sunFineArea.value.w = 0;
+    cancelTask(crowns.handle);
+    crowns.handle = null;
+    crowns.job = null;
+    crowns.gpu?.dispose();
+    crowns.gpu = null;
     if (canopyUniforms.land_canopy.value === texture) canopyUniforms.land_canopy.value = null;
     canopyUniforms.land_canopyRect.value.w = 0;
     canopyUniforms.land_sunDir.value.w = 0;
@@ -3034,6 +3616,7 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
     world2.needsFrame = true;
   }
   const islandSurface = () => sun.island ?? null;
+  const debug = () => ({ fine: { gpu: fine.gpu, x0: fine.x0, z0: fine.z0, patterns: fine.patterns, built: { ...fine.built }, row: atlas?.fineRow, atlas: atlas?.texture }, crowns: { gpu: crowns.gpu, built: { ...crowns.built } } });
   return {
     update,
     dispose,
@@ -3042,6 +3625,7 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
     texture,
     fieldAt,
     islandSurface,
+    debug,
     get enabled() {
       return enabled;
     },
@@ -3066,7 +3650,8 @@ function createCanopyShadow(world2, options = world2.sunFieldOptions || {}) {
         near: canopyUniforms.land_sunNear.value.toArray().map((v) => +v.toFixed(1))
       },
       clouds: { strength: +clouds.strength.toFixed(3), threshold: +canopyUniforms.land_sunCloud.value.x.toFixed(4), drift: [+clouds.x.toFixed(1), +clouds.z.toFixed(1)] },
-      fine: { ...fine.stats, ready: fine.ready, building: !!fine.job, origin: [fine.x0, fine.z0], patterns: fine.patterns.size, weight: +canopyUniforms.land_sunFineArea.value.w.toFixed(3) }
+      crowns: { ...crowns.stats, ready: crowns.ready, building: !!crowns.job, gpu: crowns.gpu ? { ...crowns.gpu.state } : null, weight: +crownShadowUniforms.land_crownShadowTune.value.w.toFixed(3) },
+      fine: { ...fine.stats, ready: fine.ready, building: !!fine.job, origin: [fine.x0, fine.z0], patterns: fine.patterns.size, gpu: fine.gpu ? { ...fine.gpu.state } : null, weight: +canopyUniforms.land_sunFineArea.value.w.toFixed(3) }
     })
   };
 }
@@ -3351,8 +3936,8 @@ function validateBakedTreeAtlas(atlas) {
   const m = atlas?.manifest;
   if (!m || m.frames?.length !== 128) return { ready: false, reason: "baked-atlas-layout" };
   for (let i = 0; i < 128; i++) {
-    const f10 = m.frames[i];
-    if (!Array.isArray(f10.centre) || f10.centre.length !== 3 || !f10.centre.every(Number.isFinite) || !(f10.halfSpan > 0)) return { ready: false, reason: "baked-atlas-frame:" + i };
+    const f12 = m.frames[i];
+    if (!Array.isArray(f12.centre) || f12.centre.length !== 3 || !f12.centre.every(Number.isFinite) || !(f12.halfSpan > 0)) return { ready: false, reason: "baked-atlas-frame:" + i };
   }
   for (const kind of ["albedo", "normal"]) {
     const texture = atlas[kind];
@@ -3376,9 +3961,9 @@ function validateDistantTreeAtlas(atlas, expectedPins) {
   if (m.frames?.length !== 128 || m.bake.atlasWidth !== 2048 || m.bake.atlasHeight !== 1024 || m.bake.tile !== 128 || m.bake.gutter !== 4)
     return { ready: false, reason: "atlas-layout-mismatch" };
   for (let i = 0; i < 128; i++) {
-    const f10 = m.frames[i], family = (i < 64 ? "pine:" : "broadleaf:") + Math.floor(i % 64 / 8), state2 = i % 8 < 4 ? "live" : "leafless";
+    const f12 = m.frames[i], family = (i < 64 ? "pine:" : "broadleaf:") + Math.floor(i % 64 / 8), state2 = i % 8 < 4 ? "live" : "leafless";
     const x = i % 16 * 128 + 4, y = Math.floor(i / 16) * 128 + 4;
-    if (f10.tile !== i || f10.family !== family || f10.state !== state2 || f10.familySeedKey !== expectedPins.familyGeometry[family].seedKey || f10.azimuthRadians !== i % 4 * Math.PI / 2 || !Array.isArray(f10.centre) || f10.centre.length !== 3 || !f10.centre.every(Number.isFinite) || !(f10.halfSpan > 0) || !equal(f10.uvMin, [x / 2048, y / 1024]) || !equal(f10.uvMax, [(x + 120) / 2048, (y + 120) / 1024]) || i % 8 && (!equal(f10.centre, m.frames[i - i % 8].centre) || f10.halfSpan !== m.frames[i - i % 8].halfSpan))
+    if (f12.tile !== i || f12.family !== family || f12.state !== state2 || f12.familySeedKey !== expectedPins.familyGeometry[family].seedKey || f12.azimuthRadians !== i % 4 * Math.PI / 2 || !Array.isArray(f12.centre) || f12.centre.length !== 3 || !f12.centre.every(Number.isFinite) || !(f12.halfSpan > 0) || !equal(f12.uvMin, [x / 2048, y / 1024]) || !equal(f12.uvMax, [(x + 120) / 2048, (y + 120) / 1024]) || i % 8 && (!equal(f12.centre, m.frames[i - i % 8].centre) || f12.halfSpan !== m.frames[i - i % 8].halfSpan))
       return { ready: false, reason: "atlas-frame-mismatch:" + i };
   }
   let bytes = 0;
@@ -3535,6 +4120,9 @@ varying float distantSunShift;
 #include <clipping_planes_pars_fragment>
 ${islandBiomeGLSL}
 ${DISTANT_HANDOFF_GLSL}
+// v95: the shade of other crowns past the shadow map (crown-shadow-map.js).
+#define LAND_CROWN_SHADOW
+#define LAND_CROWN_SHIFT (distantSunShift*1.2)
 ${CANOPY_TREE_PARS}
 ${CANOPY_TREE_SHADE}
 vec3 distantRotateNormal(vec3 n) {
@@ -3643,7 +4231,7 @@ function createDistantTreeMaterial(THREE, atlas, expectedPins) {
     distantEnvironment: { value: null },
     distantMaterialEnvironment: { value: new THREE.Vector4() },
     distantSkyIndirectWeight: { value: 1 },
-    distantFrames: { value: atlas.manifest.frames.filter((_, i) => i % 8 === 0).map((f10) => new THREE.Vector4(...f10.centre, f10.halfSpan)) },
+    distantFrames: { value: atlas.manifest.frames.filter((_, i) => i % 8 === 0).map((f12) => new THREE.Vector4(...f12.centre, f12.halfSpan)) },
     distantTime: { value: 0 },
     distantHandoffEnabled: { value: 0 },
     distantPlayer: { value: new THREE.Vector2() },
@@ -3735,8 +4323,8 @@ function coastalBouldersPossible(world2, cx, cz) {
   return !!coastAt && Math.abs(coastAt(cx * 64 + 32, cz * 64 + 32, coastScratch).shore) < COAST_BOULDERS.reach;
 }
 function coastalBoulderCandidate(world2, cx, cz, j, rng2, height2) {
-  const f10 = world2.terrainFunctions, s = COAST_BOULDERS.first + j, x = cx * 64 + rng2(s, 9) * 64, z = cz * 64 + rng2(s, 10) * 64;
-  const c2 = f10.coastAt(x, z, coastScratch);
+  const f12 = world2.terrainFunctions, s = COAST_BOULDERS.first + j, x = cx * 64 + rng2(s, 9) * 64, z = cz * 64 + rng2(s, 10) * 64;
+  const c2 = f12.coastAt(x, z, coastScratch);
   if (!(c2.rock > 0.08)) return null;
   const y = height2(x, z), above = y - (world2.worldModel?.seaLevel ?? world2.islandTerrain?.params?.seaLevel ?? 0);
   if (above < -COAST_BOULDERS.below || above > COAST_BOULDERS.above) return null;
@@ -3778,7 +4366,7 @@ function distance2(e, x, z, t) {
 }
 function createRiverReachMorphology({ plan, geometry: geometry3 } = {}) {
   if (!Number.isSafeInteger(plan?.seed) || geometry3?.plan !== plan || !Array.isArray(geometry3.segments)) throw TypeError("Final matching river plan and geometry required");
-  const L3 = plan.generated ? { ...RIVER_REACH_MORPHOLOGY, range: 40 } : RIVER_REACH_MORPHOLOGY, stationData = /* @__PURE__ */ new Map();
+  const L4 = plan.generated ? { ...RIVER_REACH_MORPHOLOGY, range: 40 } : RIVER_REACH_MORPHOLOGY, stationData = /* @__PURE__ */ new Map();
   for (const river of plan.rivers) {
     const reaches = river.reaches.filter((r) => !r.oceanConnected), lengths2 = reaches.map((r) => r.points.at(-1).along - r.points[0].along), total = lengths2.reduce((a, b) => a + b, 0), landformSeed = riverSeed(plan.seed, river.id);
     let offset = 0;
@@ -3786,7 +4374,7 @@ function createRiverReachMorphology({ plan, geometry: geometry3 } = {}) {
     for (let r = 0; r < reaches.length; r++) {
       const points = reaches[r].points;
       for (let i = 0; i < points.length; i++) {
-        const p = points[i], lo = Math.max(0, i - L3.curvatureSteps), hi = Math.min(points.length - 1, i + L3.curvatureSteps), a = points[lo], b = points[hi];
+        const p = points[i], lo = Math.max(0, i - L4.curvatureSteps), hi = Math.min(points.length - 1, i + L4.curvatureSteps), a = points[lo], b = points[hi];
         let ds = 0;
         for (let j = lo + 1; j <= hi; j++) ds += Math.hypot(points[j].x - points[j - 1].x, points[j].z - points[j - 1].z);
         const curvature = ds ? Math.atan2(a.fx * b.fz - a.fz * b.fx, a.fx * b.fx + a.fz * b.fz) / ds : 0;
@@ -3804,8 +4392,8 @@ function createRiverReachMorphology({ plan, geometry: geometry3 } = {}) {
     if (!a || !b) throw TypeError("River morphology requires final public station identity");
     const record2 = { s, a, b, edges: [edge(s.leftA, s.leftB, -1), edge(s.rightA, s.rightB, 1)] };
     records.push(record2);
-    const bounds6 = s.bounds, x0 = Math.floor((bounds6.minX - L3.range) / L3.cellSize), x1 = Math.floor((bounds6.maxX + L3.range) / L3.cellSize), z0 = Math.floor((bounds6.minZ - L3.range) / L3.cellSize), z1 = Math.floor((bounds6.maxZ + L3.range) / L3.cellSize);
-    if ((x1 - x0 + 1) * (z1 - z0 + 1) > L3.indexEntries - entries) throw RangeError("River morphology index budget exceeded");
+    const bounds6 = s.bounds, x0 = Math.floor((bounds6.minX - L4.range) / L4.cellSize), x1 = Math.floor((bounds6.maxX + L4.range) / L4.cellSize), z0 = Math.floor((bounds6.minZ - L4.range) / L4.cellSize), z1 = Math.floor((bounds6.maxZ + L4.range) / L4.cellSize);
+    if ((x1 - x0 + 1) * (z1 - z0 + 1) > L4.indexEntries - entries) throw RangeError("River morphology index budget exceeded");
     for (let z = z0; z <= z1; z++) for (let x = x0; x <= x1; x++) {
       const key3 = x + "," + z;
       let list = cells.get(key3);
@@ -3819,7 +4407,7 @@ function createRiverReachMorphology({ plan, geometry: geometry3 } = {}) {
   const distances = new Float64Array(maxBucket * 2), projections = new Float64Array(maxBucket * 2);
   function sample2(x, z, out2 = {}) {
     if (!Number.isFinite(x) || !Number.isFinite(z)) throw TypeError("Finite river morphology coordinates required");
-    const nearby = cells.get(Math.floor(x / L3.cellSize) + "," + Math.floor(z / L3.cellSize)) || EMPTY;
+    const nearby = cells.get(Math.floor(x / L4.cellSize) + "," + Math.floor(z / L4.cellSize)) || EMPTY;
     let nearest2 = Infinity, target = null;
     for (let i = 0; i < nearby.length; i++) for (let j = 0; j < 2; j++) {
       const r = nearby[i], e = r.edges[j], t = project(e, x, z), d2 = distance2(e, x, z, t), index2 = i * 2 + j;
@@ -3830,8 +4418,8 @@ function createRiverReachMorphology({ plan, geometry: geometry3 } = {}) {
         target = r.s.featureId;
       }
     }
-    if (nearest2 >= L3.range * L3.range) return null;
-    const bankDistance = Math.sqrt(nearest2), nearLimit = (bankDistance + L3.blendBand) * (bankDistance + L3.blendBand);
+    if (nearest2 >= L4.range * L4.range) return null;
+    const bankDistance = Math.sqrt(nearest2), nearLimit = (bankDistance + L4.blendBand) * (bankDistance + L4.blendBand);
     let sum = 0, progress = 0, along = 0, bankSide = 0, curvature = 0, width = 0, level = 0, inner = 0, outer = 0, riverId = null, landformSeed = 0;
     for (let i = 0; i < nearby.length; i++) {
       const r = nearby[i];
@@ -3842,7 +4430,7 @@ function createRiverReachMorphology({ plan, geometry: geometry3 } = {}) {
         const index2 = i * 2 + j;
         if (distances[index2] >= nearLimit) continue;
         const d = Math.sqrt(distances[index2]) - bankDistance;
-        const t = projections[index2], w = 1 - smooth4(0, L3.blendBand, d), k = mix(r.a.curvature, r.b.curvature, t), hw = mix(r.s.a.halfWidth, r.s.b.halfWidth, t), bend = smooth4(0.01, 0.085, Math.abs(k) * hw);
+        const t = projections[index2], w = 1 - smooth4(0, L4.blendBand, d), k = mix(r.a.curvature, r.b.curvature, t), hw = mix(r.s.a.halfWidth, r.s.b.halfWidth, t), bend = smooth4(0.01, 0.085, Math.abs(k) * hw);
         sum += w;
         progress += w * mix(r.a.progress, r.b.progress, t);
         along += w * mix(r.a.along, r.b.along, t);
@@ -3874,8 +4462,8 @@ function createRiverReachMorphology({ plan, geometry: geometry3 } = {}) {
     return out2;
   }
   return Object.freeze({ seed: plan.seed, sample: sample2, hasTerrain(x, z) {
-    return terrainCells.has(Math.floor(x / L3.cellSize) + "," + Math.floor(z / L3.cellSize));
-  }, stats: Object.freeze({ revision: L3.revision, segments: records.length, indexEntries: entries, indexCells: cells.size, maxBucket, scratchBytes: distances.byteLength + projections.byteLength }) });
+    return terrainCells.has(Math.floor(x / L4.cellSize) + "," + Math.floor(z / L4.cellSize));
+  }, stats: Object.freeze({ revision: L4.revision, segments: records.length, indexEntries: entries, indexCells: cells.size, maxBucket, scratchBytes: distances.byteLength + projections.byteLength }) });
 }
 function getRiverReachMorphology({ plan, geometry: geometry3 } = {}) {
   if (!geometry3 || geometry3.plan !== plan) throw TypeError("River morphology requires matching final geometry");
@@ -4016,25 +4604,25 @@ function dryContext(context, featureId) {
   return value;
 }
 function dryRiverBankGrassProof(world2, context, x, z, radius, polygon2 = null) {
-  const h = world2.hydrology, f10 = world2.terrainFunctions, L3 = DRY_BANK_PLANT_LIMITS;
-  if (h?.generationMode !== "water-first" || !h.surfaceAt || !h.nearWater || typeof f10?.height !== "function" || ![x, z, radius].every(Number.isFinite) || radius < 0 || radius > L3.radius) return null;
+  const h = world2.hydrology, f12 = world2.terrainFunctions, L4 = DRY_BANK_PLANT_LIMITS;
+  if (h?.generationMode !== "water-first" || !h.surfaceAt || !h.nearWater || typeof f12?.height !== "function" || ![x, z, radius].every(Number.isFinite) || radius < 0 || radius > L4.radius) return null;
   if (h.surfaceAt(x, z)) return null;
-  const shore = h.nearWater(x, z, L3.shoreRange);
-  if (shore?.kind !== "stream" || !shore.featureId || shore.distance <= radius + L3.shoreMargin) return null;
+  const shore = h.nearWater(x, z, L4.shoreRange);
+  if (shore?.kind !== "stream" || !shore.featureId || shore.distance <= radius + L4.shoreMargin) return null;
   const next = dryContext(context, shore.featureId);
   if (!next) return null;
   if (polygon2 ? !reservationAllowsPolygon(next, "groundcover", polygon2, 0.035) : !reservationAllows(next, "groundcover", x, z, radius)) return null;
-  const y = f10.height(x, z), rise = y - shore.level;
-  if (!Number.isFinite(y) || rise < L3.minRise || rise > L3.maxRise || h.waterAt(x, z, y) || riverBankVegetationAt(h.seed, x, y, z, shore, h) < L3.minCover) return null;
-  const dx = (f10.height(x + 0.6, z) - f10.height(x - 0.6, z)) / 1.2, dz = (f10.height(x, z + 0.6) - f10.height(x, z - 0.6)) / 1.2;
-  if (!Number.isFinite(dx + dz) || Math.hypot(dx, dz) > L3.maxGrade) return null;
-  const s = L3.nativeStep, minX = Math.floor((x - radius) / s), maxX = Math.ceil((x + radius) / s), minZ = Math.floor((z - radius) / s), maxZ = Math.ceil((z + radius) / s);
-  if ((maxX - minX + 1) * (maxZ - minZ + 1) > L3.maxGridProbes) return null;
+  const y = f12.height(x, z), rise = y - shore.level;
+  if (!Number.isFinite(y) || rise < L4.minRise || rise > L4.maxRise || h.waterAt(x, z, y) || riverBankVegetationAt(h.seed, x, y, z, shore, h) < L4.minCover) return null;
+  const dx = (f12.height(x + 0.6, z) - f12.height(x - 0.6, z)) / 1.2, dz = (f12.height(x, z + 0.6) - f12.height(x, z - 0.6)) / 1.2;
+  if (!Number.isFinite(dx + dz) || Math.hypot(dx, dz) > L4.maxGrade) return null;
+  const s = L4.nativeStep, minX = Math.floor((x - radius) / s), maxX = Math.ceil((x + radius) / s), minZ = Math.floor((z - radius) / s), maxZ = Math.ceil((z + radius) / s);
+  if ((maxX - minX + 1) * (maxZ - minZ + 1) > L4.maxGridProbes) return null;
   let minError = 0, maxError = 0, probes = 0;
   for (let iz = minZ; iz <= maxZ; iz++) for (let ix = minX; ix <= maxX; ix++) {
-    const px = ix * s, pz = iz * s, ground = f10.height(px, pz), error = ground - y - dx * (px - x) - dz * (pz - z);
+    const px = ix * s, pz = iz * s, ground = f12.height(px, pz), error = ground - y - dx * (px - x) - dz * (pz - z);
     probes++;
-    if (!Number.isFinite(error) || Math.abs(error) > L3.maxSupportError) return null;
+    if (!Number.isFinite(error) || Math.abs(error) > L4.maxSupportError) return null;
     minError = Math.min(minError, error);
     maxError = Math.max(maxError, error);
   }
@@ -4300,7 +4888,7 @@ function* pruneReservedDecorSteps(world2, c2) {
 }
 
 // tree-placement.js
-var TREE_PLACEMENT_VERSION = "canonical-tree-placement-v87-coast";
+var TREE_PLACEMENT_VERSION = "canonical-tree-placement-v96-character";
 var TREE_PLACEMENT_SLOTS = 66;
 var scratch = {};
 var coastScratch2 = {};
@@ -4311,9 +4899,9 @@ var smooth6 = (a, b, v) => {
 function coastBareOf(c2, above) {
   return Math.min(1, (c2.rock + c2.pebble) * (1 - smooth6(3.5, 6, above)) + c2.mud + 0.8 * smooth6(0.06, 0.45, c2.dune));
 }
-function coastBare(f10, x, z, y) {
-  if (!f10.coastAt) return 0;
-  return coastBareOf(f10.coastAt(x, z, coastScratch2), (y ?? f10.height(x, z)) - (f10.seaLevel ?? 0.62));
+function coastBare(f12, x, z, y) {
+  if (!f12.coastAt) return 0;
+  return coastBareOf(f12.coastAt(x, z, coastScratch2), (y ?? f12.height(x, z)) - (f12.seaLevel ?? 0.62));
 }
 var MARSH_TREE_EDGE = 6;
 function inMarshBasin(world2, x, z) {
@@ -4328,18 +4916,24 @@ function marshTreeThinned(world2, x, z) {
   return world2.terrainFunctions.hash(Math.floor(x * 4.31 + 7919), Math.floor(z * 3.77 - 4421)) < k * MARSH_DEAD_EDGE.share;
 }
 function treePlacementCandidate(world2, cx, cz, i, climateScratch3 = scratch) {
-  const f10 = world2.terrainFunctions, rng2 = (n) => f10.hash(cx * 229 + cz * 733 + i * 13, n);
-  const x = cx * 64 + rng2(1) * 64, z = cz * 64 + rng2(2) * 64, y = f10.height(x, z);
-  const treeClimate2 = f10.climate(x, z, y, climateScratch3), treeDensity = treeClimate2.treeDensity;
+  const f12 = world2.terrainFunctions, rng2 = (n) => f12.hash(cx * 229 + cz * 733 + i * 13, n);
+  const x = cx * 64 + rng2(1) * 64, z = cz * 64 + rng2(2) * 64, y = f12.height(x, z);
+  const treeClimate2 = f12.climate(x, z, y, climateScratch3), treeDensity = treeClimate2.treeDensity;
   if (rng2(99) > treeDensity) return null;
-  if (y < 1.5 || world2.hydrology.waterAt(x, z, y) || inMarshBasin(world2, x, z) || marshTreeThinned(world2, x, z) || f10.slope(x, z) > 0.9 || coastBare(f10, x, z, y) > 0.45 || world2.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear)) return null;
+  if (y < 1.5 || world2.hydrology.waterAt(x, z, y) || inMarshBasin(world2, x, z) || marshTreeThinned(world2, x, z) || f12.slope(x, z) > 0.9 || coastBare(f12, x, z, y) > 0.45 || world2.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear)) return null;
   const id2 = cx + "," + cz + ":tree:" + i;
   if (world2.removed.has(id2)) return null;
   return treeRecord(x, y, z, id2, rng2, treeClimate2);
 }
+var TREE_CHARACTER = Object.freeze({ old: 0.045, oldFrom: 18, oldWidth: Object.freeze([1.5, 1.8]), oldHeight: 1.12, leaning: 0.07, lean: 0.9 });
+function treeCharacter(rng2, h, width) {
+  const C2 = TREE_CHARACTER, old = h > C2.oldFrom && rng2(31) < C2.old;
+  const lean = rng2(32) < C2.leaning ? (rng2(33) - 0.5) * C2.lean : (rng2(6) - 0.5) * 0.1;
+  return { h: old ? h * C2.oldHeight : h, width: old ? width * (C2.oldWidth[0] + rng2(34) * (C2.oldWidth[1] - C2.oldWidth[0])) : width, lean, old };
+}
 function treeRecord(x, y, z, id2, rng2, treeClimate2) {
-  const h = (rng2(7) < 0.22 ? 4 + rng2(3) * 7 : 13 + rng2(3) * 15) * (1 - treeClimate2.swamp * 0.22);
-  return { x, y, z, h, id: id2, r: rng2(4), width: 0.75 + rng2(5) * 0.65, lean: (rng2(6) - 0.5) * 0.1 };
+  const character = treeCharacter(rng2, (rng2(7) < 0.22 ? 4 + rng2(3) * 7 : 13 + rng2(3) * 15) * (1 - treeClimate2.swamp * 0.22), 0.75 + rng2(5) * 0.65);
+  return { x, y, z, h: character.h, id: id2, r: rng2(4), width: character.width, lean: character.lean };
 }
 var authorities = /* @__PURE__ */ new WeakMap();
 var dependencies = (world2) => [
@@ -4452,8 +5046,8 @@ function gridSampler(grid) {
     const ix = Math.floor(gx), iz = Math.floor(gz), u = gx - ix, w = gz - iz, i = iz * nx + ix;
     const a = (1 - u) * (1 - w), b = u * (1 - w), c2 = (1 - u) * w, d = u * w;
     for (const key3 of ["height", "density", "swamp", "ash", "snow", "mountain"]) {
-      const f10 = grid[key3];
-      out2[key3] = f10[i] * a + f10[i + 1] * b + f10[i + nx] * c2 + f10[i + nx + 1] * d;
+      const f12 = grid[key3];
+      out2[key3] = f12[i] * a + f12[i + 1] * b + f12[i + nx] * c2 + f12[i + nx + 1] * d;
     }
     const h = grid.height, dx = ((h[i + 1] - h[i]) * (1 - w) + (h[i + nx + 1] - h[i + nx]) * w) / step, dz = ((h[i + nx] - h[i]) * (1 - u) + (h[i + nx + 1] - h[i + 1]) * u) / step;
     out2.slope = Math.hypot(dx, dz);
@@ -4474,7 +5068,7 @@ function farTreeCell(cx, cz, { hash: hash12, sample: sample2, waterAt, landmarks
       if (counters) counters.waterRejects++;
       continue;
     }
-    const h = (rng2(7) < 0.22 ? 4 + rng2(3) * 7 : 13 + rng2(3) * 15) * (1 - s.swamp * 0.22);
+    const character = treeCharacter(rng2, (rng2(7) < 0.22 ? 4 + rng2(3) * 7 : 13 + rng2(3) * 15) * (1 - s.swamp * 0.22), 0.75 + rng2(5) * 0.65), h = character.h;
     farClimate.swamp = s.swamp;
     farClimate.ash = s.ash;
     farClimate.snow = s.snow;
@@ -4488,19 +5082,19 @@ function farTreeCell(cx, cz, { hash: hash12, sample: sample2, waterAt, landmarks
       id: id2,
       slot: i,
       r: rng2(4),
-      width: 0.75 + rng2(5) * 0.65,
-      lean: (rng2(6) - 0.5) * 0.1,
+      width: character.width,
+      lean: character.lean,
       species,
       leafless,
       family: treeFamilyIndex(seed, { x, z, id: id2 }, species) + (species === "pine" ? 0 : 8),
-      tint: s.snow > 0.7 ? 13884890 : s.ash > 0.7 ? 11511179 : s.swamp > 0.6 ? 12765609 : 16777215
+      tint: vegetationTint(farClimate, leafless)
     });
   }
 }
 function createFarTrees(THREE, world2, { atlas, expectedPins, group, schedule = scheduleTask, cancel: cancel2 = cancelTask, now = () => performance.now(), onError = null } = {}) {
   const grid = world2.islandBackdrop?.grid;
   if (!grid || !world2.hydrology?.waterAt || typeof world2.terrainFunctions?.hash !== "function") return null;
-  const island = world2.islandTerrain, f10 = world2.terrainFunctions, seed = world2.proceduralTreeSeed;
+  const island = world2.islandTerrain, f12 = world2.terrainFunctions, seed = world2.proceduralTreeSeed;
   const cx0 = Math.floor(grid.x0 / 64), cz0 = Math.floor(grid.z0 / 64);
   const width = Math.ceil((grid.x0 + (grid.nx - 1) * grid.step) / 64) - cx0, height2 = Math.ceil((grid.z0 + (grid.nz - 1) * grid.step) / 64) - cz0;
   const cells = [];
@@ -4549,7 +5143,7 @@ function createFarTrees(THREE, world2, { atlas, expectedPins, group, schedule = 
     return null;
   }
   const sample2 = gridSampler(grid), tint4 = new THREE.Color();
-  const context = { hash: f10.hash, sample: sample2, waterAt: (x, z, y) => world2.hydrology.waterAt(x, z, y) || (inMarshBasin(world2, x, z) || marshTreeThinned(world2, x, z) ? MARSH_BASIN : null), landmarks: world2.landmarks || [], removed: world2.removed, seed, counters };
+  const context = { hash: f12.hash, sample: sample2, waterAt: (x, z, y) => world2.hydrology.waterAt(x, z, y) || (inMarshBasin(world2, x, z) || marshTreeThinned(world2, x, z) ? MARSH_BASIN : null), landmarks: world2.landmarks || [], removed: world2.removed, seed, counters };
   function buildCell(cx, cz) {
     const cell = (cz - cz0) * width + (cx - cx0), first = count;
     farTreeCell(cx, cz, context, (tree) => {
@@ -4848,10 +5442,10 @@ function createDistantTreeRuntime(THREE, world2, options = {}) {
   }
   function applyIslandAtlas() {
     if (!material2) return;
-    const source2 = islandAtlas || atlas, frames3 = source2.manifest.frames.filter((_, i) => i % 8 === 0);
+    const source2 = islandAtlas || atlas, frames4 = source2.manifest.frames.filter((_, i) => i % 8 === 0);
     material2.uniforms.distantAlbedo.value = source2.albedo;
     material2.uniforms.distantNormals.value = source2.normal;
-    material2.uniforms.distantFrames.value.forEach((v, i) => v.set(...frames3[i].centre, frames3[i].halfSpan));
+    material2.uniforms.distantFrames.value.forEach((v, i) => v.set(...frames4[i].centre, frames4[i].halfSpan));
     material2.uniformsNeedUpdate = true;
     requestPresentation();
   }
@@ -4998,11 +5592,11 @@ function createDistantTreeRuntime(THREE, world2, options = {}) {
       highWater = Math.max(highWater, slot + 1);
       counters.maxInstances = Math.max(counters.maxInstances, count);
     }
-    const local = vegetationClimate(world2.terrainFunctions, tree.x, tree.z, tree.y, climate3);
-    const species = vegetationSpecies(local, world2.terrainFunctions.hash(tree.x, tree.z));
-    const leafless = vegetationLeafless(local, world2.terrainFunctions.hash(tree.x + 83, tree.z - 47));
+    const local2 = vegetationClimate(world2.terrainFunctions, tree.x, tree.z, tree.y, climate3);
+    const species = vegetationSpecies(local2, world2.terrainFunctions.hash(tree.x, tree.z));
+    const leafless = vegetationLeafless(local2, world2.terrainFunctions.hash(tree.x + 83, tree.z - 47));
     const family = treeFamilyIndex(world2.proceduralTreeSeed, tree, species) + (species === "pine" ? 0 : 8);
-    tint4.set(local.snow > 0.7 ? 13884890 : local.ash > 0.7 ? 11511179 : local.swamp > 0.6 ? 12765609 : 16777215);
+    tint4.set(vegetationTint(local2, leafless));
     const offset = slot * 12;
     payload[offset] = tree.x;
     payload[offset + 1] = tree.y - (species === "pine" ? 0.22 : 0.35);
@@ -5598,9 +6192,9 @@ function appendWaterLookOptions(container, { settings: settings2, onChanged = ()
     number.inputMode = "decimal";
     number.setAttribute("aria-label", `${labelText}（倍率の数値入力）`);
     Object.assign(number.style, { width: "76px", padding: "6px", font: "inherit", color: "inherit", background: "var(--ink)", border: "1px solid var(--line)" });
-    const unit = element("span", "", "倍");
-    unit.setAttribute("aria-hidden", "true");
-    group.append(range, number, unit);
+    const unit2 = element("span", "", "倍");
+    unit2.setAttribute("aria-hidden", "true");
+    group.append(range, number, unit2);
     result.append(group);
     controls.set(key3, [range, number]);
     const setNumber = () => {
@@ -5790,17 +6384,17 @@ function smoothUnion(a, b, amount = 0.8) {
   return mix3(b, a, h) + amount * h * (1 - h);
 }
 function createProceduralCaveLayout({ id: id2 = "landmark:cave", seed = 728194, name = "月影の洞窟" } = {}) {
-  const seedValue2 = caveSeed(id2, seed), random7 = randomSource(seedValue2);
+  const seedValue2 = caveSeed(id2, seed), random9 = randomSource(seedValue2);
   const nodes = [], edges = [], chambers = [];
   const addNode = (x, z, kind = "passage") => {
     const n = { id: nodes.length, x, z, kind };
     nodes.push(n);
     return n;
   };
-  const link = (a, b, radius = 2.6 + random7() * 0.8) => edges.push({ a: a.id, b: b.id, radius });
+  const link = (a, b, radius = 2.6 + random9() * 0.8) => edges.push({ a: a.id, b: b.id, radius });
   const addChamber = (node2, rx, rz) => {
-    const phase2 = random7() * TAU2, angle = (random7() - 0.5) * 1.1;
-    const room = { id: chambers.length, node: node2.id, x: node2.x, z: node2.z, rx, rz, angle, cos: Math.cos(angle), sin: Math.sin(angle), phase: phase2, height: 5.8 + random7() * 3.2 };
+    const phase2 = random9() * TAU2, angle = (random9() - 0.5) * 1.1;
+    const room = { id: chambers.length, node: node2.id, x: node2.x, z: node2.z, rx, rz, angle, cos: Math.cos(angle), sin: Math.sin(angle), phase: phase2, height: 5.8 + random9() * 3.2 };
     node2.kind = "chamber";
     chambers.push(room);
     return room;
@@ -5808,26 +6402,26 @@ function createProceduralCaveLayout({ id: id2 = "landmark:cave", seed = 728194, 
   const exitNode = addNode(0, 10, "exit"), entryNode = addNode(0, 6, "entry");
   link(exitNode, entryNode, 3.6);
   let previous = entryNode;
-  const mainNodes = [entryNode], count = 5 + Math.floor(random7() * 2);
+  const mainNodes = [entryNode], count = 5 + Math.floor(random9() * 2);
   for (let i = 0; i < count; i++) {
-    const z = previous.z - (14 + random7() * 6), x = clamp4(previous.x + (random7() - 0.5) * 17, -18, 18);
+    const z = previous.z - (14 + random9() * 6), x = clamp4(previous.x + (random9() - 0.5) * 17, -18, 18);
     const node2 = addNode(x, z);
     link(previous, node2);
-    if (i > 0 || random7() < 0.8) addChamber(node2, 5.5 + random7() * 3, 5.5 + random7() * 3.4);
+    if (i > 0 || random9() < 0.8) addChamber(node2, 5.5 + random9() * 3, 5.5 + random9() * 3.4);
     mainNodes.push(node2);
     previous = node2;
   }
-  const branchNodes = [], branchCount = 2 + Math.floor(random7() * 2);
+  const branchNodes = [], branchCount = 2 + Math.floor(random9() * 2);
   for (let i = 0; i < branchCount; i++) {
     const parent = mainNodes[1 + Math.min(count - 2, i + 1)], side2 = i % 2 === 0 ? -1 : 1;
-    const bend = addNode(parent.x + side2 * (10 + random7() * 4), parent.z + (random7() - 0.5) * 12);
-    const end = addNode(bend.x + side2 * (10 + random7() * 6), bend.z - (7 + random7() * 7));
-    link(parent, bend, 2.7 + random7() * 0.4);
-    link(bend, end, 2.6 + random7() * 0.7);
-    addChamber(end, 6.2 + random7() * 2.7, 5.8 + random7() * 3);
+    const bend = addNode(parent.x + side2 * (10 + random9() * 4), parent.z + (random9() - 0.5) * 12);
+    const end = addNode(bend.x + side2 * (10 + random9() * 6), bend.z - (7 + random9() * 7));
+    link(parent, bend, 2.7 + random9() * 0.4);
+    link(bend, end, 2.6 + random9() * 0.7);
+    addChamber(end, 6.2 + random9() * 2.7, 5.8 + random9() * 3);
     branchNodes.push(end);
   }
-  if (branchNodes.length === 3 && random7() < 0.6) link(branchNodes[0], branchNodes[2], 2.6);
+  if (branchNodes.length === 3 && random9() < 0.6) link(branchNodes[0], branchNodes[2], 2.6);
   const capsules = edges.map((e) => {
     const a = nodes[e.a], b = nodes[e.b], dx = b.x - a.x, dz = b.z - a.z;
     return { ...e, x: a.x, z: a.z, dx, dz, length2: dx * dx + dz * dz };
@@ -6327,8 +6921,8 @@ function createCaveSeepGeometry(THREE, floor, patches) {
 
 // cave-formations.js
 function createCaveFormationGeometries(THREE) {
-  const TAU36 = Math.PI * 2;
-  function builder5() {
+  const TAU38 = Math.PI * 2;
+  function builder6() {
     const positions = [], uv = [], indices = [], parts = [];
     const vertex3 = (x, y, z, u, v) => {
       const n = positions.length / 3;
@@ -6354,13 +6948,13 @@ function createCaveFormationGeometries(THREE) {
       for (let k = 0; k < rings2.length; k++) {
         const r = rings2[k];
         for (let j = 0; j <= segments; j++) {
-          const theta = j / segments * TAU36;
+          const theta = j / segments * TAU38;
           const radial = 1 + ribs * Math.sin(theta * 5 + phase2 + r.y * 0.65) + ribs * 0.48 * Math.cos(theta * 3 - phase2 * 1.3) + ribs * 0.22 * Math.sin(theta * 9 + r.y * 3.1 + phase2);
           vertex3(
             (r.x || 0) + Math.cos(theta) * r.rx * radial,
             r.y,
             (r.z || 0) + Math.sin(theta) * r.rz * radial,
-            j / segments * radius * TAU36 * uvScale,
+            j / segments * radius * TAU38 * uvScale,
             r.y * uvScale
           );
         }
@@ -6387,7 +6981,7 @@ function createCaveFormationGeometries(THREE) {
       }
       parts.push({ firstTriangle: firstIndex / 3, triangleCount: (indices.length - firstIndex) / 3 });
     }
-    function ellipsoid(x, y, z, rx, ry, rz, phase2, segments = 12, bands = 6) {
+    function ellipsoid2(x, y, z, rx, ry, rz, phase2, segments = 12, bands = 6) {
       const rings2 = [];
       for (let i = 1; i < bands; i++) {
         const a = i / bands * Math.PI, s = Math.sin(a);
@@ -6478,9 +7072,9 @@ function createCaveFormationGeometries(THREE) {
       };
       return geometry3;
     }
-    return { volume, ellipsoid, finish: finish3 };
+    return { volume, ellipsoid: ellipsoid2, finish: finish3 };
   }
-  const pendantBuilder = builder5();
+  const pendantBuilder = builder6();
   pendantBuilder.volume({
     segments: 24,
     phase: 0.4,
@@ -6526,7 +7120,7 @@ function createCaveFormationGeometries(THREE) {
     });
   }
   const pendant = pendantBuilder.finish("pendant", "Broad fused limestone mantle with four unequal ribbed pendants");
-  const ledgeBuilder = builder5();
+  const ledgeBuilder = builder6();
   ledgeBuilder.volume({
     segments: 11,
     phase: 2.8,
@@ -6559,7 +7153,7 @@ function createCaveFormationGeometries(THREE) {
     ]
   });
   const ledge = ledgeBuilder.finish("ledge", "Angular broken limestone bedding shelf with an attached fallen slab", true);
-  const flowBuilder = builder5();
+  const flowBuilder = builder6();
   flowBuilder.volume({
     segments: 24,
     phase: 1.2,
@@ -6894,10 +7488,10 @@ function buildProceduralCave(world2, scene, options = {}) {
     stems.push({ x: p.x, y: y + 1.42, z: p.z });
     baskets.push({ x: p.x, y: y + 1.98, z: p.z });
     for (const rotation of [0, Math.PI / 2]) {
-      const f10 = mesh2(flameGeometry, flameMaterial, `cave-lamp-flame:${i}`, false);
-      f10.position.set(p.x, y + 2.39, p.z);
-      f10.rotation.y = rotation;
-      f10.updateMatrix();
+      const f12 = mesh2(flameGeometry, flameMaterial, `cave-lamp-flame:${i}`, false);
+      f12.position.set(p.x, y + 2.39, p.z);
+      f12.rotation.y = rotation;
+      f12.updateMatrix();
     }
     const light = new PointLight(16761234, 160, 250, 2);
     light.position.set(p.x + inward.x * 0.25, y + 2.4, p.z + inward.z * 0.25);
@@ -7007,7 +7601,7 @@ function buildWalk(THREE, gltf, idle) {
   const hip = root.getObjectByName("Hip");
   if (!hip) throw new Error("Native deer Hip missing");
   const vec = () => new THREE.Vector3(), quat = () => new THREE.Quaternion(), worldPosition = (o) => o.getWorldPosition(vec()), worldQuaternion = (o) => o.getWorldQuaternion(quat());
-  const hipWorld = worldPosition(hip), hipLocal = hip.position.clone(), duration = DEER_GAIT.walkDuration, frames3 = 32;
+  const hipWorld = worldPosition(hip), hipLocal = hip.position.clone(), duration = DEER_GAIT.walkDuration, frames4 = 32;
   const definitions = [["Backleg_L", 0], ["Frontleg_L", 0.25], ["Backleg_R", 0.5], ["Frontleg_R", 0.75]];
   const legs = definitions.map(([name, phase2]) => {
     const upper = root.getObjectByName(name), lower = root.getObjectByName(name + "001"), foot = root.getObjectByName(name + "002");
@@ -7016,7 +7610,7 @@ function buildWalk(THREE, gltf, idle) {
     bend2.addScaledVector(axis2, -bend2.dot(axis2)).normalize();
     return { name, phase: phase2, upper, lower, foot, a, b, c: c2, bend: bend2, upperLength: a.distanceTo(b), lowerLength: b.distanceTo(c2), footWorldQuaternion: worldQuaternion(foot), rest: [upper.quaternion.clone(), lower.quaternion.clone(), foot.quaternion.clone()], values: [[], [], []] };
   });
-  const times = Array.from({ length: frames3 + 1 }, (_, i) => i / frames3 * duration), hipValues = [], target = vec(), direction = vec(), bend = vec(), knee = vec(), delta = quat(), parentQ = quat(), worldQ = quat();
+  const times = Array.from({ length: frames4 + 1 }, (_, i) => i / frames4 * duration), hipValues = [], target = vec(), direction = vec(), bend = vec(), knee = vec(), delta = quat(), parentQ = quat(), worldQ = quat();
   let maxIkError = 0;
   const aim = (bone, child, destination) => {
     const p = worldPosition(bone), current = worldPosition(child).sub(p).normalize(), wanted = destination.clone().sub(p).normalize();
@@ -7027,8 +7621,8 @@ function buildWalk(THREE, gltf, idle) {
     bone.quaternion.copy(parentQ.multiply(worldQ)).normalize();
     bone.updateWorldMatrix(false, true);
   };
-  for (let frame3 = 0; frame3 <= frames3; frame3++) {
-    const phase2 = frame3 === frames3 ? 0 : frame3 / frames3;
+  for (let frame3 = 0; frame3 <= frames4; frame3++) {
+    const phase2 = frame3 === frames4 ? 0 : frame3 / frames4;
     hip.position.copy(hipLocal);
     for (const leg of legs) {
       leg.upper.quaternion.copy(leg.rest[0]);
@@ -7471,8 +8065,8 @@ function buildWoodyShrubModel(seed = 728194, age = 1, family = 0) {
     });
   }
   function sample2(points, t) {
-    const f10 = t * (points.length - 1), i = Math.min(points.length - 2, Math.floor(f10));
-    return points[i].clone().lerp(points[i + 1], f10 - i);
+    const f12 = t * (points.length - 1), i = Math.min(points.length - 2, Math.floor(f12));
+    return points[i].clone().lerp(points[i + 1], f12 - i);
   }
   function leaf(root, direction, length, roll, id2, parent, tileIndex) {
     const tile = LEAF_TILES[tileIndex], width = length * (tile.max[0] - tile.min[0]) / (tile.max[1] - tile.min[1]), start2 = positions.length / 3;
@@ -7553,7 +8147,7 @@ function createWeatheredRockStructure({ rawBounds, phase: phase2, seed }) {
   function block(along, across2, vertical, scales, topTilt, topHeight) {
     const origin = [center2[0] + (c2 * along - s * across2) * half[0], center2[1] + vertical * half[1], center2[2] + (s * along + c2 * across2) * half[2]], planes = [];
     const plane = (n, d) => {
-      const local = n.map((v, i) => v / scales[i]), rotated = [c2 * local[0] - s * local[2], local[1], s * local[0] + c2 * local[2]], metric = rotated.map((v, i) => v / half[i]), len3 = Math.hypot(...metric);
+      const local2 = n.map((v, i) => v / scales[i]), rotated = [c2 * local2[0] - s * local2[2], local2[1], s * local2[0] + c2 * local2[2]], metric = rotated.map((v, i) => v / half[i]), len3 = Math.hypot(...metric);
       planes.push({ n: metric.map((v) => v / len3), d: d / len3 });
     };
     for (let i = 0; i < 5; i++) {
@@ -7647,8 +8241,8 @@ function noise2(x, y, z, seed) {
     n = Math.imul(n ^ n >>> 13, 1274126177);
     return ((n ^ n >>> 16) >>> 0) / 4294967295;
   };
-  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z), f10 = (t) => t * t * (3 - 2 * t), u = f10(x - ix), v = f10(y - iy), w = f10(z - iz), mix18 = (a, b, t) => a + (b - a) * t;
-  return mix18(mix18(mix18(h(ix, iy, iz), h(ix + 1, iy, iz), u), mix18(h(ix, iy + 1, iz), h(ix + 1, iy + 1, iz), u), v), mix18(mix18(h(ix, iy, iz + 1), h(ix + 1, iy, iz + 1), u), mix18(h(ix, iy + 1, iz + 1), h(ix + 1, iy + 1, iz + 1), u), v), w);
+  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z), f12 = (t) => t * t * (3 - 2 * t), u = f12(x - ix), v = f12(y - iy), w = f12(z - iz), mix19 = (a, b, t) => a + (b - a) * t;
+  return mix19(mix19(mix19(h(ix, iy, iz), h(ix + 1, iy, iz), u), mix19(h(ix, iy + 1, iz), h(ix + 1, iy + 1, iz), u), v), mix19(mix19(h(ix, iy, iz + 1), h(ix + 1, iy, iz + 1), u), mix19(h(ix, iy + 1, iz + 1), h(ix + 1, iy + 1, iz + 1), u), v), w);
 }
 var smootherMax = (a, b, k) => {
   const h = Math.max(k - Math.abs(a - b), 0) / k;
@@ -7674,36 +8268,36 @@ function polytopeBounds(planes, margin = 0) {
 function createRockPlan(familyId, worldSeed = 728194) {
   const match = /^(weathered|jointed|bedded|waterworn)-(\d)$/.exec(familyId);
   if (!match || Number(match[2]) > 3) throw new Error("Unknown procedural rock family " + familyId);
-  const type = match[1], variant = Number(match[2]), seed = hash32(worldSeed + ":rock:" + familyId), random7 = rng(seed), planes = [];
+  const type = match[1], variant = Number(match[2]), seed = hash32(worldSeed + ":rock:" + familyId), random9 = rng(seed), planes = [];
   const ratios = { weathered: [[1.12, 0.65, 0.81], [0.83, 0.91, 0.69], [1.04, 0.59, 0.93], [1.18, 0.78, 0.73]], jointed: [[0.8, 1.1, 0.69], [1.13, 0.72, 0.6], [0.86, 0.93, 0.96], [1.04, 0.87, 0.64]], bedded: [[1.31, 0.37, 0.8], [1.1, 0.49, 0.94], [1.34, 0.52, 0.62], [1.02, 0.43, 0.85]], waterworn: [[1.12, 0.43, 0.79], [0.86, 0.55, 1.02], [1.25, 0.38, 0.7], [0.93, 0.61, 0.81]] }[type][variant];
-  const [width, height2, depth] = ratios.map((v) => v * (0.91 + random7() * 0.17)), phase2 = random7() * TAU4;
-  const dip = (random7() - 0.5) * (type === "bedded" ? 0.75 : 0.95), bedding = normalize([Math.sin(dip), 1, (random7() - 0.5) * 0.42]);
+  const [width, height2, depth] = ratios.map((v) => v * (0.91 + random9() * 0.17)), phase2 = random9() * TAU4;
+  const dip = (random9() - 0.5) * (type === "bedded" ? 0.75 : 0.95), bedding = normalize([Math.sin(dip), 1, (random9() - 0.5) * 0.42]);
   const extent2 = (n) => Math.hypot(n[0] * width, n[1] * height2, n[2] * depth);
   for (let i = 0; i < 5; i++) {
-    const a = phase2 + i * TAU4 / 5 + (random7() - 0.5) * 0.28;
-    const lean = (0.12 + random7() * 0.43) * (type === "jointed" && i === 2 ? -0.18 : 1), n = normalize([Math.cos(a) / width, lean / height2, Math.sin(a) / depth]);
-    planes.push({ n, d: extent2(n) * (0.81 + random7() * 0.3), kind: "major-joint" });
+    const a = phase2 + i * TAU4 / 5 + (random9() - 0.5) * 0.28;
+    const lean = (0.12 + random9() * 0.43) * (type === "jointed" && i === 2 ? -0.18 : 1), n = normalize([Math.cos(a) / width, lean / height2, Math.sin(a) / depth]);
+    planes.push({ n, d: extent2(n) * (0.81 + random9() * 0.3), kind: "major-joint" });
   }
-  const top = normalize([bedding[0] + (random7() - 0.5) * 0.7, 1, bedding[2] + (random7() - 0.5) * 0.58]), bottom = normalize([(random7() - 0.5) * 0.3, -1, (random7() - 0.5) * 0.34]);
-  planes.push({ n: top, d: extent2(top) * (0.64 + random7() * 0.22), kind: "sloping-bedding" });
-  planes.push({ n: bottom, d: extent2(bottom) * (0.91 + random7() * 0.13), kind: "buried-base" });
+  const top = normalize([bedding[0] + (random9() - 0.5) * 0.7, 1, bedding[2] + (random9() - 0.5) * 0.58]), bottom = normalize([(random9() - 0.5) * 0.3, -1, (random9() - 0.5) * 0.34]);
+  planes.push({ n: top, d: extent2(top) * (0.64 + random9() * 0.22), kind: "sloping-bedding" });
+  planes.push({ n: bottom, d: extent2(bottom) * (0.91 + random9() * 0.13), kind: "buried-base" });
   for (let i = 0; i < 3; i++) {
-    const a = phase2 + (i * 0.73 + 0.14) * TAU4 + (random7() - 0.5) * 0.55, n = normalize([Math.cos(a) / width, (0.6 + random7() * 0.65) / height2, Math.sin(a) / depth]);
-    planes.push({ n, d: extent2(n) * (0.56 + random7() * 0.2), kind: "shoulder-spall" });
+    const a = phase2 + (i * 0.73 + 0.14) * TAU4 + (random9() - 0.5) * 0.55, n = normalize([Math.cos(a) / width, (0.6 + random9() * 0.65) / height2, Math.sin(a) / depth]);
+    planes.push({ n, d: extent2(n) * (0.56 + random9() * 0.2), kind: "shoulder-spall" });
   }
   const round = type === "waterworn" ? [0.19, 0.16, 0.22, 0.18][variant] : type === "weathered" ? 0.095 : type === "bedded" ? 0.04 : 0.035, erosion = type === "waterworn" ? 0.014 : type === "weathered" ? 0.029 : 0.02;
   const relief = type === "waterworn" ? 0.032 : type === "weathered" ? 0.135 : type === "bedded" ? 0.08 : 0.095;
   const seams = [];
   for (let i = 0; i < (type === "bedded" ? 2 : type === "jointed" ? 1 : 0); i++) {
-    const n = type === "bedded" ? bedding : normalize([random7() - 0.5, 0.25 + random7() * 0.5, random7() - 0.5]);
-    seams.push({ n, offset: (random7() - 0.5) * height2 * 0.85, width: type === "bedded" ? 0.13 : 0.17, depth: type === "bedded" ? 0.065 : 0.078, phase: random7() * TAU4 });
+    const n = type === "bedded" ? bedding : normalize([random9() - 0.5, 0.25 + random9() * 0.5, random9() - 0.5]);
+    seams.push({ n, offset: (random9() - 0.5) * height2 * 0.85, width: type === "bedded" ? 0.13 : 0.17, depth: type === "bedded" ? 0.065 : 0.078, phase: random9() * TAU4 });
   }
   const recessCount = type === "waterworn" ? 0 : type === "weathered" ? variant === 2 ? 0 : 1 : variant % 2 === 0 ? 1 : 0, recesses = [];
   for (let i = 0; i < recessCount; i++) {
-    const a = phase2 + (i * 0.43 + 0.13) * TAU4 + (random7() - 0.5) * 0.3, ny = 0.1 + random7() * 0.42;
-    recesses.push({ center: [Math.cos(a) * width * (0.77 + random7() * 0.08), ny * height2, Math.sin(a) * depth * (0.77 + random7() * 0.1)], axes: [width * (0.36 + random7() * 0.13), height2 * (0.28 + random7() * 0.15), depth * (0.29 + random7() * 0.11)], radial: [Math.cos(a), 0, Math.sin(a)], tangent: [-Math.sin(a), 0, Math.cos(a)], shear: (random7() - 0.5) * 0.7, power: type === "weathered" ? 1.42 : 1.16, softness: type === "weathered" ? 0.04 : 0.024 });
+    const a = phase2 + (i * 0.43 + 0.13) * TAU4 + (random9() - 0.5) * 0.3, ny = 0.1 + random9() * 0.42;
+    recesses.push({ center: [Math.cos(a) * width * (0.77 + random9() * 0.08), ny * height2, Math.sin(a) * depth * (0.77 + random9() * 0.1)], axes: [width * (0.36 + random9() * 0.13), height2 * (0.28 + random9() * 0.15), depth * (0.29 + random9() * 0.11)], radial: [Math.cos(a), 0, Math.sin(a)], tangent: [-Math.sin(a), 0, Math.cos(a)], shear: (random9() - 0.5) * 0.7, power: type === "weathered" ? 1.42 : 1.16, softness: type === "weathered" ? 0.04 : 0.024 });
   }
-  const abrasion = type === "waterworn" ? { center: [width * (random7() - 0.5) * 0.2, -height2 * 0.11, depth * (random7() - 0.5) * 0.17], axes: [width * 0.99, height2 * 1.13, depth * 0.99], skew: (random7() - 0.5) * 0.32 } : null;
+  const abrasion = type === "waterworn" ? { center: [width * (random9() - 0.5) * 0.2, -height2 * 0.11, depth * (random9() - 0.5) * 0.17], axes: [width * 0.99, height2 * 1.13, depth * 0.99], skew: (random9() - 0.5) * 0.32 } : null;
   const rawBounds = polytopeBounds(planes, relief * 0.56 + erosion * 0.7 + 7e-3), originY = rawBounds.min[1], bounds6 = { min: [rawBounds.min[0], 0, rawBounds.min[2]], max: [rawBounds.max[0], rawBounds.max[1] - originY, rawBounds.max[2]] };
   const envelopeVertices = rawBounds.vertices.map((v) => [v[0], v[1] - originY, v[2]]);
   if (abrasion) {
@@ -7724,17 +8318,17 @@ function createRockPlan(familyId, worldSeed = 728194) {
       origin[1] += vertical * half[1];
       origin[short] += across2 * half[short];
       const axes = half.map((v, i) => v * proportions[i]), facets = [];
-      const add3 = (normal4, offset) => {
+      const add4 = (normal4, offset) => {
         const metric = normal4.map((v, i) => v / axes[i]), length = Math.hypot(...metric);
         facets.push({ n: metric.map((v) => v / length), d: offset / length });
       };
       for (let i = 0; i < 5; i++) {
         const a = phase2 + turn + i * TAU4 / 5 + [0.05, -0.11, 0.08, -0.04, 0.1][i];
-        add3([Math.cos(a), [-0.24, 0.34, 0.28, -0.3, 0.38][i], Math.sin(a)], [0.95, 0.88, 1.02, 0.92, 0.98][i]);
+        add4([Math.cos(a), [-0.24, 0.34, 0.28, -0.3, 0.38][i], Math.sin(a)], [0.95, 0.88, 1.02, 0.92, 0.98][i]);
       }
-      add3([0.65, 0.65, -0.38], 0.74);
-      add3([-0.48, 0.75, 0.5], 0.82);
-      add3([0.16, -1, -0.19], 1.04);
+      add4([0.65, 0.65, -0.38], 0.74);
+      add4([-0.48, 0.75, 0.5], 0.82);
+      add4([0.16, -1, -0.19], 1.04);
       return { center: origin, planes: facets };
     };
     bulk = { masses: [mass(0.21, 0.07, 0.02, [0.6, 0.95, 0.78], 0), mass(-0.44, -0.3, -0.1, [0.5, 0.56, 0.68], 0.43)], round: 0.07, join: 0.105 };
@@ -7781,10 +8375,10 @@ function rockField(plan, x, y, z) {
   if (plan.bulk) {
     let merged = Infinity;
     for (const mass of plan.bulk.masses) {
-      const local = p.map((v, i) => v - mass.center[i]);
+      const local2 = p.map((v, i) => v - mass.center[i]);
       let block = -Infinity;
       for (const face of mass.planes) {
-        const q = dot(face.n, local) - face.d;
+        const q = dot(face.n, local2) - face.d;
         block = block === -Infinity ? q : smootherMax(block, q, plan.bulk.round);
       }
       merged = merged === Infinity ? block : -smootherMax(-merged, -block, plan.bulk.join);
@@ -7793,8 +8387,8 @@ function rockField(plan, x, y, z) {
     d = smootherMax(d, merged, 0.035);
   }
   if (plan.shoulderBreak) {
-    const fracture = plan.shoulderBreak, local = p.map((v, i) => v - fracture.center[i]);
-    const cut = dot(fracture.n, local) - fracture.d + macro * 0.035 + broad * 7e-3;
+    const fracture = plan.shoulderBreak, local2 = p.map((v, i) => v - fracture.center[i]);
+    const cut = dot(fracture.n, local2) - fracture.d + macro * 0.035 + broad * 7e-3;
     d = smootherMax(d, cut, fracture.round);
   }
   if (plan.weatheredStructure) d = smootherMax(d, weatheredRockStructureField(plan.weatheredStructure, x, y, z, macro, broad), plan.weatheredStructure.intersectionRound);
@@ -7814,8 +8408,8 @@ function surfaceNormals(geometry3, guardCorners = false) {
       nx /= len3;
       ny /= len3;
       nz /= len3;
-      const dot4 = nx * (n[a] + n[b] + n[c2]) + ny * (n[a + 1] + n[b + 1] + n[c2 + 1]) + nz * (n[a + 2] + n[b + 2] + n[c2 + 2]);
-      if (dot4 >= 0.06) continue;
+      const dot5 = nx * (n[a] + n[b] + n[c2]) + ny * (n[a + 1] + n[b + 1] + n[c2 + 1]) + nz * (n[a + 2] + n[b + 2] + n[c2 + 2]);
+      if (dot5 >= 0.06) continue;
       changed++;
       for (const j of [a, b, c2]) {
         const x = n[j] + nx * 0.36, y = n[j + 1] + ny * 0.36, z = n[j + 2] + nz * 0.36, l = Math.hypot(x, y, z);
@@ -7836,9 +8430,9 @@ function surfaceNormals(geometry3, guardCorners = false) {
     for (let pass = 0; pass < 64; pass++) {
       let changed = 0;
       for (const [a, b, c2, nx, ny, nz] of faces) for (const j of [a, b, c2]) {
-        const dot4 = nx * n[j] + ny * n[j + 1] + nz * n[j + 2];
-        if (dot4 >= 0.015) continue;
-        const weight = 0.025 - dot4, x = n[j] + nx * weight, y = n[j + 1] + ny * weight, z = n[j + 2] + nz * weight, len3 = Math.hypot(x, y, z);
+        const dot5 = nx * n[j] + ny * n[j + 1] + nz * n[j + 2];
+        if (dot5 >= 0.015) continue;
+        const weight = 0.025 - dot5, x = n[j] + nx * weight, y = n[j + 1] + ny * weight, z = n[j + 2] + nz * weight, len3 = Math.hypot(x, y, z);
         n[j] = x / len3;
         n[j + 1] = y / len3;
         n[j + 2] = z / len3;
@@ -7871,13 +8465,13 @@ function* rockGeometryStages(plan, { resolution = 16 } = {}) {
     if (cache2.has(key3)) return cache2.get(key3);
     let a = points[ia], b = points[ib], fa = values[ia], fb = values[ib];
     for (let j = 0; j < 16; j++) {
-      const p2 = a.map((v, k) => (v + b[k]) * 0.5), f10 = rockField(plan, ...p2);
-      if (f10 < 0 === fa < 0) {
+      const p2 = a.map((v, k) => (v + b[k]) * 0.5), f12 = rockField(plan, ...p2);
+      if (f12 < 0 === fa < 0) {
         a = p2;
-        fa = f10;
+        fa = f12;
       } else {
         b = p2;
-        fb = f10;
+        fb = f12;
       }
     }
     const t = clamp6(fa / (fa - fb), 0, 1), p = a.map((v, k) => v + (b[k] - v) * t), weldKey = [Math.fround(p[0]), Math.fround(p[1] - plan.originY), Math.fround(p[2])].join(",");
@@ -7972,8 +8566,8 @@ function chooseRockFamily(terrainFunctions, rock, worldSeed = 728194) {
     const [type2, variant2] = bank.familyId.split("-");
     return { id: bank.familyId, type: type2, variant: Number(variant2), yaw: bank.yaw, rotationX: 0 };
   }
-  const f10 = terrainFunctions, x = rock.x, z = rock.z, grade = f10.slope(x, z), channel2 = f10.projectChannel?.(x, z, 14), dry = vegetationClimate(f10, x, z, rock.y, rockClimateScratch).ash;
-  const worn = channel2 ? channel2.distance < 14 && rock.y >= channel2.level - 0.3 && rock.y < channel2.level + 3.4 : !f10.projectChannel && Math.abs(x - (22 + Math.sin(z * 0.011) * 24 + Math.sin(z * 0.037) * 7)) < 28 && rock.y < 6;
+  const f12 = terrainFunctions, x = rock.x, z = rock.z, grade = f12.slope(x, z), channel2 = f12.projectChannel?.(x, z, 14), dry = vegetationClimate(f12, x, z, rock.y, rockClimateScratch).ash;
+  const worn = channel2 ? channel2.distance < 14 && rock.y >= channel2.level - 0.3 && rock.y < channel2.level + 3.4 : !f12.projectChannel && Math.abs(x - (22 + Math.sin(z * 0.011) * 24 + Math.sin(z * 0.037) * 7)) < 28 && rock.y < 6;
   const type = worn ? "waterworn" : dry > 0.62 ? "bedded" : grade > 0.48 ? "jointed" : "weathered", variant = hash32(worldSeed + ":" + rock.id + ":shape") % 4, orientation2 = hash32(worldSeed + ":" + Math.floor(x / 96) + "," + Math.floor(z / 96) + ":joint") / 4294967296 * TAU4;
   return { id: type + "-" + variant, type, variant, yaw: orientation2 + (hash32(rock.id + ":yaw") / 4294967296 - 0.5) * 0.65, rotationX: (hash32(rock.id + ":tilt") / 4294967296 - 0.5) * 0.18 };
 }
@@ -7990,15 +8584,15 @@ function createProceduralRockMaterial(maps) {
   };
   material2.onBeforeCompile = (s) => {
     Object.assign(s.uniforms, uniforms);
-    s.vertexShader = "varying vec3 vRockWorld;varying vec3 vRockNormal;\n" + s.vertexShader;
+    s.vertexShader = "varying vec3 vRockWorld;varying vec3 vRockNormal;varying float vRockBase;\n" + s.vertexShader;
     s.vertexShader = s.vertexShader.replace("#include <begin_vertex>", `#include <begin_vertex>
    #ifdef USE_INSTANCING
-    mat3 rockTransform=mat3(modelMatrix*instanceMatrix);vec3 rockScaleSq=vec3(dot(rockTransform[0],rockTransform[0]),dot(rockTransform[1],rockTransform[1]),dot(rockTransform[2],rockTransform[2]));vRockWorld=(modelMatrix*instanceMatrix*vec4(transformed,1.)).xyz;vRockNormal=normalize(rockTransform*(normal/max(rockScaleSq,vec3(.000001))));
+    mat3 rockTransform=mat3(modelMatrix*instanceMatrix);vec3 rockScaleSq=vec3(dot(rockTransform[0],rockTransform[0]),dot(rockTransform[1],rockTransform[1]),dot(rockTransform[2],rockTransform[2]));vRockWorld=(modelMatrix*instanceMatrix*vec4(transformed,1.)).xyz;vRockBase=(modelMatrix*instanceMatrix)[3].y;vRockNormal=normalize(rockTransform*(normal/max(rockScaleSq,vec3(.000001))));
    #else
-    mat3 rockTransform=mat3(modelMatrix);vec3 rockScaleSq=vec3(dot(rockTransform[0],rockTransform[0]),dot(rockTransform[1],rockTransform[1]),dot(rockTransform[2],rockTransform[2]));vRockWorld=(modelMatrix*vec4(transformed,1.)).xyz;vRockNormal=normalize(rockTransform*(normal/max(rockScaleSq,vec3(.000001))));
+    mat3 rockTransform=mat3(modelMatrix);vec3 rockScaleSq=vec3(dot(rockTransform[0],rockTransform[0]),dot(rockTransform[1],rockTransform[1]),dot(rockTransform[2],rockTransform[2]));vRockWorld=(modelMatrix*vec4(transformed,1.)).xyz;vRockBase=modelMatrix[3].y;vRockNormal=normalize(rockTransform*(normal/max(rockScaleSq,vec3(.000001))));
    #endif
   `);
-    s.fragmentShader = `varying vec3 vRockWorld;varying vec3 vRockNormal;uniform sampler2D rockPhotoNormal;uniform sampler2D rockMossPhoto;uniform sampler2D rockSnowPhoto;uniform sampler2D rockSnowNormal;uniform float rockTextureMeters;uniform float rockPhotoResponse;
+    s.fragmentShader = `varying vec3 vRockWorld;varying vec3 vRockNormal;varying float vRockBase;uniform sampler2D rockPhotoNormal;uniform sampler2D rockMossPhoto;uniform sampler2D rockSnowPhoto;uniform sampler2D rockSnowNormal;uniform float rockTextureMeters;uniform float rockPhotoResponse;
    ${MINERAL_SURFACE_GRADIENT_GLSL}
    ${islandBiomeGLSL}
    ${TEMPERATE_MINERAL_GLSL}
@@ -8014,17 +8608,30 @@ function createProceduralRockMaterial(maps) {
    diffuseColor.rgb*=rockPhoto.rgb;diffuseColor.a=opacity;
    float rockDry=rockClimate.ash,rockSnow=rockClimate.snow*smoothstep(.48,.85,rockN.y),rockWet=1.-smoothstep(1.,5.,vRockWorld.y);vec2 rockSnowUV=vRockWorld.xz/3.15*1.5;
    float rockMoss=(1.-rockDry)*smoothstep(.40,.70,rockNoise(vRockWorld.xz*.71+rockN.xz*2.))*smoothstep(.20,.85,rockN.y)*.48*smoothstep(1.8,4.5,vRockWorld.y);
-   diffuseColor.rgb=mix(diffuseColor.rgb,texture2D(rockMossPhoto,vRockWorld.xz/2.4).rgb*vec3(.65,.72,.50),rockMoss);
+   // v96 (back in v96.2): a forest's rocks (shade, damp air) wear thick moss:
+   // over their tops and down the sides toward the soil, in cushions. (v96's
+   // warmer stone between and dark line of soil at the foot stay out.)
+   float rockAbove=vRockWorld.y-vRockBase;
+   #ifdef LAND_SUN_FIELD
+   // The ground's own height from the sun field (the rock's base lies buried).
+   if(land_sunFieldReady>.5){vec2 rockField=vRockWorld.xz*land_sunFieldMap.xy+land_sunFieldMap.zw;if(all(greaterThan(rockField,vec2(.002)))&&all(lessThan(rockField,vec2(.998))))rockAbove=vRockWorld.y-textureLod(land_sunField,rockField*land_sunAtlas,0.).g;}
+   #endif
+   float rockWood=(1.-rockDry)*(1.-rockClimate.snow)*smoothstep(.12,.55,rockClimate.forest+rockClimate.swamp*.6)*smoothstep(.6,2.2,vRockWorld.y);
+   float rockCushion=rockNoise(vRockWorld.xz*1.7+rockN.xz*1.3+vRockWorld.y*.9)*.62+rockNoise(vRockWorld.xz*5.3-vRockWorld.y*2.1)*.38;
+   float rockMossWood=rockWood*smoothstep(.36,.6,rockCushion*(.7+.55*smoothstep(-.1,.75,rockN.y))+.3*(1.-smoothstep(.15,.9,rockAbove)));
+   rockMoss=max(rockMoss,rockMossWood*.92);
+   vec3 rockMossTint=mix(vec3(.42,.6,.24),vec3(.62,.66,.3),rockNoise(vRockWorld.xz*.37+3.1));
+   diffuseColor.rgb=mix(diffuseColor.rgb,texture2D(rockMossPhoto,vRockWorld.xz/1.6+rockN.xz*.3).rgb*rockMossTint*(.75+.5*rockCushion),rockMoss);
    diffuseColor.rgb*=mix(1.,.76,rockWet*.55);diffuseColor.rgb*=mix(vec3(1.),vec3(.5,.56,.42),(1.-smoothstep(.5,1.6,vRockWorld.y))*.85);diffuseColor.rgb=mix(diffuseColor.rgb,texture2D(rockSnowPhoto,rockSnowUV).rgb*vec3(.93,.97,1.),rockSnow*.96);
   `);
-    s.fragmentShader = s.fragmentShader.replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor=mix(clamp(rockPhoto.a*.94+rockMoss*.12-rockWet*.11,.58,1.),.94,rockSnow);");
-    s.fragmentShader = s.fragmentShader.replace("#include <normal_fragment_maps>", `vec3 rockShadeN=mineralTriNormal(rockPhotoNormal,rockUV,rockN,rockWeights,mix(.62,1.,rockPhotoResponse)),snowPhotoN=texture2D(rockSnowNormal,rockSnowUV).xyz*2.-1.;normal=normalize(mat3(viewMatrix)*normalize(mix(rockShadeN,normalize(rockN+vec3(snowPhotoN.x,0.,snowPhotoN.y)),rockSnow)));`);
+    s.fragmentShader = s.fragmentShader.replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor=mix(clamp(rockPhoto.a*.94+rockMoss*.4-rockWet*.11,.58,1.),.94,rockSnow);");
+    s.fragmentShader = s.fragmentShader.replace("#include <normal_fragment_maps>", `vec3 rockShadeN=mineralTriNormal(rockPhotoNormal,rockUV,rockN,rockWeights,mix(.62,1.,rockPhotoResponse)),snowPhotoN=texture2D(rockSnowNormal,rockSnowUV).xyz*2.-1.;rockShadeN=normalize(mix(rockShadeN,rockN,rockMoss*.65));normal=normalize(mat3(viewMatrix)*normalize(mix(rockShadeN,normalize(rockN+vec3(snowPhotoN.x,0.,snowPhotoN.y)),rockSnow)));`);
     const aoMarker = "texture2D( aoMap, vAoMapUv ).r";
     if (!ShaderChunk.aomap_fragment.includes(aoMarker)) throw Error("Rock AO shader seam changed");
     const aoChunk = ShaderChunk.aomap_fragment.replace(aoMarker, "mix(1.,rockTri(aoMap,rockUV,rockWeights).r,rockPhotoResponse*(1.-rockSnow)*(1.-rockMoss))");
     s.fragmentShader = s.fragmentShader.replace("#include <aomap_fragment>", aoChunk);
   };
-  material2.customProgramCacheKey = () => "procedural-rock-triplanar-v34-temperate-mineral-experiment|photo-response-v65-r1|sea-wash-v87";
+  material2.customProgramCacheKey = () => "procedural-rock-triplanar-v34-temperate-mineral-experiment|photo-response-v65-r1|sea-wash-v87|forest-moss-v96.2";
   material2.userData.refreshMaps = (next) => {
     if (!next.cliff || !next.cliffN) throw new Error("Rock photo maps missing");
     material2.map = next.cliff;
@@ -8124,7 +8731,7 @@ function createProceduralRockLibrary({ seed = 728194, maps, resolution = 16, far
     },
     statistics() {
       let triangles2 = 0, bytes = 0;
-      for (const f10 of families.values()) for (const t of [f10.near, f10.far]) {
+      for (const f12 of families.values()) for (const t of [f12.near, f12.far]) {
         triangles2 += t.geometry.index.count / 3;
         bytes += t.geometry.index.array.byteLength;
         for (const a of Object.values(t.geometry.attributes)) bytes += a.array.byteLength;
@@ -8134,7 +8741,7 @@ function createProceduralRockLibrary({ seed = 728194, maps, resolution = 16, far
     dispose() {
       if (disposed) return;
       disposed = true;
-      for (const f10 of families.values()) for (const t of [f10.near, f10.far]) t.geometry.dispose();
+      for (const f12 of families.values()) for (const t of [f12.near, f12.far]) t.geometry.dispose();
       families.clear();
       material2.dispose();
     }
@@ -8355,12 +8962,12 @@ function naturalRank(id2, slot = "", seed = 728194) {
 var sorted = (a) => [...a || []].sort((a2, b) => a2.id.localeCompare(b.id));
 var kindRadius = (kind) => kind.startsWith("snag") ? 0.42 : kind.startsWith("stump") ? 0.62 : kind.startsWith("branch") ? 0.44 : kind.startsWith("scree") ? 0.42 : 0.3;
 var kindRange = (kind) => kind.startsWith("snag") ? [38, 100] : kind.startsWith("stump") ? [25, 66] : kind.startsWith("branch") ? [36, 36] : kind.startsWith("fungi") ? [22, 36] : kind.startsWith("flowers") ? [28, 48] : [42, 42];
-function buildNaturalPlacements({ terrainFunctions: f10, chunk, landmarks = [], allowed = () => true, seed = 728194 }) {
+function buildNaturalPlacements({ terrainFunctions: f12, chunk, landmarks = [], allowed = () => true, seed = 728194 }) {
   const records = [], groups = [], h = {}, ownerKey = chunk.cx + "," + chunk.cz;
   const trees = sorted(chunk.trees), rocks = sorted(chunk.rocks), logs = sorted(chunk.logs);
   const rank3 = (id2, slot) => naturalRank(id2, slot, seed);
   const permitted = (x, z, r) => {
-    if (f10.height(x, z) < 0.82) return false;
+    if (f12.height(x, z) < 0.82) return false;
     if (landmarks.some((l) => l.clear && Math.hypot(x - l.x, z - l.z) < l.clear + r)) return false;
     if (Math.hypot(x + 4, z - 20) < 10 + r) return false;
     return allowed(x, z, r);
@@ -8370,28 +8977,28 @@ function buildNaturalPlacements({ terrainFunctions: f10, chunk, landmarks = [], 
     groups.push(record2);
     return record2;
   };
-  const add3 = (g, slot, kind, x, z, scale5 = 1, yaw2 = rank3(g.id, slot + "/yaw") * TAU5) => {
+  const add4 = (g, slot, kind, x, z, scale5 = 1, yaw2 = rank3(g.id, slot + "/yaw") * TAU5) => {
     const radius = kindRadius(kind) * scale5;
     if (records.length >= NATURAL_LIMITS.chunkRecords || !permitted(x, z, radius)) return false;
-    const dx = (f10.height(x + 0.35, z) - f10.height(x - 0.35, z)) / 0.7, dz = (f10.height(x, z + 0.35) - f10.height(x, z - 0.35)) / 0.7;
+    const dx = (f12.height(x + 0.35, z) - f12.height(x - 0.35, z)) / 0.7, dz = (f12.height(x, z + 0.35) - f12.height(x, z - 0.35)) / 0.7;
     const grade = Math.hypot(dx, dz), limit = kind.startsWith("scree") ? 1.15 : kind.startsWith("branch") ? 0.78 : 0.54;
     if (grade > limit) return false;
     const maxTilt = kind.startsWith("snag") ? 0.12 : 0.38, tilt = grade ? Math.min(1, maxTilt / grade) : 0;
-    const ranges = kindRange(kind), r = { id: g.id + "/" + slot, groupId: g.id, anchorId: g.anchorId, ownerKey, kind, x, y: f10.height(x, z) - (kind.startsWith("snag") ? 0.075 : 0.016), z, yaw: yaw2, scale: scale5, normalX: -dx * tilt, normalZ: -dz * tilt, lodRank: g.rank, near: ranges[0], far: ranges[1], radius };
+    const ranges = kindRange(kind), r = { id: g.id + "/" + slot, groupId: g.id, anchorId: g.anchorId, ownerKey, kind, x, y: f12.height(x, z) - (kind.startsWith("snag") ? 0.075 : 0.016), z, yaw: yaw2, scale: scale5, normalX: -dx * tilt, normalZ: -dz * tilt, lodRank: g.rank, near: ranges[0], far: ranges[1], radius };
     records.push(r);
     return true;
   };
   const child = (g, slot, kind, min, max, scale5 = 0.9) => {
     const a = rank3(g.id, slot + "/angle") * TAU5, d = min + rank3(g.id, slot + "/distance") * (max - min);
-    return add3(g, slot, kind, g.x + Math.cos(a) * d, g.z + Math.sin(a) * d, scale5 * (0.82 + rank3(g.id, slot + "/size") * 0.36));
+    return add4(g, slot, kind, g.x + Math.cos(a) * d, g.z + Math.sin(a) * d, scale5 * (0.82 + rank3(g.id, slot + "/size") * 0.36));
   };
   for (const a of logs) {
-    sampleHabitat(f10, a.x, a.z, h);
+    sampleHabitat(f12, a.x, a.z, h);
     if (h.snow > 0.42 || h.dry > 0.62 || h.shelter < 0.34 || !permitted(a.x, a.z, 0.2)) continue;
     const g = group(a, "deadwood"), yaw2 = a.yaw ?? rank3(a.id, "grain") * TAU5, side2 = rank3(g.id, "side") < 0.5 ? -1 : 1;
     for (let i = 0; i < 3; i++) {
       const along = (i - 1) * 0.77 + (rank3(g.id, "fungi" + i) - 0.5) * 0.3, off = side2 * (0.62 + rank3(g.id, "offset" + i) * 0.4), cs = Math.cos(yaw2), sn = Math.sin(yaw2);
-      add3(g, "fungi/" + i, i % 2 ? "fungi-b" : "fungi-a", a.x + along * cs - off * sn, a.z + along * sn + off * cs, 0.8 + rank3(g.id, "fungi-scale" + i) * 0.42, yaw2);
+      add4(g, "fungi/" + i, i % 2 ? "fungi-b" : "fungi-a", a.x + along * cs - off * sn, a.z + along * sn + off * cs, 0.8 + rank3(g.id, "fungi-scale" + i) * 0.42, yaw2);
     }
     for (let i = 0; i < 3; i++) child(g, "branch/" + i, ["branch-a", "branch-b", "branch-c"][i], 1.1, 2.6, 0.84);
   }
@@ -8399,43 +9006,43 @@ function buildNaturalPlacements({ terrainFunctions: f10, chunk, landmarks = [], 
     const r = rank3(a.id, "deadwood-pocket");
     if (r < 0.13) return true;
     if (r >= 0.27) return false;
-    sampleHabitat(f10, a.x, a.z, h);
+    sampleHabitat(f12, a.x, a.z, h);
     return r < 0.13 + h.swamp * 0.14;
   }).sort((a, b) => rank3(a.id, "pocket-priority") - rank3(b.id, "pocket-priority") || a.id.localeCompare(b.id)).slice(0, 5);
   for (const a of woody) {
-    sampleHabitat(f10, a.x, a.z, h);
+    sampleHabitat(f12, a.x, a.z, h);
     if (h.snow > 0.35 || h.dry > 0.6 || h.shelter < 0.35 || h.cover < 0.12) continue;
     const swamp = h.swamp > 0.5, g = group(a, swamp ? "wetland-woodland" : "woodland"), angle = rank3(g.id, "wind") * TAU5, d = 2.7 + rank3(g.id, "offset") * 1.6;
     g.x = a.x + Math.cos(angle) * d;
     g.z = a.z + Math.sin(angle) * d;
     if (!permitted(g.x, g.z, 0.8)) continue;
     const snag = rank3(g.id, "standing") < (swamp ? 0.56 : 0.24);
-    add3(g, "wood", snag ? !swamp && rank3(g.id, "species") < 0.6 ? "snag-pine" : "snag-broadleaf" : rank3(g.id, "stump") < 0.5 ? "stump-a" : "stump-b", g.x, g.z, snag ? 0.75 + rank3(g.id, "wood-size") * 0.38 : 0.8 + rank3(g.id, "wood-size") * 0.35, angle);
+    add4(g, "wood", snag ? !swamp && rank3(g.id, "species") < 0.6 ? "snag-pine" : "snag-broadleaf" : rank3(g.id, "stump") < 0.5 ? "stump-a" : "stump-b", g.x, g.z, snag ? 0.75 + rank3(g.id, "wood-size") * 0.38 : 0.8 + rank3(g.id, "wood-size") * 0.35, angle);
     for (let i = 0; i < 3; i++) child(g, "branch/" + i, ["branch-a", "branch-b", "branch-c"][i], 0.6, 2.5, 0.8);
     if (h.shelter > 0.43) for (let i = 0; i < 2; i++) child(g, "fungi/" + i, i ? "fungi-b" : "fungi-a", 0.55, 1.4, 0.75);
   }
   for (let gz = chunk.cz * 4; gz < (chunk.cz + 1) * 4; gz++) for (let gx = chunk.cx * 4; gx < (chunk.cx + 1) * 4; gx++) {
     const id2 = "edge/" + gx + "," + gz, x = (gx + 0.22 + rank3(id2, "x") * 0.56) * 16, z = (gz + 0.22 + rank3(id2, "z") * 0.56) * 16;
-    sampleHabitat(f10, x, z, h);
-    if (h.snow > 0.25 || h.dry > 0.4 || h.wet > 0.55 || h.cover < 0.3 || h.cover > 0.83 || h.edge < 0.52 || h.shelter < 0.31 || h.shelter > 0.66 || f10.slope(x, z) > 0.45 || rank3(id2, "flowering") > 0.19) continue;
+    sampleHabitat(f12, x, z, h);
+    if (h.snow > 0.25 || h.dry > 0.4 || h.wet > 0.55 || h.cover < 0.3 || h.cover > 0.83 || h.edge < 0.52 || h.shelter < 0.31 || h.shelter > 0.66 || f12.slope(x, z) > 0.45 || rank3(id2, "flowering") > 0.19) continue;
     if (!permitted(x, z, 1.6)) continue;
     const g = group({ id: id2, x, z }, "flowers"), kind = rank3(g.id, "species") < 0.6 ? "flowers-a" : "flowers-b", yaw2 = rank3(g.id, "lay") * TAU5;
     for (let i = 0; i < 5; i++) {
       const t = (i - 2) * 0.56, side2 = (rank3(g.id, "offset" + i) - 0.5) * 1.18, cs = Math.cos(yaw2), sn = Math.sin(yaw2), px = x + t * cs - side2 * sn, pz = z + t * sn + side2 * cs;
-      sampleHabitat(f10, px, pz, h);
-      if (h.cover > 0.2 && h.cover < 0.9) add3(g, "clump/" + i, kind, px, pz, 0.72 + rank3(g.id, "age" + i) * 0.35, yaw2 + (rank3(g.id, "turn" + i) - 0.5));
+      sampleHabitat(f12, px, pz, h);
+      if (h.cover > 0.2 && h.cover < 0.9) add4(g, "clump/" + i, kind, px, pz, 0.72 + rank3(g.id, "age" + i) * 0.35, yaw2 + (rank3(g.id, "turn" + i) - 0.5));
     }
   }
   for (const a of rocks) {
     if (rank3(a.id, "scree-pocket") > 0.2) continue;
-    const grade = f10.slope(a.x, a.z), channel2 = f10.projectChannel?.(a.x, a.z, 14);
-    sampleHabitat(f10, a.x, a.z, h);
-    const bank = !!channel2 && Number.isFinite(channel2.level) && channel2.distance < 14 && f10.height(a.x, a.z) < channel2.level + 5.5;
+    const grade = f12.slope(a.x, a.z), channel2 = f12.projectChannel?.(a.x, a.z, 14);
+    sampleHabitat(f12, a.x, a.z, h);
+    const bank = !!channel2 && Number.isFinite(channel2.level) && channel2.distance < 14 && f12.height(a.x, a.z) < channel2.level + 5.5;
     if (h.snow > 0.5 || !bank && (grade < 0.25 || h.exposure < 0.26)) continue;
-    const g = group(a, bank ? "bank" : "scree"), dx = f10.height(a.x + 0.7, a.z) - f10.height(a.x - 0.7, a.z), dz = f10.height(a.x, a.z + 0.7) - f10.height(a.x, a.z - 0.7), down2 = Math.atan2(-dz, -dx);
+    const g = group(a, bank ? "bank" : "scree"), dx = f12.height(a.x + 0.7, a.z) - f12.height(a.x - 0.7, a.z), dz = f12.height(a.x, a.z + 0.7) - f12.height(a.x, a.z - 0.7), down2 = Math.atan2(-dz, -dx);
     for (let i = 0; i < 3; i++) {
       const angle = down2 + (rank3(g.id, "angle" + i) - 0.5) * 1.9, d = (a.r || 1) * 0.65 + 0.6 + i * 0.48;
-      add3(g, "chips/" + i, i % 2 ? "scree-b" : "scree-a", a.x + Math.cos(angle) * d, a.z + Math.sin(angle) * d, (bank ? 0.65 : 0.8) * (1 - i * 0.12), down2);
+      add4(g, "chips/" + i, i % 2 ? "scree-b" : "scree-a", a.x + Math.cos(angle) * d, a.z + Math.sin(angle) * d, (bank ? 0.65 : 0.8) * (1 - i * 0.12), down2);
     }
   }
   records.sort((a, b) => a.id.localeCompare(b.id));
@@ -8496,7 +9103,7 @@ function assetBox2(asset, state2) {
 function objectBox(object2, state2) {
   const result = new Box3(), identity3 = new Matrix4();
   const visit = (o, parent) => {
-    const local = o.matrixAutoUpdate === false ? o.matrix : new Matrix4().compose(o.position, o.quaternion, o.scale), m = new Matrix4().multiplyMatrices(parent, local);
+    const local2 = o.matrixAutoUpdate === false ? o.matrix : new Matrix4().compose(o.position, o.quaternion, o.scale), m = new Matrix4().multiplyMatrices(parent, local2);
     if (o.geometry) result.union(geometryBox(o.geometry, state2).clone().applyMatrix4(m));
     for (const c2 of o.children || []) visit(c2, m);
   };
@@ -8842,8 +9449,8 @@ function* installWoodyShrubsSteps(world2, chunk) {
       sourceCount++;
       const x = source2[i * 16 + 12], z = source2[i * 16 + 14], identity3 = old.userData.courtLodIndices?.[i] ?? i, family = woodyHash(728194, chunk.cx, chunk.cz, identity3, 17) < 0.5 ? 0 : 1, geometry3 = state2.models[age * 2 + family];
       let chosen = null;
-      const local = vegetationClimate(world2.terrainFunctions, x, z, source2[i * 16 + 13], climate3);
-      if (local.ash < 0.45 && local.snow < 0.45) for (const factor of [1, 0.82, 0.66]) {
+      const local2 = vegetationClimate(world2.terrainFunctions, x, z, source2[i * 16 + 13], climate3);
+      if (local2.ash < 0.45 && local2.snow < 0.45) for (const factor of [1, 0.82, 0.66]) {
         const attempt = seatedMatrix(world2, geometry3, source2, i * 16, factor);
         if (woodyShrubClearanceAllowed(world2, chunk, x, z, attempt.radius, attempt.maxY)) {
           chosen = { index: i, matrix: new Float32Array(attempt.matrix.elements), factor, radius: attempt.radius, maxY: attempt.maxY };
@@ -9176,21 +9783,21 @@ function wetlandPlantContext(hydrology2, terrainFunctions, x, z, shore) {
 var MEADOW_BANK_LIMITS = Object.freeze({ cellSize: 4, density: 1.6, maxFraction: 0.24, maxCount: 1024 });
 var clamp8 = (x) => Math.max(0, Math.min(1, x));
 function bankMeadowBudget(count, step, budget) {
-  const L3 = MEADOW_BANK_LIMITS;
-  return Math.min(count, L3.maxCount, Math.floor(budget * L3.maxFraction), Math.round(count * step * step * L3.density));
+  const L4 = MEADOW_BANK_LIMITS;
+  return Math.min(count, L4.maxCount, Math.floor(budget * L4.maxFraction), Math.round(count * step * step * L4.density));
 }
 function meadowColony(functions, x, z) {
   return functions.noise(x * 0.16 + 219, z * 0.16 - 71) * 0.7 + functions.noise(x * 0.061 - 91, z * 0.061 + 183) * 0.3;
 }
 function* stratifyBankMeadowSteps(functions, candidates) {
-  const cells = /* @__PURE__ */ new Map(), L3 = MEADOW_BANK_LIMITS;
+  const cells = /* @__PURE__ */ new Map(), L4 = MEADOW_BANK_LIMITS;
   let work4 = 0;
   for (const p of candidates) {
     if (work4++ && work4 % 128 === 0) yield "meadow:layering";
-    const ix = Math.floor(p.x / L3.cellSize), iz = Math.floor(p.z / L3.cellSize), key3 = ix + "," + iz;
+    const ix = Math.floor(p.x / L4.cellSize), iz = Math.floor(p.z / L4.cellSize), key3 = ix + "," + iz;
     let cell = cells.get(key3);
     if (!cell) {
-      const colony = meadowColony(functions, (ix + 0.5) * L3.cellSize, (iz + 0.5) * L3.cellSize);
+      const colony = meadowColony(functions, (ix + 0.5) * L4.cellSize, (iz + 0.5) * L4.cellSize);
       cell = { points: [], weight: 0.18 + 1.82 * colony * colony };
       cells.set(key3, cell);
     }
@@ -9285,12 +9892,12 @@ function* obstaclesSteps(world2, c2) {
       const rockWater = world2.hydrology?.waterAt(x, z, y);
       if (!ordinaryRockWaterAllowed(rockWater, i) || !ordinaryRockCoastAllowed(world2, x, z)) continue;
       if (i >= 19) {
-        const f10 = world2.terrainFunctions;
-        if (typeof f10.riverBankRockAllowed === "function") {
-          if (!f10.riverBankRockAllowed(x, z, y)) continue;
-        } else if (typeof f10.projectChannel === "function") {
-          const channel2 = f10.projectChannel(x, z, 30);
-          if (!channel2 || !Number.isFinite(channel2.level) || !(y >= channel2.level - 0.3 && y <= channel2.level + 5.4 && slope2(x, z) >= 0.28) || f10.waterAt?.(x, z, y)) continue;
+        const f12 = world2.terrainFunctions;
+        if (typeof f12.riverBankRockAllowed === "function") {
+          if (!f12.riverBankRockAllowed(x, z, y)) continue;
+        } else if (typeof f12.projectChannel === "function") {
+          const channel2 = f12.projectChannel(x, z, 30);
+          if (!channel2 || !Number.isFinite(channel2.level) || !(y >= channel2.level - 0.3 && y <= channel2.level + 5.4 && slope2(x, z) >= 0.28) || f12.waterAt?.(x, z, y)) continue;
         } else continue;
       }
       if (Math.hypot(x + 4, z - 20) < 15 || world2.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear * 0.6)) continue;
@@ -10064,7 +10671,7 @@ function* replaceFernsSteps(world2, c2) {
   yield* prepareHabitatObstaclesSteps(world2, c2);
   for (let i = 0; i < candidates; i++) {
     if (i && i % 64 === 0) yield "ecology:fern-candidates";
-    const x = c2.cx * 64 + rng2(i, 65) * 64, z = c2.cz * 64 + rng2(i, 66) * 64, y = height2(x, z), h = habitatAt(world2, x, z), field = h.cover, local = localClimate(world2, x, z, y), dry = local.ash, winter = local.snow;
+    const x = c2.cx * 64 + rng2(i, 65) * 64, z = c2.cz * 64 + rng2(i, 66) * 64, y = height2(x, z), h = habitatAt(world2, x, z), field = h.cover, local2 = localClimate(world2, x, z, y), dry = local2.ash, winter = local2.snow;
     const arena = world2.landmarks.some((l) => l.type === "boss" && Math.hypot(x - l.x, z - l.z) < l.clear * 0.67);
     const seedling = arena && rng2(i, 765) < 0.075;
     if (y < 1.2 || world2.hydrology?.waterAt(x, z, y) || slope2(x, z) > 0.85 || winter > 0.65 || dry > 0.78 || !outsideRoute(world2, x, z, 0.32) && !seedling) continue;
@@ -10079,6 +10686,51 @@ function* replaceFernsSteps(world2, c2) {
     const ageChoice = rng2(i, 762), age = seedling || core < 0.18 ? 0 : ageChoice < 0.16 ? 0 : ageChoice < 0.76 + 0.14 * h.shelter ? 1 : 2;
     const size = seedling ? 0.34 + rng2(i, 763) * 0.2 : age === 0 ? 0.52 + rng2(i, 763) * 0.48 : age === 1 ? 0.78 + rng2(i, 763) * 0.78 + 0.48 * core : 0.75 + rng2(i, 763) * 0.67;
     placements[age].push({ x, y: y - 0.018, z, size, ratio: 0.72 + rng2(i, 764) * 0.35, rot: rng2(i, 68) * TAU9, lean: (rng2(i, 69) - 0.5) * 0.12, color: age === 2 ? new Color(15063991) : age === 0 ? new Color(15594715) : new Color(16777205) });
+  }
+  if (candidates > 200) for (let i = 0; i < c2.rocks.length; i++) {
+    if (i && i % 16 === 0) yield "ecology:rock-ferns";
+    const rock = c2.rocks[i];
+    if (!(rock.r > 0.55)) continue;
+    const n = 2 + Math.floor(Math.min(3.35, rock.r) * 2.2);
+    for (let k = 0; k < n; k++) {
+      const j = i * 31 + k, a = rng2(j, 780) * TAU9, d = rock.r * (0.9 + rng2(j, 781) * 0.45) + 0.25, x = rock.x + Math.cos(a) * d, z = rock.z + Math.sin(a) * d, y = height2(x, z);
+      const local2 = localClimate(world2, x, z, y);
+      if (local2.ash > 0.6 || local2.snow > 0.5 || y < 1.2 || world2.hydrology?.waterAt(x, z, y) || slope2(x, z) > 0.85) continue;
+      if (rng2(j, 782) > 0.82 * (1 - local2.ash) || !plantPositionAllowed(world2, c2, x, z, 0.08)) continue;
+      placements[1].push({ x, y: y - 0.018, z, size: 0.62 + rng2(j, 783) * 0.62, ratio: 0.72 + rng2(j, 784) * 0.3, rot: rng2(j, 785) * TAU9, lean: (rng2(j, 786) - 0.5) * 0.18, color: new Color(16777205) });
+    }
+  }
+  if (candidates > 200) {
+    for (let i = 0; i < c2.trees.length; i++) {
+      if (i && i % 32 === 0) yield "ecology:trunk-ferns";
+      const tree = c2.trees[i];
+      if (world2.removed?.has(tree.id) || !(tree.h > 7) || rng2(i, 800) > 0.5) continue;
+      const trunk = 0.022 * tree.h * (tree.width ?? 1), n = 1 + Math.floor(rng2(i, 801) * 2.6);
+      for (let k = 0; k < n; k++) {
+        const j = i * 7 + k, a = rng2(j, 802) * TAU9, d = trunk + 0.3 + rng2(j, 803) * 0.55, x = tree.x + Math.cos(a) * d, z = tree.z + Math.sin(a) * d, y = height2(x, z);
+        const local2 = localClimate(world2, x, z, y);
+        if (local2.ash > 0.5 || local2.snow > 0.45 || y < 1.2 || world2.hydrology?.waterAt(x, z, y) || slope2(x, z) > 0.85 || !plantPositionAllowed(world2, c2, x, z, 0.06)) continue;
+        placements[rng2(j, 804) < 0.35 ? 0 : 1].push({ x, y: y - 0.018, z, size: 0.6 + rng2(j, 805) * 0.5, ratio: 0.8 + rng2(j, 806) * 0.3, rot: Math.atan2(Math.sin(a), Math.cos(a)) + (rng2(j, 807) - 0.5) * 1.2, lean: (rng2(j, 808) - 0.5) * 0.2, color: new Color(16514542) });
+      }
+    }
+    const stands = Math.round(candidates / 220);
+    for (let s = 0; s < stands; s++) {
+      if (s && s % 8 === 0) yield "ecology:tall-ferns";
+      const sx = c2.cx * 64 + rng2(s, 790) * 64, sz = c2.cz * 64 + rng2(s, 791) * 64, sy = height2(sx, sz), local2 = localClimate(world2, sx, sz, sy);
+      if (sy < 1.2 || local2.ash > 0.35 || local2.snow > 0.3 || (local2.treeDensity ?? 0) < 0.42 && local2.swamp < 0.4) continue;
+      const n = 3 + Math.floor(rng2(s, 792) * 6);
+      for (let k = 0; k < n; k++) {
+        const j = s * 17 + k, a = rng2(j, 793) * TAU9, d = Math.sqrt(rng2(j, 794)) * 2.8, x = sx + Math.cos(a) * d, z = sz + Math.sin(a) * d, y = height2(x, z);
+        if (y < 1.2 || world2.hydrology?.waterAt(x, z, y) || slope2(x, z) > 0.7 || !plantPositionAllowed(world2, c2, x, z, 0.12)) continue;
+        let trunk = false;
+        for (const tree of c2.trees) if (Math.hypot(x - tree.x, z - tree.z) < 0.45 + tree.h * 0.024) {
+          trunk = true;
+          break;
+        }
+        if (trunk) continue;
+        placements[1].push({ x, y: y - 0.02, z, size: 1.85 + rng2(j, 795) * 0.75, ratio: 1.05 + rng2(j, 796) * 0.3, rot: rng2(j, 797) * TAU9, lean: (rng2(j, 798) - 0.5) * 0.1, color: new Color(15923938) });
+      }
+    }
   }
   for (let age = 0; age < placements.length; age++) {
     const list = placements[age];
@@ -10230,7 +10882,7 @@ function prepareContacts(world2) {
 }
 function supportsHydrologyDeposit(height2, patch2, maxGrade = 0.65) {
   const grid = 4 / 3, radius = Math.max(patch2.rx, patch2.rz), cs = Math.cos(patch2.rot), sn = Math.sin(patch2.rot), maskRadius2 = 0.96 * 0.96;
-  const local = (x, z) => {
+  const local2 = (x, z) => {
     const dx = x - patch2.x, dz = z - patch2.z;
     return { x: (cs * dx + sn * dz) / patch2.rx, z: (-sn * dx + cs * dz) / patch2.rz };
   };
@@ -10244,7 +10896,7 @@ function supportsHydrologyDeposit(height2, patch2, maxGrade = 0.65) {
   };
   const ix0 = Math.floor((patch2.x - radius) / grid), ix1 = Math.ceil((patch2.x + radius) / grid), iz0 = Math.floor((patch2.z - radius) / grid), iz1 = Math.ceil((patch2.z + radius) / grid);
   for (let iz = iz0; iz < iz1; iz++) for (let ix = ix0; ix < ix1; ix++) {
-    const x = ix * grid, z = iz * grid, a = local(x, z), b = local(x + grid, z), c2 = local(x, z + grid), d = local(x + grid, z + grid);
+    const x = ix * grid, z = iz * grid, a = local2(x, z), b = local2(x + grid, z), c2 = local2(x, z + grid), d = local2(x + grid, z + grid);
     const ya = height2(x, z), yb = height2(x + grid, z), yc = height2(x, z + grid), yd = height2(x + grid, z + grid);
     if (overlaps3(a, c2, b) && !(Math.hypot(yb - ya, yc - ya) / grid <= maxGrade)) return false;
     if (overlaps3(b, c2, d) && !(Math.hypot(yd - yc, yd - yb) / grid <= maxGrade)) return false;
@@ -10441,7 +11093,7 @@ function* winterReplaceFernsSteps(world2, c2) {
   c2.reservePreparationBytes?.(candidates * 144);
   for (let i = 0; i < candidates; i++) {
     if (i && i % 64 === 0) yield "ecology:fern-candidates";
-    const x = c2.cx * 64 + rng2(i, 65) * 64, z = c2.cz * 64 + rng2(i, 66) * 64, y = height2(x, z), field = winterHabitat(world2, x, z), local = localClimate(world2, x, z, y), dry = local.ash, winter = local.snow;
+    const x = c2.cx * 64 + rng2(i, 65) * 64, z = c2.cz * 64 + rng2(i, 66) * 64, y = height2(x, z), field = winterHabitat(world2, x, z), local2 = localClimate(world2, x, z, y), dry = local2.ash, winter = local2.snow;
     const arena = world2.landmarks.some((l) => l.type === "boss" && Math.hypot(x - l.x, z - l.z) < l.clear * 0.67);
     const seedling = arena && rng2(i, 765) < 0.075;
     if (y < 1.2 || world2.hydrology?.waterAt(x, z, y) || slope2(x, z) > 0.85 || winter > 0.65 || dry > 0.78 || !outsideRoute(world2, x, z, 0.32) && !seedling || noise7(x * 0.09 + 7, z * 0.09) < 0.39) continue;
@@ -10588,7 +11240,7 @@ function farCoastStep(height2, sea, wet = 0) {
   const fade = a <= 1 ? 1 : 1 - (a - 1) * (a - 1) * (3 - (a - 1)) / 4;
   return height2 + FAR_COAST.step * fade * Math.tanh(d / 0.12) * (d > 0 ? 1 - Math.min(1, Math.max(0, wet)) : 1);
 }
-var VERTEX = `
+var VERTEX3 = `
  #ifndef FAR_COAST_BAKED
  {
   // far-coast.js
@@ -10625,7 +11277,7 @@ function markFarCoastBaked(shader) {
 function patchFarCoast(shader) {
   const seam = "#include <begin_vertex>\n";
   if (!shader.vertexShader.includes(seam)) throw new Error("Far coast vertex seam missing");
-  shader.vertexShader = "uniform vec4 farCoast;\n" + shader.vertexShader.replace(seam, seam + VERTEX);
+  shader.vertexShader = "uniform vec4 farCoast;\n" + shader.vertexShader.replace(seam, seam + VERTEX3);
   shader.uniforms.farCoast = farCoastUniforms.farCoast;
   return shader;
 }
@@ -11106,7 +11758,30 @@ function patchMeadowGround(shader) {
 }
 
 // terrain-far-ground.js
-var FAR_GROUND = Object.freeze({ start: 26, end: 80, a: 2.4, b: 5.9, contrast: 0.62, blur: 2.2, grain: 8, grainFrom: 14, grainTo: 50, grainFade: 0.62, fade: 0.45, fadeFrom: 70, fadeTo: 420 });
+var FAR_GROUND = Object.freeze({
+  start: 26,
+  end: 80,
+  a: 2.4,
+  b: 5.9,
+  contrast: 0.62,
+  blur: 2.2,
+  grain: 8,
+  grainFrom: 14,
+  grainTo: 50,
+  grainFade: 0.62,
+  fade: 0.45,
+  fadeFrom: 70,
+  fadeTo: 420,
+  // v95: from noiseFrom to noiseTo (m) every photo layer (grass, soil, litter,
+  // rock, cliff) hands over to its mean colour varied by aperiodic noise:
+  // their tiles (3 to 50 m, in rotated frames) still lined up into lattices
+  // and diamonds across far hillsides. Noise scales (m) with their weights,
+  // and how strongly it varies the colour.
+  noiseFrom: 110,
+  noiseTo: 260,
+  noise: Object.freeze([Object.freeze([3.7, 0.5]), Object.freeze([9.3, 0.34]), Object.freeze([23.9, 0.24])]),
+  noiseStrength: 0.45
+});
 var f4 = (v) => Number(v).toFixed(6);
 var FAR_GROUND_ARRAYS = Object.freeze({
   grass: (uv, dx, dy) => `textureGrad(land_commonColor,vec3(${uv},0.),${dx},${dy})`,
@@ -11147,6 +11822,9 @@ function farGroundSamplingGLSL(access) {
    vec2 landFarA=landFarFrameA*landXZ,landFarADX=landFarFrameA*landXZDX,landFarADY=landFarFrameA*landXZDY;
    vec2 landFarB=landFarFrameB*landXZ,landFarBDX=landFarFrameB*landXZDX,landFarBDY=landFarFrameB*landXZDY;
    float landFarLead=.5+.36*(landNoise(landXZ*.019+vec2(5.3,1.7))-.5);
+   // v95: past ${f4(FAR_GROUND.noiseFrom)} m the photos give way to aperiodic noise on their mean colours.
+   float landFarAperiodic=smoothstep(${f4(FAR_GROUND.noiseFrom)},${f4(FAR_GROUND.noiseTo)},landDistance),landFarPixel=max(length(landXZDX),length(landXZDY));
+   float landFarGrainN=landFarAperiodic>0.?landFarAperiodicNoise(landXZ,landFarPixel)*${f4(FAR_GROUND.noiseStrength)}:0.;
    float landGrain=smoothstep(${f4(FAR_GROUND.grainFrom)},${f4(FAR_GROUND.grainTo)},landDistance);
    // Mineral photos (soil, litter, rock, cliff) keep less of their own
    // pattern further out: their low-frequency blotches and bands repeat every
@@ -11177,13 +11855,28 @@ function farGroundSamplingGLSL(access) {
     grassSample=mix(grassSample,${farPair(access.grass, grassF, "vec2(.37,.11)", "vec2(.73,.29)")}.rgb,landFar);
     landGrassN=mix(landGrassN,${farOne(access.grassN, grassF, "vec2(.37,.11)")}.xyz,landFar);
    }
+   if(landFarAperiodic>0.){
+    vec4 soilMean=textureGrad(land_soil,vec2(.5),vec2(64.),vec2(64.));
+    soilData=mix(soilData,vec4(soilMean.rgb*(1.+landFarGrainN),soilData.a),landFarAperiodic);soilNormalData.xyz=mix(soilNormalData.xyz,vec3(.5,.5,1.),landFarAperiodic*.85);
+    if(litterMask>0.){vec4 litterMean=${access.litter("vec2(.5)", "vec2(64.)", "vec2(64.)")};litterData=mix(litterData,vec4(litterMean.rgb*(1.+landFarGrainN),litterData.a),landFarAperiodic);litterNormalData.xyz=mix(litterNormalData.xyz,vec3(.5,.5,1.),landFarAperiodic*.85);}
+    grassSample=mix(grassSample,${access.grass("vec2(.5)", "vec2(64.)", "vec2(64.)")}.rgb*(1.+landFarGrainN*.8),landFarAperiodic);landGrassN=mix(landGrassN,vec3(.5,.5,1.),landFarAperiodic*.85);
+   }
    float litterMix=landHeightBlend(litterMask,soilNormalData.a,litterNormalData.a);
 `;
 }
 var rockA = f4(1 / FAR_GROUND.a);
 var rockB = f4(1 / FAR_GROUND.b);
 var blur = f4(FAR_GROUND.blur);
+var noiseOctaves = FAR_GROUND.noise.map(([size, weight], k) => `g+=(islandNoise(${["mat2(.8,-.6,.6,.8)", "mat2(-.28,.96,-.96,-.28)", "mat2(1.,0.,0.,1.)"][k]}*xz*${f4(1 / size)}+${["vec2(3.1,7.9)", "vec2(5.3,1.1)", "vec2(8.7,4.4)"][k]},${211 + k}u)-.5)*${f4(weight)}*(1.-smoothstep(${f4(size / 6)},${f4(size / 2.5)},px));`).join("\n    ");
 var FAR_ROCK_GLSL = `
+   // v95: aperiodic grain for the far ground (zero mean, about +-.5 at most):
+   // value noise at a few scales in turned frames, each fading out before it
+   // is smaller than a few pixels (px: metres per pixel).
+   float landFarAperiodicNoise(vec2 xz,float px){
+    float g=0.;
+    ${noiseOctaves}
+    return g;
+   }
    // Mean colour plus grain on three planes (see farGrain).
    vec4 landFarRock(sampler2D photo,vec3 p,vec3 w,vec3 dx,vec3 dy,float gain){
     vec3 q=p*${rockA}+vec3(.31,.17,.53);
@@ -11202,20 +11895,22 @@ var FAR_ROCK_COLOR_GLSL = `
     if(landGrain>0.&&rockMix>.01){vec4 rockMean=textureGrad(land_rock,vec2(.5),vec2(64.),vec2(64.));rockData=rockMean*vec4(vec3(1.-.1*landGrain),1.)+(rockData-rockMean)*(1.-${f4(FAR_GROUND.grainFade)}*landGrain);}
    }
    if(landFar>0.)rockData=mix(rockData,landFarRock(land_rock,rockUV,landWeights,rockDX,rockDY,1.2),landFar);
+   if(landFarAperiodic>0.){vec4 rockMean=textureGrad(land_rock,vec2(.5),vec2(64.),vec2(64.));rockData=mix(rockData,vec4(rockMean.rgb*.9*(1.+landFarGrainN),rockData.a),landFarAperiodic);}
 `;
 var FAR_ROCK_NORMAL_GLSL = `
    vec3 rockSlope=vec3(0.);
    // The photo's relief fades with distance: its rows and cracks repeat every tile.
    if(landFar<1.)rockSlope=v28TriSlopeGrad(land_rockN,rockUV,landWeights,rockDX,rockDY)*mix(1.,.4,landGrain);
    if(landFar>0.)rockSlope=mix(rockSlope,v28TriSlopeGrad(land_rockN,rockUV*${rockA}+vec3(.31,.17,.53),landWeights,rockDX*(${rockA}*${blur}),rockDY*(${rockA}*${blur}))*(.35-.3*smoothstep(80.,260.,landDistance)),landFar);
+   rockSlope*=1.-landFarAperiodic*.85;
    landViewN=normalize(mix(landViewN,normalize(mat3(viewMatrix)*mineralSurfaceNormal(landN,rockSlope,.82)),rockMix*.86));
 `;
 var FAR_GROUND_TINT_GLSL = "landColor*=mix(vec3(.92,.95,.93),vec3(1.06,1.03,.97),landNoise(vLandPosition.xz*.0068+vec2(2.3,8.9)));";
-var FAR_GROUND_REVISION = "far-ground-v2-mineral-grain";
+var FAR_GROUND_REVISION = "far-ground-v3-aperiodic";
 
 // mountain-surface.js
 var MOUNTAIN_SURFACE = Object.freeze({
-  revision: "mountain-surface-v2",
+  revision: "mountain-surface-v3-aperiodic",
   // Gully scales: [spacing across (m), length along the fall line (m),
   // colour weight, depth (m) for the shading normal].
   octaves: Object.freeze([Object.freeze([38, 190, 0.55, 1.6]), Object.freeze([13, 64, 0.35, 0.6]), Object.freeze([4.4, 22, 0.2, 0.18])]),
@@ -11330,6 +12025,17 @@ var NORMAL_SEAM = "normal=normalize(mix(normal,normalize(mat3(viewMatrix)*landN)
 var NORMAL = `
    if(dot(mtnTilt,mtnTilt)>0.){vec3 mtnT=mtnTilt-landN*dot(landN,mtnTilt);normal=normalize(normal+mat3(viewMatrix)*mtnT);}
 `;
+var GEOLOGY_END = `    cliffData=detailGeologyBlend>=1.?detailGeologyPhoto:mix(cliffData,detailGeologyPhoto,detailGeologyBlend);
+   }
+`;
+var GEOLOGY_FAR = GEOLOGY_END + `   if(landFarAperiodic>0.){vec3 mtnCliffMean=alpineMineralColor(textureGrad(land_cliff,vec2(.5),vec2(64.),vec2(64.)).rgb*.84,detailAlpinePigment);cliffData.rgb=mix(cliffData.rgb,mtnCliffMean*(1.+landFarGrainN),landFarAperiodic);}
+`;
+var GEOLOGY_NORMAL_END = `    v28CliffNormal=detailGeologyBlend>=1.?detailGeologyNormal:normalize(mix(v28CliffNormal,detailGeologyNormal,detailGeologyBlend));
+   }
+`;
+var GEOLOGY_NORMAL_FAR = GEOLOGY_NORMAL_END + `   if(landFarAperiodic>0.)v28CliffNormal=normalize(mix(v28CliffNormal,landN,landFarAperiodic*.8));
+`;
+var SOIL_SECONDARY = "float detailSoilMix=detailFade*detailDry*.24*smoothstep(.02,.10,detailSoilVisible);";
 function replaceOnce5(source2, from, to, what) {
   const at = source2.indexOf(from);
   if (at < 0 || source2.indexOf(from, at + from.length) >= 0) throw new Error("Mountain surface seam missing or repeated: " + what);
@@ -11341,6 +12047,9 @@ function patchMountainSurface(shader) {
   s = replaceOnce5(s, CLIFF_NORMAL_NEAR, CLIFF_NORMAL_FAR, "cliff normal");
   s = replaceOnce5(s, COLOUR_SEAM, COLOUR_SEAM + COLOUR, "colour");
   s = replaceOnce5(s, NORMAL_SEAM, NORMAL_SEAM + NORMAL, "normal");
+  s = replaceOnce5(s, GEOLOGY_END, GEOLOGY_FAR, "far cliffs without tiles");
+  s = replaceOnce5(s, GEOLOGY_NORMAL_END, GEOLOGY_NORMAL_FAR, "far cliff relief without tiles");
+  s = replaceOnce5(s, SOIL_SECONDARY, SOIL_SECONDARY.replace(";", "*(1.-landFarAperiodic);"), "far soil without the second photo");
   s = replaceOnce5(s, "vec2 landParallax(", MOUNTAIN_SURFACE_GLSL + "\n   vec2 landParallax(", "helpers");
   shader.fragmentShader = s;
   return shader;
@@ -11903,8 +12612,8 @@ function createTerrainContext(size = 512, metersPerTexel = 1) {
     for (const chunk of [...world2.chunks.values()]) {
       for (const tree of chunk.trees || []) {
         if (world2.removed.has(tree.id)) continue;
-        const local = vegetationClimate(world2.terrainFunctions, tree.x, tree.z, tree.y, climate3), dry = local.ash, winter = local.snow;
-        if (dry > 0.98 || winter > 0.95 || vegetationLeafless(local, world2.terrainFunctions.hash(tree.x + 83, tree.z - 47))) continue;
+        const local2 = vegetationClimate(world2.terrainFunctions, tree.x, tree.z, tree.y, climate3), dry = local2.ash, winter = local2.snow;
+        if (dry > 0.98 || winter > 0.95 || vegetationLeafless(local2, world2.terrainFunctions.hash(tree.x + 83, tree.z - 47))) continue;
         const r = clamp13(tree.h * 0.25, 3.2, 7.6), seed = tree.r * 31.7;
         stamp(ox, oz, tree.x, tree.z, r * (0.95 + tree.width * 0.14), r * 0.84, tree.r * Math.PI * 2, 0.9 * (1 - dry) * (1 - winter), 0, seed);
         trees++;
@@ -12856,8 +13565,8 @@ function fernGeometry() {
     p.push(...a, ...b, ...d);
     for (let k = 0; k < 3; k++) c2.push(...color3);
   };
-  for (let f10 = 0; f10 < 9; f10++) {
-    const angle = f10 / 9 * Math.PI * 2, ca = Math.cos(angle), sa = Math.sin(angle), length = 0.7 + f10 % 3 * 0.12;
+  for (let f12 = 0; f12 < 9; f12++) {
+    const angle = f12 / 9 * Math.PI * 2, ca = Math.cos(angle), sa = Math.sin(angle), length = 0.7 + f12 % 3 * 0.12;
     const point5 = (t, w) => {
       const r = t * length;
       return [ca * r - sa * w, Math.sin(t * Math.PI * 0.77) * 0.7 + 0.04, sa * r + ca * w];
@@ -12920,8 +13629,8 @@ function boundFaunaTemplate(scene) {
   shared.radius = shared.radius * 1.25 + 0.35;
   for (const part2 of parts) {
     toScene.copy(part2.matrixWorld).invert();
-    const local = shared.clone().applyMatrix4(toScene);
-    part2.boundingSphere = local;
+    const local2 = shared.clone().applyMatrix4(toScene);
+    part2.boundingSphere = local2;
     part2.userData.faunaBounds = true;
   }
 }
@@ -14030,7 +14739,7 @@ function createRockFracturePhysics(THREE, { group, height: height2, onLand } = {
     contactVelocity.crossVectors(body2.omega, r).add(body2.velocity);
     return contactVelocity;
   }
-  function add3({ geometry: geometry3, material: material2, matrix: matrix6, point: point5, normal: hitNormal, seed = 1, id: id2, parentPlane, parentCollider = null, velocity: velocity2 = null, spin = null, lifetime = LIFETIME, collide = false, collideAfter = 0.3 } = {}) {
+  function add4({ geometry: geometry3, material: material2, matrix: matrix6, point: point5, normal: hitNormal, seed = 1, id: id2, parentPlane, parentCollider = null, velocity: velocity2 = null, spin = null, lifetime = LIFETIME, collide = false, collideAfter = 0.3 } = {}) {
     const rejectInput = (geometry4) => {
       parentCollider?.dispose?.();
       return reject2(geometry4);
@@ -14134,9 +14843,9 @@ function createRockFracturePhysics(THREE, { group, height: height2, onLand } = {
       if (!x && !y && !z) continue;
       let best = -Infinity, bestIndex = -1;
       for (let i = 0; i < position3.count; i++) {
-        const dot4 = x * position3.getX(i) + y * position3.getY(i) + z * position3.getZ(i);
-        if (dot4 > best) {
-          best = dot4;
+        const dot5 = x * position3.getX(i) + y * position3.getY(i) + z * position3.getZ(i);
+        if (dot5 > best) {
+          best = dot5;
           bestIndex = i;
         }
       }
@@ -14167,7 +14876,7 @@ function createRockFracturePhysics(THREE, { group, height: height2, onLand } = {
       parentPoints = new Float64Array(selected);
     }
     let randomState = (Number.isFinite(seed) ? seed : 1) >>> 0;
-    function random7() {
+    function random9() {
       randomState = Math.imul(randomState, 1664525) + 1013904223 >>> 0;
       return randomState / 4294967296;
     }
@@ -14219,10 +14928,10 @@ function createRockFracturePhysics(THREE, { group, height: height2, onLand } = {
       if (finiteVector(spin)) body2.angularMomentum.set(spin.x, spin.y, spin.z).applyMatrix3(inertia);
       worldInertia(body2);
     } else {
-      const launch = Math.min(8 + random7() * 3, mass * 1.2);
+      const launch = Math.min(8 + random9() * 3, mass * 1.2);
       impulse.copy(normal4).multiplyScalar(launch);
-      impulse.x += (random7() - 0.5) * launch * 0.12;
-      impulse.z += (random7() - 0.5) * launch * 0.12;
+      impulse.x += (random9() - 0.5) * launch * 0.12;
+      impulse.z += (random9() - 0.5) * launch * 0.12;
       body2.velocity.copy(impulse).multiplyScalar(body2.inverseMass);
       if (point5) lever.copy(point5).sub(center2);
       else lever.set(radius * 0.19, -radius * 0.18, radius * 0.13);
@@ -14659,15 +15368,15 @@ function createRockFracturePhysics(THREE, { group, height: height2, onLand } = {
     for (let i = bodies.length - 1; i >= 0; i--) retire(i);
     accumulator = 0;
   }
-  return { add: add3, update, dispose, stats };
+  return { add: add4, update, dispose, stats };
 }
 
 // natural-decor-kit.js
 var TAU10 = Math.PI * 2;
 var clamp17 = MathUtils.clamp;
 var hash2 = (a, b = 0) => {
-  const f10 = Math.sin(a * 127.1 + b * 311.7) * 43758.5453123;
-  return f10 - Math.floor(f10);
+  const f12 = Math.sin(a * 127.1 + b * 311.7) * 43758.5453123;
+  return f12 - Math.floor(f12);
 };
 var color = (hex) => new Color(hex).toArray();
 var C = { wood: color(9601386), cut: color(9535593), bark: color(16777215), stem: color(14207921), gill: color(12298379), cap: color(10248768), capPale: color(11705208), leaf: color(5007159), leafDry: color(6975814), violet: color(9277875), ivory: color(14275252), pollen: color(13086054), stone: color(11973543) };
@@ -14727,8 +15436,8 @@ var Builder = class {
     return g;
   }
 };
-function tube(builder5, points, radii, { segments = 8, seed = 1, c: c2 = C.bark, role = 0, uvScale = [1, 1], cap = true } = {}) {
-  const rings2 = [], group = builder5.group(), n = points.length, reference = new Vector3(0, 0, 1);
+function tube(builder6, points, radii, { segments = 8, seed = 1, c: c2 = C.bark, role = 0, uvScale = [1, 1], cap = true } = {}) {
+  const rings2 = [], group = builder6.group(), n = points.length, reference = new Vector3(0, 0, 1);
   for (let j = 0; j < n; j++) {
     const center2 = new Vector3(...points[j]), a = new Vector3(...points[Math.max(0, j - 1)]), b = new Vector3(...points[Math.min(n - 1, j + 1)]), tangent = b.sub(a).normalize();
     if (Math.abs(tangent.dot(reference)) > 0.93) reference.set(0, 1, 0);
@@ -14736,19 +15445,19 @@ function tube(builder5, points, radii, { segments = 8, seed = 1, c: c2 = C.bark,
     const side2 = new Vector3().crossVectors(tangent, reference).normalize(), other2 = new Vector3().crossVectors(tangent, side2).normalize(), ring2 = [];
     for (let k = 0; k <= segments; k++) {
       const angle = k / segments * TAU10, r = radii[j] * (1 + 0.035 * Math.sin(angle * 5 + seed + j * 0.72)), v = center2.clone().addScaledVector(side2, Math.cos(angle) * r).addScaledVector(other2, Math.sin(angle) * r);
-      ring2.push(builder5.vertex(v.toArray(), [k / segments * uvScale[0], j / (n - 1) * uvScale[1]], shade(c2, 0.92 + 0.08 * j / (n - 1)), role, group));
+      ring2.push(builder6.vertex(v.toArray(), [k / segments * uvScale[0], j / (n - 1) * uvScale[1]], shade(c2, 0.92 + 0.08 * j / (n - 1)), role, group));
     }
     rings2.push(ring2);
   }
   for (let j = 0; j < n - 1; j++) for (let k = 0; k < segments; k++) {
     const a = rings2[j][k], b = rings2[j][k + 1], c3 = rings2[j + 1][k], d = rings2[j + 1][k + 1];
-    builder5.face(a, b, d);
-    builder5.face(a, d, c3);
+    builder6.face(a, b, d);
+    builder6.face(a, d, c3);
   }
   if (cap) {
     for (const end of [0, n - 1]) {
-      const c3 = builder5.vertex(points[end], [0.5, 0.5], shade(C.cut, 0.75), 3, builder5.group());
-      for (let k = 0; k < segments; k++) end === 0 ? builder5.face(c3, rings2[end][k + 1], rings2[end][k]) : builder5.face(c3, rings2[end][k], rings2[end][k + 1]);
+      const c3 = builder6.vertex(points[end], [0.5, 0.5], shade(C.cut, 0.75), 3, builder6.group());
+      for (let k = 0; k < segments; k++) end === 0 ? builder6.face(c3, rings2[end][k + 1], rings2[end][k]) : builder6.face(c3, rings2[end][k], rings2[end][k + 1]);
     }
   }
   return rings2;
@@ -14937,7 +15646,7 @@ function twigPath(p, heading, length, radius, { n = 6, rise = 0, droop = 0.5, se
   return out2;
 }
 var pointAt = (points, t) => {
-  const f10 = t * (points.length - 1), i = Math.min(points.length - 2, Math.floor(f10)), u = f10 - i;
+  const f12 = t * (points.length - 1), i = Math.min(points.length - 2, Math.floor(f12)), u = f12 - i;
   return points[i].map((v, k) => v + (points[i + 1][k] - v) * u);
 };
 function looseBranchGeometry(variant) {
@@ -14965,12 +15674,12 @@ function looseBranchGeometry(variant) {
   } else {
     const ra = (t) => 0.029 * (1 - 0.3 * t), A2 = lyingPath([-0.42, 0, -0.04], 0.08, 0.85, ra, { n: 8, wiggle: 0.018, seed: 21 });
     stick(bark, cut, A2, ra, { seed: 22 });
-    const rb = (t) => 0.022 * (1 - 0.3 * t), cross9 = pointAt(A2, 0.52), hb = 1.05, s = 0.4, len3 = 0.7, y0 = rb(0), yc = 2 * ra(0.52) + rb(s), start2 = [cross9[0] - Math.cos(hb) * len3 * s, 0, cross9[2] - Math.sin(hb) * len3 * s];
+    const rb = (t) => 0.022 * (1 - 0.3 * t), cross10 = pointAt(A2, 0.52), hb = 1.05, s = 0.4, len3 = 0.7, y0 = rb(0), yc = 2 * ra(0.52) + rb(s), start2 = [cross10[0] - Math.cos(hb) * len3 * s, 0, cross10[2] - Math.sin(hb) * len3 * s];
     stick(bark, cut, lyingPath(start2, hb, len3, rb, { n: 7, lift: (t) => (yc - y0) / s * t - (rb(t) - y0), wiggle: 6e-3, seed: 23 }), rb, { segments: 6, seed: 23 });
     const rc = (t) => 0.014 * (1 - 0.4 * t), C0 = lyingPath([0.02, 0, 0.3], -0.32, 0.46, rc, { n: 7, wiggle: 0.015, seed: 24 });
     stick(bark, cut, C0, rc, { segments: 6, seed: 24 });
-    const f10 = pointAt(C0, 0.55), rf = (t) => 8e-3 * (1 - 0.4 * t);
-    stick(bark, cut, twigPath(f10, -0.95, 0.16, rf, { seed: 25 }), rf, { segments: 5, seed: 25, start: null, end: "cut" });
+    const f12 = pointAt(C0, 0.55), rf = (t) => 8e-3 * (1 - 0.4 * t);
+    stick(bark, cut, twigPath(f12, -0.95, 0.16, rf, { seed: 25 }), rf, { segments: 5, seed: 25, start: null, end: "cut" });
     const rd = (t) => 0.017 * (1 - 0.2 * t);
     stick(bark, cut, lyingPath([-0.36, 0, -0.3], 2.75, 0.3, rd, { n: 5, wiggle: 6e-3, seed: 26 }), rd, { segments: 6, seed: 26 });
   }
@@ -15002,43 +15711,43 @@ function createLooseBranches({ bark }) {
     }
   } };
 }
-function addMushroom(builder5, x, z, size, seed, lod) {
+function addMushroom(builder6, x, z, size, seed, lod) {
   const height2 = (0.115 + hash2(seed, 3) * 0.105) * size, radius = (0.055 + hash2(seed, 4) * 0.037) * size, segments = lod ? 9 : 15, bend = (hash2(seed, 5) - 0.5) * 0.05 * size;
   const stemPoints = Array.from({ length: lod ? 3 : 5 }, (_, j, a) => {
     const t = j / ((lod ? 3 : 5) - 1);
     return [x + bend * t * t, 7e-3 + height2 * t, z + Math.sin(t * 2.2 + seed) * 8e-3 * size];
   });
-  tube(builder5, stemPoints, stemPoints.map((_, j) => size * 0.014 * (1 - j / stemPoints.length * 0.25)), { segments: lod ? 5 : 7, seed, c: shade(C.stem, 0.91 + hash2(seed, 12) * 0.14), role: 2, uvScale: [1, 1] });
+  tube(builder6, stemPoints, stemPoints.map((_, j) => size * 0.014 * (1 - j / stemPoints.length * 0.25)), { segments: lod ? 5 : 7, seed, c: shade(C.stem, 0.91 + hash2(seed, 12) * 0.14), role: 2, uvScale: [1, 1] });
   const cx = x + bend, cz = stemPoints.at(-1)[2], base = height2 - 0.017 * size, capColor = seed % 2 ? C.cap : C.capPale;
   const createCap = (underside) => {
-    const steps = lod ? 3 : 5, group = builder5.group(), center2 = builder5.vertex([cx, base + (underside ? 6e-3 : 0.048) * size, cz], [0.5, 0.5], underside ? C.gill : shade(capColor, 0.94), underside ? 2 : 1, group), rings2 = [];
+    const steps = lod ? 3 : 5, group = builder6.group(), center2 = builder6.vertex([cx, base + (underside ? 6e-3 : 0.048) * size, cz], [0.5, 0.5], underside ? C.gill : shade(capColor, 0.94), underside ? 2 : 1, group), rings2 = [];
     for (let j = 1; j <= steps; j++) {
       const t = j / steps, ring2 = [];
       for (let k = 0; k <= segments; k++) {
         const a = k / segments * TAU10, r = radius * t * (1 + 0.065 * Math.sin(a * 3 + seed) + 0.03 * Math.sin(a * 7)), lip = t ** 8;
         let y = underside ? base + (6e-3 - 0.01 * t + Math.cos(a * (lod ? 9 : 21) + seed) * 3e-3 * t) * size : base + (0.048 * Math.cos(t * Math.PI * 0.5) + 4e-3 * lip) * size;
         if (j === steps) y = base + (underside ? -6e-3 : 4e-3) * size;
-        ring2.push(builder5.vertex([cx + Math.cos(a) * r, y, cz + Math.sin(a) * r], [0.5 + Math.cos(a) * t * 0.5, 0.5 + Math.sin(a) * t * 0.5], shade(underside ? C.gill : capColor, underside ? 0.79 + t * 0.14 : 0.89 + t * 0.16), underside ? 2 : 1, group));
+        ring2.push(builder6.vertex([cx + Math.cos(a) * r, y, cz + Math.sin(a) * r], [0.5 + Math.cos(a) * t * 0.5, 0.5 + Math.sin(a) * t * 0.5], shade(underside ? C.gill : capColor, underside ? 0.79 + t * 0.14 : 0.89 + t * 0.16), underside ? 2 : 1, group));
       }
       rings2.push(ring2);
     }
-    for (let k = 0; k < segments; k++) underside ? builder5.face(center2, rings2[0][k], rings2[0][k + 1]) : builder5.face(center2, rings2[0][k + 1], rings2[0][k]);
+    for (let k = 0; k < segments; k++) underside ? builder6.face(center2, rings2[0][k], rings2[0][k + 1]) : builder6.face(center2, rings2[0][k + 1], rings2[0][k]);
     for (let j = 0; j < steps - 1; j++) for (let k = 0; k < segments; k++) {
       const a = rings2[j][k], b = rings2[j][k + 1], c2 = rings2[j + 1][k], d = rings2[j + 1][k + 1];
       if (underside) {
-        builder5.face(a, c2, d);
-        builder5.face(a, d, b);
+        builder6.face(a, c2, d);
+        builder6.face(a, d, b);
       } else {
-        builder5.face(a, b, d);
-        builder5.face(a, d, c2);
+        builder6.face(a, b, d);
+        builder6.face(a, d, c2);
       }
     }
     return rings2.at(-1);
   };
   const upper = createCap(false), lower = createCap(true);
   for (let k = 0; k < segments; k++) {
-    builder5.face(upper[k], lower[k + 1], lower[k]);
-    builder5.face(upper[k], upper[k + 1], lower[k + 1]);
+    builder6.face(upper[k], lower[k + 1], lower[k]);
+    builder6.face(upper[k], upper[k + 1], lower[k + 1]);
   }
 }
 function fungiGeometry(seed, lod) {
@@ -15052,36 +15761,36 @@ function fungiGeometry(seed, lod) {
   g.userData.stemAnchors = anchors;
   return g;
 }
-function ribbonLeaf(builder5, base, angle, length, width, lift, seed, lod) {
-  const steps = lod ? 2 : 4, rows = [], group = builder5.group(), green2 = seed % 3 ? C.leaf : C.leafDry;
+function ribbonLeaf(builder6, base, angle, length, width, lift, seed, lod) {
+  const steps = lod ? 2 : 4, rows = [], group = builder6.group(), green2 = seed % 3 ? C.leaf : C.leafDry;
   for (let j = 0; j <= steps; j++) {
     const t = j / steps, shape = Math.sin(Math.PI * t) ** 0.7, row2 = [];
     for (const side2 of [-1, 0, 1]) {
       const along = t * length, across2 = side2 * width * shape, vein = (1 - Math.abs(side2)) * 8e-3 * shape, y = base[1] + Math.sin(t * Math.PI * 0.9) * lift + vein;
-      row2.push(builder5.vertex([base[0] + Math.cos(angle) * along - Math.sin(angle) * across2, y, base[2] + Math.sin(angle) * along + Math.cos(angle) * across2], [t, (side2 + 1) * 0.5], shade(green2, 0.78 + 0.2 * t + (side2 === 0 ? 0.12 : 0)), 0, group));
+      row2.push(builder6.vertex([base[0] + Math.cos(angle) * along - Math.sin(angle) * across2, y, base[2] + Math.sin(angle) * along + Math.cos(angle) * across2], [t, (side2 + 1) * 0.5], shade(green2, 0.78 + 0.2 * t + (side2 === 0 ? 0.12 : 0)), 0, group));
     }
     rows.push(row2);
   }
   for (let j = 0; j < steps; j++) for (let k = 0; k < 2; k++) {
     const a = rows[j][k], b = rows[j][k + 1], c2 = rows[j + 1][k], d = rows[j + 1][k + 1];
-    builder5.face(a, d, c2);
-    builder5.face(a, b, d);
+    builder6.face(a, d, c2);
+    builder6.face(a, b, d);
   }
 }
-function petal(builder5, center2, angle, length, width, seed, lod, c2) {
-  const steps = lod ? 2 : 4, rows = [], group = builder5.group();
+function petal(builder6, center2, angle, length, width, seed, lod, c2) {
+  const steps = lod ? 2 : 4, rows = [], group = builder6.group();
   for (let j = 0; j <= steps; j++) {
     const t = j / steps, w = Math.sin(Math.PI * t) ** 0.55 * width, row2 = [];
     for (const side2 of [-1, 0, 1]) {
       const along = 0.012 + t * length, across2 = side2 * w, y = center2[1] + Math.sin(t * Math.PI) * 0.018 - t * t * 0.024 + Math.abs(side2) * 8e-3 * Math.sin(t * Math.PI);
-      row2.push(builder5.vertex([center2[0] + Math.cos(angle) * along - Math.sin(angle) * across2, y, center2[2] + Math.sin(angle) * along + Math.cos(angle) * across2], [t, (side2 + 1) * 0.5], shade(c2, 0.83 + t * 0.19 + (side2 === 0 ? 0.03 : 0)), 4, group));
+      row2.push(builder6.vertex([center2[0] + Math.cos(angle) * along - Math.sin(angle) * across2, y, center2[2] + Math.sin(angle) * along + Math.cos(angle) * across2], [t, (side2 + 1) * 0.5], shade(c2, 0.83 + t * 0.19 + (side2 === 0 ? 0.03 : 0)), 4, group));
     }
     rows.push(row2);
   }
   for (let j = 0; j < steps; j++) for (let k = 0; k < 2; k++) {
     const a = rows[j][k], b = rows[j][k + 1], c3 = rows[j + 1][k], d = rows[j + 1][k + 1];
-    builder5.face(a, d, c3);
-    builder5.face(a, b, d);
+    builder6.face(a, d, c3);
+    builder6.face(a, b, d);
   }
 }
 function flowerGeometry(seed, lod) {
@@ -15160,7 +15869,7 @@ function createNaturalDecorKit({ materials, templates: source2 = {} }) {
   ownedMaterials.add(organic);
   let disposed = false;
   const own = (g) => (ownedGeometry.add(g), g);
-  const add3 = (id2, parts, { anchors = [], baseScale = 1, near = id2, far = id2, range = 48, kind = id2 } = {}) => {
+  const add4 = (id2, parts, { anchors = [], baseScale = 1, near = id2, far = id2, range = 48, kind = id2 } = {}) => {
     const bounds6 = boundsFor(parts, baseScale), template3 = { id: id2, kind, parts, baseScale, bounds: bounds6, anchors: [{ id: "ground", position: [0, 0, 0], radius: 0.035 }, ...anchors], lods: { near, far }, range, footprint: { halfWidth: Math.max(Math.abs(bounds6.min[0]), Math.abs(bounds6.max[0])), halfDepth: Math.max(Math.abs(bounds6.min[2]), Math.abs(bounds6.max[2])) } };
     templates.set(id2, template3);
     return template3;
@@ -15181,14 +15890,14 @@ function createNaturalDecorKit({ materials, templates: source2 = {} }) {
     if (near) {
       const scale5 = height2 / near.height, parts = near.parts.filter((p) => !p.leaf).map((p) => part2(p.geometry, p.material));
       if (parts.length) {
-        const t = add3("snag-" + name, parts, { baseScale: scale5, far: far ? "snag-" + name + "-lod" : "snag-" + name, range: 130, kind: "snag" });
+        const t = add4("snag-" + name, parts, { baseScale: scale5, far: far ? "snag-" + name + "-lod" : "snag-" + name, range: 130, kind: "snag" });
         t.collider = { kind: "snag", stemRadius: name === "pine" ? 0.18 : 0.23, minY: 0, maxY: Math.min(2.5, t.bounds.max[1]), support: false };
       }
     }
     if (far) {
       const scale5 = height2 / far.height, parts = far.parts.filter((p) => !p.leaf).map((p) => part2(p.geometry, p.material));
       if (parts.length) {
-        const t = add3("snag-" + name + "-lod", parts, { baseScale: scale5, near: "snag-" + name, range: 130, kind: "snag" });
+        const t = add4("snag-" + name + "-lod", parts, { baseScale: scale5, near: "snag-" + name, range: 130, kind: "snag" });
         t.collider = { kind: "snag", stemRadius: name === "pine" ? 0.18 : 0.23, minY: 0, maxY: Math.min(2.5, t.bounds.max[1]), support: false };
       }
     }
@@ -15196,25 +15905,25 @@ function createNaturalDecorKit({ materials, templates: source2 = {} }) {
   for (const [letter, seed] of [["a", 17], ["b", 28]]) for (const lod of [false, true]) {
     const id2 = "stump-" + letter + (lod ? "-lod" : ""), g = stumpGeometry(seed, lod), parts = [part2(own(barkUv(g.bark, materials.bark)), materials.bark), part2(own(g.cut), organic)];
     alignBase(parts);
-    const t = add3(id2, parts, { anchors: g.anchors, near: "stump-" + letter, far: "stump-" + letter + "-lod", range: 75, kind: "stump" });
+    const t = add4(id2, parts, { anchors: g.anchors, near: "stump-" + letter, far: "stump-" + letter + "-lod", range: 75, kind: "stump" });
     t.collider = { kind: "stump", stemRadius: 0.32, rootRadius: Math.max(t.footprint.halfWidth, t.footprint.halfDepth), minY: 0, maxY: t.bounds.max[1], support: "actual upward triangles" };
   }
   for (const [letter, seed] of [["a", 3], ["b", 8], ["c", 13]]) {
     const g = branchGeometry(seed), parts = [part2(own(barkUv(g.bark, materials.bark)), materials.bark, false), part2(own(g.cut), organic, false)], y = alignBase(parts);
-    add3("branch-" + letter, parts, { anchors: anchorShift(g.anchors, y), range: 28, kind: "branch" });
+    add4("branch-" + letter, parts, { anchors: anchorShift(g.anchors, y), range: 28, kind: "branch" });
   }
   for (const [letter, seed] of [["a", 7], ["b", 12]]) for (const lod of [false, true]) {
     const name = "fungi-" + letter, id2 = name + (lod ? "-lod" : ""), parts = [part2(own(fungiGeometry(seed, lod)), organic, false)], y = alignBase(parts);
-    add3(id2, parts, { anchors: anchorShift(parts[0].geometry.userData.stemAnchors, y), near: name, far: name + "-lod", range: 30, kind: "fungi" });
+    add4(id2, parts, { anchors: anchorShift(parts[0].geometry.userData.stemAnchors, y), near: name, far: name + "-lod", range: 30, kind: "fungi" });
   }
   for (const [letter, seed] of [["a", 9], ["b", 14]]) for (const lod of [false, true]) {
     const name = "flowers-" + letter, id2 = name + (lod ? "-lod" : ""), parts = [part2(own(flowerGeometry(seed, lod)), organic, false)], y = alignBase(parts);
-    add3(id2, parts, { anchors: anchorShift(parts[0].geometry.userData.stemAnchors, y), near: name, far: name + "-lod", range: 42, kind: "flowers" });
+    add4(id2, parts, { anchors: anchorShift(parts[0].geometry.userData.stemAnchors, y), near: name, far: name + "-lod", range: 42, kind: "flowers" });
   }
   for (const [letter, seed] of [["a", 9], ["b", 19]]) {
     const parts = [part2(own(screeGeometry(seed)), materials.stone, false)];
     alignBase(parts);
-    add3("scree-" + letter, parts, { range: 40, kind: "scree" });
+    add4("scree-" + letter, parts, { range: 40, kind: "scree" });
   }
   const surfaceRecipes = Object.freeze({
     litter: Object.freeze({ existingSystem: "ecology.js:addContacts", requiredContext: "tree or log canopy pocket", textureSources: ["forest_leaves_02_diffuse_1k.jpg", "forest_leaves_02_nor_gl_1k.jpg"], gridStep: 4 / 3, surfaceOffset: 0.012, placement: "irregular connected conforming patches; preserve existing path mask" }),
@@ -15328,14 +16037,14 @@ function createTreeFelling(THREE, world2, hooks = {}) {
     return { i: ys.length - 2, f: 1 };
   }
   function ringAt(t, y) {
-    const { i, f: f10 } = ringSpan(t, y), { stride, rings: rings2 } = t, pos2 = t.geometry.attributes.position, nor = t.geometry.attributes.normal, uv = t.geometry.attributes.uv;
-    const a = rings2.start + i * stride, b = a + stride, out2 = { position: [], normal: [], uv: [], centre: t.centres[i].map((c2, k) => c2 + (t.centres[i + 1][k] - c2) * f10) };
+    const { i, f: f12 } = ringSpan(t, y), { stride, rings: rings2 } = t, pos2 = t.geometry.attributes.position, nor = t.geometry.attributes.normal, uv = t.geometry.attributes.uv;
+    const a = rings2.start + i * stride, b = a + stride, out2 = { position: [], normal: [], uv: [], centre: t.centres[i].map((c2, k) => c2 + (t.centres[i + 1][k] - c2) * f12) };
     for (let j = 0; j < stride; j++) {
       for (let k = 0; k < 3; k++) {
-        out2.position.push(pos2.getComponent(a + j, k) + (pos2.getComponent(b + j, k) - pos2.getComponent(a + j, k)) * f10);
-        out2.normal.push(nor.getComponent(a + j, k) + (nor.getComponent(b + j, k) - nor.getComponent(a + j, k)) * f10);
+        out2.position.push(pos2.getComponent(a + j, k) + (pos2.getComponent(b + j, k) - pos2.getComponent(a + j, k)) * f12);
+        out2.normal.push(nor.getComponent(a + j, k) + (nor.getComponent(b + j, k) - nor.getComponent(a + j, k)) * f12);
       }
-      for (let k = 0; k < 2; k++) out2.uv.push(uv.getComponent(a + j, k) + (uv.getComponent(b + j, k) - uv.getComponent(a + j, k)) * f10);
+      for (let k = 0; k < 2; k++) out2.uv.push(uv.getComponent(a + j, k) + (uv.getComponent(b + j, k) - uv.getComponent(a + j, k)) * f12);
     }
     return out2;
   }
@@ -15451,7 +16160,7 @@ function createTreeFelling(THREE, world2, hooks = {}) {
     }
     stumpMeshes.clear();
     const merged = /* @__PURE__ */ new Map(), normalMatrix = new THREE.Matrix3();
-    const add3 = (key3, parts, matrix6, hasNormals) => {
+    const add4 = (key3, parts, matrix6, hasNormals) => {
       let m = merged.get(key3);
       if (!m) merged.set(key3, m = { position: [], normal: [], uv: [], color: [], index: [] });
       const base = m.position.length / 3;
@@ -15471,8 +16180,8 @@ function createTreeFelling(THREE, world2, hooks = {}) {
     for (const stump of stumps.values()) {
       const parts = stumpParts(stump);
       if (!parts) continue;
-      add3("bark:" + stump.family.split(":")[0], parts.bark, parts.matrix, true);
-      add3("cut", parts.top, parts.matrix, false);
+      add4("bark:" + stump.family.split(":")[0], parts.bark, parts.matrix, true);
+      add4("cut", parts.top, parts.matrix, false);
     }
     for (const [key3, m] of merged) {
       const species = key3.split(":")[1], g = makeGeometry(m, key3 === "cut" ? "cut" : "bark");
@@ -15700,15 +16409,15 @@ function createTreeFelling(THREE, world2, hooks = {}) {
     return log;
   }
   function rollFromMatrix(log, matrix6) {
-    const local = v12.subVectors(log.localB, log.localA).normalize(), axis2 = v22.subVectors(log.B, log.A).normalize();
-    const align = new THREE.Quaternion().setFromUnitVectors(local, axis2), rotation = new THREE.Quaternion().setFromRotationMatrix(m1.extractRotation(matrix6));
+    const local2 = v12.subVectors(log.localB, log.localA).normalize(), axis2 = v22.subVectors(log.B, log.A).normalize();
+    const align = new THREE.Quaternion().setFromUnitVectors(local2, axis2), rotation = new THREE.Quaternion().setFromRotationMatrix(m1.extractRotation(matrix6));
     const rest2 = align.clone().invert().multiply(rotation);
-    const s = v32.set(rest2.x, rest2.y, rest2.z).dot(local);
+    const s = v32.set(rest2.x, rest2.y, rest2.z).dot(local2);
     return 2 * Math.atan2(s, rest2.w);
   }
   function placeLog(log) {
-    const local = v12.subVectors(log.localB, log.localA).normalize(), axis2 = v22.subVectors(log.B, log.A).normalize();
-    q1.setFromUnitVectors(local, axis2).multiply(new THREE.Quaternion().setFromAxisAngle(local, log.roll));
+    const local2 = v12.subVectors(log.localB, log.localA).normalize(), axis2 = v22.subVectors(log.B, log.A).normalize();
+    q1.setFromUnitVectors(local2, axis2).multiply(new THREE.Quaternion().setFromAxisAngle(local2, log.roll));
     const position3 = v32.copy(log.localA).applyQuaternion(q1).negate().add(log.A);
     log.root.matrix.compose(position3, q1, v12.set(1, 1, 1));
     log.root.matrixWorldNeedsUpdate = true;
@@ -15952,17 +16661,17 @@ function createTreeFelling(THREE, world2, hooks = {}) {
   }
   function splitLog(log, point5) {
     const ab = v12.subVectors(log.B, log.A), s = clamp18(v22.subVectors(point5, log.A).dot(ab) / (ab.lengthSq() || 1), 0.35, 0.65), ym = log.y0 + (log.y1 - log.y0) * s;
-    const M2 = log.A.clone().addScaledVector(ab, s), unit = ab.clone().normalize(), gap = unit.clone().multiplyScalar(0.07);
+    const M2 = log.A.clone().addScaledVector(ab, s), unit2 = ab.clone().normalize(), gap = unit2.clone().multiplyScalar(0.07);
     const lower = makeLog({ family: log.family, y0: log.y0, y1: ym, sx: log.sx, sy: log.sy, A: log.A.toArray(), B: M2.clone().sub(gap).toArray(), roll: log.roll, color: log.color, kind: "half" });
     const upper = makeLog({ family: log.family, y0: ym, y1: log.y1, sx: log.sx, sy: log.sy, A: M2.clone().add(gap).toArray(), B: log.B.toArray(), roll: log.roll, color: log.color, kind: "half" });
-    const side2 = new THREE.Vector3().crossVectors(up7, unit).normalize();
+    const side2 = new THREE.Vector3().crossVectors(up7, unit2).normalize();
     if (lower) {
-      lower.pA.addScaledVector(unit, 0.011);
-      lower.pB.addScaledVector(unit, 0.011).addScaledVector(side2, -8e-3);
+      lower.pA.addScaledVector(unit2, 0.011);
+      lower.pB.addScaledVector(unit2, 0.011).addScaledVector(side2, -8e-3);
     }
     if (upper) {
-      upper.pA.addScaledVector(unit, -0.011).addScaledVector(side2, 8e-3);
-      upper.pB.addScaledVector(unit, -0.011);
+      upper.pA.addScaledVector(unit2, -0.011).addScaledVector(side2, 8e-3);
+      upper.pB.addScaledVector(unit2, -0.011);
     }
     removeLog(log);
     counters.splits++;
@@ -16024,25 +16733,25 @@ function createTreeFelling(THREE, world2, hooks = {}) {
       for (const sys of systems.values()) {
         sys.active = 0;
         for (let i = sys.list.length - 1; i >= 0; i--) {
-          const f10 = sys.list[i];
-          f10.age += dt;
-          if (f10.age >= f10.life) {
+          const f12 = sys.list[i];
+          f12.age += dt;
+          if (f12.age >= f12.life) {
             sys.list.splice(i, 1);
             continue;
           }
-          f10.v.y -= 3.2 * dt;
-          f10.v.multiplyScalar(Math.exp(-1.8 * dt));
-          f10.p.addScaledVector(f10.v, dt);
-          const ground = height2(f10.p.x, f10.p.z);
-          if (Number.isFinite(ground) && f10.p.y < ground + 0.05) {
-            f10.p.y = ground + 0.05;
-            f10.v.set(0, 0, 0);
+          f12.v.y -= 3.2 * dt;
+          f12.v.multiplyScalar(Math.exp(-1.8 * dt));
+          f12.p.addScaledVector(f12.v, dt);
+          const ground = height2(f12.p.x, f12.p.z);
+          if (Number.isFinite(ground) && f12.p.y < ground + 0.05) {
+            f12.p.y = ground + 0.05;
+            f12.v.set(0, 0, 0);
           }
-          f10.angle.x += f10.spin.x * dt;
-          f10.angle.y += f10.spin.y * dt;
-          dummy6.position.copy(f10.p);
-          dummy6.rotation.copy(f10.angle);
-          dummy6.scale.setScalar(f10.size * Math.min(1, (f10.life - f10.age) / 0.6));
+          f12.angle.x += f12.spin.x * dt;
+          f12.angle.y += f12.spin.y * dt;
+          dummy6.position.copy(f12.p);
+          dummy6.rotation.copy(f12.angle);
+          dummy6.scale.setScalar(f12.size * Math.min(1, (f12.life - f12.age) / 0.6));
           dummy6.updateMatrix();
           sys.mesh.setMatrixAt(sys.active++, dummy6.matrix);
         }
@@ -16970,18 +17679,18 @@ function createShadowCadence(world2) {
 // river-bank-resource.js
 var RIVER_BANK_RESOURCE_LIMITS = Object.freeze({ maxChannelDistance: 30, minRise: -0.3, ordinaryMaxRise: 5.4, upperMaxRise: 32, upperRiseBoost: 26.6, minSlope: 0.28 });
 function createUpperRiverBankRockAllowed({ hydrology: hydrology2, terrainFunctions, morphology } = {}) {
-  const f10 = terrainFunctions, geometry3 = hydrology2?.geometry;
-  if (typeof f10?.height !== "function" || typeof f10?.slope !== "function" || typeof f10?.projectChannel !== "function" || typeof hydrology2?.waterAt !== "function") throw TypeError("Canonical terrain and hydrology queries required");
-  const context = morphology ?? (geometry3?.plan ? getRiverReachMorphology({ plan: geometry3.plan, geometry: geometry3 }) : null), scratch3 = {}, L3 = RIVER_BANK_RESOURCE_LIMITS;
-  return function upperRiverBankRockAllowed(x, z, y = f10.height(x, z)) {
-    const channel2 = f10.projectChannel(x, z, L3.maxChannelDistance);
-    if (!channel2 || !(y >= channel2.level + L3.minRise)) return false;
-    if (y > channel2.level + L3.ordinaryMaxRise) {
-      if (y > channel2.level + L3.upperMaxRise) return false;
+  const f12 = terrainFunctions, geometry3 = hydrology2?.geometry;
+  if (typeof f12?.height !== "function" || typeof f12?.slope !== "function" || typeof f12?.projectChannel !== "function" || typeof hydrology2?.waterAt !== "function") throw TypeError("Canonical terrain and hydrology queries required");
+  const context = morphology ?? (geometry3?.plan ? getRiverReachMorphology({ plan: geometry3.plan, geometry: geometry3 }) : null), scratch3 = {}, L4 = RIVER_BANK_RESOURCE_LIMITS;
+  return function upperRiverBankRockAllowed(x, z, y = f12.height(x, z)) {
+    const channel2 = f12.projectChannel(x, z, L4.maxChannelDistance);
+    if (!channel2 || !(y >= channel2.level + L4.minRise)) return false;
+    if (y > channel2.level + L4.ordinaryMaxRise) {
+      if (y > channel2.level + L4.upperMaxRise) return false;
       const m = context?.sample(x, z, scratch3);
-      if (!m || m.featureId !== channel2.featureId || !(y <= channel2.level + (L3.ordinaryMaxRise + L3.upperRiseBoost * m.upper))) return false;
+      if (!m || m.featureId !== channel2.featureId || !(y <= channel2.level + (L4.ordinaryMaxRise + L4.upperRiseBoost * m.upper))) return false;
     }
-    return f10.slope(x, z) >= L3.minSlope && !hydrology2.waterAt(x, z, y);
+    return f12.slope(x, z) >= L4.minSlope && !hydrology2.waterAt(x, z, y);
   };
 }
 
@@ -17161,7 +17870,7 @@ function createBirds(world2, { seed = 1 } = {}) {
   const group = new Group();
   group.name = "birds";
   const flocks = [], birds = [];
-  for (let f10 = 0; f10 < S.flocks; f10++) {
+  for (let f12 = 0; f12 < S.flocks; f12++) {
     const n = Math.round(lerp(S.perFlock[0], S.perFlock[1], rand2())), angle = rand2() * Math.PI * 2, r = lerp(S.range[0] + 40, S.range[1] - 60, rand2());
     const flock = {
       x: Math.cos(angle) * r,
@@ -17354,6 +18063,1783 @@ function createBirds(world2, { seed = 1 } = {}) {
   return { group, update, prepareShadows, dispose, birds, flocks, stats, meshes };
 }
 
+// near-cells.js
+function nearCells(size) {
+  let lastX = NaN, lastZ = NaN, lastReach = NaN, next = 0, waiting = false, clock = 0;
+  const list = [];
+  return {
+    // True when the list was made anew (the caller then drops far cells).
+    plan(player, reach, dt = 0, again = false) {
+      const px = Math.floor(player.x / size), pz = Math.floor(player.z / size);
+      clock += dt;
+      if (px === lastX && pz === lastZ && reach === lastReach && !again && !(waiting && clock > 0.5)) return false;
+      lastX = px;
+      lastZ = pz;
+      lastReach = reach;
+      clock = 0;
+      waiting = false;
+      next = 0;
+      list.length = 0;
+      const span = Math.ceil(reach / size);
+      for (let j = -span; j <= span; j++) for (let i = -span; i <= span; i++) {
+        const ix = px + i, iz = pz + j, d = Math.hypot((ix + 0.5) * size - player.x, (iz + 0.5) * size - player.z);
+        if (d <= reach + size * 0.71) list.push({ ix, iz, d, key: ix + "," + iz });
+      }
+      list.sort((a, b) => a.d - b.d);
+      return true;
+    },
+    // The next listed cell not yet made (made(key) false) whose ground is
+    // ready (ready(ix, iz) true), or null.
+    take(made, ready) {
+      while (next < list.length) {
+        const cell = list[next++];
+        if (made(cell.key)) continue;
+        if (!ready(cell.ix, cell.iz)) {
+          waiting = true;
+          continue;
+        }
+        return cell;
+      }
+      return null;
+    },
+    get pending() {
+      return list.length - next;
+    }
+  };
+}
+
+// forest-floor.js
+var FOREST_FLOOR = Object.freeze({
+  revision: "forest-floor-v2",
+  // Cell size (m, a multiple of the terrain's 4/3 m lattice) and the radius
+  // (m) by quality; none on Low.
+  cell: 4,
+  radius: Object.freeze({ ultra: 12, high: 10, balanced: 6.5 }),
+  // Leaves per square metre in a full broadleaf forest (none under pines);
+  // more within `reach` m of a trunk (up to 1 + bonus times).
+  density: 60,
+  near: Object.freeze({ reach: 3.4, bonus: 1 }),
+  // A leaf's length (m): [smallest, largest]; its width as a share of length.
+  length: Object.freeze([0.09, 0.16]),
+  width: 0.62,
+  // Leaves at most (all cells together) and cells made per frame.
+  max: 4e4,
+  cellsPerFrame: 1,
+  // Colours (linear): tan, brown, dark wet, a few yellow and red; their shares.
+  leaves: Object.freeze([[0.2, 0.11, 0.045], [0.15, 0.085, 0.036], [0.1, 0.058, 0.028], [0.26, 0.16, 0.06], [0.3, 0.2, 0.05], [0.22, 0.075, 0.035]].map(Object.freeze)),
+  leafShare: Object.freeze([0.3, 0.28, 0.22, 0.1, 0.05, 0.05])
+});
+var F = FOREST_FLOOR;
+var LATTICE = 4 / 3;
+function cardGeometry() {
+  const g = new InstancedBufferGeometry(), p = [], uv = [];
+  for (const v of [0, 0.5, 1]) for (const u of [0, 1]) {
+    p.push(u - 0.5, 0, v - 0.5);
+    uv.push(u, v);
+  }
+  g.setAttribute("position", new Float32BufferAttribute(p, 3));
+  g.setAttribute("normal", new Float32BufferAttribute([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], 3));
+  g.setAttribute("uv", new Float32BufferAttribute(uv, 2));
+  g.setIndex([0, 2, 1, 1, 2, 3, 2, 4, 3, 3, 4, 5]);
+  return g;
+}
+function floorMaterial() {
+  const material2 = new MeshStandardMaterial({ color: 16777215, roughness: 0.92, metalness: 0, side: DoubleSide, alphaTest: 0.5 });
+  material2.userData.sunField = "ground";
+  material2.userData.noSunField = true;
+  material2.onBeforeCompile = (shader) => {
+    shader.vertexShader = "attribute vec4 litter;varying vec4 vLitter;varying vec2 vLitterUv;varying vec3 vLitterWorld;\n" + shader.vertexShader.replace("#include <begin_vertex>", `#include <begin_vertex>
+  // Curl along the length, cup across it (curl: y, cup: z, seed: w).
+  vLitter=litter;vLitterUv=uv;
+  transformed.y+=litter.y*(uv.y-.5)*(uv.y-.5)*1.6+litter.z*(uv.x-.5)*(uv.x-.5)*2.;`).replace("#include <worldpos_vertex>", `#include <worldpos_vertex>
+  vLitterWorld=(modelMatrix*instanceMatrix*vec4(transformed,1.)).xyz;`);
+    shader.fragmentShader = "uniform float litterReach;varying vec4 vLitter;varying vec2 vLitterUv;varying vec3 vLitterWorld;\n" + shader.fragmentShader.replace("#include <alphatest_fragment>", `
+  {
+   vec2 q=vLitterUv;float s=vLitter.w,inside;float shade=1.;
+   // A leaf: widest a third of the way up, a pointed tip, a short stalk,
+   // a darker midrib and a few veins, a little serrated.
+   float v=q.y,w=.5*pow(max(sin(3.14159*pow(v,.82)),0.),.75)*(1.-.18*v);
+   w*=1.+.06*sin(v*38.+s*7.);
+   float d=abs(q.x-.5);inside=step(d,w)*step(.06,v);
+   inside=max(inside,step(d,.025)*step(v,.08));
+   shade*=1.-.32*(1.-smoothstep(.006,.02,d));
+   shade*=1.-.12*(1.-smoothstep(.0,.03,abs(fract((v*5.+d*3.5)+s)-.5)-.38));
+   // Fade out toward the edge of the near ground (dithered).
+   float far=smoothstep(litterReach*.72,litterReach,distance(vLitterWorld.xz,cameraPosition.xz));
+   float dither=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));
+   if(inside<.5||far>dither)discard;
+   diffuseColor.rgb*=shade;
+  }
+  #include <alphatest_fragment>`);
+    shader.uniforms.litterReach = material2.userData.reach;
+    patchSunField(shader, "ground", "vLitterWorld");
+  };
+  material2.userData.reach = { value: F.radius.high };
+  material2.customProgramCacheKey = () => F.revision;
+  return material2;
+}
+function createForestFloor(world2) {
+  const functions = world2.terrainFunctions, geometry3 = cardGeometry(), material2 = floorMaterial();
+  const mesh2 = new InstancedMesh(geometry3, material2, F.max);
+  mesh2.name = "forest-floor";
+  mesh2.count = 0;
+  mesh2.frustumCulled = false;
+  mesh2.castShadow = false;
+  mesh2.receiveShadow = true;
+  mesh2.instanceMatrix.setUsage(DynamicDrawUsage);
+  mesh2.instanceColor = new InstancedBufferAttribute(new Float32Array(F.max * 3), 3).setUsage(DynamicDrawUsage);
+  const litter = new InstancedBufferAttribute(new Float32Array(F.max * 4), 4).setUsage(DynamicDrawUsage);
+  geometry3.setAttribute("litter", litter);
+  mesh2.userData.waterCaptureHidden = true;
+  mesh2.userData.weatherSurfaceExclude = true;
+  mesh2.userData.noSunField = true;
+  world2.scene.add(mesh2);
+  const PAGE = 64, pages = Math.floor(F.max / PAGE), used = new Uint8Array(pages), dirtyPages = /* @__PURE__ */ new Set();
+  let top = 0;
+  const cells = /* @__PURE__ */ new Map(), climate3 = {}, treeClimate2 = {}, m = new Matrix4(), q = new Quaternion(), yaw2 = new Quaternion(), up7 = new Vector3(0, 1, 0), n = new Vector3(), pos2 = new Vector3(), scale5 = new Vector3();
+  const stats = { cells: 0, pieces: 0, built: 0, lastMs: 0, maxMs: 0 };
+  let dirty = false, enabled = true;
+  const plan = nearCells(F.cell);
+  const wetBlocks = /* @__PURE__ */ new Map();
+  function waterNear(cx, cz) {
+    if (!world2.hydrology?.nearWater) return !!world2.hydrology;
+    const bx = Math.floor(cx / 16), bz = Math.floor(cz / 16), key3 = bx * 100003 + bz;
+    let wet = wetBlocks.get(key3);
+    if (wet === void 0) {
+      if (wetBlocks.size > 4096) wetBlocks.clear();
+      wet = !!world2.hydrology.nearWater((bx + 0.5) * 16, (bz + 0.5) * 16, 13.5);
+      wetBlocks.set(key3, wet);
+    }
+    return wet;
+  }
+  function radius() {
+    return F.radius[world2.quality] ?? 0;
+  }
+  function buildCell(ix, iz) {
+    const c2 = F.cell, x0 = ix * c2, z0 = iz * c2, cx = x0 + c2 / 2, cz = z0 + c2 / 2, hash12 = functions.hash;
+    const cy = functions.height(cx, cz);
+    if (!(cy > 0.6)) return null;
+    const cl = vegetationClimate(functions, cx, cz, cy, climate3);
+    const forest = Math.min(1, cl.treeDensity ?? cl.forest ?? 0) * (1 - cl.snow * 0.95) * (1 - cl.meadow * 0.6);
+    if (forest < 0.04) return null;
+    if (world2.landmarks?.some((l) => l.clear && Math.hypot(cx - l.x, cz - l.z) < l.clear * 0.4)) return null;
+    const trees = [], rocks = [], reach = F.near.reach;
+    const k0x = Math.floor((x0 - reach) / 64), k1x = Math.floor((x0 + c2 + reach) / 64), k0z = Math.floor((z0 - reach) / 64), k1z = Math.floor((z0 + c2 + reach) / 64);
+    for (let kz = k0z; kz <= k1z; kz++) for (let kx = k0x; kx <= k1x; kx++) {
+      const chunk = world2.chunks?.get(kx + "," + kz);
+      if (!chunk) continue;
+      for (const t of chunk.trees || []) if (t.x > x0 - reach && t.x < x0 + c2 + reach && t.z > z0 - reach && t.z < z0 + c2 + reach && !world2.removed?.has(t.id)) trees.push(t);
+      for (const r of chunk.rocks || []) if (Math.abs(r.x - cx) < c2 + r.r && Math.abs(r.z - cz) < c2 + r.r) rocks.push(r);
+    }
+    const nearWater = waterNear(cx, cz);
+    const h = new Float32Array(16);
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) h[j * 4 + i] = functions.height(x0 + i * LATTICE, z0 + j * LATTICE);
+    const broad = trees.length ? trees.filter((t) => vegetationSpecies(vegetationClimate(functions, t.x, t.z, t.y, treeClimate2), hash12(t.x, t.z)) === "broadleaf").length / trees.length : vegetationSpecies(cl, hash12(cx, cz)) === "broadleaf" ? 1 : 0;
+    const count = Math.round(F.density * broad * c2 * c2 * forest * (1 + F.near.bonus));
+    if (!count) return null;
+    const out2 = new Float32Array(count * 23);
+    let used2 = 0;
+    {
+      for (let salt = 0; salt < count; salt++) {
+        const a = hash12(x0 + salt * 0.618, z0 - salt * 0.382), b = hash12(x0 - salt * 1.31, z0 + salt * 0.77);
+        const x = x0 + a * c2, z = z0 + b * c2;
+        let near = 0;
+        for (const t2 of trees) {
+          const d2 = (t2.x - x) ** 2 + (t2.z - z) ** 2;
+          near = Math.max(near, Math.exp(-d2 / (reach * reach)));
+        }
+        if (hash12(x * 1.7 + 3.1, z * 1.3 - 7.9) > (1 + F.near.bonus * near) / (1 + F.near.bonus)) continue;
+        let blocked = false;
+        for (const t2 of trees) if ((t2.x - x) ** 2 + (t2.z - z) ** 2 < (0.25 + t2.h * 0.018) ** 2) {
+          blocked = true;
+          break;
+        }
+        if (!blocked) {
+          for (const r of rocks) if ((r.x - x) ** 2 + (r.z - z) ** 2 < (r.r * 0.85) ** 2) {
+            blocked = true;
+            break;
+          }
+        }
+        if (blocked) continue;
+        const gx = (x - x0) / LATTICE, gz = (z - z0) / LATTICE, i = Math.min(2, Math.floor(gx)), j = Math.min(2, Math.floor(gz)), u = gx - i, v = gz - j;
+        const h00 = h[j * 4 + i], h10 = h[j * 4 + i + 1], h01 = h[(j + 1) * 4 + i], h11 = h[(j + 1) * 4 + i + 1];
+        let y, sx, sz;
+        if (u + v <= 1) {
+          y = h00 + (h10 - h00) * u + (h01 - h00) * v;
+          sx = (h10 - h00) / LATTICE;
+          sz = (h01 - h00) / LATTICE;
+        } else {
+          y = h11 + (h01 - h11) * (1 - u) + (h10 - h11) * (1 - v);
+          sx = (h11 - h01) / LATTICE;
+          sz = (h11 - h10) / LATTICE;
+        }
+        if (nearWater && world2.hydrology?.waterAt?.(x, z, y)) continue;
+        const r1 = hash12(x * 3.3, z * 2.9), r2 = hash12(x * 1.9 - 5, z * 4.1 + 2), r3 = hash12(x * 0.7 + 11, z * 5.3 - 4);
+        const [l0, l1] = F.length, length = l0 + (l1 - l0) * r1 * r1, width = length * F.width;
+        n.set(-sx, 1, -sz).normalize();
+        q.setFromUnitVectors(up7, n);
+        yaw2.setFromAxisAngle(up7, r2 * Math.PI * 2);
+        q.multiply(yaw2);
+        pos2.set(x, y + 6e-3 + r3 * 0.01, z);
+        scale5.set(width, 1, length);
+        m.compose(pos2, q, scale5);
+        let t = r3, pick = 0;
+        for (; pick < F.leafShare.length - 1 && t > F.leafShare[pick]; pick++) t -= F.leafShare[pick];
+        const colour = F.leaves[pick], tone = 0.85 + 0.3 * hash12(x * 9.1, z * 8.7);
+        out2.set(m.elements, used2);
+        used2 += 16;
+        out2[used2++] = colour[0] * tone;
+        out2[used2++] = colour[1] * tone;
+        out2[used2++] = colour[2] * tone;
+        out2[used2++] = 0;
+        out2[used2++] = (r2 - 0.5) * 0.09;
+        out2[used2++] = -0.05 + r1 * 0.09;
+        out2[used2++] = r3;
+      }
+    }
+    return used2 ? out2.slice(0, used2) : null;
+  }
+  function place(cell) {
+    const a = cell.data, n2 = a ? a.length / 23 : 0, matrices = mesh2.instanceMatrix.array, colours = mesh2.instanceColor.array, data = litter.array;
+    cell.pages = [];
+    for (let page = 0, need = Math.ceil(n2 / PAGE); page < pages && cell.pages.length < need; page++) if (!used[page]) {
+      used[page] = 1;
+      cell.pages.push(page);
+    }
+    let o = 0;
+    for (const page of cell.pages) {
+      for (let s = 0, i = page * PAGE; s < PAGE; s++, i++, o += 23) {
+        if (o < a.length) {
+          matrices.set(a.subarray(o, o + 16), i * 16);
+          colours.set(a.subarray(o + 16, o + 19), i * 3);
+          data.set(a.subarray(o + 19, o + 23), i * 4);
+        } else matrices.fill(0, i * 16, i * 16 + 16);
+      }
+      dirtyPages.add(page);
+      top = Math.max(top, page + 1);
+    }
+    stats.pieces += Math.min(n2, cell.pages.length * PAGE);
+  }
+  function release(cell) {
+    const matrices = mesh2.instanceMatrix.array;
+    for (const page of cell.pages || []) {
+      matrices.fill(0, page * PAGE * 16, (page + 1) * PAGE * 16);
+      used[page] = 0;
+      dirtyPages.add(page);
+    }
+    stats.pieces -= Math.min(cell.data ? cell.data.length / 23 : 0, (cell.pages || []).length * PAGE);
+    cell.pages = [];
+    while (top > 0 && !used[top - 1]) top--;
+  }
+  function upload() {
+    const list = [...dirtyPages].sort((a, b) => a - b);
+    dirtyPages.clear();
+    for (const attribute of [mesh2.instanceMatrix, mesh2.instanceColor, litter]) attribute.clearUpdateRanges();
+    for (let k = 0; k < list.length; ) {
+      let end = k;
+      while (end + 1 < list.length && list[end + 1] === list[end] + 1) end++;
+      for (const attribute of [mesh2.instanceMatrix, mesh2.instanceColor, litter]) attribute.addUpdateRange(list[k] * PAGE * attribute.itemSize, (list[end] - list[k] + 1) * PAGE * attribute.itemSize);
+      k = end + 1;
+    }
+    for (const attribute of [mesh2.instanceMatrix, mesh2.instanceColor, litter]) attribute.needsUpdate = true;
+    mesh2.count = top * PAGE;
+  }
+  function update(dt, player) {
+    const r = enabled && !world2.inDungeon ? radius() : 0;
+    mesh2.visible = r > 0 && mesh2.count > 0;
+    if (!(r > 0) || !player) return;
+    material2.userData.reach.value = r;
+    const c2 = F.cell, started = performance.now();
+    if (plan.plan(player, r, dt, again)) {
+      again = false;
+      for (const [key3, cell] of cells) if (Math.hypot(cell.cx - player.x, cell.cz - player.z) > r + c2) {
+        release(cell);
+        cells.delete(key3);
+        dirty = true;
+      }
+    }
+    for (let k = 0; k < F.cellsPerFrame; k++) {
+      const next = plan.take(has, ready);
+      if (!next) break;
+      const cell = { cx: (next.ix + 0.5) * c2, cz: (next.iz + 0.5) * c2, data: buildCell(next.ix, next.iz) };
+      place(cell);
+      cells.set(next.key, cell);
+      dirty = true;
+      stats.built++;
+    }
+    if (dirty) {
+      upload();
+      dirty = false;
+    }
+    stats.cells = cells.size;
+    stats.lastMs = +(performance.now() - started).toFixed(2);
+    stats.maxMs = Math.max(stats.maxMs, stats.lastMs);
+    mesh2.visible = mesh2.count > 0;
+  }
+  let again = false;
+  const has = (key3) => cells.has(key3), ready = (ix, iz) => !!world2.chunks?.get(Math.floor(ix * F.cell / 64) + "," + Math.floor(iz * F.cell / 64));
+  function invalidate(x, z, reach = 6) {
+    for (const [key3, cell] of cells) if (Math.abs(cell.cx - x) < reach + F.cell && Math.abs(cell.cz - z) < reach + F.cell) {
+      release(cell);
+      cells.delete(key3);
+    }
+    dirty = true;
+    again = true;
+  }
+  function setEnabled(value) {
+    enabled = !!value;
+    if (!enabled) mesh2.visible = false;
+  }
+  function dispose() {
+    world2.scene.remove(mesh2);
+    geometry3.dispose();
+    material2.dispose();
+    mesh2.dispose();
+    cells.clear();
+    used.fill(0);
+    top = 0;
+  }
+  return { mesh: mesh2, update, invalidate, setEnabled, dispose, stats: () => ({ ...stats }) };
+}
+
+// forest-understory.js
+var FOREST_UNDERSTORY = Object.freeze({
+  revision: "forest-understory-v1",
+  // Cell size (m) and the reach (m) by quality; none on Low.
+  cell: 16,
+  radius: Object.freeze({ ultra: 72, high: 64, balanced: 46 }),
+  // Plants per 100 m² of full forest (young trees, thickets); a thicket is
+  // half as likely in a pine wood.
+  density: Object.freeze({ sapling: 2.4, thicket: 1.1 }),
+  pineThickets: 0.5,
+  // Kept this far (m) from a trunk's bark; young trees grow more in the gaps:
+  // their chance rises from gap[0] m to gap[1] m from the nearest trunk.
+  clear: Object.freeze({ sapling: 0.7, thicket: 1.3 }),
+  gap: Object.freeze([1.5, 6.5]),
+  // Heights (m) of the shapes made for each kind (a plant is one of them,
+  // scaled by `scale`), and the steepest ground they stand on (slope).
+  heights: Object.freeze({ broadleaf: Object.freeze([2.1, 2.7, 3.4, 4.1]), pine: Object.freeze([1.5, 2.3, 3.2]), thicket: Object.freeze([1.3, 1.75, 2.2]) }),
+  scale: Object.freeze([0.86, 1.16]),
+  slope: 0.75,
+  // Instances per shape at most; cells made per frame.
+  max: 320,
+  cellsPerFrame: 2,
+  // The stems' bark (linear): broadleaf saplings and thickets, pines.
+  wood: Object.freeze({ broadleaf: Object.freeze([0.1, 0.088, 0.072]), pine: Object.freeze([0.14, 0.085, 0.055]) }),
+  // Leaf tints (multiplying the photo): young leaves a little lighter and
+  // yellower, thickets a little darker.
+  tint: Object.freeze({ broadleaf: Object.freeze([1.08, 1.12, 0.88]), pine: Object.freeze([1, 1.04, 0.96]), thicket: Object.freeze([0.9, 1, 0.84]) }),
+  // Wind: the stem's bend per metre of height (the trees' is .022), leaf flutter (m).
+  bend: 0.06,
+  flutter: 0.035
+});
+var F2 = FOREST_UNDERSTORY;
+var TAU12 = Math.PI * 2;
+var UNDERSTORY_SHAPES = Object.freeze([
+  ...F2.heights.broadleaf.map((height2, i) => Object.freeze({ kind: "sapling", species: "broadleaf", height: height2, seed: 11 + i })),
+  ...F2.heights.pine.map((height2, i) => Object.freeze({ kind: "sapling", species: "pine", height: height2, seed: 31 + i })),
+  ...F2.heights.thicket.map((height2, i) => Object.freeze({ kind: "thicket", species: "broadleaf", height: height2, seed: 51 + i }))
+]);
+var add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+var sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+var mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+var dot2 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+var cross3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+var unit = (a) => mul(a, 1 / Math.max(1e-9, Math.hypot(a[0], a[1], a[2])));
+var clamp20 = (v, a, b) => Math.max(a, Math.min(b, v));
+function random2(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = a + 1831565813 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function frames(dir, roll = 0) {
+  const ref = Math.abs(dir[1]) > 0.93 ? [1, 0, 0] : [0, 1, 0], right = unit(cross3(dir, ref)), up7 = unit(cross3(right, dir)), c2 = Math.cos(roll), s = Math.sin(roll);
+  return { right: add(mul(right, c2), mul(up7, s)), up: add(mul(up7, c2), mul(right, -s)), dir };
+}
+var local = (f12, v) => add(add(mul(f12.right, v[0]), mul(f12.dir, v[1])), mul(f12.up, v[2]));
+function bezier(p, t) {
+  const s = 1 - t;
+  return add(add(mul(p[0], s * s * s), mul(p[1], 3 * s * s * t)), add(mul(p[2], 3 * s * t * t), mul(p[3], t * t * t)));
+}
+function builder3() {
+  const position3 = [], normal4 = [], uv = [], under = [], index2 = [];
+  const vertex3 = (p, n, u, v, wood, sway) => {
+    position3.push(p[0], p[1], p[2]);
+    normal4.push(n[0], n[1], n[2]);
+    uv.push(u, v);
+    under.push(wood, sway);
+    return position3.length / 3 - 1;
+  };
+  function tube5(points, radii, sways, sides) {
+    const start2 = position3.length / 3;
+    let right = null;
+    for (let i = 0; i < points.length; i++) {
+      const tangent = unit(sub(points[Math.min(points.length - 1, i + 1)], points[Math.max(0, i - 1)]));
+      right = right ? unit(sub(right, mul(tangent, dot2(right, tangent)))) : frames(tangent).right;
+      const side2 = unit(cross3(tangent, right));
+      for (let j = 0; j <= sides; j++) {
+        const a = j / sides * TAU12, radial = add(mul(right, Math.cos(a)), mul(side2, Math.sin(a)));
+        vertex3(add(points[i], mul(radial, radii[i])), radial, j / sides, i / (points.length - 1), 1, sways[i]);
+      }
+    }
+    for (let i = 0; i < points.length - 1; i++) for (let j = 0; j < sides; j++) {
+      const a = start2 + i * (sides + 1) + j, b = a + sides + 1;
+      index2.push(a, a + 1, b, a + 1, b + 1, b);
+    }
+  }
+  function cards2(species, shape, at, dir, roll, scale5, sway) {
+    const all = TREE_SPRAYS[species], views = all.filter((v) => v.shape === shape);
+    const used = species === "pine" ? [[views[0], 0], [views[1], 0], [views[0], Math.PI / 3]] : [[views[0], 0], [views[1], 0]];
+    for (const [view, extra] of used) {
+      const f12 = frames(dir, roll + extra), start2 = position3.length / 3;
+      for (const [u, v] of [[0, 0], [1, 0], [1, 1], [0, 1]]) {
+        const p = add(view.center, add(mul(view.right, (u - 0.5) * view.size), mul(view.up, (v - 0.5) * view.size)));
+        p[2] += 0.018 * Math.sin(p[1] / view.size * Math.PI) * (u - 0.5);
+        const n = unit(add(mul(view.normal, 0.78), add(mul(view.right, (u - 0.5) * 0.8), mul(view.up, (v - 0.5) * 0.35))));
+        vertex3(add(at, mul(local(f12, p), scale5)), unit(local(f12, n)), view.uvMin[0] + (view.uvMax[0] - view.uvMin[0]) * u, 1 - (view.uvMin[1] + (view.uvMax[1] - view.uvMin[1]) * v), 0, sway);
+      }
+      index2.push(start2, start2 + 1, start2 + 2, start2, start2 + 2, start2 + 3);
+    }
+  }
+  function finish3() {
+    const g = new BufferGeometry();
+    g.setAttribute("position", new Float32BufferAttribute(position3, 3));
+    g.setAttribute("normal", new Float32BufferAttribute(normal4, 3));
+    g.setAttribute("uv", new Float32BufferAttribute(uv, 2));
+    g.setAttribute("under", new Float32BufferAttribute(under, 2));
+    g.setIndex(index2);
+    g.computeBoundingBox();
+    g.computeBoundingSphere();
+    return g;
+  }
+  return { tube: tube5, cards: cards2, finish: finish3, count: () => position3.length / 3 };
+}
+function broadleafSapling(b, H, r) {
+  const sx = (r() - 0.5) * 0.16 * H, sz = (r() - 0.5) * 0.16 * H, bow2 = (r() - 0.5) * 0.1 * H, phase2 = r() * TAU12, stem = [], radii = [], sways = [];
+  const r0 = 0.016 + 7e-3 * H;
+  for (let i = 0; i <= 7; i++) {
+    const t = i / 7;
+    stem.push([sx * t * t + Math.cos(phase2) * bow2 * Math.sin(t * Math.PI), t * H, sz * t * t + Math.sin(phase2) * bow2 * Math.sin(t * Math.PI)]);
+    radii.push(r0 * (1 - t) ** 0.9 + 4e-3);
+    sways.push(t ** 1.6);
+  }
+  b.tube(stem, radii, sways, 6);
+  const at = (t) => {
+    const f12 = t * 7, i = Math.min(6, Math.floor(f12));
+    return add(stem[i], mul(sub(stem[i + 1], stem[i]), f12 - i));
+  };
+  const shoots = 4 + Math.floor(r() * 3) + (H > 3 ? 1 : 0), shapes = "abc";
+  for (let k = 0; k < shoots; k++) {
+    const tb = 0.36 + 0.56 * (k + 0.3 + r() * 0.4) / shoots, base = at(tb), az = phase2 + k * 2.39996 + (r() - 0.5) * 0.5, fromVertical = 0.75 + 0.55 * (1 - tb) + (r() - 0.5) * 0.2;
+    const dir = [Math.cos(az) * Math.sin(fromVertical), Math.cos(fromVertical), Math.sin(az) * Math.sin(fromVertical)];
+    const len3 = (0.32 + 0.55 * (1 - tb)) * (0.8 + 0.4 * r()) * Math.min(1.25, H / 2.8), points = [], pr = [], ps = [];
+    for (let i = 0; i <= 4; i++) {
+      const t = i / 4;
+      points.push(add(base, add(mul(dir, len3 * t), [0, len3 * 0.12 * t * t, 0])));
+      pr.push(9e-3 * (1 - t) + 25e-4);
+      ps.push((tb + (1 - tb) * 0.3 * t) ** 1.6);
+    }
+    b.tube(points, pr, ps, 4);
+    for (const t of [0.45, 0.75, 1]) {
+      const p = points[Math.round(t * 4)], d = unit(add(dir, [0, 0.25 + r() * 0.3, 0]));
+      b.cards("broadleaf", shapes[(k + Math.round(t * 4)) % 3], p, d, (r() - 0.5) * 1.2, 2.4 + r() * 0.9, ps[Math.round(t * 4)]);
+    }
+  }
+  for (let k = 0; k < 2; k++) b.cards("broadleaf", shapes[k], at(0.93 + k * 0.06), unit([(r() - 0.5) * 0.8, 1, (r() - 0.5) * 0.8]), r() * TAU12, 2.3 + r() * 0.7, 1);
+}
+function pineSapling(b, H, r) {
+  const r0 = 0.018 + 8e-3 * H, lean = [(r() - 0.5) * 0.06 * H, 0, (r() - 0.5) * 0.06 * H], stem = [], radii = [], sways = [];
+  for (let i = 0; i <= 6; i++) {
+    const t = i / 6;
+    stem.push([lean[0] * t * t, t * H, lean[2] * t * t]);
+    radii.push(r0 * (1 - t) ** 0.9 + 4e-3);
+    sways.push(t ** 1.6);
+  }
+  b.tube(stem, radii, sways, 6);
+  const whorls = Math.max(3, Math.round(H / 0.42)), phase2 = r() * TAU12, y0 = 0.2 * H, y1 = 0.86 * H;
+  for (let w = 0; w < whorls; w++) {
+    const u = w / (whorls - 1), y = y0 + (y1 - y0) * u, t = y / H, base = [lean[0] * t * t, y, lean[2] * t * t], count = 4 + (r() < 0.5 ? 1 : 0);
+    for (let j = 0; j < count; j++) {
+      const az = phase2 + w * 0.7 + j * TAU12 / count + (r() - 0.5) * 0.4, len3 = (0.14 + 0.42 * (1 - u)) * Math.min(1.3, H / 2.4) * (0.85 + 0.3 * r());
+      const dir = unit([Math.cos(az), -0.06 - 0.12 * (1 - u), Math.sin(az)]), points = [], pr = [], ps = [];
+      for (let i = 0; i <= 3; i++) {
+        const s = i / 3;
+        points.push(add(base, add(mul(dir, len3 * s), [0, len3 * 0.1 * s * s, 0])));
+        pr.push(7e-3 * (1 - s) + 2e-3);
+        ps.push((t + 0.25 * s * (1 - t)) ** 1.6);
+      }
+      b.tube(points, pr, ps, 3);
+      for (const s of [0.55, 1]) b.cards("pine", r() < 0.5 ? "a" : "b", points[s < 1 ? 2 : 3], unit(add(dir, [0, 0.3, 0])), (r() - 0.5) * 0.6, (1.05 + 0.45 * r()) * (1 - u * 0.25), ps[s < 1 ? 2 : 3]);
+    }
+  }
+  for (let k = 0; k < 3; k++) b.cards("pine", k % 2 ? "a" : "b", [lean[0], H * (0.9 + k * 0.03), lean[2]], unit([(r() - 0.5) * 0.5, 1, (r() - 0.5) * 0.5]), r() * TAU12, 0.95 + 0.3 * r(), 1);
+}
+function thicket(b, H, r) {
+  const stems = 6 + Math.floor(r() * 4), phase2 = r() * TAU12, shapes = "abc";
+  for (let k = 0; k < stems; k++) {
+    const az = phase2 + k * TAU12 / stems + (r() - 0.5) * 0.6, out2 = [Math.cos(az), 0, Math.sin(az)], foot = mul(out2, 0.06 + 0.22 * r());
+    const rise = H * (0.78 + 0.26 * r()), reach = H * (0.32 + 0.32 * r());
+    const control2 = [foot, add(foot, add([0, rise * 0.55, 0], mul(out2, reach * 0.12))), add(foot, add([0, rise * 1.02, 0], mul(out2, reach * 0.55))), add(foot, add([0, rise * (0.72 + 0.16 * r()), 0], mul(out2, reach)))];
+    const points = [], pr = [], ps = [];
+    for (let i = 0; i <= 6; i++) {
+      const t = i / 6;
+      points.push(bezier(control2, t));
+      pr.push(0.011 * (1 - t) + 3e-3);
+      ps.push(t ** 1.4);
+    }
+    b.tube(points, pr, ps, 4);
+    for (const t of [0.22, 0.36, 0.5, 0.62, 0.74, 0.86, 0.96]) {
+      const p = bezier(control2, t), next = bezier(control2, Math.min(1, t + 0.05)), d = unit(add(unit(sub(next, p)), add(mul(out2, 0.45), [0, -0.1, 0])));
+      b.cards("broadleaf", shapes[(k + Math.round(t * 10)) % 3], p, d, (r() - 0.5) * 1.4, 2.2 + r() * 0.8, t ** 1.4);
+    }
+  }
+}
+function buildUnderstoryShape(shape) {
+  const b = builder3(), r = random2(shape.seed * 7919 + Math.round(shape.height * 100));
+  if (shape.kind === "thicket") thicket(b, shape.height, r);
+  else if (shape.species === "pine") pineSapling(b, shape.height, r);
+  else broadleafSapling(b, shape.height, r);
+  const geometry3 = b.finish();
+  geometry3.userData.understory = { ...shape, vertices: b.count() };
+  return geometry3;
+}
+var f7 = (v) => Number(v).toFixed(5);
+var vec3 = (c2) => `vec3(${c2.map(f7).join(",")})`;
+var VERTEX_PARS = "attribute vec2 under;uniform vec4 meadowWind;uniform float meadowTime;varying vec2 vUnder;varying vec3 vUnderWorld;\n" + MEADOW_GUST_GLSL + "\n";
+var WIND = `
+ #ifdef USE_INSTANCING
+ mat4 underToWorld=modelMatrix*instanceMatrix;
+ #else
+ mat4 underToWorld=modelMatrix;
+ #endif
+ {vec2 underRoot=underToWorld[3].xz;float underPhase=fract(sin(dot(underRoot,vec2(12.9898,78.233)))*43758.5453)*6.283185;
+  // Bend per metre of the plant's height (its local metres up to this point).
+  float underTall=length(underToWorld[1].xyz)*max(position.y,0.);
+  vec2 underSway=meadowSway(underRoot,underPhase,2.6,meadowWind,meadowTime)*(${f7(F2.bend)}*underTall*under.y*1.6);
+  if(under.x<.5)underSway+=vec2(sin(meadowTime*7.330383+dot(position,vec3(3.1,1.7,2.3))+underPhase),sin(meadowTime*6.283185+dot(position,vec3(1.9,2.9,3.7))-underPhase))*(${f7(F2.flutter)}*(.3+meadowWind.z)*under.y);
+  transformed+=inverse(mat3(underToWorld))*vec3(underSway.x,0.,underSway.y);}
+ vUnder=under;vUnderWorld=(underToWorld*vec4(transformed,1.)).xyz;
+`;
+var FADE = `
+ {float underFar=smoothstep(understoryReach*.74,understoryReach,distance(vUnderWorld.xz,understoryEye.xz));
+  float underDither=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));
+  if(underFar>underDither)discard;}
+`;
+function patchVertex(shader, uniforms) {
+  Object.assign(shader.uniforms, { meadowWind: meadowUniforms.meadowWind, meadowTime: meadowUniforms.meadowTime, understoryEye: uniforms.eye, understoryReach: uniforms.reach });
+  shader.vertexShader = VERTEX_PARS + shader.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n" + WIND);
+  shader.fragmentShader = "uniform vec3 understoryEye;uniform float understoryReach;varying vec2 vUnder;varying vec3 vUnderWorld;\n" + shader.fragmentShader;
+}
+function understoryMaterial(source2, species, uniforms) {
+  const material2 = new MeshStandardMaterial({ color: source2.color.clone(), map: source2.map, roughness: Math.max(0.8, source2.roughness ?? 0.9), metalness: 0, alphaTest: source2.alphaTest > 0 ? source2.alphaTest : 0.38, alphaToCoverage: true, side: DoubleSide });
+  material2.shadowSide = DoubleSide;
+  material2.name = "forest-understory:" + species;
+  const lighting = treeLeafLightingChunk(ShaderChunk.lights_fragment_begin);
+  material2.onBeforeCompile = (shader) => {
+    patchVertex(shader, uniforms);
+    shader.fragmentShader = shader.fragmentShader.replace("#include <color_fragment>", `#include <color_fragment>
+ if(vUnder.x>.5){diffuseColor.rgb=${vec3(F2.wood[species])}*(.8+.4*fract(sin(dot(floor(vUnderWorld*7.),vec3(12.9898,78.233,37.719)))*43758.5453));diffuseColor.a=1.;}
+${FADE}`).replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n if(vUnder.x>.5)roughnessFactor=.92;").replace("#include <lights_fragment_begin>", lighting);
+  };
+  material2.customProgramCacheKey = () => F2.revision + ":" + species + ":" + TREE_LEAF_LIGHTING_KEY;
+  const depth = new MeshDepthMaterial({ depthPacking: RGBADepthPacking, map: source2.map, alphaTest: material2.alphaTest, side: DoubleSide });
+  depth.onBeforeCompile = (shader) => {
+    patchVertex(shader, uniforms);
+    shader.fragmentShader = shader.fragmentShader.replace("#include <alphatest_fragment>", `if(vUnder.x>.5)diffuseColor.a=1.;
+${FADE}#include <alphatest_fragment>`);
+  };
+  depth.customProgramCacheKey = () => F2.revision + ":depth:" + species;
+  return { material: material2, depth };
+}
+function createForestUnderstory(world2) {
+  const functions = world2.terrainFunctions, climate3 = {}, treeClimate2 = {}, cells = /* @__PURE__ */ new Map();
+  const uniforms = { eye: { value: new Vector3() }, reach: { value: F2.radius.high } };
+  const stats = { cells: 0, plants: 0, saplings: 0, thickets: 0, built: 0, lastMs: 0, maxMs: 0 };
+  let group = null, meshes = null, dirty = false, enabled = true, materials = null;
+  const tintColour = new Color(), m = new Matrix4(), q = new Quaternion(), tilt = new Quaternion(), pos2 = new Vector3(), scale5 = new Vector3(), axis2 = new Vector3(), upY = new Vector3(0, 1, 0);
+  function ready() {
+    if (meshes) return true;
+    const leaf = (species) => world2.nature?.[species]?.parts?.find((p) => p.leaf)?.material;
+    if (!leaf("broadleaf")?.map || !leaf("pine")?.map) return false;
+    materials = { broadleaf: understoryMaterial(leaf("broadleaf"), "broadleaf", uniforms), pine: understoryMaterial(leaf("pine"), "pine", uniforms) };
+    group = new Group();
+    group.name = "forest-understory";
+    meshes = UNDERSTORY_SHAPES.map((shape, i) => {
+      const geometry3 = buildUnderstoryShape(shape), pair = materials[shape.species];
+      const mesh2 = new InstancedMesh(geometry3, pair.material, F2.max);
+      mesh2.name = "forest-understory:" + shape.kind + ":" + shape.species + ":" + i;
+      mesh2.count = 0;
+      mesh2.instanceMatrix.setUsage(DynamicDrawUsage);
+      mesh2.instanceColor = new InstancedBufferAttribute(new Float32Array(F2.max * 3), 3).setUsage(DynamicDrawUsage);
+      mesh2.customDepthMaterial = pair.depth;
+      mesh2.castShadow = true;
+      mesh2.receiveShadow = true;
+      mesh2.userData.waterCaptureHidden = true;
+      mesh2.userData.weatherSurfaceExclude = true;
+      mesh2.userData.understoryShape = shape;
+      group.add(mesh2);
+      return mesh2;
+    });
+    world2.scene.add(group);
+    return true;
+  }
+  function radius() {
+    return F2.radius[world2.quality] ?? 0;
+  }
+  function chunkAt(x, z) {
+    return world2.chunks?.get(Math.floor(x / 64) + "," + Math.floor(z / 64));
+  }
+  function buildCell(ix, iz) {
+    const c2 = F2.cell, x0 = ix * c2, z0 = iz * c2, cx = x0 + c2 / 2, cz = z0 + c2 / 2, hash12 = functions.hash, height2 = functions.height;
+    const cy = height2(cx, cz);
+    if (!(cy > 1.2)) return null;
+    const cl = vegetationClimate(functions, cx, cz, cy, climate3);
+    const forest = clamp20(cl.treeDensity ?? 0, 0, 1) * (1 - cl.snow) * (1 - cl.ash * 0.85) * (1 - cl.meadow * 0.5);
+    if (forest < 0.06) return null;
+    const trees = [], margin = 8;
+    for (let kz = Math.floor((z0 - margin) / 64); kz <= Math.floor((z0 + c2 + margin) / 64); kz++) for (let kx = Math.floor((x0 - margin) / 64); kx <= Math.floor((x0 + c2 + margin) / 64); kx++) {
+      const chunk = world2.chunks?.get(kx + "," + kz);
+      if (!chunk) continue;
+      for (const t of chunk.trees || []) if (t.x > x0 - margin && t.x < x0 + c2 + margin && t.z > z0 - margin && t.z < z0 + c2 + margin && !world2.removed?.has(t.id)) trees.push(t);
+    }
+    const tint4 = tintColour.set(vegetationTint(cl, false)), tr = tint4.r, tg = tint4.g, tb = tint4.b;
+    const out2 = [], area = c2 * c2 / 100;
+    let salt = 0;
+    for (const kind of ["sapling", "thicket"]) {
+      const tries = Math.round(F2.density[kind] * area * forest * (kind === "sapling" ? 2.2 : 1.2) + hash12(x0 + 3.7, z0 - 1.3 + salt));
+      for (let k = 0; k < tries; k++, salt++) {
+        const x = x0 + hash12(x0 + salt * 0.618 + 11.3, z0 - salt * 0.382) * c2, z = z0 + hash12(x0 - salt * 1.31, z0 + salt * 0.77 - 5.1) * c2, y = height2(x, z);
+        if (!(y > 1.2) || functions.slope && functions.slope(x, z) > F2.slope) continue;
+        let gap = Infinity;
+        for (const t of trees) gap = Math.min(gap, Math.hypot(t.x - x, t.z - z) - 0.022 * t.h * (t.width ?? 1));
+        if (gap < F2.clear[kind]) continue;
+        const species = vegetationSpecies(cl, hash12(x * 0.7 + 1.9, z * 0.7 - 4.4));
+        if (kind === "sapling") {
+          const t = clamp20((gap - F2.gap[0]) / (F2.gap[1] - F2.gap[0]), 0, 1);
+          if (hash12(x * 1.3 - 2.2, z * 1.7 + 8.1) > 0.42 + 0.58 * t * t * (3 - 2 * t)) continue;
+        } else if (species === "pine" && hash12(x * 2.1, z * 1.9) > F2.pineThickets) continue;
+        const chunk = chunkAt(x, z);
+        if (!chunk || !plantPositionAllowed(world2, chunk, x, z, kind === "thicket" ? 0.55 : 0.3)) continue;
+        const list = kind === "thicket" ? F2.heights.thicket : F2.heights[species], base = kind === "thicket" ? F2.heights.broadleaf.length + F2.heights.pine.length : species === "pine" ? F2.heights.broadleaf.length : 0;
+        const shape = base + Math.min(list.length - 1, Math.floor(hash12(x * 3.1 + 7, z * 2.3 - 3) * list.length));
+        const s = F2.scale[0] + (F2.scale[1] - F2.scale[0]) * hash12(x * 1.1 - 9, z * 1.9 + 2);
+        axis2.set(hash12(x - 4.4, z + 2.2) - 0.5, 0, hash12(x + 6.1, z - 7.3) - 0.5).normalize();
+        tilt.setFromAxisAngle(axis2, (hash12(x * 0.3, z * 0.3) - 0.5) * (kind === "thicket" ? 0.08 : 0.14));
+        q.setFromAxisAngle(upY, hash12(x * 5.7, z * 3.1) * TAU12).premultiply(tilt);
+        pos2.set(x, y - 0.04, z);
+        scale5.setScalar(s);
+        m.compose(pos2, q, scale5);
+        const leaf = F2.tint[kind === "thicket" ? "thicket" : species], tone = 0.88 + 0.24 * hash12(x * 9.3, z * 7.7);
+        out2.push({ shape, matrix: Float32Array.from(m.elements), colour: [leaf[0] * tone * tr, leaf[1] * tone * tg, leaf[2] * tone * tb], kind });
+      }
+    }
+    return out2.length ? out2 : null;
+  }
+  function assemble() {
+    const counts = new Array(meshes.length).fill(0);
+    let saplings = 0, thickets = 0;
+    for (const cell of cells.values()) for (const p of cell.plants || []) {
+      const mesh2 = meshes[p.shape], i = counts[p.shape];
+      if (i >= F2.max) continue;
+      mesh2.instanceMatrix.array.set(p.matrix, i * 16);
+      mesh2.instanceColor.array.set(p.colour, i * 3);
+      counts[p.shape]++;
+      if (p.kind === "thicket") thickets++;
+      else saplings++;
+    }
+    meshes.forEach((mesh2, k) => {
+      mesh2.count = counts[k];
+      for (const attribute of [mesh2.instanceMatrix, mesh2.instanceColor]) {
+        attribute.clearUpdateRanges();
+        attribute.addUpdateRange(0, counts[k] * attribute.itemSize);
+        attribute.needsUpdate = true;
+      }
+      mesh2.visible = counts[k] > 0;
+      if (counts[k]) mesh2.computeBoundingSphere();
+    });
+    Object.assign(stats, { plants: saplings + thickets, saplings, thickets });
+  }
+  function update(dt, player) {
+    const r = enabled && !world2.inDungeon ? radius() : 0;
+    if (group) group.visible = r > 0;
+    if (!(r > 0) || !player || !ready()) return;
+    uniforms.reach.value = r;
+    uniforms.eye.value.set(player.x, player.y ?? 0, player.z);
+    const c2 = F2.cell, started = performance.now();
+    if (plan.plan(player, r, dt, again)) {
+      again = false;
+      for (const [key3, cell] of cells) if (Math.hypot(cell.cx - player.x, cell.cz - player.z) > r + c2) {
+        cells.delete(key3);
+        dirty = true;
+      }
+    }
+    for (let made = 0; made < F2.cellsPerFrame; made++) {
+      const next = plan.take(has, groundReady);
+      if (!next) break;
+      cells.set(next.key, { cx: (next.ix + 0.5) * c2, cz: (next.iz + 0.5) * c2, plants: buildCell(next.ix, next.iz) });
+      dirty = true;
+      stats.built++;
+    }
+    if (dirty) {
+      assemble();
+      dirty = false;
+    }
+    stats.cells = cells.size;
+    stats.lastMs = +(performance.now() - started).toFixed(2);
+    stats.maxMs = Math.max(stats.maxMs, stats.lastMs);
+  }
+  function perches(x, z, r) {
+    const out2 = [];
+    for (const cell of cells.values()) {
+      if (Math.abs(cell.cx - x) > r + F2.cell || Math.abs(cell.cz - z) > r + F2.cell) continue;
+      for (const plant of cell.plants || []) {
+        const e = plant.matrix, shape = UNDERSTORY_SHAPES[plant.shape];
+        if (Math.hypot(e[12] - x, e[14] - z) > r) continue;
+        const h = shape.height * (shape.kind === "thicket" ? 0.9 : 0.97);
+        out2.push({ x: e[12] + e[4] * h, y: e[13] + e[5] * h, z: e[14] + e[6] * h, kind: shape.kind });
+      }
+    }
+    return out2;
+  }
+  const plan = nearCells(F2.cell), has = (key3) => cells.has(key3);
+  const groundReady = (ix, iz) => {
+    const c2 = F2.cell, chunk = chunkAt(ix * c2, iz * c2);
+    return !!chunk && !chunk.preparing && !!chunkAt(ix * c2 + c2 - 0.01, iz * c2 + c2 - 0.01);
+  };
+  let again = false;
+  function invalidate(x, z, reach = 8) {
+    for (const [key3, cell] of cells) if (Math.abs(cell.cx - x) < reach + F2.cell && Math.abs(cell.cz - z) < reach + F2.cell) cells.delete(key3);
+    dirty = true;
+    again = true;
+  }
+  function setEnabled(value) {
+    enabled = !!value;
+    if (!enabled && group) group.visible = false;
+  }
+  function dispose() {
+    if (group) world2.scene.remove(group);
+    for (const mesh2 of meshes || []) {
+      mesh2.geometry.dispose();
+      mesh2.dispose();
+    }
+    for (const pair of Object.values(materials || {})) {
+      pair.material.dispose();
+      pair.depth.dispose();
+    }
+    cells.clear();
+    meshes = null;
+    group = null;
+  }
+  return { update, invalidate, perches, setEnabled, dispose, stats: () => ({ ...stats }), get group() {
+    return group;
+  }, get meshes() {
+    return meshes;
+  } };
+}
+
+// forest-life.js
+var FOREST_LIFE = Object.freeze({
+  revision: "forest-life-v1",
+  // Butterflies: how many at most, where they appear (m from the player),
+  // how far before they are placed anew, wingspan (m), flying speed (m/s),
+  // height over the ground (m), wing beats a second, how far they roam from
+  // where they appeared (m), the share of their flights that end in a rest
+  // on the ground, and how long they rest (s).
+  butterfly: Object.freeze({ count: 16, spawn: Object.freeze([6, 22]), keep: 32, wingspan: Object.freeze([0.07, 0.095]), speed: Object.freeze([1.1, 2.1]), height: Object.freeze([0.3, 2]), beats: Object.freeze([7, 11]), roam: 6, restShare: 0.22, rest: Object.freeze([2, 7]) }),
+  // Small birds: how many, in groups of, where they appear, scale, the
+  // player's distance that flushes them (walking, running), flying speed,
+  // seconds perched before they come down again or hidden in a crown.
+  bird: Object.freeze({ count: 9, group: Object.freeze([2, 4]), spawn: Object.freeze([8, 24]), keep: 32, flush: Object.freeze([4.5, 8]), speed: Object.freeze([6, 8.5]), perch: Object.freeze([5, 14]), hidden: Object.freeze([12, 30]) }),
+  // Squirrels: how many, where they appear, the player's distance that sends
+  // them up a tree (walking, running), running and climbing speeds (m/s), how
+  // long they cling before coming down (s), how high they climb (m).
+  squirrel: Object.freeze({ count: 3, spawn: Object.freeze([9, 26]), keep: 38, flee: Object.freeze([6, 10]), run: Object.freeze([2.2, 4.6]), climb: 1.6, cling: Object.freeze([7, 15]), height: Object.freeze([2.6, 7]) }),
+  // Meeting them (v96.1): the share of new ones placed ahead of the player
+  // (within `cone` radians of where the player looks), the nearest a new one
+  // may appear in plain view (m), how far behind the player (out of view) one
+  // is let go to be placed anew ahead, and a new try every `every` s (bird
+  // groups every try there is room, squirrels every other).
+  ahead: 0.75,
+  cone: 1.3,
+  inView: Object.freeze({ butterfly: 10, bird: 14, squirrel: 15 }),
+  behind: 16,
+  every: 0.35,
+  squirrelTry: 0.5,
+  // The daylight they need (the sky's 0..1) and the rain that keeps them away.
+  daylight: 0.3,
+  rain: 0.22
+});
+var L = FOREST_LIFE;
+var TAU13 = Math.PI * 2;
+var clamp21 = (v, a, b) => Math.max(a, Math.min(b, v));
+var mix6 = (a, b, t) => a + (b - a) * t;
+var smooth14 = (a, b, x) => {
+  const t = clamp21((x - a) / (b - a), 0, 1);
+  return t * t * (3 - 2 * t);
+};
+var f8 = (v) => Number(v).toFixed(4);
+var vec32 = (c2) => `vec3(${c2.map(f8).join(",")})`;
+function angleTo(from, to) {
+  let d = (to - from) % TAU13;
+  if (d > Math.PI) d -= TAU13;
+  if (d < -Math.PI) d += TAU13;
+  return d;
+}
+function geometryFrom(attributes, index2) {
+  const g = new BufferGeometry();
+  for (const [name, [array, size]] of Object.entries(attributes)) g.setAttribute(name, new Float32BufferAttribute(array, size));
+  g.setIndex(index2);
+  g.computeBoundingSphere();
+  return g;
+}
+function ellipsoid(vertex3, index2, centre, radii, rings2, sides, extra = () => {
+}) {
+  const start2 = vertex3.count();
+  for (let i = 0; i <= rings2; i++) {
+    const theta = i / rings2 * Math.PI;
+    for (let j = 0; j <= sides; j++) {
+      const phi = j / sides * TAU13, s = [Math.sin(theta) * Math.cos(phi), Math.sin(theta) * Math.sin(phi), Math.cos(theta)];
+      const p = [centre[0] + radii[0] * s[0], centre[1] + radii[1] * s[1], centre[2] + radii[2] * s[2]];
+      const n = [s[0] / radii[0], s[1] / radii[1], s[2] / radii[2]], l = Math.hypot(...n);
+      vertex3.add(p, [n[0] / l, n[1] / l, n[2] / l], extra(p, s));
+    }
+  }
+  for (let i = 0; i < rings2; i++) for (let j = 0; j < sides; j++) {
+    const a = start2 + i * (sides + 1) + j, b = a + sides + 1;
+    index2.push(a, b, a + 1, a + 1, b, b + 1);
+  }
+}
+function butterflyGeometry() {
+  const position3 = [], normal4 = [], uv = [], wing = [], index2 = [];
+  const v = (p, n, u, w) => {
+    position3.push(...p);
+    normal4.push(...n);
+    uv.push(...u);
+    wing.push(w);
+    return position3.length / 3 - 1;
+  };
+  for (const side2 of [1, -1]) {
+    const a = v([0, 0, -0.5], [0, 1, 0], [0, 0], side2), b = v([side2, 0, -0.5], [0, 1, 0], [1, 0], side2), c2 = v([side2, 0, 0.5], [0, 1, 0], [1, 1], side2), d = v([0, 0, 0.5], [0, 1, 0], [0, 1], side2);
+    if (side2 > 0) index2.push(a, c2, b, a, d, c2);
+    else index2.push(a, b, c2, a, c2, d);
+  }
+  for (const [ax, ay] of [[1, 0], [0, 1]]) {
+    const w = 0.05, a = v([-ax * w, -ay * w, -0.48], [ay, ax, 0], [2, 0], 0), b = v([ax * w, ay * w, -0.48], [ay, ax, 0], [2, 0], 0), c2 = v([ax * w, ay * w, 0.34], [ay, ax, 0], [2, 1], 0), d = v([-ax * w, -ay * w, 0.34], [ay, ax, 0], [2, 1], 0);
+    if (ax) index2.push(a, c2, b, a, d, c2);
+    else index2.push(a, b, c2, a, c2, d);
+  }
+  const g = geometryFrom({ position: [position3, 3], normal: [normal4, 3], uv: [uv, 2], wing: [wing, 1] }, index2);
+  g.boundingSphere = new Sphere(new Vector3(), 1.3);
+  return g;
+}
+var BUTTERFLY_KINDS = Object.freeze(["white", "yellow", "orange", "blue", "peacock"]);
+var BUTTERFLY_SHARE = [0.32, 0.2, 0.2, 0.16, 0.12];
+var BUTTERFLY_GLSL = `
+ vec3 butterflyColour(float kind,vec2 q,float rim,inout float cut){
+  // Fore wing: a tilted oval toward the head and the tip; hind wing: a rounder one behind.
+  vec2 a=mat2(.94,.34,-.34,.94)*(q-vec2(.47,.64));float fore=length(a/vec2(.55,.34));
+  float hind=length((q-vec2(.36,.3))/vec2(.4,.3));
+  float shape=min(fore,hind);cut=shape;
+  bool front=fore<hind;
+  vec3 c;
+  if(kind<.5){c=front?vec3(.86,.86,.78):vec3(.9,.88,.72);if(front&&q.x>.66&&q.y>.62)c=vec3(.05);if(front&&length(q-vec2(.55,.58))<.05)c=vec3(.05);}
+  else if(kind<1.5){c=vec3(.9,.78,.12);if(length(q-vec2(.5,.56))<.035||length(q-vec2(.42,.28))<.03)c=vec3(.75,.32,.04);}
+  else if(kind<2.5){c=vec3(.82,.3,.04);if(length(q-vec2(.36,.64))<.07||length(q-vec2(.58,.74))<.06||length(q-vec2(.3,.3))<.07)c=vec3(.04,.03,.02);if(shape>.8)c=vec3(.05,.04,.03);if(front&&length(q-vec2(.8,.78))<.04)c=vec3(.9);if(!front&&shape>.8&&fract(q.x*9.)<.4)c=vec3(.15,.3,.75);}
+  else if(kind<3.5){c=mix(vec3(.24,.42,.95),vec3(.5,.6,.95),q.x*.5);if(shape>.9)c=vec3(.9);if(q.x<.12)c*=.6;}
+  else{c=vec3(.42,.07,.04);float e=length(q-vec2(.74,.74));if(e<.12)c=vec3(.85,.65,.2);if(e<.08)c=vec3(.2,.28,.75);if(e<.04)c=vec3(.02);float h=length(q-vec2(.42,.24));if(h<.11)c=vec3(.03);if(h<.07)c=vec3(.25,.35,.8);if(shape>.88)c=vec3(.08,.05,.04);}
+  return c*(.9+.1*rim);
+ }
+`;
+function butterflyMaterial() {
+  const material2 = new MeshStandardMaterial({ color: 16777215, roughness: 0.62, metalness: 0, side: DoubleSide });
+  material2.name = "forest-life:butterfly";
+  material2.onBeforeCompile = (shader) => {
+    shader.vertexShader = "attribute float wing;attribute float flap;attribute float kind;varying vec2 vWingUv;varying float vWingSide;varying float vWingKind;\n" + shader.vertexShader.replace("#include <beginnormal_vertex>", "#include <beginnormal_vertex>\n if(wing!=0.)objectNormal=vec3(-wing*sin(flap),cos(flap),0.);").replace("#include <begin_vertex>", "#include <begin_vertex>\n if(wing!=0.)transformed=vec3(transformed.x*cos(flap),transformed.y+abs(transformed.x)*sin(flap),transformed.z);\n vWingUv=uv;vWingSide=wing;vWingKind=kind;");
+    shader.fragmentShader = "varying vec2 vWingUv;varying float vWingSide;varying float vWingKind;\n" + BUTTERFLY_GLSL + shader.fragmentShader.replace("#include <map_fragment>", `#include <map_fragment>
+ if(vWingUv.x>1.5)diffuseColor.rgb=vec3(.05,.04,.035);
+ else{float cut;diffuseColor.rgb=butterflyColour(vWingKind,vWingUv,smoothstep(0.,.3,vWingUv.x),cut);if(cut>1.)discard;}`);
+  };
+  material2.customProgramCacheKey = () => L.revision + ":butterfly";
+  return material2;
+}
+var SHOULDER2 = Object.freeze([0.022, 0.066, 4e-3]);
+function birdGeometry() {
+  const position3 = [], normal4 = [], part2 = [], wing = [], detail = [], index2 = [];
+  const vertex3 = { add: (p, n, e) => {
+    position3.push(...p);
+    normal4.push(...n);
+    part2.push(e[0]);
+    wing.push(e[1] ?? 0);
+    detail.push(e[2] ?? 0, e[3] ?? 0);
+    return position3.length / 3 - 1;
+  }, count: () => position3.length / 3 };
+  ellipsoid(vertex3, index2, [0, 0.052, 0], [0.026, 0.028, 0.052], 6, 8, () => [0]);
+  ellipsoid(vertex3, index2, [0, 0.081, 0.046], [0.019, 0.019, 0.021], 5, 8, () => [2]);
+  {
+    const tip = vertex3.add([0, 0.077, 0.078], [0, 0, 1], [3]), r = 55e-4, base = [[r, 0.081], [-r, 0.081], [-r, 0.073], [r, 0.073]].map(([x, y]) => vertex3.add([x, y, 0.064], [Math.sign(x), (y - 0.077) * 100, 0.3], [3]));
+    for (let k = 0; k < 4; k++) index2.push(base[k], base[(k + 1) % 4], tip);
+  }
+  for (const s of [1, -1]) {
+    const a = vertex3.add([s * 9e-3, 0.028, 2e-3], [s, 0, 0], [3]), b = vertex3.add([s * 9e-3, 0.028, -4e-3], [s, 0, 0], [3]), c2 = vertex3.add([s * 8e-3, 0, 6e-3], [s, 0, 0], [3]), d = vertex3.add([s * 8e-3, 0, -2e-3], [s, 0, 0], [3]);
+    if (s > 0) index2.push(a, c2, b, b, c2, d);
+    else index2.push(a, b, c2, b, d, c2);
+  }
+  {
+    const a = vertex3.add([0.011, 0.055, -0.042], [0, 1, 0], [5, 0, 0, 0]), b = vertex3.add([-0.011, 0.055, -0.042], [0, 1, 0], [5, 0, 1, 0]), c2 = vertex3.add([0.017, 0.066, -0.102], [0, 1, 0], [5, 0, 0, 1]), d = vertex3.add([-0.017, 0.066, -0.102], [0, 1, 0], [5, 0, 1, 1]);
+    index2.push(a, c2, b, b, c2, d);
+  }
+  for (const s of [1, -1]) {
+    const outline = [[0, 0.022], [0.03, 0.028], [0.06, 0.022], [0.085, 6e-3], [0.095, -0.014], [0.085, -0.03], [0.06, -0.036], [0.03, -0.034], [0, -0.03]];
+    const centre = vertex3.add([s * SHOULDER2[0] + s * 0.045, SHOULDER2[1], -4e-3], [0, 1, 0], [4, s, 0.47, 0.5]), ring2 = outline.map(([x, z]) => vertex3.add([s * (SHOULDER2[0] + x), SHOULDER2[1], z], [0, 1, 0], [4, s, x / 0.095, (z + 0.036) / 0.064]));
+    const tri = (a, b, c2) => s > 0 ? index2.push(a, b, c2) : index2.push(a, c2, b);
+    for (let k = 0; k < ring2.length - 1; k++) tri(centre, ring2[k], ring2[k + 1]);
+    tri(centre, ring2.at(-1), ring2[0]);
+  }
+  const g = geometryFrom({ position: [position3, 3], normal: [normal4, 3], part: [part2, 1], wing: [wing, 1], detail: [detail, 2] }, index2);
+  g.boundingSphere = new Sphere(new Vector3(0, 0.05, 0), 0.16);
+  return g;
+}
+var BIRD_KINDS = Object.freeze(["sparrow", "robin", "bluetit", "chaffinch"]);
+var BIRD_SCALE = [1, 1.04, 0.86, 1.06];
+var BIRD_PALETTE = [
+  [[0.16, 0.09, 0.04], [0.3, 0.28, 0.25], [0.42, 0.4, 0.36], [0.2, 0.19, 0.19], [0.2, 0.12, 0.06], [0.44, 0.42, 0.38], [0.03, 0.03, 0.03], [0.17, 0.09, 0.04], [0.07, 0.045, 0.03], [0.12, 0.08, 0.05], [0.25, 0.2, 0.15]],
+  [[0.17, 0.13, 0.06], [0.62, 0.18, 0.03], [0.58, 0.55, 0.5], [0.17, 0.13, 0.06], [0.62, 0.18, 0.03], [0.62, 0.18, 0.03], [0.62, 0.18, 0.03], [0.15, 0.11, 0.05], [0.09, 0.07, 0.04], [0.14, 0.1, 0.05], [0.04, 0.03, 0.03]],
+  [[0.22, 0.33, 0.12], [0.72, 0.62, 0.06], [0.7, 0.62, 0.1], [0.06, 0.2, 0.66], [0.86, 0.86, 0.82], [0.86, 0.86, 0.82], [0.04, 0.05, 0.12], [0.1, 0.25, 0.62], [0.05, 0.1, 0.32], [0.08, 0.2, 0.52], [0.05, 0.05, 0.05]],
+  [[0.25, 0.15, 0.08], [0.52, 0.26, 0.18], [0.56, 0.42, 0.36], [0.15, 0.2, 0.3], [0.15, 0.2, 0.3], [0.52, 0.26, 0.18], [0.52, 0.26, 0.18], [0.06, 0.06, 0.06], [0.03, 0.03, 0.03], [0.06, 0.06, 0.06], [0.35, 0.35, 0.4]]
+];
+var BIRD_GLSL = `
+ vec3 birdPick(float kind,int k){
+  ${BIRD_PALETTE.map((p, i) => `${i ? "else " : ""}if(kind<${i}.5){${p.map((c2, j) => `${j ? "else " : ""}if(k==${j})return ${vec32(c2)};`).join("")}}`).join("")}
+  return vec3(.2);
+ }
+ vec3 birdColour(float kind,float part,vec3 n,vec2 d){
+  if(part<.5){if(n.y<-.25)return birdPick(kind,2);if(n.z>.25&&n.y<.45)return birdPick(kind,1);return birdPick(kind,0);}
+  if(part<2.5){
+   // The eye: a dark dot each side.
+   if(abs(n.x)>.62&&n.y>-.05&&n.y<.42&&n.z>.18&&n.z<.6)return vec3(.012);
+   if(n.y>.42)return birdPick(kind,3);if(n.y<-.3)return birdPick(kind,6);if(abs(n.x)>.55)return birdPick(kind,5);return birdPick(kind,4);
+  }
+  if(part<3.5)return birdPick(kind,10);
+  if(part<4.5){vec3 c=d.x>.62?birdPick(kind,8):birdPick(kind,7);if((kind>2.5||kind<.5)&&d.x<.6&&d.y>.42&&d.y<.56)c=mix(c,vec3(.75,.73,.66),kind>2.5?1.:.6);return c;}
+  return birdPick(kind,9);
+ }
+`;
+function birdMaterial2() {
+  const material2 = new MeshStandardMaterial({ color: 16777215, roughness: 0.8, metalness: 0, side: DoubleSide });
+  material2.name = "forest-life:bird";
+  const S = `vec3(wing*${f8(SHOULDER2[0])}+wing*.004*pose.y,${f8(SHOULDER2[1])},${f8(SHOULDER2[2])})`;
+  material2.onBeforeCompile = (shader) => {
+    shader.vertexShader = `attribute float part;attribute float wing;attribute vec2 detail;attribute vec2 pose;attribute float kind;varying float vBirdPart;varying float vBirdKind;varying vec3 vBirdN;varying vec2 vBirdDetail;
+ mat3 birdRotZ(float a){float c=cos(a),s=sin(a);return mat3(c,s,0.,-s,c,0.,0.,0.,1.);}
+ mat3 birdRotY(float a){float c=cos(a),s=sin(a);return mat3(c,0.,-s,0.,1.,0.,s,0.,c);}
+` + shader.vertexShader.replace("#include <beginnormal_vertex>", `#include <beginnormal_vertex>
+ vBirdN=objectNormal;
+ if(wing!=0.)objectNormal=birdRotY(wing*pose.y*1.42)*(birdRotZ(wing*pose.x)*objectNormal);`).replace("#include <begin_vertex>", `#include <begin_vertex>
+ if(wing!=0.){vec3 S=${S};transformed=S+birdRotY(wing*pose.y*1.42)*(birdRotZ(wing*pose.x)*(transformed-S));}
+ vBirdPart=part;vBirdKind=kind;vBirdDetail=detail;`);
+    shader.fragmentShader = "varying float vBirdPart;varying float vBirdKind;varying vec3 vBirdN;varying vec2 vBirdDetail;\n" + BIRD_GLSL + shader.fragmentShader.replace("#include <map_fragment>", "#include <map_fragment>\n diffuseColor.rgb=birdColour(vBirdKind,vBirdPart,normalize(vBirdN),vBirdDetail);");
+  };
+  material2.customProgramCacheKey = () => L.revision + ":bird";
+  return material2;
+}
+var SQ = Object.freeze({ hip: Object.freeze([0, 0.045, -0.075]), neck: Object.freeze([0, 0.1, 0.085]), tailBase: Object.freeze([0, 0.075, -0.098]), shoulder: Object.freeze([0, 0.07, 0.06]), hipJoint: Object.freeze([0, 0.075, -0.045]) });
+var SQ_BACK = [0.3, 0.095, 0.03];
+var SQ_BELLY = [0.72, 0.64, 0.5];
+function colouredBuilder() {
+  const position3 = [], normal4 = [], color3 = [], index2 = [];
+  const vertex3 = { add: (p, n, c2) => {
+    position3.push(...p);
+    normal4.push(...n);
+    color3.push(...c2);
+    return position3.length / 3 - 1;
+  }, count: () => position3.length / 3 };
+  return { vertex: vertex3, index: index2, finish: () => geometryFrom({ position: [position3, 3], normal: [normal4, 3], color: [color3, 3] }, index2) };
+}
+var furColour = (p, s) => {
+  const belly = smooth14(0.1, -0.45, s[1]) * (s[2] > -0.2 ? 1 : 0.4);
+  return SQ_BACK.map((c2, k) => mix6(c2, SQ_BELLY[k], belly) * (0.9 + 0.2 * Math.sin(p[0] * 300 + p[2] * 170)));
+};
+function squirrelBody() {
+  const b = colouredBuilder();
+  ellipsoid(b.vertex, b.index, [0, 0.078, -5e-3], [0.04, 0.043, 0.1], 7, 8, furColour);
+  return b.finish();
+}
+function squirrelHead() {
+  const b = colouredBuilder();
+  ellipsoid(b.vertex, b.index, [0, 0.114, 0.118], [0.029, 0.03, 0.038], 6, 8, (p, s) => {
+    const eye = Math.abs(s[0]) > 0.55 && s[1] > -0.05 && s[1] < 0.45 && s[2] > 0.2 && s[2] < 0.62;
+    return eye ? [0.01, 8e-3, 6e-3] : s[2] > 0.93 ? [0.05, 0.03, 0.02] : furColour(p, s);
+  });
+  for (const side2 of [1, -1]) {
+    const tip = b.vertex.add([side2 * 0.017, 0.158, 0.104], [side2 * 0.3, 1, -0.2], [0.2, 0.06, 0.02]), r = 8e-3;
+    const base = [0, 1, 2, 3].map((k) => {
+      const a = k / 4 * TAU13;
+      return b.vertex.add([side2 * 0.016 + Math.cos(a) * r, 0.136, 0.108 + Math.sin(a) * r], [Math.cos(a), 0.3, Math.sin(a)], SQ_BACK);
+    });
+    for (let k = 0; k < 4; k++) b.index.push(base[(k + 1) % 4], base[k], tip);
+  }
+  return b.finish();
+}
+function squirrelLegs(front) {
+  const b = colouredBuilder();
+  for (const side2 of [1, -1]) {
+    const x = side2 * (front ? 0.022 : 0.03);
+    if (front) ellipsoid(b.vertex, b.index, [x, 0.04, 0.066], [9e-3, 0.034, 0.011], 4, 6, () => SQ_BACK);
+    else {
+      ellipsoid(b.vertex, b.index, [x, 0.058, -0.045], [0.016, 0.032, 0.03], 4, 6, furColour);
+      ellipsoid(b.vertex, b.index, [x, 9e-3, -0.02], [9e-3, 8e-3, 0.036], 3, 6, () => SQ_BACK);
+    }
+  }
+  return b.finish();
+}
+function squirrelTail() {
+  const position3 = [], normal4 = [], uv = [], index2 = [];
+  const curve = [[0, 0.075, -0.098], [0, 0.1, -0.2], [0, 0.24, -0.24], [0, 0.33, -0.12]], at = (t) => {
+    const s = 1 - t;
+    return [0, 1, 2].map((k) => curve[0][k] * s * s * s + 3 * curve[1][k] * s * s * t + 3 * curve[2][k] * s * t * t + curve[3][k] * t * t * t);
+  };
+  const steps = 10, width = (t) => 0.018 + 0.05 * Math.sin(Math.PI * Math.min(1, t * 1.25 + 0.05)) ** 0.7;
+  for (let r = 0; r < 3; r++) {
+    const roll = r / 3 * Math.PI, start2 = position3.length / 3;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps, p = at(t), q = at(Math.min(1, t + 0.02)), p0 = at(Math.max(0, t - 0.02));
+      const tan = [q[0] - p0[0], q[1] - p0[1], q[2] - p0[2]], l = Math.hypot(...tan), T = tan.map((v) => v / l);
+      const side2 = [1, 0, 0], up7 = [T[1] * side2[2] - T[2] * side2[1], T[2] * side2[0] - T[0] * side2[2], T[0] * side2[1] - T[1] * side2[0]];
+      const across2 = side2.map((v, k) => v * Math.cos(roll) + up7[k] * Math.sin(roll)), w = width(t);
+      const n = [across2[1] * T[2] - across2[2] * T[1], across2[2] * T[0] - across2[0] * T[2], across2[0] * T[1] - across2[1] * T[0]], nl = Math.hypot(...n) || 1;
+      for (const u of [-1, 1]) {
+        position3.push(p[0] + across2[0] * w * u, p[1] + across2[1] * w * u, p[2] + across2[2] * w * u);
+        normal4.push(n[0] / nl, n[1] / nl, n[2] / nl);
+        uv.push(u, t);
+      }
+    }
+    for (let i = 0; i < steps; i++) {
+      const a = start2 + i * 2;
+      index2.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+    }
+  }
+  return geometryFrom({ position: [position3, 3], normal: [normal4, 3], uv: [uv, 2] }, index2);
+}
+function squirrelMaterials() {
+  const fur = new MeshStandardMaterial({ color: 16777215, vertexColors: true, roughness: 0.9, metalness: 0 });
+  fur.name = "forest-life:squirrel";
+  const tail = new MeshStandardMaterial({ color: 16777215, roughness: 0.95, metalness: 0, side: DoubleSide });
+  tail.name = "forest-life:squirrel-tail";
+  tail.onBeforeCompile = (shader) => {
+    shader.vertexShader = "varying vec2 vTailUv;\n" + shader.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n vTailUv=uv;");
+    shader.fragmentShader = "varying vec2 vTailUv;\n" + shader.fragmentShader.replace("#include <map_fragment>", `#include <map_fragment>
+ {float hair=fract(sin(floor(vTailUv.y*70.+abs(vTailUv.x)*3.)*91.7+floor(abs(vTailUv.x)*9.)*13.1)*4375.85);
+  float edge=abs(vTailUv.x);if(edge>.62+.38*hair)discard;
+  diffuseColor.rgb=mix(${vec32(SQ_BACK)}*(.85+.3*hair),vec3(.55,.42,.3),smoothstep(.75,1.,edge)*hair);}`);
+  };
+  tail.customProgramCacheKey = () => L.revision + ":squirrel-tail";
+  return { fur, tail };
+}
+function random3(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = a + 1831565813 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function createForestLife(world2, { seed = 1 } = {}) {
+  const functions = world2.terrainFunctions, climate3 = {}, rnd = random3(seed * 977 + 13);
+  const B = L.butterfly, BD = L.bird, SQR = L.squirrel;
+  const group = new Group();
+  group.name = "forest-life";
+  const stats = { butterflies: 0, birds: 0, squirrels: 0, flushes: 0, climbs: 0, spawns: 0 };
+  let events = {}, enabled = true, time = 0, spawnClock = 0;
+  const m = new Matrix4(), q = new Quaternion(), e = new Euler(0, 0, 0, "YXZ"), p = new Vector3(), s = new Vector3();
+  const soundPoint = new Vector3();
+  function sound2(name, x, y, z, gain = 1, range = 40) {
+    soundPoint.set(x, y, z);
+    events.sound?.(name, { position: soundPoint, gain, range, refDistance: 5 });
+  }
+  function instanced(geometry3, material2, count, attributes = {}) {
+    const mesh2 = new InstancedMesh(geometry3, material2, count);
+    mesh2.count = 0;
+    mesh2.frustumCulled = false;
+    mesh2.instanceMatrix.setUsage(DynamicDrawUsage);
+    for (const [name, size] of Object.entries(attributes)) geometry3.setAttribute(name, new InstancedBufferAttribute(new Float32Array(count * size), size).setUsage(DynamicDrawUsage));
+    mesh2.userData.waterCaptureHidden = true;
+    mesh2.userData.weatherSurfaceExclude = true;
+    mesh2.receiveShadow = true;
+    group.add(mesh2);
+    return mesh2;
+  }
+  const butterflyMesh = instanced(butterflyGeometry(), butterflyMaterial(), B.count, { flap: 1, kind: 1 });
+  butterflyMesh.name = "forest-life:butterflies";
+  const birdMesh = instanced(birdGeometry(), birdMaterial2(), BD.count, { pose: 2, kind: 1 });
+  birdMesh.name = "forest-life:birds";
+  const squirrelMats = squirrelMaterials();
+  const sqParts = { body: instanced(squirrelBody(), squirrelMats.fur, SQR.count), head: instanced(squirrelHead(), squirrelMats.fur, SQR.count), tail: instanced(squirrelTail(), squirrelMats.tail, SQR.count), front: instanced(squirrelLegs(true), squirrelMats.fur, SQR.count), hind: instanced(squirrelLegs(false), squirrelMats.fur, SQR.count) };
+  for (const [name, mesh2] of Object.entries(sqParts)) {
+    mesh2.name = "forest-life:squirrel-" + name;
+    mesh2.castShadow = true;
+  }
+  world2.scene.add(group);
+  const ground = (x, z) => functions.height(x, z);
+  function dryLand(x, z, y = ground(x, z)) {
+    return y > 1 && !world2.hydrology?.waterAt?.(x, z, y);
+  }
+  function climateAt(x, z, y) {
+    return vegetationClimate(functions, x, z, y, climate3);
+  }
+  function treesNear(x, z, r, out2 = []) {
+    out2.length = 0;
+    for (let kz = Math.floor((z - r) / 64); kz <= Math.floor((z + r) / 64); kz++) for (let kx = Math.floor((x - r) / 64); kx <= Math.floor((x + r) / 64); kx++) {
+      const chunk = world2.chunks?.get(kx + "," + kz);
+      if (!chunk || chunk.preparing) continue;
+      for (const t of chunk.trees || []) if (!world2.removed?.has(t.id) && Math.abs(t.x - x) < r && Math.abs(t.z - z) < r && Math.hypot(t.x - x, t.z - z) < r) out2.push(t);
+    }
+    return out2;
+  }
+  const nearTrees = [];
+  function trunkOf(tree) {
+    const info = world2.proceduralTrees?.info?.(tree.id), edge2 = info?.family?.rootProfile;
+    if (edge2?.p && info.matrix) {
+      const mm = new Matrix4().fromArray(info.matrix), el2 = mm.elements, sx = Math.hypot(el2[0], el2[1], el2[2]), sy = Math.hypot(el2[4], el2[5], el2[6]);
+      const v = new Vector3();
+      return { foot: el2[13], top: tree.h * 0.62, at(h, out2) {
+        const y = h / sy;
+        let lo = 0, hi = 1;
+        for (let i = 0; i < 16; i++) {
+          const mid = (lo + hi) / 2;
+          if (curvePoint(edge2, mid)[1] < y) lo = mid;
+          else hi = mid;
+        }
+        const t = (lo + hi) / 2, c2 = curvePoint(edge2, t);
+        v.set(c2[0], c2[1], c2[2]).applyMatrix4(mm);
+        out2.x = v.x;
+        out2.y = v.y;
+        out2.z = v.z;
+        out2.r = treeRadiusAt(edge2, t) * sx * (1 + 0.5 * Math.exp(-y / 0.62)) + 0.012;
+        return out2;
+      } };
+    }
+    const foot = tree.y, r0 = 0.022 * tree.h * (tree.width ?? 1);
+    return { foot, top: tree.h * 0.6, at(h, out2) {
+      out2.x = tree.x;
+      out2.y = foot + h;
+      out2.z = tree.z;
+      out2.r = r0 * (1 - 0.55 * h / tree.h) + 0.012;
+      return out2;
+    } };
+  }
+  const conditions = { day: 0, rain: 0 };
+  function weatherNow() {
+    const day = world2.dayNight?.state?.daylight ?? 1, w = world2.weather?.state || {};
+    conditions.day = day;
+    conditions.rain = Math.max(w.rain ?? 0, w.snow ?? 0, (w.storm ?? 0) * 0.8);
+    return day > L.daylight && conditions.rain < L.rain;
+  }
+  function placeFor(player, [r0, r1], weight, tries = 6, near = 0) {
+    const forward = Math.atan2(view.z, view.x);
+    for (let k = 0; k < tries; k++) {
+      const a = view.ok && rnd() < L.ahead ? forward + (rnd() * 2 - 1) * L.cone : rnd() * TAU13;
+      const d = Math.sqrt(mix6(r0 * r0, r1 * r1, rnd())), x = player.x + Math.cos(a) * d, z = player.z + Math.sin(a) * d, y = ground(x, z);
+      if (!dryLand(x, z, y) || functions.slope && functions.slope(x, z) > 0.7) continue;
+      if (near && d < near && seen(x, y + 0.5, z)) continue;
+      const w = weight(x, z, y, climateAt(x, z, y));
+      if (w > 0 && rnd() < w) return { x, y, z };
+    }
+    return null;
+  }
+  function playerMotion() {
+    const motion = world2.player?.userData?.motion || {};
+    return { speed: motion.speed || 0, running: !!motion.sprint || (motion.speed || 0) > 4.5 };
+  }
+  const butterflies = Array.from({ length: B.count }, () => ({ active: false }));
+  const butterflyHabitat = (x, z, y, c2) => (1 - c2.snow) * (1 - c2.ash * 0.85) * (1 - c2.swamp * 0.5) * (0.22 + 0.78 * c2.meadow) * (0.3 + 0.7 * (1 - clamp21(c2.treeDensity ?? 0, 0, 1))) * smooth14(1.5, 4, y);
+  function spawnButterfly(b, player) {
+    const at = placeFor(player, B.spawn, butterflyHabitat, 6, L.inView.butterfly);
+    if (!at) return false;
+    let t = rnd(), kind = 0;
+    for (; kind < BUTTERFLY_SHARE.length - 1 && t > BUTTERFLY_SHARE[kind]; kind++) t -= BUTTERFLY_SHARE[kind];
+    Object.assign(b, { active: true, kind, hx: at.x, hz: at.z, x: at.x, y: at.y + mix6(B.height[0], B.height[1], rnd()), z: at.z, vx: 0, vy: 0, vz: 0, span: mix6(B.wingspan[0], B.wingspan[1], rnd()), speed: mix6(B.speed[0], B.speed[1], rnd()), beat: mix6(B.beats[0], B.beats[1], rnd()), phase: rnd() * TAU13, state: "fly", timer: 0, yaw: rnd() * TAU13, seed: rnd() * 100, flap: 0 });
+    pickButterflyTarget(b);
+    stats.spawns++;
+    return true;
+  }
+  function pickButterflyTarget(b) {
+    for (let k = 0; k < 5; k++) {
+      const a = rnd() * TAU13, d = rnd() * B.roam, x = b.hx + Math.cos(a) * d, z = b.hz + Math.sin(a) * d, y = ground(x, z);
+      if (!dryLand(x, z, y)) continue;
+      b.land = rnd() < B.restShare;
+      b.tx = x;
+      b.tz = z;
+      b.ty = b.land ? y + 0.03 : y + mix6(B.height[0], B.height[1], rnd());
+      return;
+    }
+    b.land = false;
+    b.tx = b.hx;
+    b.tz = b.hz;
+    b.ty = ground(b.hx, b.hz) + 1;
+  }
+  function updateButterfly(b, dt, player, fine) {
+    const dx = b.x - player.x, dz = b.z - player.z, d = Math.hypot(dx, dz);
+    if (d > B.keep || !fine && d > 18 || leftBehind(b.x, b.y, b.z, player, d)) {
+      b.active = false;
+      return;
+    }
+    if (b.state === "rest") {
+      b.timer -= dt;
+      b.flap = b.kind === 2 || b.kind === 4 ? 0.08 + 0.5 * (0.5 + 0.5 * Math.sin(time * 1.3 + b.seed)) : 1.25 + 0.3 * Math.sin(time * 1.7 + b.seed);
+      if (b.timer < 0 && fine || d < 2.2) {
+        b.state = "fly";
+        b.vy = 1.2;
+        pickButterflyTarget(b);
+        if (d < 2.2) {
+          b.tx = b.x + dx / d * 4;
+          b.tz = b.z + dz / d * 4;
+          b.ty = ground(b.tx, b.tz) + 1.5;
+          b.land = false;
+        }
+      }
+    } else {
+      if (!fine && !b.land) {
+        b.land = true;
+        b.tx = b.x + (rnd() - 0.5);
+        b.tz = b.z + (rnd() - 0.5);
+        b.ty = ground(b.tx, b.tz) + 0.03;
+      }
+      const tx = b.tx - b.x, ty = b.ty - b.y, tz = b.tz - b.z, td = Math.hypot(tx, ty, tz);
+      if (td < (b.land ? 0.12 : 0.5)) {
+        if (b.land) {
+          b.state = "rest";
+          b.timer = mix6(B.rest[0], B.rest[1], rnd());
+          b.y = b.ty;
+          b.vx = b.vy = b.vz = 0;
+        } else pickButterflyTarget(b);
+      } else {
+        const wander = Math.sin(time * 1.9 + b.seed) * 0.9 + Math.sin(time * 3.7 + b.seed * 2.3) * 0.5, c2 = Math.cos(wander), sn = Math.sin(wander);
+        const hx = tx / td, hz = tz / td, sp = b.speed * (b.land ? clamp21(td / 1.5, 0.35, 1) : 1);
+        const wx = hx * c2 - hz * sn, wz = hx * sn + hz * c2, wy = ty / td * 0.8 + Math.sin(time * 5.3 + b.seed) * 0.35;
+        const k = Math.min(1, dt * 2.4);
+        b.vx += (wx * sp - b.vx) * k;
+        b.vz += (wz * sp - b.vz) * k;
+        b.vy += (wy * sp - b.vy) * k;
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.z += b.vz * dt;
+        const floor = ground(b.x, b.z) + 0.12;
+        if (b.y < floor) {
+          b.y = floor;
+          b.vy = Math.abs(b.vy) * 0.5;
+        }
+        b.yaw += angleTo(b.yaw, Math.atan2(b.vx, b.vz)) * Math.min(1, dt * 8);
+      }
+      b.phase += dt * b.beat * TAU13 * (b.land && td < 0.5 ? 0.7 : 1);
+      b.flap = Math.sin(time * 0.9 + b.seed) > 0.93 ? 0.55 : 0.25 + 1.05 * Math.sin(b.phase);
+    }
+    b.bob = b.state === "fly" ? 0.012 * Math.sin(b.phase + 1.4) : 0;
+  }
+  function drawButterflies() {
+    let n = 0;
+    const flap = butterflyMesh.geometry.attributes.flap, kind = butterflyMesh.geometry.attributes.kind;
+    for (const b of butterflies) {
+      if (!b.active) continue;
+      const pitch2 = b.state === "fly" ? clamp21(-Math.atan2(b.vy, Math.hypot(b.vx, b.vz) + 0.3), -0.6, 0.6) * 0.6 : 0;
+      e.set(pitch2, b.yaw, 0);
+      q.setFromEuler(e);
+      p.set(b.x, b.y + b.bob, b.z);
+      s.set(b.span / 2, b.span / 2, b.span * 0.62);
+      m.compose(p, q, s);
+      butterflyMesh.setMatrixAt(n, m);
+      flap.array[n] = b.flap;
+      kind.array[n] = b.kind;
+      n++;
+    }
+    butterflyMesh.count = n;
+    stats.butterflies = n;
+    if (n) {
+      butterflyMesh.instanceMatrix.needsUpdate = true;
+      flap.needsUpdate = true;
+      kind.needsUpdate = true;
+    }
+  }
+  const birds = Array.from({ length: BD.count }, () => ({ active: false }));
+  const birdHabitat = (x, z, y, c2) => (1 - c2.snow * 0.9) * (1 - c2.ash * 0.85) * (0.35 + 0.65 * smooth14(0.15, 0.6, c2.treeDensity ?? 0)) * (1 - c2.swamp * 0.3) * smooth14(1.5, 3, y);
+  function spawnBirds(player) {
+    const free = birds.filter((b) => !b.active);
+    if (free.length < BD.group[0]) return;
+    const at = placeFor(player, BD.spawn, birdHabitat, 6, L.inView.bird);
+    if (!at) return;
+    const kind = Math.floor(rnd() * BIRD_KINDS.length), n = Math.min(free.length, BD.group[0] + Math.floor(rnd() * (BD.group[1] - BD.group[0] + 1)));
+    for (let k = 0; k < n; k++) {
+      const a = rnd() * TAU13, d = rnd() * 2.2, x = at.x + Math.cos(a) * d, z = at.z + Math.sin(a) * d, y = ground(x, z);
+      if (!dryLand(x, z, y)) continue;
+      Object.assign(free[k], { active: true, kind: rnd() < 0.8 ? kind : Math.floor(rnd() * BIRD_KINDS.length), x, y, z, yaw: rnd() * TAU13, pitch: 0, state: "ground", timer: rnd() * 0.8, hop: null, flap: -0.2, fold: 1, wingPhase: rnd() * TAU13, seed: rnd() * 100, flock: at });
+      stats.spawns++;
+    }
+  }
+  function birdPerch(b, player) {
+    const away = Math.atan2(b.x - player.x, b.z - player.z), list = [];
+    for (const top of world2.forestUnderstory?.perches?.(b.x, b.z, 22) || []) list.push(top);
+    for (const t of treesNear(b.x, b.z, 22, nearTrees)) {
+      const info = world2.proceduralTrees?.info?.(t.id);
+      if (!info?.family?.branchAnchors || !info.matrix) continue;
+      const mm = m.fromArray(info.matrix), foot = info.matrix[13];
+      for (const a of info.family.branchAnchors) if (a.kind === "primary" || a.kind === "secondary") {
+        p.fromArray(a.point).applyMatrix4(mm);
+        if (p.y - foot > 1.6 && p.y - foot < 7.5) list.push({ x: p.x, y: p.y, z: p.z, hidden: p.y - foot > 5 });
+      }
+    }
+    let best = null, bestScore = -Infinity;
+    for (const c2 of list) {
+      const d2 = Math.hypot(c2.x - b.x, c2.z - b.z), fromPlayer = Math.hypot(c2.x - player.x, c2.z - player.z);
+      if (d2 < 3 || fromPlayer < 7) continue;
+      const score = -Math.abs(angleTo(away, Math.atan2(c2.x - b.x, c2.z - b.z))) * 3 - Math.abs(d2 - 11) * 0.15 + rnd();
+      if (score > bestScore) {
+        bestScore = score;
+        best = c2;
+      }
+    }
+    if (best) return best;
+    const d = 14 + rnd() * 10, x = b.x + Math.sin(away) * d, z = b.z + Math.cos(away) * d;
+    return { x, y: ground(x, z) + 7 + rnd() * 5, z, hidden: true };
+  }
+  function flyBird(b, to, speed = mix6(BD.speed[0], BD.speed[1], rnd())) {
+    const d = Math.hypot(to.x - b.x, to.z - b.z, to.y - b.y);
+    b.path = { x0: b.x, y0: b.y, z0: b.z, x1: to.x, y1: to.y, z1: to.z, arc: Math.min(2.5, 0.15 * d + 0.6), t: 0, dur: Math.max(0.6, d / speed), hidden: !!to.hidden };
+    b.state = "fly";
+  }
+  function updateBird(b, dt, player, fine, motion) {
+    const d = Math.hypot(b.x - player.x, b.z - player.z);
+    if (d > BD.keep || !fine && d > 16 && b.state !== "fly" || leftBehind(b.x, b.y, b.z, player, d)) {
+      b.active = false;
+      return;
+    }
+    const flushAt = motion.running ? BD.flush[1] : BD.flush[0];
+    if (b.state === "ground") {
+      b.flap = -0.2;
+      b.fold = 1;
+      b.timer -= dt;
+      if (d < flushAt || !fine) {
+        let first = true;
+        for (const o of birds) if (o.active && o.flock === b.flock && o.state === "ground") {
+          flyBird(o, birdPerch(o, player));
+          if (first) {
+            sound2("birdflush", o.x, o.y + 0.3, o.z, 0.9, 45);
+            first = false;
+          }
+          stats.flushes++;
+        }
+        return;
+      }
+      if (b.hop) {
+        const h = b.hop;
+        h.t += dt / h.dur;
+        const t = Math.min(1, h.t);
+        b.x = mix6(h.x0, h.x1, t);
+        b.z = mix6(h.z0, h.z1, t);
+        b.y = ground(b.x, b.z) + Math.sin(Math.PI * t) * h.h;
+        if (t >= 1) b.hop = null;
+      } else if (b.timer < 0) {
+        const r = rnd();
+        if (r < 0.55) {
+          let a = b.yaw + (rnd() - 0.5) * 1.6;
+          if (d < 12) a = mix6(a, Math.atan2(b.x - player.x, b.z - player.z), 0.4);
+          const len3 = 0.07 + rnd() * 0.16, x1 = b.x + Math.sin(a) * len3, z1 = b.z + Math.cos(a) * len3;
+          if (dryLand(x1, z1)) {
+            b.yaw += angleTo(b.yaw, a);
+            b.hop = { x0: b.x, z0: b.z, x1, z1, t: 0, dur: 0.13 + rnd() * 0.05, h: 0.025 + rnd() * 0.03 };
+          }
+          b.timer = rnd() < 0.5 ? 0.05 : 0.25 + rnd() * 0.6;
+        } else if (r < 0.85) {
+          b.peck = 0.35;
+          b.timer = 0.4 + rnd() * 0.5;
+        } else {
+          b.yaw += (rnd() - 0.5) * 2.2;
+          b.timer = 0.3 + rnd() * 0.8;
+        }
+      }
+      b.peck = Math.max(0, (b.peck || 0) - dt);
+      b.pitch = b.peck > 0 ? 0.55 * Math.sin(b.peck / 0.35 * Math.PI) : 0;
+      if (!b.hop) b.y = ground(b.x, b.z);
+    } else if (b.state === "fly") {
+      const P = b.path;
+      P.t += dt / P.dur;
+      const t = Math.min(1, P.t), x = mix6(P.x0, P.x1, t), z = mix6(P.z0, P.z1, t), y = mix6(P.y0, P.y1, t) + Math.sin(Math.PI * t) * P.arc;
+      const vx = x - b.x, vz = z - b.z, vy = y - b.y;
+      b.x = x;
+      b.y = Math.max(y, ground(x, z) + 0.05);
+      b.z = z;
+      if (Math.hypot(vx, vz) > 1e-4) b.yaw += angleTo(b.yaw, Math.atan2(vx, vz)) * Math.min(1, dt * 12);
+      b.pitch = clamp21(-Math.atan2(vy, Math.hypot(vx, vz) + 1e-4), -0.8, 0.8) * 0.5;
+      b.wingPhase += dt * 17 * TAU13;
+      const burst = Math.sin(b.wingPhase / 17 * 2.4 + b.seed) > -0.2 || t < 0.3;
+      b.flap = burst ? 0.15 + 0.95 * Math.sin(b.wingPhase) : -0.1;
+      b.fold = burst ? 0 : 0.55;
+      if (t >= 1) {
+        if (P.hidden) {
+          b.state = "hidden";
+          b.timer = mix6(BD.hidden[0], BD.hidden[1], rnd());
+        } else if (P.toGround) {
+          b.state = "ground";
+          b.timer = 0.3;
+          b.y = ground(b.x, b.z);
+        } else {
+          b.state = "perch";
+          b.timer = mix6(BD.perch[0], BD.perch[1], rnd());
+        }
+        b.pitch = 0;
+      }
+    } else if (b.state === "perch") {
+      b.flap = -0.2;
+      b.fold = 1;
+      b.timer -= dt;
+      if (rnd() < dt * 1.5) b.yaw += (rnd() - 0.5) * 1.8;
+      b.pitch = Math.sin(time * 9 + b.seed) > 0.97 ? -0.25 : 0;
+      if (d < flushAt * 0.5) flyBird(b, birdPerch(b, player));
+      else if (b.timer < 0) {
+        if (d > 11 && fine) {
+          const a = rnd() * TAU13, r = 3 + rnd() * 5, x = b.x + Math.sin(a) * r, z = b.z + Math.cos(a) * r;
+          if (dryLand(x, z)) {
+            flyBird(b, { x, y: ground(x, z), z }, 5);
+            b.path.toGround = true;
+          } else b.timer = 2;
+        } else b.timer = 2 + rnd() * 3;
+      }
+    } else if (b.state === "hidden") {
+      b.timer -= dt;
+      if (b.timer < 0) b.active = false;
+    }
+  }
+  function drawBirds() {
+    let n = 0;
+    const pose = birdMesh.geometry.attributes.pose, kind = birdMesh.geometry.attributes.kind;
+    for (const b of birds) {
+      if (!b.active || b.state === "hidden") continue;
+      const into = b.state === "fly" && b.path?.hidden ? clamp21((1 - b.path.t) / 0.2, 0, 1) : 1;
+      if (into <= 0) continue;
+      e.set(b.pitch || 0, b.yaw, 0);
+      q.setFromEuler(e);
+      p.set(b.x, b.y, b.z);
+      s.setScalar(BIRD_SCALE[b.kind] * into);
+      m.compose(p, q, s);
+      birdMesh.setMatrixAt(n, m);
+      pose.array[n * 2] = b.flap;
+      pose.array[n * 2 + 1] = b.fold;
+      kind.array[n] = b.kind;
+      n++;
+    }
+    birdMesh.count = n;
+    stats.birds = n;
+    if (n) {
+      birdMesh.instanceMatrix.needsUpdate = true;
+      pose.needsUpdate = true;
+      kind.needsUpdate = true;
+    }
+  }
+  const squirrels = Array.from({ length: SQR.count }, () => ({ active: false }));
+  const squirrelHabitat = (x, z, y, c2) => (1 - c2.snow * 0.8) * (1 - c2.ash) * smooth14(0.3, 0.65, c2.treeDensity ?? 0) * (1 - c2.swamp * 0.6) * smooth14(2, 4, y);
+  const trunkPoint = { x: 0, y: 0, z: 0, r: 0 };
+  function spawnSquirrel(sq, player) {
+    const at = placeFor(player, SQR.spawn, squirrelHabitat, 4, L.inView.squirrel);
+    if (!at) return false;
+    const trees = treesNear(at.x, at.z, 9, nearTrees).filter((t) => t.h > 9);
+    if (!trees.length) return false;
+    const tree = trees[Math.floor(rnd() * trees.length)], a = rnd() * TAU13, r = 1.2 + rnd() * 3, x = tree.x + Math.cos(a) * r, z = tree.z + Math.sin(a) * r;
+    if (!dryLand(x, z) || Math.hypot(x - player.x, z - player.z) < L.inView.squirrel && seen(x, ground(x, z) + 0.3, z)) return false;
+    Object.assign(sq, { active: true, x, y: ground(x, z), z, yaw: rnd() * TAU13, home: tree, state: "idle", timer: 1 + rnd() * 3, sit: 1, gait: 0, phase: 0, speed: 0, headYaw: 0, headPitch: 0, tail: 0, front: 0, hind: 0, bounce: 0, pitch: 0, seed: rnd() * 100, climb: null });
+    stats.spawns++;
+    return true;
+  }
+  function runTo(sq, x, z, speed, flee = false) {
+    sq.state = flee ? "flee" : "run";
+    sq.tx = x;
+    sq.tz = z;
+    sq.speed = speed;
+  }
+  function treeToClimb(sq, player) {
+    let best = null, bestScore = Infinity;
+    for (const t of treesNear(sq.x, sq.z, 16, nearTrees)) {
+      if (t.h < 8) continue;
+      const d = Math.hypot(t.x - sq.x, t.z - sq.z), fromPlayer = Math.hypot(t.x - player.x, t.z - player.z);
+      if (fromPlayer < 3 || fromPlayer < d * 0.7) continue;
+      if (d < bestScore) {
+        bestScore = d;
+        best = t;
+      }
+    }
+    return best;
+  }
+  function startClimb(sq, tree, player) {
+    const trunk = trunkOf(tree), side2 = Math.atan2(sq.z - tree.z, sq.x - tree.x);
+    sq.climb = { tree, trunk, angle: side2, h: 0.25, target: Math.min(trunk.top, mix6(SQR.height[0], SQR.height[1], rnd())), spin: (rnd() < 0.5 ? -1 : 1) * (0.45 + rnd() * 0.4), dir: 1 };
+    sq.state = "climb";
+    stats.climbs++;
+    sound2("scrabble", tree.x, ground(tree.x, tree.z) + 1, tree.z, 0.8, 30);
+  }
+  function updateSquirrel(sq, dt, player, fine, motion) {
+    const d = Math.hypot(sq.x - player.x, sq.z - player.z);
+    if (d > SQR.keep || !fine && d > 22 && sq.state !== "climb" && sq.state !== "cling" || leftBehind(sq.x, sq.y, sq.z, player, d)) {
+      sq.active = false;
+      return;
+    }
+    const fleeAt = motion.running ? SQR.flee[1] : SQR.flee[0];
+    const onGround = sq.state === "idle" || sq.state === "run" || sq.state === "flee";
+    if (onGround && sq.state !== "flee" && d < fleeAt) {
+      const tree = treeToClimb(sq, player);
+      if (tree) {
+        const a = Math.atan2(tree.x - player.x, tree.z - player.z), trunk = trunkOf(tree).at(0.3, trunkPoint);
+        sq.fleeTree = tree;
+        runTo(sq, tree.x + Math.sin(a) * (trunk.r + 0.08), tree.z + Math.cos(a) * (trunk.r + 0.08), SQR.run[1], true);
+      } else {
+        const a = Math.atan2(sq.x - player.x, sq.z - player.z), x = sq.x + Math.sin(a) * 12, z = sq.z + Math.cos(a) * 12;
+        runTo(sq, x, z, SQR.run[1], true);
+        sq.fleeTree = null;
+      }
+      if (rnd() < 0.5) sound2("squirrel", sq.x, sq.y + 0.2, sq.z, 0.7, 35);
+    }
+    let gait = 0;
+    if (sq.state === "idle") {
+      sq.timer -= dt;
+      sq.speed = 0;
+      sq.sit += ((Math.sin(time * 0.35 + sq.seed) > -0.3 ? 1 : 0) - sq.sit) * Math.min(1, dt * 5);
+      sq.headYaw = Math.sin(time * 1.1 + sq.seed) * 0.7 * (Math.sin(time * 0.5 + sq.seed * 2) > 0 ? 1 : 0.2);
+      sq.headPitch = sq.sit > 0.5 ? 0 : 0.5;
+      sq.tail = Math.sin(time * 7 + sq.seed) > 0.9 ? 0.25 * Math.sin(time * 40) : 0;
+      if (sq.timer < 0 && fine) {
+        for (let k = 0; k < 4; k++) {
+          const a = rnd() * TAU13, r = 2 + rnd() * 8, x = sq.home.x + Math.cos(a) * r, z = sq.home.z + Math.sin(a) * r;
+          if (dryLand(x, z)) {
+            runTo(sq, x, z, mix6(SQR.run[0], SQR.run[1] * 0.8, rnd()));
+            break;
+          }
+        }
+        sq.timer = 1.5 + rnd() * 4;
+      }
+    } else if (sq.state === "run" || sq.state === "flee") {
+      const tx = sq.tx - sq.x, tz = sq.tz - sq.z, td = Math.hypot(tx, tz);
+      sq.sit += (0 - sq.sit) * Math.min(1, dt * 10);
+      if (td < 0.15) {
+        if (sq.state === "flee" && sq.fleeTree) startClimb(sq, sq.fleeTree, player);
+        else {
+          sq.state = "idle";
+          sq.timer = 1 + rnd() * 3.5;
+        }
+      } else {
+        const want = Math.atan2(tx, tz);
+        sq.yaw += angleTo(sq.yaw, want) * Math.min(1, dt * 9);
+        const step = Math.min(td, sq.speed * dt * clamp21(1 - Math.abs(angleTo(sq.yaw, want)) / 1.6, 0.2, 1));
+        const nx = sq.x + Math.sin(sq.yaw) * step, nz = sq.z + Math.cos(sq.yaw) * step;
+        if (dryLand(nx, nz)) {
+          sq.x = nx;
+          sq.z = nz;
+        } else if (sq.state === "run") {
+          sq.state = "idle";
+          sq.timer = 1;
+        }
+        sq.y = ground(sq.x, sq.z);
+        gait = 1;
+      }
+      sq.headYaw *= 0.8;
+      sq.headPitch = 0;
+      sq.tail = 0.85;
+    } else if (sq.state === "climb" || sq.state === "cling") {
+      const c2 = sq.climb;
+      if (sq.state === "climb") {
+        c2.h += SQR.climb * c2.dir * dt;
+        c2.angle += c2.spin * SQR.climb * dt * c2.dir;
+        gait = 1;
+        if (c2.dir > 0 && c2.h >= c2.target) {
+          c2.h = c2.target;
+          sq.state = "cling";
+          sq.timer = mix6(SQR.cling[0], SQR.cling[1], rnd());
+          if (rnd() < 0.45) sound2("squirrel", sq.x, sq.y, sq.z, 0.6, 35);
+        }
+        if (c2.dir < 0 && c2.h <= 0.3) {
+          const a = c2.angle;
+          sq.x = c2.tree.x + Math.cos(a) * (c2.r + 0.25);
+          sq.z = c2.tree.z + Math.sin(a) * (c2.r + 0.25);
+          sq.y = ground(sq.x, sq.z);
+          sq.yaw = Math.atan2(Math.cos(a), Math.sin(a));
+          sq.state = "idle";
+          sq.timer = 1 + rnd() * 2;
+          sq.climb = null;
+          sq.home = c2.tree;
+        }
+      } else {
+        sq.timer -= dt;
+        sq.tail = Math.sin(time * 6 + sq.seed) > 0.8 ? 0.3 * Math.sin(time * 35) : 0;
+        sq.headYaw = Math.sin(time * 0.9 + sq.seed) * 0.5;
+        if (d < 4 && c2.h < c2.trunk.top - 0.5) {
+          sq.state = "climb";
+          c2.dir = 1;
+          c2.target = Math.min(c2.trunk.top, c2.h + 2.5);
+        } else if (sq.timer < 0 && d > 12) {
+          sq.state = "climb";
+          c2.dir = -1;
+        }
+      }
+      if (sq.climb) {
+        const t = c2.trunk.at(c2.h, trunkPoint);
+        c2.r = t.r;
+        sq.x = t.x + Math.cos(c2.angle) * t.r;
+        sq.y = t.y;
+        sq.z = t.z + Math.sin(c2.angle) * t.r;
+        sq.radialX = Math.cos(c2.angle);
+        sq.radialZ = Math.sin(c2.angle);
+      }
+    }
+    sq.gait += (gait - sq.gait) * Math.min(1, dt * 8);
+    sq.phase += dt * (2.2 + (sq.state === "climb" ? SQR.climb : sq.speed) * 1.1) * TAU13 * (sq.gait > 0.05 ? 1 : 0);
+    const g = sq.gait, ph = sq.phase;
+    sq.front = 0.85 * Math.sin(ph + 0.5) * g - 1.1 * sq.sit;
+    sq.hind = 0.8 * Math.sin(ph + Math.PI) * g;
+    sq.bounce = 0.025 * Math.max(0, Math.sin(ph)) * g;
+    sq.pitch = 0.16 * Math.sin(ph) * g;
+  }
+  const body2 = new Matrix4(), part2 = new Matrix4(), turn = new Matrix4(), back = new Matrix4(), pivoted = new Matrix4(), lift = new Matrix4(), basis = { x: new Vector3(), y: new Vector3(), z: new Vector3() };
+  function about(axis2, angle, at) {
+    pivoted.makeTranslation(at[0], at[1], at[2]);
+    turn.makeRotationAxis(axis2, angle);
+    back.makeTranslation(-at[0], -at[1], -at[2]);
+    return pivoted.multiply(turn).multiply(back);
+  }
+  const X2 = new Vector3(1, 0, 0), Y2 = new Vector3(0, 1, 0);
+  function drawSquirrels() {
+    let n = 0;
+    for (const sq of squirrels) {
+      if (!sq.active) continue;
+      if (sq.climb) {
+        const dir = sq.climb.dir > 0 || sq.state === "cling" ? 1 : -1;
+        basis.y.set(sq.radialX, 0, sq.radialZ);
+        basis.z.set(0, dir, 0);
+        basis.x.crossVectors(basis.y, basis.z).normalize();
+        body2.makeBasis(basis.x, basis.y, basis.z).setPosition(sq.x, sq.y, sq.z);
+      } else {
+        e.set(0, sq.yaw, 0);
+        q.setFromEuler(e);
+        body2.compose(p.set(sq.x, sq.y, sq.z), q, s.setScalar(1));
+      }
+      body2.multiply(about(X2, -1.1 * sq.sit + sq.pitch, SQ.hip)).multiply(lift.makeTranslation(0, sq.bounce, 0));
+      sqParts.body.setMatrixAt(n, body2);
+      part2.copy(body2).multiply(about(X2, sq.headPitch + 0.95 * sq.sit, SQ.neck)).multiply(about(Y2, sq.headYaw, SQ.neck));
+      sqParts.head.setMatrixAt(n, part2);
+      part2.copy(body2).multiply(about(X2, -0.95 * sq.tail * (1 - sq.sit) + 0.95 * sq.sit + (sq.state === "climb" && sq.climb?.dir > 0 ? -0.5 : 0) + sq.tail * 0.2, SQ.tailBase));
+      sqParts.tail.setMatrixAt(n, part2);
+      part2.copy(body2).multiply(about(X2, sq.front, SQ.shoulder));
+      sqParts.front.setMatrixAt(n, part2);
+      part2.copy(body2).multiply(about(X2, sq.hind, SQ.hipJoint));
+      sqParts.hind.setMatrixAt(n, part2);
+      n++;
+    }
+    for (const mesh2 of Object.values(sqParts)) {
+      mesh2.count = n;
+      if (n) mesh2.instanceMatrix.needsUpdate = true;
+    }
+    stats.squirrels = n;
+  }
+  const viewDir = new Vector3(), view = { ok: false, x: 0, z: 1 };
+  function lookAround() {
+    const camera = world2.camera;
+    view.ok = !!camera;
+    if (!camera) return;
+    camera.getWorldDirection(viewDir);
+    const l = Math.hypot(viewDir.x, viewDir.z);
+    if (l > 1e-4) {
+      view.x = viewDir.x / l;
+      view.z = viewDir.z / l;
+    }
+  }
+  function seen(x, y, z) {
+    const camera = world2.camera;
+    if (!camera) return true;
+    const dx = x - camera.position.x, dy = y - camera.position.y, dz = z - camera.position.z, d = Math.hypot(dx, dy, dz) || 1;
+    return (dx * viewDir.x + dy * viewDir.y + dz * viewDir.z) / d > 0.55;
+  }
+  function leftBehind(x, y, z, player, d) {
+    return d > L.behind && view.ok && ((x - player.x) * view.x + (z - player.z) * view.z) / d < -0.2 && !seen(x, y, z);
+  }
+  function update(dt, player) {
+    const on = enabled && !world2.inDungeon && world2.quality !== "low";
+    group.visible = on;
+    if (!on || !player) return;
+    dt = Math.min(dt, 0.1);
+    time += dt;
+    const fine = weatherNow(), motion = playerMotion();
+    lookAround();
+    spawnClock -= dt;
+    if (fine && spawnClock < 0) {
+      spawnClock = L.every;
+      const b = butterflies.find((o) => !o.active);
+      if (b) spawnButterfly(b, player);
+      if (birds.filter((o) => o.active).length + BD.group[0] <= BD.count) spawnBirds(player);
+      const sq = squirrels.find((o) => !o.active);
+      if (sq && rnd() < L.squirrelTry) spawnSquirrel(sq, player);
+    }
+    for (const b of butterflies) if (b.active && !b.held) updateButterfly(b, dt, player, fine);
+    for (const b of birds) if (b.active && !b.held) updateBird(b, dt, player, fine, motion);
+    for (const sq of squirrels) if (sq.active && !sq.held) updateSquirrel(sq, dt, player, fine, motion);
+    drawButterflies();
+    drawBirds();
+    drawSquirrels();
+  }
+  function setEvents(next) {
+    events = next || {};
+  }
+  function setEnabled(value) {
+    enabled = !!value;
+    if (!enabled) group.visible = false;
+  }
+  function dispose() {
+    world2.scene.remove(group);
+    group.traverse((o) => {
+      if (o.isMesh) {
+        o.geometry.dispose();
+        o.dispose?.();
+      }
+    });
+    for (const material2 of [butterflyMesh.material, birdMesh.material, squirrelMats.fur, squirrelMats.tail]) material2.dispose();
+  }
+  function snapshot() {
+    return {
+      ...stats,
+      conditions: { ...conditions },
+      butterflies: butterflies.filter((b) => b.active).map((b) => ({ kind: BUTTERFLY_KINDS[b.kind], state: b.state, x: +b.x.toFixed(2), y: +b.y.toFixed(2), z: +b.z.toFixed(2) })),
+      birds: birds.filter((b) => b.active).map((b) => ({ kind: BIRD_KINDS[b.kind], state: b.state, x: +b.x.toFixed(2), y: +b.y.toFixed(2), z: +b.z.toFixed(2) })),
+      squirrels: squirrels.filter((o) => o.active).map((o) => ({ state: o.state, x: +o.x.toFixed(2), y: +o.y.toFixed(2), z: +o.z.toFixed(2), h: o.climb ? +o.climb.h.toFixed(2) : 0 }))
+    };
+  }
+  function place(kind, x, z, options = {}) {
+    const placed2 = put2(kind, x, z, options);
+    placed2.held = !!options.hold;
+    return placed2;
+  }
+  function put2(kind, x, z, options) {
+    const y = ground(x, z);
+    if (kind === "butterfly") {
+      const b = butterflies.find((o) => !o.active) || butterflies[0];
+      Object.assign(b, { active: true, kind: options.kind ?? 2, hx: x, hz: z, x, y: y + (options.height ?? 1), z, vx: 0, vy: 0, vz: 0, span: B.wingspan[1], speed: B.speed[0], beat: 9, phase: 0, state: options.rest ? "rest" : "fly", timer: 99, yaw: options.yaw ?? 0, seed: 1, flap: 0.4, bob: 0 });
+      if (!options.rest) pickButterflyTarget(b);
+      return b;
+    }
+    if (kind === "bird") {
+      const b = birds.find((o) => !o.active) || birds[0];
+      Object.assign(b, { active: true, kind: options.kind ?? 1, x, y, z, yaw: options.yaw ?? 0, pitch: 0, state: "ground", timer: 99, hop: null, flap: options.flap ?? -0.2, fold: options.fold ?? 1, wingPhase: 0, seed: 1, flock: { x, z } });
+      return b;
+    }
+    const sq = squirrels.find((o) => !o.active) || squirrels[0];
+    Object.assign(sq, { active: true, x, y, z, yaw: options.yaw ?? 0, home: treesNear(x, z, 12, nearTrees)[0] || { x, z, h: 12 }, state: "idle", timer: 99, sit: options.sit ?? 1, gait: 0, phase: 0, speed: 0, headYaw: 0, headPitch: 0, tail: 0, front: 0, hind: 0, bounce: 0, pitch: 0, seed: 1, climb: null });
+    return sq;
+  }
+  function release() {
+    for (const list of [butterflies, birds, squirrels]) for (const o of list) o.held = false;
+  }
+  return { group, update, setEvents, setEnabled, dispose, snapshot, place, release, stats: () => ({ ...stats }), get meshes() {
+    return { butterflies: butterflyMesh, birds: birdMesh, ...sqParts };
+  } };
+}
+
 // ambient-motes.js
 var AMBIENT_PARTICLES = Object.freeze({
   revision: "ambient-particles-v89-bokeh",
@@ -17384,15 +19870,15 @@ var AMBIENT_PARTICLES = Object.freeze({
   })
 });
 var AMBIENT_PARTICLE_KINDS = Object.freeze(["leaf", "fluff", "dust"]);
-var smooth14 = (a, b, x) => {
+var smooth15 = (a, b, x) => {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
-var f7 = (v) => Number(v).toFixed(4);
-var vec3 = (c2) => `vec3(${c2.map(f7).join(",")})`;
+var f9 = (v) => Number(v).toFixed(4);
+var vec33 = (c2) => `vec3(${c2.map(f9).join(",")})`;
 var LEAF = AMBIENT_PARTICLES.leaf;
 var FLUFF = AMBIENT_PARTICLES.fluff;
-var VERTEX_PARS = `
+var VERTEX_PARS2 = `
  attribute vec4 aSeed;attribute float aKind;attribute vec2 aLife;
  uniform float uTime;uniform vec4 uWind;uniform vec4 uLevels;uniform vec4 uSun;uniform vec3 uLight;uniform float uPixelRatio;
  varying vec3 vPColor;varying float vPAlpha;varying float vPShape;varying float vPSpin;varying float vPFlat;
@@ -17409,7 +19895,7 @@ var VERTEX_MOVE = `
   transformed+=vec3(drift.x,drop*(1.-c),drift.y);
   vPSpin=t*(1.5+2.5*r.y)+r.z*6.2832;vPFlat=abs(cos(t*(2.1+1.7*r.x)+r.w*6.2832));
   // Green or brown; brighter while turned flat to the light.
-  vec3 leaf=r.w<${f7(LEAF.brownShare)}?mix(${vec3(LEAF.brown[0])},${vec3(LEAF.brown[1])},r.x):mix(${vec3(LEAF.green[0])},${vec3(LEAF.green[1])},r.x);
+  vec3 leaf=r.w<${f9(LEAF.brownShare)}?mix(${vec33(LEAF.brown[0])},${vec33(LEAF.brown[1])},r.x):mix(${vec33(LEAF.green[0])},${vec33(LEAF.green[1])},r.x);
   vPColor=leaf*uLight*(.55+.5*vPFlat);pGlow=.4;
   vPAlpha=uLevels.x*smoothstep(0.,.04,c)*(1.-smoothstep(.95,1.,c))*pLife;
   vPShape=1.;pSize=.09+.06*r.x;
@@ -17419,8 +19905,8 @@ var VERTEX_MOVE = `
   transformed.xz+=uWind.xy*along+vec2(-uWind.y,uWind.x)*(sin(t*.37+r.y*6.2832)*1.1);
   transformed.y+=.35+2.6*r.z+sin(t*.61+r.w*6.2832)*.3+along*.04;
   vPColor=vec3(1.,.98,.94)*uLight*1.25;pGlow=2.5;
-  vPAlpha=uLevels.y*(1.-smoothstep(.3*span,.5*span,abs(along)))*${f7(FLUFF.alpha)}*pLife;
-  vPShape=2.;pSize=${f7(FLUFF.size[0])}+${f7(FLUFF.size[1] - FLUFF.size[0])}*r.w;
+  vPAlpha=uLevels.y*(1.-smoothstep(.3*span,.5*span,abs(along)))*${f9(FLUFF.alpha)}*pLife;
+  vPShape=2.;pSize=${f9(FLUFF.size[0])}+${f9(FLUFF.size[1] - FLUFF.size[0])}*r.w;
  }else{
   // Dust: hangs in the forest air, catching the light.
   transformed+=vec3(sin(t*.09+r.x*6.2832)*2.2,.5+2.6*r.y+sin(t*.13+r.z*6.2832)*.35,cos(t*.07+r.w*6.2832)*2.2);
@@ -17434,7 +19920,7 @@ var VERTEX_SIZE = `
  // Fade before the eye; below the smallest size keep the light, not the size.
  vPAlpha*=smoothstep(.35,1.4,-mvPosition.z);
  // Fluff near the eye: out of focus, larger and fainter.
- if(vPShape>1.5){float pBlur=${f7(FLUFF.blur)}*(1.-smoothstep(${f7(FLUFF.focus[0])},${f7(FLUFF.focus[1])},-mvPosition.z));gl_PointSize*=1.+pBlur;vPAlpha/=1.+pBlur;}
+ if(vPShape>1.5){float pBlur=${f9(FLUFF.blur)}*(1.-smoothstep(${f9(FLUFF.focus[0])},${f9(FLUFF.focus[1])},-mvPosition.z));gl_PointSize*=1.+pBlur;vPAlpha/=1.+pBlur;}
  float pMin=${AMBIENT_PARTICLES.minPixels.toFixed(3)}*uPixelRatio;
  if(gl_PointSize>0.&&gl_PointSize<pMin){float k=gl_PointSize/pMin;vPAlpha*=k*k;gl_PointSize=pMin;}
  gl_PointSize=min(gl_PointSize,${AMBIENT_PARTICLES.maxPixels.toFixed(3)}*uPixelRatio);
@@ -17466,7 +19952,7 @@ function createAmbientParticles(world2, { count = AMBIENT_PARTICLES.count, radiu
   const material2 = new PointsMaterial({ size: 1, sizeAttenuation: true, transparent: true, depthWrite: false });
   material2.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
-    shader.vertexShader = VERTEX_PARS + replaceOnce7(replaceOnce7(replaceOnce7(
+    shader.vertexShader = VERTEX_PARS2 + replaceOnce7(replaceOnce7(replaceOnce7(
       shader.vertexShader,
       "#include <begin_vertex>",
       VERTEX_MOVE
@@ -17488,16 +19974,16 @@ function createAmbientParticles(world2, { count = AMBIENT_PARTICLES.count, radiu
   const stats = { spawned: 0, empty: 0, active: 0, kinds: [0, 0, 0] };
   let time = 0, cursor = 0, disposed = false;
   function place(i, cx, cz) {
-    const f10 = world2.terrainFunctions, share = AMBIENT_PARTICLES.share, angle = Math.random() * Math.PI * 2, distance4 = radius * Math.pow(Math.random(), 0.75);
-    const x = cx + Math.cos(angle) * distance4, z = cz + Math.sin(angle) * distance4, h = f10.height(x, z);
+    const f12 = world2.terrainFunctions, share = AMBIENT_PARTICLES.share, angle = Math.random() * Math.PI * 2, distance4 = radius * Math.pow(Math.random(), 0.75);
+    const x = cx + Math.cos(angle) * distance4, z = cz + Math.sin(angle) * distance4, h = f12.height(x, z);
     let wL = 0, wM = 0, wD = 0;
     if (h > sea + 0.3) {
-      const c2 = f10.climate(x, z, h, climateOut), open = (1 - c2.snow) * (1 - c2.ash * 0.85);
+      const c2 = f12.climate(x, z, h, climateOut), open = (1 - c2.snow) * (1 - c2.ash * 0.85);
       if (levels.leaf > 0 && c2.treeDensity > 0.2) {
         const broadThreshold = c2.swamp > 0.45 ? 0.1 : 0.35 + Math.max(c2.ash, c2.snow, c2.mountain * 0.7) * 0.65;
         wL = share.leaf * levels.leaf * c2.treeDensity * Math.max(0, 1 - broadThreshold) * 1.4 * (1 - c2.snow);
       }
-      if (levels.fluff > 0) wM = share.fluff * levels.fluff * smooth14(0.25, 0.7, c2.meadow) * open;
+      if (levels.fluff > 0) wM = share.fluff * levels.fluff * smooth15(0.25, 0.7, c2.meadow) * open;
       if (levels.dust > 0) wD = share.dust * levels.dust * c2.treeDensity * open;
     }
     let pick = Math.random() * (wL + wM + wD + AMBIENT_PARTICLES.empty), k = -1;
@@ -17530,7 +20016,7 @@ function createAmbientParticles(world2, { count = AMBIENT_PARTICLES.count, radiu
     levels.dust = daylight * (1 - rain) * (1 - snow) * (1 - cloud * 0.5);
     uniforms.uLevels.value.set(levels.leaf, levels.fluff, levels.dust, 0);
     const light = world2.sun, sunY = world2.sunDir?.y ?? 1;
-    uniforms.uLight.value.copy(light?.color ?? uniforms.uLight.value.setRGB(1, 1, 1)).multiplyScalar((light?.intensity ?? 3) * 0.16 * smooth14(-0.02, 0.12, sunY));
+    uniforms.uLight.value.copy(light?.color ?? uniforms.uLight.value.setRGB(1, 1, 1)).multiplyScalar((light?.intensity ?? 3) * 0.16 * smooth15(-0.02, 0.12, sunY));
     const sky = 0.03 + 0.22 * daylight;
     uniforms.uLight.value.r += sky * 0.82;
     uniforms.uLight.value.g += sky * 0.9;
@@ -17540,7 +20026,7 @@ function createAmbientParticles(world2, { count = AMBIENT_PARTICLES.count, radiu
       const l = Math.hypot(day.sunX, day.sunY, day.sunZ) || 1;
       sun.set(day.sunX / l, day.sunY / l, day.sunZ / l, 0);
     }
-    sun.w = smooth14(-0.02, 0.15, sun.y) * (1 - 0.75 * smooth14(0.45, 1, cloud)) * (1 - rain) * (1 - snow);
+    sun.w = smooth15(-0.02, 0.15, sun.y) * (1 - 0.75 * smooth15(0.45, 1, cloud)) * (1 - rain) * (1 - snow);
   }
   function update(dt, player) {
     if (disposed) return;
@@ -17590,9 +20076,9 @@ var TYPES2 = Object.freeze([
   Object.freeze({ type: "boss", id: "landmark:boss", name: "朽ちた王庭", radius: 19, feather: 22, clear: 18, maxRelief: 5, maxGrade: 0.24 }),
   Object.freeze({ type: "memory", id: "landmark:wind-memory", name: "風の記憶碑", radius: 8, feather: 12, clear: 7.4, maxRelief: 3, maxGrade: 0.32 })
 ]);
-var clamp20 = (v) => Math.max(0, Math.min(1, v));
-var smooth15 = (v) => {
-  const t = clamp20(v);
+var clamp22 = (v) => Math.max(0, Math.min(1, v));
+var smooth16 = (v) => {
+  const t = clamp22(v);
   return t * t * t * (t * (t * 6 - 15) + 10);
 };
 function hash3(seed, type, index2, salt) {
@@ -17685,7 +20171,7 @@ function createSeededLandmarkPlan({ seed, island, height: height2, waterAt, near
       const d = Math.hypot(dx, dz);
       if (d >= reach) continue;
       if (d <= site.radius) return site.level;
-      const t = smooth15((d - site.radius) / site.feather);
+      const t = smooth16((d - site.radius) / site.feather);
       return site.level + (base - site.level) * t;
     }
     return base;
@@ -17694,12 +20180,12 @@ function createSeededLandmarkPlan({ seed, island, height: height2, waterAt, near
 }
 
 // start-access-terrain.js
-var clamp21 = (t) => Math.max(0, Math.min(1, t));
-var smooth16 = (a, b, x) => {
-  const t = clamp21((x - a) / (b - a));
+var clamp23 = (t) => Math.max(0, Math.min(1, t));
+var smooth17 = (a, b, x) => {
+  const t = clamp23((x - a) / (b - a));
   return t * t * t * (t * (t * 6 - 15) + 10);
 };
-var mix6 = (a, b, t) => a + (b - a) * t;
+var mix7 = (a, b, t) => a + (b - a) * t;
 function createStartAccessTerrain({ access, height: height2, waterAt }) {
   if (!access?.approach?.to || typeof height2 !== "function" || typeof waterAt !== "function") throw TypeError("Planned near-start river and canonical base height required");
   const { spawn, campfire, approach, level } = access;
@@ -17719,11 +20205,11 @@ function createStartAccessTerrain({ access, height: height2, waterAt }) {
     let uncovered = 1;
     for (const p of paths) {
       if (x < p.minX || x > p.maxX || z < p.minZ || z > p.maxZ) continue;
-      const t2 = clamp21(((x - p.a.x) * p.dx + (z - p.a.z) * p.dz) / p.length2), distance4 = Math.hypot(x - p.a.x - t2 * p.dx, z - p.a.z - t2 * p.dz), w = 1 - smooth16(2, p.radius, distance4);
+      const t2 = clamp23(((x - p.a.x) * p.dx + (z - p.a.z) * p.dz) / p.length2), distance4 = Math.hypot(x - p.a.x - t2 * p.dx, z - p.a.z - t2 * p.dz), w = 1 - smooth17(2, p.radius, distance4);
       uncovered *= 1 - w;
     }
     const main = paths[1], t = ((x - spawn.x) * main.dx + (z - spawn.z) * main.dz) / main.length2;
-    return mix6(original, mix6(startY, endY, t), 1 - uncovered);
+    return mix7(original, mix7(startY, endY, t), 1 - uncovered);
   }
   function sample2(x, z) {
     return applyHeight(x, z, height2(x, z));
@@ -17733,7 +20219,7 @@ function createStartAccessTerrain({ access, height: height2, waterAt }) {
     const count = Math.ceil(p.length / 1.25);
     let previous = null;
     for (let i = 0; i <= count; i++) {
-      const t = i / count, x = mix6(p.a.x, p.b.x, t), z = mix6(p.a.z, p.b.z, t), y = sample2(x, z);
+      const t = i / count, x = mix7(p.a.x, p.b.x, t), z = mix7(p.a.z, p.b.z, t), y = sample2(x, z);
       if (waterAt(x, z, y)) throw RangeError("Start access intersects generated water");
       if (previous !== null) maxGrade = Math.max(maxGrade, Math.abs(y - previous) / (p.length / count));
       previous = y;
@@ -18282,9 +20768,9 @@ function createOcclusionCulling(world2, { enabled = true, maxQueries = 2048, max
       for (let j = 0; j < 3; j++) norm3 += m[i * 4 + j] * m[i * 4 + j];
       if (Math.abs(norm3 - 1) > 1e-9) active2 = false;
       for (let k = 0; k < i; k++) {
-        let dot4 = 0;
-        for (let j = 0; j < 3; j++) dot4 += m[i * 4 + j] * m[k * 4 + j];
-        if (Math.abs(dot4) > 1e-9) active2 = false;
+        let dot5 = 0;
+        for (let j = 0; j < 3; j++) dot5 += m[i * 4 + j] * m[k * 4 + j];
+        if (Math.abs(dot5) > 1e-9) active2 = false;
       }
     }
     if (active2) {
@@ -18556,13 +21042,13 @@ function identityTransform(o) {
 }
 function instanceBounds(geometry3, source2, count, out2 = new Float64Array(count * 4)) {
   if (!geometry3.boundingSphere) geometry3.computeBoundingSphere();
-  const local = geometry3.boundingSphere;
+  const local2 = geometry3.boundingSphere;
   for (let i = 0; i < count; i++) {
     const k = i * 16, b = i * 4;
-    out2[b] = source2[k] * local.center.x + source2[k + 4] * local.center.y + source2[k + 8] * local.center.z + source2[k + 12];
-    out2[b + 1] = source2[k + 1] * local.center.x + source2[k + 5] * local.center.y + source2[k + 9] * local.center.z + source2[k + 13];
-    out2[b + 2] = source2[k + 2] * local.center.x + source2[k + 6] * local.center.y + source2[k + 10] * local.center.z + source2[k + 14];
-    out2[b + 3] = local.radius * Math.max(Math.hypot(source2[k], source2[k + 1], source2[k + 2]), Math.hypot(source2[k + 4], source2[k + 5], source2[k + 6]), Math.hypot(source2[k + 8], source2[k + 9], source2[k + 10]));
+    out2[b] = source2[k] * local2.center.x + source2[k + 4] * local2.center.y + source2[k + 8] * local2.center.z + source2[k + 12];
+    out2[b + 1] = source2[k + 1] * local2.center.x + source2[k + 5] * local2.center.y + source2[k + 9] * local2.center.z + source2[k + 13];
+    out2[b + 2] = source2[k + 2] * local2.center.x + source2[k + 6] * local2.center.y + source2[k + 10] * local2.center.z + source2[k + 14];
+    out2[b + 3] = local2.radius * Math.max(Math.hypot(source2[k], source2[k + 1], source2[k + 2]), Math.hypot(source2[k + 4], source2[k + 5], source2[k + 6]), Math.hypot(source2[k + 8], source2[k + 9], source2[k + 10]));
   }
   return out2;
 }
@@ -18915,7 +21401,7 @@ function hash4(a, b, c2) {
   return ((h ^ h >>> 16) >>> 0) / 4294967296;
 }
 var clamp012 = (v) => v < 0 ? 0 : v > 1 ? 1 : v;
-var smooth17 = (a, b, v) => {
+var smooth18 = (a, b, v) => {
   const t = clamp012((v - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
@@ -18927,7 +21413,7 @@ function marshMistHour(minute) {
   }
   return H[0][1];
 }
-var VERTEX2 = (
+var VERTEX4 = (
   /* glsl */
   `
   attribute vec4 mistData;
@@ -18948,7 +21434,7 @@ var VERTEX2 = (
   }
 `
 );
-var FRAGMENT = (
+var FRAGMENT3 = (
   /* glsl */
   `
   uniform float uTime;
@@ -18998,13 +21484,13 @@ var FRAGMENT = (
 `
 );
 function* buildMarsh(world2, marsh, out2) {
-  const S = MARSH_MIST, f10 = world2.terrainFunctions, b = marsh.bounds, sampler = world2.worldModel?.sampler;
-  if (!b || !f10?.height) return;
+  const S = MARSH_MIST, f12 = world2.terrainFunctions, b = marsh.bounds, sampler = world2.worldModel?.sampler;
+  if (!b || !f12?.height) return;
   const m = S.map.margin, cell = S.map.cell, x0 = b.minX - m, z0 = b.minZ - m, size = Math.max(b.maxX - b.minX, b.maxZ - b.minZ) + 2 * m;
   const n = Math.min(256, Math.ceil(size / cell) + 1), data = new Float32Array(n * n);
   let started = performance.now();
   for (let j = 0; j < n; j++) {
-    for (let i = 0; i < n; i++) data[j * n + i] = f10.height(x0 + i / (n - 1) * size, z0 + j / (n - 1) * size);
+    for (let i = 0; i < n; i++) data[j * n + i] = f12.height(x0 + i / (n - 1) * size, z0 + j / (n - 1) * size);
     if (performance.now() - started > S.budgetMs) {
       yield;
       started = performance.now();
@@ -19016,12 +21502,12 @@ function* buildMarsh(world2, marsh, out2) {
   texture.needsUpdate = true;
   texture.name = "marsh-mist-ground";
   if (!world2.renderer?.extensions?.has?.("OES_texture_float_linear")) texture.minFilter = texture.magFilter = NearestFilter;
-  const veils = [], L3 = marsh.level, s = S.spacing, salt = marsh.index * 131;
+  const veils = [], L4 = marsh.level, s = S.spacing, salt = marsh.index * 131;
   for (let gz = Math.floor(b.minZ / s); gz <= Math.ceil(b.maxZ / s); gz++) for (let gx = Math.floor(b.minX / s); gx <= Math.ceil(b.maxX / s); gx++) {
     const x = (gx + 0.1 + 0.8 * hash4(gx, gz, 1 + salt)) * s, z = (gz + 0.1 + 0.8 * hash4(gx, gz, 2 + salt)) * s;
     if (!sampler?.marshDistance || sampler.marshDistance(x, z) < 6) continue;
     const w = S.width[0] + (S.width[1] - S.width[0]) * hash4(gx, gz, 3 + salt), h = S.height[0] + (S.height[1] - S.height[0]) * hash4(gx, gz, 4 + salt);
-    veils.push(x, L3 + S.lift[0] + (S.lift[1] - S.lift[0]) * hash4(gx, gz, 5 + salt), z, w, h, hash4(gx, gz, 6 + salt) * 40, 0.75 + 0.25 * hash4(gx, gz, 7 + salt));
+    veils.push(x, L4 + S.lift[0] + (S.lift[1] - S.lift[0]) * hash4(gx, gz, 5 + salt), z, w, h, hash4(gx, gz, 6 + salt) * 40, 0.75 + 0.25 * hash4(gx, gz, 7 + salt));
   }
   const B = S.band;
   for (let gz = Math.floor((b.minZ + B.from) / s); gz <= Math.ceil((b.maxZ - B.from) / s); gz++) for (let gx = Math.floor((b.minX + B.from) / s); gx <= Math.ceil((b.maxX - B.from) / s); gx++) {
@@ -19029,14 +21515,14 @@ function* buildMarsh(world2, marsh, out2) {
     if (!sampler?.marshDistance) break;
     const d = sampler.marshDistance(x, z);
     if (d < B.from || d >= Math.max(6, B.to) || hash4(gx, gz, 23 + salt) > B.share) continue;
-    const ground = Math.max(L3, f10.height(x, z)), w = S.width[0] + (S.width[1] - S.width[0]) * hash4(gx, gz, 24 + salt), h = S.height[0] + (S.height[1] - S.height[0]) * hash4(gx, gz, 25 + salt);
+    const ground = Math.max(L4, f12.height(x, z)), w = S.width[0] + (S.width[1] - S.width[0]) * hash4(gx, gz, 24 + salt), h = S.height[0] + (S.height[1] - S.height[0]) * hash4(gx, gz, 25 + salt);
     veils.push(x, ground + B.lift[0] + (B.lift[1] - B.lift[0]) * hash4(gx, gz, 26 + salt), z, w, h, hash4(gx, gz, 27 + salt) * 40, 0.55 + 0.3 * hash4(gx, gz, 28 + salt));
   }
   const cx = (b.minX + b.maxX) / 2, cz = (b.minZ + b.maxZ) / 2, rx = (b.maxX - b.minX) * 0.32, rz = (b.maxZ - b.minZ) * 0.32;
   for (let k = 0; k < S.broad.count; k++) {
     const x = cx + (hash4(k, 9, salt) * 2 - 1) * rx, z = cz + (hash4(k, 10, salt) * 2 - 1) * rz;
     if (sampler?.marshDistance && sampler.marshDistance(x, z) < 14) continue;
-    veils.push(x, L3 - 0.4, z, S.broad.width[0] + (S.broad.width[1] - S.broad.width[0]) * hash4(k, 11, salt), S.broad.height[0] + (S.broad.height[1] - S.broad.height[0]) * hash4(k, 12, salt), hash4(k, 13, salt) * 40, 0.7);
+    veils.push(x, L4 - 0.4, z, S.broad.width[0] + (S.broad.width[1] - S.broad.width[0]) * hash4(k, 11, salt), S.broad.height[0] + (S.broad.height[1] - S.broad.height[0]) * hash4(k, 12, salt), hash4(k, 13, salt) * 40, 0.7);
   }
   out2.texture = texture;
   out2.rect = new Vector4(x0, z0, 1 / size, 1 / size);
@@ -19085,7 +21571,7 @@ function makeMesh(world2, state2, entry) {
     uGround: { value: d.texture },
     uGroundRect: { value: d.rect }
   };
-  mesh2.material = new ShaderMaterial({ name: "marsh-mist", uniforms, vertexShader: VERTEX2, fragmentShader: FRAGMENT, transparent: true, depthTest: true, depthWrite: false, side: DoubleSide, forceSinglePass: true, toneMapped: true });
+  mesh2.material = new ShaderMaterial({ name: "marsh-mist", uniforms, vertexShader: VERTEX4, fragmentShader: FRAGMENT3, transparent: true, depthTest: true, depthWrite: false, side: DoubleSide, forceSinglePass: true, toneMapped: true });
   mesh2.name = "marsh-mist-" + entry.marsh.id;
   mesh2.frustumCulled = false;
   mesh2.castShadow = mesh2.receiveShadow = false;
@@ -19112,7 +21598,7 @@ function updateMarshMist(world2, dt) {
   state2.time += seconds;
   const w = world2.weather?.state || {}, minute = world2.dayNight?.state?.minuteOfDay ?? 720;
   const damp = clamp012(0.6 * (w.fog || 0) + 0.35 * (w.haze || 0) + 0.25 * (w.rain || 0) + 0.15 * (w.wetness || 0)), wind = clamp012(w.wind ?? 0.2);
-  const target = world2.inDungeon ? 0 : clamp012(marshMistHour(minute) * (1 + 0.9 * damp) * (1 - 0.55 * smooth17(0.3, 0.9, wind)) * (1 - 0.7 * clamp012(w.snow || 0)));
+  const target = world2.inDungeon ? 0 : clamp012(marshMistHour(minute) * (1 + 0.9 * damp) * (1 - 0.55 * smooth18(0.3, 0.9, wind)) * (1 - 0.7 * clamp012(w.snow || 0)));
   state2.strength += (target - state2.strength) * (1 - Math.exp(-seconds / 3));
   const wx = Number.isFinite(w.windX) ? w.windX : 1, wz = Number.isFinite(w.windZ) ? w.windZ : 0;
   state2.drift.x += wx * seconds * (8e-3 + wind * 0.03);
@@ -19120,7 +21606,7 @@ function updateMarshMist(world2, dt) {
   const mood = world2.atmosphere?.uniforms?.mood, moodFog = world2.atmosphere?.uniforms?.moodFog, sampler = world2.worldModel?.sampler;
   if (mood && moodFog) {
     const M2 = S.mood, d = world2.inDungeon || !sampler?.marshDistance ? -1e9 : sampler.marshDistance(p.x, p.z);
-    const target2 = smooth17(M2.from, M2.to, d) * M2.strength * (0.75 + 0.25 * clamp012(state2.strength / 0.9));
+    const target2 = smooth18(M2.from, M2.to, d) * M2.strength * (0.75 + 0.25 * clamp012(state2.strength / 0.9));
     state2.mood = (state2.mood ?? target2) + (target2 - (state2.mood ?? target2)) * (1 - Math.exp(-seconds / 1.5));
     mood.value.x = state2.mood > 2e-3 ? state2.mood : 0;
     const fog = world2.scene?.fog?.color;
@@ -19218,8 +21704,8 @@ function sampleGrid(g, array, x, z) {
   const ix = Math.min(g.nx - 2, Math.floor(gx)), iz = Math.min(g.nz - 2, Math.floor(gz)), tx = gx - ix, tz = gz - iz, i = iz * g.nx + ix;
   return (array[i] * (1 - tx) + array[i + 1] * tx) * (1 - tz) + (array[i + g.nx] * (1 - tx) + array[i + g.nx + 1] * tx) * tz;
 }
-var TAU12 = Math.PI * 2;
-var wrap2 = (a) => a - TAU12 * Math.floor((a + Math.PI) / TAU12);
+var TAU14 = Math.PI * 2;
+var wrap2 = (a) => a - TAU14 * Math.floor((a + Math.PI) / TAU14);
 var distanceLists = /* @__PURE__ */ new Map();
 function distancesFor(C2) {
   const key3 = [C2.firstStep, C2.growth, C2.reach].join();
@@ -19515,8 +22001,8 @@ function createCaptureScope(world2, { margin = WATER_CAPTURE_MARGIN, chunk = CHU
 }
 var WATER_COPY_ORDER = RENDER_ORDER.sky + 1;
 var WATER_RENDER_ORDER = RENDER_ORDER.sky + 2;
-var VERTEX3 = "varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}";
-var FRAGMENT2 = "uniform sampler2D source;varying vec2 vUv;void main(){gl_FragColor=texture2D(source,vUv);}";
+var VERTEX5 = "varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}";
+var FRAGMENT4 = "uniform sampler2D source;varying vec2 vUv;void main(){gl_FragColor=texture2D(source,vUv);}";
 function createWaterSceneCopy({ renderer, camera, target }) {
   if (!renderer?.isWebGLRenderer || !camera || typeof target !== "function") throw new TypeError("Renderer, camera and main target are required");
   const gl = renderer.getContext();
@@ -19533,8 +22019,8 @@ function createWaterSceneCopy({ renderer, camera, target }) {
   color3.texture.name = "WaterSceneCopy";
   const quad = new Mesh(new PlaneGeometry(2, 2), new ShaderMaterial({
     uniforms: { source: { value: full.texture } },
-    vertexShader: VERTEX3,
-    fragmentShader: FRAGMENT2,
+    vertexShader: VERTEX5,
+    fragmentShader: FRAGMENT4,
     depthTest: false,
     depthWrite: false
   }));
@@ -20347,7 +22833,7 @@ function createMeadowGrass(world2) {
     return -1;
   }
   function runSurvey(budgetMs) {
-    const started = performance.now(), f10 = world2.terrainFunctions, sea = uniforms.meadowSea.value;
+    const started = performance.now(), f12 = world2.terrainFunctions, sea = uniforms.meadowSea.value;
     let done = 0;
     while (pending.length && performance.now() - started < budgetMs) {
       const iz = pending.pop(), ix = pending.pop(), i = surveySlot(ix, iz);
@@ -20355,13 +22841,13 @@ function createMeadowGrass(world2) {
       const x = ix * 8 + 4, z = iz * 8 + 4, y = groundAt(x, z);
       if (y < NO_GROUND / 2) continue;
       let value = 0;
-      if (y > sea + 1 && f10?.climate) {
-        const climate3 = f10.climate(x, z, y, climateScratch3);
+      if (y > sea + 1 && f12?.climate) {
+        const climate3 = f12.climate(x, z, y, climateScratch3);
         if (climate3.meadow > 0.06) {
-          const water = f10.nearWater?.(x, z, 9);
+          const water = f12.nearWater?.(x, z, 9);
           value = water && water.distance < 8 ? 0 : 1;
         }
-        if (value && f10.coastAt && coastBare(f10, x, z, y) > 0.5) value = 0;
+        if (value && f12.coastAt && coastBare(f12, x, z, y) > 0.5) value = 0;
       }
       surveyX[i] = ix;
       surveyZ[i] = iz;
@@ -21020,8 +23506,8 @@ var WATER_FIRST_QUERY_LIMITS = Object.freeze({ features: 160, segments: 32768, p
 var finite2 = Number.isFinite;
 var EMPTY2 = Object.freeze([]);
 var EPS2 = 0.025;
-var clamp22 = (t) => Math.max(0, Math.min(1, t));
-var mix7 = (a, b, t) => a + (b - a) * t;
+var clamp24 = (t) => Math.max(0, Math.min(1, t));
+var mix8 = (a, b, t) => a + (b - a) * t;
 var inside2 = (b, x, z, pad = 0) => x >= b.minX - pad && x <= b.maxX + pad && z >= b.minZ - pad && z <= b.maxZ + pad;
 var overlap2 = (a, b) => a.minX <= b.maxX && a.maxX >= b.minX && a.minZ <= b.maxZ && a.maxZ >= b.minZ;
 var blank = () => ({ minX: Infinity, minZ: Infinity, maxX: -Infinity, maxZ: -Infinity });
@@ -21078,7 +23564,7 @@ function index(records, boundsOf5, size) {
   };
 }
 function distanceSegment2(x, z, a, b) {
-  const dx = b.x - a.x, dz = b.z - a.z, den = dx * dx + dz * dz, t = den ? clamp22(((x - a.x) * dx + (z - a.z) * dz) / den) : 0;
+  const dx = b.x - a.x, dz = b.z - a.z, den = dx * dx + dz * dz, t = den ? clamp24(((x - a.x) * dx + (z - a.z) * dz) / den) : 0;
   return Math.hypot(x - a.x - dx * t, z - a.z - dz * t);
 }
 function ringDistance(ring2, x, z) {
@@ -21114,7 +23600,7 @@ function sampleWaterFirstPond(pond, x, z, out2 = {}) {
   return out2;
 }
 function sampleWaterFirstRiverSegment(segment2, x, z, out2 = {}) {
-  const { a, b, dx, dz, length2 } = segment2, t = clamp22(((x - a.x) * dx + (z - a.z) * dz) / length2), px = mix7(a.x, b.x, t), pz = mix7(a.z, b.z, t);
+  const { a, b, dx, dz, length2 } = segment2, t = clamp24(((x - a.x) * dx + (z - a.z) * dz) / length2), px = mix8(a.x, b.x, t), pz = mix8(a.z, b.z, t);
   out2.id = segment2.id;
   out2.featureId = segment2.featureId;
   out2.reachId = segment2.reachId;
@@ -21123,11 +23609,11 @@ function sampleWaterFirstRiverSegment(segment2, x, z, out2 = {}) {
   out2.x = px;
   out2.z = pz;
   out2.distance = Math.hypot(x - px, z - pz);
-  out2.level = mix7(a.level, b.level, t);
-  out2.halfWidth = mix7(a.halfWidth, b.halfWidth, t);
-  out2.depth = mix7(a.depth, b.depth, t);
-  out2.bankWidth = mix7(a.bankWidth, b.bankWidth, t);
-  out2.valleyWidth = mix7(a.valleyWidth, b.valleyWidth, t);
+  out2.level = mix8(a.level, b.level, t);
+  out2.halfWidth = mix8(a.halfWidth, b.halfWidth, t);
+  out2.depth = mix8(a.depth, b.depth, t);
+  out2.bankWidth = mix8(a.bankWidth, b.bankWidth, t);
+  out2.valleyWidth = mix8(a.valleyWidth, b.valleyWidth, t);
   out2.minLevel = Math.min(a.level, b.level);
   out2.maxLevel = Math.max(a.level, b.level);
   return out2;
@@ -21280,10 +23766,10 @@ function compileWaterFirstGeometry(plan) {
           terrainBounds[key3] = Math.max(terrainBounds[key3], headwater.supportBounds[key3]);
         }
       }
-      const channelFalls = (reach.falls || []).map((f10) => ({ ...f10, channel: true, streamId: reach.id }));
-      for (const f10 of channelFalls) for (const q of [f10.lip, f10.base]) {
-        grow(featureBounds, q.x, q.z, f10.width);
-        grow(terrainBounds, q.x, q.z, f10.width + 8);
+      const channelFalls = (reach.falls || []).map((f12) => ({ ...f12, channel: true, streamId: reach.id }));
+      for (const f12 of channelFalls) for (const q of [f12.lip, f12.base]) {
+        grow(featureBounds, q.x, q.z, f12.width);
+        grow(terrainBounds, q.x, q.z, f12.width + 8);
       }
       features.push({
         id: reach.id,
@@ -21305,7 +23791,7 @@ function compileWaterFirstGeometry(plan) {
   freeze3(features);
   freeze3(segments);
   freeze3(ponds);
-  const wetIndex = index(segments, (s) => s.bounds, 64), influenceIndex = index(segments, (s) => s.influenceBounds, 128), featureIndex = index(features, (f10) => f10.terrainBounds, 128);
+  const wetIndex = index(segments, (s) => s.bounds, 64), influenceIndex = index(segments, (s) => s.influenceBounds, 128), featureIndex = index(features, (f12) => f12.terrainBounds, 128);
   const scratch3 = {};
   function riverSurfaceAt(x, z, out2 = {}, oceanOnly = false) {
     checkedXZ(x, z);
@@ -21458,7 +23944,7 @@ function createWaterFirstRuntime({ plan, geometry: geometry3 = compileWaterFirst
       if (Math.abs(s.dz) < 1e-12) continue;
       const t = (z - s.a.z) / s.dz;
       if (t < 0 || t > 1) continue;
-      result.push({ id: s.id, featureId: s.featureId, x: mix7(s.a.x, s.b.x, t), z, level: mix7(s.a.level, s.b.level, t), width: mix7(s.a.halfWidth, s.b.halfWidth, t) * 2, flow: { x: s.dx / Math.sqrt(s.length2), z: s.dz / Math.sqrt(s.length2) } });
+      result.push({ id: s.id, featureId: s.featureId, x: mix8(s.a.x, s.b.x, t), z, level: mix8(s.a.level, s.b.level, t), width: mix8(s.a.halfWidth, s.b.halfWidth, t) * 2, flow: { x: s.dx / Math.sqrt(s.length2), z: s.dz / Math.sqrt(s.length2) } });
     }
     return result.sort((a, b) => b.width - a.width || a.x - b.x || a.id.localeCompare(b.id)).slice(0, 64);
   }
@@ -21477,7 +23963,7 @@ function createWaterFirstRuntime({ plan, geometry: geometry3 = compileWaterFirst
     projectChannel: projectChannel2,
     channelSections: channelSections2,
     queryBounds: geometry3.queryBounds,
-    reservations: (b) => geometry3.queryBounds(b).flatMap((f10) => f10.reservations),
+    reservations: (b) => geometry3.queryBounds(b).flatMap((f12) => f12.reservations),
     terrainHeight: (x, z, original) => terrainHeight ? terrainHeight(x, z, original) : original,
     setFinalHeight(fn) {
       if (typeof fn !== "function") throw TypeError("Final triangle height callback required");
@@ -21492,7 +23978,7 @@ function createWaterFirstRuntime({ plan, geometry: geometry3 = compileWaterFirst
 // water-first-environment.js
 function createWaterFirstEnvironment({ plan, hydrology: hydrology2, island, height: height2, slope: slope2 = null }) {
   if (!plan || !hydrology2?.nearWater || !hydrology2?.waterAt || typeof height2 !== "function" || !island?.sample) throw TypeError("Water-first field and canonical height required");
-  const clamp56 = (v) => Math.max(0, Math.min(1, v));
+  const clamp58 = (v) => Math.max(0, Math.min(1, v));
   const swampRegions = (plan.swampCoverage || []).map((c2) => ({ id: c2.wetlandId, bodyId: c2.bodyId, region: c2.region, cos: Math.cos(c2.region.yaw), sin: Math.sin(c2.region.yaw) }));
   const mouths = Object.freeze(plan.rivers.filter((r) => r.mouth).map((r) => Object.freeze({
     ...r.mouth,
@@ -21509,8 +23995,8 @@ function createWaterFirstEnvironment({ plan, hydrology: hydrology2, island, heig
     const wet = hydrology2.waterAt(x, z, elevation), shore = wet ? { ...wet, distance: 0 } : hydrology2.nearWater(x, z, 24), distance4 = shore?.distance ?? Infinity;
     const grade = slope2 ? slope2(x, z) : Math.hypot(height2(x + 2, z) - height2(x - 2, z), height2(x, z + 2) - height2(x, z - 2)) / 4;
     if (!Number.isFinite(grade) || grade < 0) throw TypeError("Finite nonnegative terrain slope required");
-    const shoreBlend = clamp56((24 - distance4) / 6), shoreWeight = shoreBlend * shoreBlend * (3 - 2 * shoreBlend);
-    const humidity = clamp56(0.28 + 0.55 * Math.exp(-distance4 / 18) * shoreWeight);
+    const shoreBlend = clamp58((24 - distance4) / 6), shoreWeight = shoreBlend * shoreBlend * (3 - 2 * shoreBlend);
+    const humidity = clamp58(0.28 + 0.55 * Math.exp(-distance4 / 18) * shoreWeight);
     let swampRegionId = null;
     for (const r of swampRegions) {
       if ((shore?.featureId ?? shore?.id) !== r.bodyId) continue;
@@ -21571,16 +24057,16 @@ function createWaterFirstEnvironment({ plan, hydrology: hydrology2, island, heig
 }
 
 // hydrology-shape.js
-var clamp23 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
-var smooth18 = (a, b, x) => {
-  const t = clamp23((x - a) / (b - a));
+var clamp25 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+var smooth19 = (a, b, x) => {
+  const t = clamp25((x - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
-var mix8 = (a, b, t) => a + (b - a) * t;
+var mix9 = (a, b, t) => a + (b - a) * t;
 var HYDROLOGY_EROSION_LIMITS = Object.freeze({ bankRadius: 62, maxBankCut: 2.4, maxChannelCut: 4.9, maxDepth: 1.2 });
 var POND_POLYGON_LIMITS = Object.freeze({ vertices: 1024, minEdge: 1e-6, minArea: 1e-6 });
 var polygonCache = /* @__PURE__ */ new WeakMap();
-var TAU13 = Math.PI * 2;
+var TAU15 = Math.PI * 2;
 var orient = (a, b, c2) => (b.x - a.x) * (c2.z - a.z) - (b.z - a.z) * (c2.x - a.x);
 function segmentsMeet(a, b, c2, d) {
   const o1 = orient(a, b, c2), o2 = orient(a, b, d), o3 = orient(c2, d, a), o4 = orient(c2, d, b);
@@ -21628,7 +24114,7 @@ function polygonDistance(data, x, z) {
   let inside3 = false, distance4 = Infinity;
   for (let i = 0, j = data.ring.length - 1; i < data.ring.length; j = i++) {
     const a = data.ring[j], b = data.ring[i], dx = b.x - a.x, dz = b.z - a.z;
-    const t = clamp23(((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz));
+    const t = clamp25(((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz));
     distance4 = Math.min(distance4, Math.hypot(x - a.x - dx * t, z - a.z - dz * t));
     if (a.z > z !== b.z > z && x < (b.x - a.x) * (z - a.z) / (b.z - a.z) + a.x) inside3 = !inside3;
   }
@@ -21645,7 +24131,7 @@ function pondPerimeterPoint(p, fraction, offset = 0) {
   let along = (fraction % 1 + 1) % 1 * data.perimeter, index2 = 0;
   while (index2 < data.lengths.length - 1 && along > data.lengths[index2]) along -= data.lengths[index2++];
   const a = data.ring[index2], b = data.ring[(index2 + 1) % data.ring.length], length = data.lengths[index2], t = along / length;
-  const x = mix8(a.x, b.x, t), z = mix8(a.z, b.z, t), nx = (b.z - a.z) / length * data.winding, nz = -(b.x - a.x) / length * data.winding;
+  const x = mix9(a.x, b.x, t), z = mix9(a.z, b.z, t), nx = (b.z - a.z) / length * data.winding, nz = -(b.x - a.x) / length * data.winding;
   if (!offset) return { x, z };
   let distance4 = offset;
   for (let attempt = 0; attempt < 20; attempt++) {
@@ -21672,7 +24158,7 @@ function pondRadius(p, x, z) {
 function pondPoint(p, a, r = 1) {
   if (p.polygon) {
     const data = pondPolygonData(p);
-    return pondPerimeterPoint(p, a / TAU13, (r - 1) * data.scale);
+    return pondPerimeterPoint(p, a / TAU15, (r - 1) * data.scale);
   }
   const k = r * pondOutline(p, a), u = Math.cos(a) * p.radiusX * k, v = Math.sin(a) * p.radiusZ * k, c2 = Math.cos(p.yaw), s = Math.sin(p.yaw);
   return { x: p.center.x + u * c2 - v * s, z: p.center.z + u * s + v * c2 };
@@ -21684,30 +24170,30 @@ function fallFrame(fall, x, z) {
 function fallLipT(fall, across2) {
   const p = fall.profile;
   if (!p) return 0;
-  const u = clamp23(across2 / (fall.width * 0.5), -1.8, 1.8), bend = p.crestBend * Math.sin(u * 1.7) + p.crestBowl * (Math.cos(u * 2.2) - 1);
+  const u = clamp25(across2 / (fall.width * 0.5), -1.8, 1.8), bend = p.crestBend * Math.sin(u * 1.7) + p.crestBowl * (Math.cos(u * 2.2) - 1);
   return bend / p.length;
 }
 function fallProfile(fall, t, across2) {
   const p = fall.profile, length = p?.length || Math.hypot(fall.base.x - fall.lip.x, fall.base.z - fall.lip.z), s = t * length, half = fall.width * 0.5, crestT = fallLipT(fall, across2), crest = crestT * length, crestLevel = fall.lip.y, crestSlope = p?.inletSlope || 0, impactT = p?.impactT ?? 1;
-  const alongEnd = p?.alongEnd ?? length + 4, side2 = p?.bankHalfWidth ?? half + 3, influence = smooth18(-3, -1.4, s) * (1 - smooth18(alongEnd - 1.4, alongEnd, s)) * (1 - smooth18(side2 - 1.2, side2, Math.abs(across2)));
+  const alongEnd = p?.alongEnd ?? length + 4, side2 = p?.bankHalfWidth ?? half + 3, influence = smooth19(-3, -1.4, s) * (1 - smooth19(alongEnd - 1.4, alongEnd, s)) * (1 - smooth19(side2 - 1.2, side2, Math.abs(across2)));
   const radiusAlong = p?.receiverLength ?? 3.6, radiusAcross = p?.receiverWidth ?? 3.5, angle = Math.atan2(across2 / radiusAcross, (s - length) / radiusAlong), outline = 1 + 0.09 * Math.sin(angle * 2 + (p?.phase || 0)) + 0.055 * Math.cos(angle * 3 - (p?.phase || 0));
   const receiverRadius = Math.hypot((s - length) / radiusAlong, across2 / radiusAcross) / outline, receiverEdge = (1 - receiverRadius) * Math.min(radiusAlong, radiusAcross);
   const outlet = p?.outlet || fall.plungePool.outlet, ox = outlet.x - fall.base.x, oz = outlet.z - fall.base.z, outletAlong = p?.outletAlong ?? ox * fall.flow.x + oz * fall.flow.z, outletAcross = p?.outletAcross ?? -ox * fall.flow.z + oz * fall.flow.x, inverseLength2 = p?.outletInverseLength2 ?? 1 / (ox * ox + oz * oz);
-  const outletT = ((s - length) * outletAlong + across2 * outletAcross) * inverseLength2, receiverLevel = mix8(fall.base.y, outlet.y, clamp23(outletT));
-  const upper = s <= crest + 1e-8, receiving = !upper && receiverRadius <= 1, upperLevel = crestLevel + crestSlope * (s - crest * smooth18(-1.4, crest, s)), level = upper ? upperLevel : receiving ? receiverLevel : null;
+  const outletT = ((s - length) * outletAlong + across2 * outletAcross) * inverseLength2, receiverLevel = mix9(fall.base.y, outlet.y, clamp25(outletT));
+  const upper = s <= crest + 1e-8, receiving = !upper && receiverRadius <= 1, upperLevel = crestLevel + crestSlope * (s - crest * smooth19(-1.4, crest, s)), level = upper ? upperLevel : receiving ? receiverLevel : null;
   const shoulders = 0.5 + 0.5 * Math.sin(across2 / Math.max(half, 1) * 1.2 + (p?.phase || 0));
   const start2 = crest - 0.1, end = Math.max(start2 + 8 / 3, length * 0.95 + crest * 0.18 + 0.18 * (shoulders - 0.5));
-  let bed = mix8(crestLevel - 0.6, fall.base.y - 0.82, smooth18(start2, end, s));
+  let bed = mix9(crestLevel - 0.6, fall.base.y - 0.82, smooth19(start2, end, s));
   if (s < start2) bed = upperLevel - 0.6;
-  if (s > length) bed = receiverLevel - 0.6 - 0.22 * (1 - smooth18(0, 3.2, Math.hypot(s - length, across2)));
-  const crestBank = 0.98 * smooth18(half * 0.3, half * 1.1, Math.abs(across2)) * (1 - smooth18(length * 0.46, length + 1.1, s));
+  if (s > length) bed = receiverLevel - 0.6 - 0.22 * (1 - smooth19(0, 3.2, Math.hypot(s - length, across2)));
+  const crestBank = 0.98 * smooth19(half * 0.3, half * 1.1, Math.abs(across2)) * (1 - smooth19(length * 0.46, length + 1.1, s));
   bed += crestBank;
   if (receiverRadius < 1) {
-    const scour = receiverLevel - fall.plungePool.depth * Math.max(0, 1 - receiverRadius * receiverRadius), basinWeight = (1 - smooth18(0.68, 1, receiverRadius)) * smooth18(length * 0.74, length * 1.12, s);
-    bed = mix8(bed, Math.min(bed, scour), basinWeight);
+    const scour = receiverLevel - fall.plungePool.depth * Math.max(0, 1 - receiverRadius * receiverRadius), basinWeight = (1 - smooth19(0.68, 1, receiverRadius)) * smooth19(length * 0.74, length * 1.12, s);
+    bed = mix9(bed, Math.min(bed, scour), basinWeight);
   }
-  const bankWeight = 1 - smooth18(half - 0.3, side2, Math.abs(across2));
-  const impactLevel = mix8(fall.base.y, outlet.y, clamp23(((impactT * length - length) * outletAlong + across2 * outletAcross) * inverseLength2));
+  const bankWeight = 1 - smooth19(half - 0.3, side2, Math.abs(across2));
+  const impactLevel = mix9(fall.base.y, outlet.y, clamp25(((impactT * length - length) * outletAlong + across2 * outletAcross) * inverseLength2));
   return { crestT, crestLevel, crestSlope, impactT, impactLevel, crestHalfWidth: half, upper, receiving, receiverRadius, receiverEdge, receiverLevel, outletT, level, bed, bankWeight, influence };
 }
 function fallProfileBounds(fall) {
@@ -21727,8 +24213,8 @@ var PUBLIC_RIVER_CONTROL_LIMITS = Object.freeze({
   maxComparisons: 2097152
 });
 var finite3 = Number.isFinite;
-var mix9 = (a, b, t) => a + (b - a) * t;
-var clamp24 = (t) => Math.max(0, Math.min(1, t));
+var mix10 = (a, b, t) => a + (b - a) * t;
+var clamp26 = (t) => Math.max(0, Math.min(1, t));
 function publicRiverCurvePoint(points, index2, t) {
   const b = points[index2], c2 = points[index2 + 1], a = points[index2 - 1] || b.map((v, k) => 2 * v - c2[k]), d = points[index2 + 2] || c2.map((v, k) => 2 * v - b[k]);
   let d0 = Math.sqrt(Math.hypot(...a.map((v, k) => v - b[k]))), d1 = Math.sqrt(Math.hypot(...b.map((v, k) => v - c2[k]))), d2 = Math.sqrt(Math.hypot(...c2.map((v, k) => v - d[k])));
@@ -21743,15 +24229,15 @@ function publicRiverCurvePoint(points, index2, t) {
 }
 function interpolate(a, b, t) {
   const p = {
-    x: mix9(a.x, b.x, t),
-    y: mix9(a.y, b.y, t),
-    z: mix9(a.z, b.z, t),
-    width: mix9(a.width, b.width, t)
+    x: mix10(a.x, b.x, t),
+    y: mix10(a.y, b.y, t),
+    z: mix10(a.z, b.z, t),
+    width: mix10(a.width, b.width, t)
   };
   for (const key3 of ["depth", "plannedWidth", "plannedDepth", "discharge", "bulkSpeed", "surfaceSpeed", "grade"])
-    if (finite3(a[key3]) && finite3(b[key3])) p[key3] = mix9(a[key3], b[key3], t);
+    if (finite3(a[key3]) && finite3(b[key3])) p[key3] = mix10(a[key3], b[key3], t);
   if (finite3(a.bankTransition) || finite3(b.bankTransition))
-    p.bankTransition = mix9(
+    p.bankTransition = mix10(
       finite3(a.bankTransition) ? Math.max(0, Math.min(0.75, a.bankTransition)) : 0.75,
       finite3(b.bankTransition) ? Math.max(0, Math.min(0.75, b.bankTransition)) : 0.75,
       t
@@ -21838,10 +24324,10 @@ function buildPublicRiverControls(points, options = {}) {
       proof.ownerComparisons++;
       const { a, b, dx, dz, length2 } = segments[i], rawT = ((x - a.x) * dx + (z - a.z) * dz) / length2;
       if (a.fallReceiverStart && rawT < 0) continue;
-      const t = clamp24(rawT), distance4 = Math.hypot(x - mix9(a.x, b.x, t), z - mix9(a.z, b.z, t)), width = mix9(a.width, b.width, t);
+      const t = clamp26(rawT), distance4 = Math.hypot(x - mix10(a.x, b.x, t), z - mix10(a.z, b.z, t)), width = mix10(a.width, b.width, t);
       if (distance4 <= width * 0.5 && distance4 < nearest2) {
         nearest2 = distance4;
-        best = { segment: i, t, distance: distance4, level: mix9(a.y, b.y, t), width };
+        best = { segment: i, t, distance: distance4, level: mix10(a.y, b.y, t), width };
       }
     }
     return best;
@@ -21921,13 +24407,13 @@ var WATER_BODY_SPEC_LIMITS = Object.freeze({ pondVertices: 64, ponds: 5, streams
 var NETWORK_WATER_BODY_LIMITS = Object.freeze({ polygonVertices: 1024, polygonGridCells: 262144, endpointOverlap: 0.25 });
 var finite4 = Number.isFinite;
 var EPS3 = 1e-6;
-var TAU14 = Math.PI * 2;
+var TAU16 = Math.PI * 2;
 var point3 = (p) => p && [p.x, p.y, p.z].every(finite4);
 var xz = (p) => p && [p.x, p.z].every(finite4);
 var issue = (id2, code, message, severity = "warning", detail) => ({ id: id2, code, message, severity, ...detail ? { detail } : {} });
 var boundsOf3 = (points, pad = 0) => ({ minX: Math.min(...points.map((p) => p.x)) - pad, maxX: Math.max(...points.map((p) => p.x)) + pad, minZ: Math.min(...points.map((p) => p.z)) - pad, maxZ: Math.max(...points.map((p) => p.z)) + pad });
 var validBounds2 = (b) => b && [b.minX, b.maxX, b.minZ, b.maxZ].every(finite4) && b.minX < b.maxX && b.minZ < b.maxZ;
-var mix10 = (a, b, t) => a + (b - a) * t;
+var mix11 = (a, b, t) => a + (b - a) * t;
 var record = (id2, featureId, type, method, options, bounds6, mapping = {}) => ({ id: id2, featureId, type, method, options, bounds: { ...bounds6 }, mapping });
 function validateRiverTerrain(spec, height2, { waterAt } = {}) {
   if (spec.method !== "addRiver" || typeof height2 !== "function") return { valid: true, probes: 0, minClearance: null };
@@ -22049,7 +24535,7 @@ function pondBodySpec(pond, featureId, { gridSpacing = 0.35 } = {}) {
     });
   }
   if (!pond?.id || !xz(pond.center) || ![pond.radiusX, pond.radiusZ, pond.yaw, pond.phase, pond.level].every(finite4) || pond.radiusX <= 0 || pond.radiusZ <= 0 || !finite4(gridSpacing) || gridSpacing <= 0) throw new TypeError("A finite authoritative pond descriptor is required");
-  const polygon2 = Array.from({ length: WATER_BODY_SPEC_LIMITS.pondVertices }, (_, i) => pondPoint(pond, i / WATER_BODY_SPEC_LIMITS.pondVertices * TAU14));
+  const polygon2 = Array.from({ length: WATER_BODY_SPEC_LIMITS.pondVertices }, (_, i) => pondPoint(pond, i / WATER_BODY_SPEC_LIMITS.pondVertices * TAU16));
   const marsh = pond.kind === "marsh", lake = pond.kind === "lake";
   return record(pond.id, featureId, marsh ? "marsh" : lake ? "lake" : "pond", lake ? "addLake" : "addPond", {
     name: pond.id,
@@ -22089,7 +24575,7 @@ function densifyStreamPoints(points) {
     if (dense.length + count > WATER_BODY_SPEC_LIMITS.denseStreamPoints) throw new RangeError("Densified stream exceeds point budget");
     for (let j = 1; j <= count; j++) {
       const t = j / count;
-      dense.push({ x: mix10(a.x, b.x, t), y: mix10(a.y, b.y, t), z: mix10(a.z, b.z, t), width: mix10(a.width, b.width, t) });
+      dense.push({ x: mix11(a.x, b.x, t), y: mix11(a.y, b.y, t), z: mix11(a.z, b.z, t), width: mix11(a.width, b.width, t) });
     }
   }
   return dense;
@@ -22216,7 +24702,7 @@ function waterfallBodySpec(fall, featureId, { height: terrainHeight, mist = 0.18
     for (let row2 = 0; row2 <= WATER_BODY_SPEC_LIMITS.fallRows; row2++) {
       const t = row2 / WATER_BODY_SPEC_LIMITS.fallRows, seconds = t * flightSeconds, vy = -9.81 * seconds, norm3 = Math.hypot(speed, vy), nx = -vy / norm3, ny = speed / norm3;
       for (let column = 0; column <= WATER_BODY_SPEC_LIMITS.fallColumns; column++) {
-        const across2 = column / WATER_BODY_SPEC_LIMITS.fallColumns - 0.5, bulge = Math.cos(across2 * Math.PI) * 0.15 * (1 - t), x = mix10(top[0], impact[0], t) - fz * width * across2 + fx * nx * bulge, z = mix10(top[2], impact[2], t) + fx * width * across2 + fz * nx * bulge, y = top[1] - drop * t * t + ny * bulge;
+        const across2 = column / WATER_BODY_SPEC_LIMITS.fallColumns - 0.5, bulge = Math.cos(across2 * Math.PI) * 0.15 * (1 - t), x = mix11(top[0], impact[0], t) - fz * width * across2 + fx * nx * bulge, z = mix11(top[2], impact[2], t) + fx * width * across2 + fz * nx * bulge, y = top[1] - drop * t * t + ny * bulge;
         const ground = terrainHeight(x, z);
         if (!finite4(ground)) return { spec: null, issues: [...issues, issue(fall.id, "invalid-fall-terrain", "Terrain returned a nonfinite height while fitting the existing waterfall.", "error")] };
         minClearance = Math.min(minClearance, y - ground);
@@ -22325,7 +24811,7 @@ function receiverBodySpec(fall, featureId, { height: terrainHeight, waterAt, rec
     return lo;
   }
   for (let i = 0; i <= rows; i++) {
-    const t = mix10(start2, 1, i / rows);
+    const t = mix11(start2, 1, i / rows);
     if (!receiving(t, 0)) {
       issues.push(issue(fall.id, "receiver-wet-center-gap", "The physical receiver has a disconnected dry center interval.", "error", { t }));
       continue;
@@ -22460,7 +24946,7 @@ function specsForLegacyRiver({ bounds: bounds6, riverX: riverX2, height: height2
   }
   const count = (rows - 1) * 2;
   for (let i = 0; i <= count; i++) {
-    const z = mix10(bounds6.minZ, bounds6.maxZ, i / count), p = center2(z);
+    const z = mix11(bounds6.minZ, bounds6.maxZ, i / count), p = center2(z);
     if (p) {
       if (previous && !previous.wet) reach.push(boundary(p, previous));
       reach.push(widthPoint(p));
@@ -22613,7 +25099,7 @@ function waterFirstBodySpecs(feature, { height: height2, includeHeadwaters = tru
       }
     });
   }
-  const falls = (feature.falls || []).filter((f10) => f10.channel || includeHeadwaters);
+  const falls = (feature.falls || []).filter((f12) => f12.channel || includeHeadwaters);
   if (!Array.isArray(falls) || falls.length > 3) throw new RangeError("Bounded planned source falls required");
   if (falls.length && typeof height2 !== "function") throw new TypeError("Final source-fall terrain height required");
   const generated = !!feature.streams?.[0]?.generated;
@@ -22636,12 +25122,12 @@ function createWaterFirstStream(world2) {
     lastTime = t;
     lastX = x;
     lastZ = z;
-    const wanted = world2.hydrology.features.filter((f10) => distanceBounds(x, z, f10.bounds) <= waterFirstDisplayRange(f10, true));
+    const wanted = world2.hydrology.features.filter((f12) => distanceBounds(x, z, f12.bounds) <= waterFirstDisplayRange(f12, true));
     let changed = wanted.length !== activeFeatures.size;
-    for (const f10 of wanted) if (activeFeatures.get(f10.id) !== f10) changed = true;
+    for (const f12 of wanted) if (activeFeatures.get(f12.id) !== f12) changed = true;
     if (changed) {
       activeFeatures.clear();
-      for (const f10 of wanted) activeFeatures.set(f10.id, f10);
+      for (const f12 of wanted) activeFeatures.set(f12.id, f12);
       revision++;
     }
     const sound2 = [];
@@ -22710,7 +25196,7 @@ function createWaterFirstStream(world2) {
 
 // water-contact.js
 var finite5 = Number.isFinite;
-var clamp25 = (v) => Math.max(0, Math.min(1, v));
+var clamp27 = (v) => Math.max(0, Math.min(1, v));
 function worldWaterAt(world2, x, z, groundHeight2) {
   if (world2?.inDungeon) return null;
   const query = world2?.hydrology?.waterAt || world2?.terrainFunctions?.waterAt;
@@ -22724,7 +25210,7 @@ function feetWaterDepth(world2, x, z, feetY, groundHeight2) {
   return water && finite5(feetY) ? Math.max(0, water.level - feetY) : 0;
 }
 function wadingSpeed(depth) {
-  return 1 - 0.52 * clamp25((depth - 0.035) / 0.3);
+  return 1 - 0.52 * clamp27((depth - 0.035) / 0.3);
 }
 function waterFootstep(world2, x, z, feetY, groundHeight2) {
   return feetWaterDepth(world2, x, z, feetY, groundHeight2) > 0.035;
@@ -22755,7 +25241,7 @@ function createUnderwaterView(THREE, world2) {
 }
 
 // vendor/RealisticWater.js
-var { FullScreenPass, saveRendererState, restoreRendererState, mulberry32, gaussianPair, clamp: clamp26, lerp: lerp2, smoothstep, toVec3, makeTarget, linkUniforms } = (() => {
+var { FullScreenPass, saveRendererState, restoreRendererState, mulberry32, gaussianPair, clamp: clamp28, lerp: lerp2, smoothstep, toVec3, makeTarget, linkUniforms } = (() => {
   const _fsCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
   const _fsGeometry = (() => {
     const g = new BufferGeometry();
@@ -22818,10 +25304,10 @@ var { FullScreenPass, saveRendererState, restoreRendererState, mulberry32, gauss
     const r = Math.sqrt(-2 * Math.log(u1));
     return [r * Math.cos(2 * Math.PI * u2), r * Math.sin(2 * Math.PI * u2)];
   }
-  const clamp56 = (x, a, b) => Math.min(b, Math.max(a, x));
+  const clamp58 = (x, a, b) => Math.min(b, Math.max(a, x));
   const lerp3 = (a, b, t) => a + (b - a) * t;
   const smoothstep3 = (a, b, x) => {
-    const t = clamp56((x - a) / (b - a), 0, 1);
+    const t = clamp58((x - a) / (b - a), 0, 1);
     return t * t * (3 - 2 * t);
   };
   function toVec32(v, target = new Vector3()) {
@@ -22866,20 +25352,20 @@ var { FullScreenPass, saveRendererState, restoreRendererState, mulberry32, gauss
     for (const s of sources) for (const k in s) out2[k] = s[k];
     return out2;
   }
-  return { FullScreenPass: FullScreenPass2, saveRendererState: saveRendererState2, restoreRendererState: restoreRendererState2, mulberry32: mulberry322, gaussianPair: gaussianPair2, clamp: clamp56, lerp: lerp3, smoothstep: smoothstep3, toVec3: toVec32, makeTarget: makeTarget2, linkUniforms: linkUniforms2 };
+  return { FullScreenPass: FullScreenPass2, saveRendererState: saveRendererState2, restoreRendererState: restoreRendererState2, mulberry32: mulberry322, gaussianPair: gaussianPair2, clamp: clamp58, lerp: lerp3, smoothstep: smoothstep3, toVec3: toVec32, makeTarget: makeTarget2, linkUniforms: linkUniforms2 };
 })();
 var { GRAVITY, normalizeSpectrum, frequency, frequencyDerivative, spectrumAmplitude, SPECTRUM_GLSL } = /* @__PURE__ */ (() => {
   const GRAVITY4 = 9.81;
   function normalizeSpectrum2(p = {}, g = GRAVITY4) {
     const U = Math.max(0.2, p.windSpeed ?? 8);
-    const F = Math.max(1, p.fetch ?? 1e5);
+    const F3 = Math.max(1, p.fetch ?? 1e5);
     return {
       scale: p.scale ?? 1,
       angle: (p.windDirection ?? 0) * Math.PI / 180,
-      spreadBlend: clamp26(p.spread ?? 0.85, 0, 1),
-      swell: clamp26(p.swell ?? 0.2, 0, 1),
-      alpha: 0.076 * Math.pow(U * U / (F * g), 0.22),
-      peakOmega: 22 * Math.pow(g * g / (U * F), 1 / 3),
+      spreadBlend: clamp28(p.spread ?? 0.85, 0, 1),
+      swell: clamp28(p.swell ?? 0.2, 0, 1),
+      alpha: 0.076 * Math.pow(U * U / (F3 * g), 0.22),
+      peakOmega: 22 * Math.pow(g * g / (U * F3), 1 / 3),
       gamma: p.peakEnhancement ?? 3.3,
       shortWavesFade: p.shortWavesFade ?? 0.01
     };
@@ -22917,9 +25403,9 @@ var { GRAVITY, normalizeSpectrum, frequency, frequencyDerivative, spectrumAmplit
     return omega > peakOmega ? 9.77 * Math.pow(x, -2.5) : 6.97 * Math.pow(x, 5);
   }
   function wrapAngle2(a) {
-    const TAU36 = Math.PI * 2;
-    a = (a + Math.PI) % TAU36;
-    if (a < 0) a += TAU36;
+    const TAU38 = Math.PI * 2;
+    a = (a + Math.PI) % TAU38;
+    if (a < 0) a += TAU38;
     return a - Math.PI;
   }
   function directionSpectrum(theta, omega, s) {
@@ -23253,11 +25739,11 @@ void main() {
       return list;
     }
     bands() {
-      const L3 = this.lengthScales;
+      const L4 = this.lengthScales;
       const out2 = [];
-      for (let c2 = 0; c2 < L3.length; c2++) {
-        const kMin = c2 === 0 ? 1e-4 : 2 * Math.PI / L3[c2] * 6;
-        const kMax = c2 === L3.length - 1 ? 1e9 : 2 * Math.PI / L3[c2 + 1] * 6;
+      for (let c2 = 0; c2 < L4.length; c2++) {
+        const kMin = c2 === 0 ? 1e-4 : 2 * Math.PI / L4[c2] * 6;
+        const kMax = c2 === L4.length - 1 ? 1e9 : 2 * Math.PI / L4[c2 + 1] * 6;
         out2.push([kMin, kMax]);
       }
       return out2;
@@ -23391,7 +25877,7 @@ void main() {
     }
     _createMaterials() {
       const N = this.size;
-      const L3 = new Vector4(...this.lengthScales, 1, 1, 1, 1);
+      const L4 = new Vector4(...this.lengthScales, 1, 1, 1, 1);
       const specUniforms = () => ({
         uDepth: { value: this.depth },
         uGravity: { value: GRAVITY },
@@ -23402,14 +25888,14 @@ void main() {
       this._spectrum = rawMat(SPECTRUM_FRAG, Object.assign(specUniforms(), {
         uNoise: { value: this._noiseTex },
         uSize: { value: N },
-        uLengthScales: { value: L3.clone() },
+        uLengthScales: { value: L4.clone() },
         uKMin: { value: new Vector4() },
         uKMax: { value: new Vector4() }
       }));
       this._evolve = rawMat(EVOLVE_FRAG, Object.assign(specUniforms(), {
         uH0: { value: this._h0.texture },
         uSize: { value: N },
-        uLengthScales: { value: L3.clone() },
+        uLengthScales: { value: L4.clone() },
         uTime: { value: 0 },
         uLoopPeriod: { value: this.loopPeriod }
       }));
@@ -23468,8 +25954,8 @@ void main() {
         u["uDeriv" + c2].value = t[1];
         u["uVar" + c2].value = t[2];
       }
-      const L3 = this.lengthScales;
-      u.uLengths.value.set(L3[0], L3[1] ?? L3[0], L3[2] ?? L3[0], this.cascades);
+      const L4 = this.lengthScales;
+      u.uLengths.value.set(L4[0], L4[1] ?? L4[0], L4[2] ?? L4[0], this.cascades);
     }
   }
   return { FFTWaves: FFTWaves2 };
@@ -23513,10 +25999,10 @@ var { CPUWaves } = /* @__PURE__ */ (() => {
       this.waveScale = 1;
     }
     _rebuild() {
-      const w = this.waves, N = w.size, M2 = this.M, L3 = this.L;
+      const w = this.waves, N = w.size, M2 = this.M, L4 = this.L;
       const spectra = w.normalizedSpectra || w.spectraParams;
       const [kMin, kMax] = w.bands()[0];
-      const dk = 2 * Math.PI / L3;
+      const dk = 2 * Math.PI / L4;
       const noise7 = w.noise[0];
       const off = N / 2 - M2 / 2;
       const w0 = 2 * Math.PI / w.loopPeriod;
@@ -23637,8 +26123,8 @@ var { CPUWaves } = /* @__PURE__ */ (() => {
     }
     // 変位 (x,z は「波で動かす前」の座標)
     sampleDisplacement(x, z, out2) {
-      const M2 = this.M, f10 = M2 / this.L;
-      const gx = x * f10, gz = z * f10;
+      const M2 = this.M, f12 = M2 / this.L;
+      const gx = x * f12, gz = z * f12;
       const ix = Math.floor(gx), iz = Math.floor(gz);
       const fx = gx - ix, fz = gz - iz;
       const x0 = (ix % M2 + M2) % M2, z0 = (iz % M2 + M2) % M2;
@@ -25202,8 +27688,8 @@ void main() {
       const o = this._sbOut || (this._sbOut = { bed: 0, dist: 0, ax: 0, az: 0 });
       const ch = (c2) => {
         const a = d.data[(j * d.W + i) * 4 + c2], b = d.data[(j * d.W + i1) * 4 + c2];
-        const e = d.data[(j1 * d.W + i) * 4 + c2], f10 = d.data[(j1 * d.W + i1) * 4 + c2];
-        return a + (b - a) * fu + (e + (f10 - e) * fu - (a + (b - a) * fu)) * fv;
+        const e = d.data[(j1 * d.W + i) * 4 + c2], f12 = d.data[(j1 * d.W + i1) * 4 + c2];
+        return a + (b - a) * fu + (e + (f12 - e) * fu - (a + (b - a) * fu)) * fv;
       };
       o.bed = ch(0);
       o.dist = ch(1);
@@ -25721,8 +28207,8 @@ void main() {
             const r = Math.floor(v / C2), c2 = v % C2;
             let dc = 3;
             for (let k = 1; k <= 2 && dc === 3; k++) if (c2 - k >= 0 && !hit[v - k] || c2 + k < C2 && !hit[v + k]) dc = k;
-            const f10 = Math.min(1, dist2[r] / st.ramp) * (dc / 3);
-            sink[v] = Math.max(sink[v], (base[v] - st.lo) * f10);
+            const f12 = Math.min(1, dist2[r] / st.ramp) * (dc / 3);
+            sink[v] = Math.max(sink[v], (base[v] - st.lo) * f12);
           }
         }
         let from = -1;
@@ -26098,8 +28584,8 @@ void main() {
         const vel = dir.clone().multiplyScalar(this.speed).add(new Vector3(0, -G2 * tt, 0)).normalize();
         const n = new Vector3().crossVectors(side2, vel).normalize();
         if (n.dot(dir) < 0) n.negate();
-        const f10 = tt / tEnd;
-        rows.push({ c: c2, vel, n, f: f10, fall: tt + pre, w: this.width * (1 + this.spread * f10), thick: th[0] * sstep(0, 0.12, f10) + (th[1] - th[0]) * f10 });
+        const f12 = tt / tEnd;
+        rows.push({ c: c2, vel, n, f: f12, fall: tt + pre, w: this.width * (1 + this.spread * f12), thick: th[0] * sstep(0, 0.12, f12) + (th[1] - th[0]) * f12 });
       }
       const firstFall = Math.max(0, rows.findIndex((r) => r.f > 0) - 1);
       const pos2 = [], nrm = [], tan = [], uv = [], fall = [], face = [], idx = [];
@@ -26250,8 +28736,8 @@ void main() {
         while (this._splashTimer > 0.03) {
           this._splashTimer -= 0.03;
           const s = (Math.random() - 0.5) * this.width * (1 + this.spread);
-          const f10 = (Math.random() - 0.5) * 1.5;
-          rp.splash(this.impact.x + side2.x * s + this.dir.x * f10, this.impact.z + side2.z * s + this.dir.z * f10, 0.5 + Math.random() * 0.6, -0.08);
+          const f12 = (Math.random() - 0.5) * 1.5;
+          rp.splash(this.impact.x + side2.x * s + this.dir.x * f12, this.impact.z + side2.z * s + this.dir.z * f12, 0.5 + Math.random() * 0.6, -0.08);
         }
       }
     }
@@ -26423,9 +28909,9 @@ void main() {
         d.prev.copy(p);
         const h = this.system.getHeight(p.x, p.z, p.y);
         if (h === null) continue;
-        const sub3 = Math.min(1, Math.max(0, (h - (p.y - d.depth)) / (2 * d.depth)));
-        if (sub3 <= 0 || sub3 >= 1 && p.y < h - d.depth * 2.5) continue;
-        const amount = -(Math.min(vel, 14) * 32e-4 + d.idle) * sub3 * d.strength * Math.min(2, dt * 60);
+        const sub4 = Math.min(1, Math.max(0, (h - (p.y - d.depth)) / (2 * d.depth)));
+        if (sub4 <= 0 || sub4 >= 1 && p.y < h - d.depth * 2.5) continue;
+        const amount = -(Math.min(vel, 14) * 32e-4 + d.idle) * sub4 * d.strength * Math.min(2, dt * 60);
         if (Math.abs(amount) > 1e-4) this._drops.push([p.x, p.z, d.radius, amount]);
       }
       this._acc += dt;
@@ -27000,7 +29486,7 @@ var { FloatingBody } = (() => {
       const n = this.points.length;
       const vPer = this.volume / n;
       const colH = this.size.y;
-      let sub3 = 0;
+      let sub4 = 0;
       let anyWater = false;
       for (const lp of this.points) {
         _r.copy(lp).applyQuaternion(_q);
@@ -27011,7 +29497,7 @@ var { FloatingBody } = (() => {
         const depth = s.height - (_p.y - colH * 0.5);
         const frac = Math.min(1, Math.max(0, depth / colH));
         if (frac <= 0) continue;
-        sub3 += frac / n;
+        sub4 += frac / n;
         _v.set(0, vPer * frac * g, 0);
         _tmp.copy(this.angularVelocity).cross(_r).add(this.velocity);
         _tmp.x -= s.velocity.x * this.flowFactor;
@@ -27023,17 +29509,17 @@ var { FloatingBody } = (() => {
         _f.add(_v);
         _t.add(_tmp.copy(_r).cross(_v));
       }
-      for (const [F, P] of this._forces) {
-        _f.add(F);
-        if (P) _t.add(_tmp.copy(P).sub(pos2).cross(F));
+      for (const [F3, P] of this._forces) {
+        _f.add(F3);
+        if (P) _t.add(_tmp.copy(P).sub(pos2).cross(F3));
       }
-      this.submerged = sub3;
-      this.inWater = anyWater && sub3 > 0;
+      this.submerged = sub4;
+      this.inWater = anyWater && sub4 > 0;
       this.velocity.addScaledVector(_f, h / this.mass);
       pos2.addScaledVector(this.velocity, h);
       _tmp.copy(_t).applyQuaternion(_qi).divide(this.inertia).applyQuaternion(_q);
       this.angularVelocity.addScaledVector(_tmp, h);
-      this.angularVelocity.multiplyScalar(Math.exp(-this.angularDrag * Math.max(sub3, 0.05) * h));
+      this.angularVelocity.multiplyScalar(Math.exp(-this.angularDrag * Math.max(sub4, 0.05) * h));
       const wl = this.angularVelocity.length();
       if (wl > 1e-6) {
         _tmp.copy(this.angularVelocity).divideScalar(wl);
@@ -27382,7 +29868,7 @@ var { WATER_QUALITY, WaterSystem } = (() => {
         this._resolveOverlaps();
       }
       for (const b of this.bodies) b._update?.(camera, dt, camPos);
-      for (const f10 of this.floaters) f10.update(dt);
+      for (const f12 of this.floaters) f12.update(dt);
       if (this.ripples) this.ripples.update(dt, camPos);
       this._updateUnderwater(camPos);
       u.uUnderBoost.value = this.underwaterBrightness;
@@ -27478,7 +29964,7 @@ var { WATER_QUALITY, WaterSystem } = (() => {
         found.push({ level: "problem", key: `overlap:${a.body.id}:${b.body.id}`, message: `${nm(a.body)}と${nm(b.body)}が、ほぼ同じ高さ（差 ${dl.toFixed(2)} m）で重なっています（x ${(sx / cnt).toFixed(0)}, z ${(sz / cnt).toFixed(0)} 付近）。重なった水面が、波の形の模様になってちらつきます。重ならない形にするか、片方の level を ${(a.crest + b.crest + 0.1).toFixed(2)} m 以上ずらしてください。` });
       }
       this._overlaps = found;
-      for (const f10 of found) if (f10.level === "problem") warnWater(f10.key, f10.message);
+      for (const f12 of found) if (f12.level === "problem") warnWater(f12.key, f12.message);
     }
     // ---- 組み込みの間違いの検出 --------------------------------------------------
     _checkDt(dt) {
@@ -27577,7 +30063,7 @@ var { WATER_QUALITY, WaterSystem } = (() => {
         out2.bodies.push(e);
       }
       if (!this._overlaps) this._resolveOverlaps();
-      for (const f10 of this._overlaps) (f10.level === "problem" ? out2.problems : out2.hints).push(f10.message);
+      for (const f12 of this._overlaps) (f12.level === "problem" ? out2.problems : out2.hints).push(f12.message);
       if (!out2.bodies.length) P("水域が1つもありません（addOcean / addLake / addPond / addRiver …）");
       else if (!out2.bodies.some((e) => e.type === "river")) out2.hints.push("川（addRiver）がありません。自前のメッシュや addLake で作った川は流れません");
       const h = this.getHeight(cam.x, cam.z, cam.y);
@@ -27723,8 +30209,8 @@ void main(){ gl_FragColor = vec4(sampleEnv(vec3(0.0, 1.0, 0.0), 1.0), 1.0); }`,
       const u = body2.bodyUniforms;
       if (!u) return out2.set(0, 0, 0);
       const a = u.uAbsorption.value, s = u.uScattering.value;
-      const sun = this.uniforms.uSunColor.value, L3 = this.uniforms.uSunDir.value;
-      const up7 = Math.max(L3.y, 0) * 0.6;
+      const sun = this.uniforms.uSunColor.value, L4 = this.uniforms.uSunDir.value;
+      const up7 = Math.max(L4.y, 0) * 0.6;
       const k = u.uScatterBoost.value;
       const amb = this.skyAmbient;
       return out2.set(
@@ -27778,7 +30264,7 @@ void main(){ gl_FragColor = vec4(sampleEnv(vec3(0.0, 1.0, 0.0), 1.0), 1.0); }`,
       pu.uWHMRect.value.copy(this.heightMap.rect);
       pu.uWaterTime.value = this.time;
       pu.uCamUnderwater.value = this.underwater ? 1 : 0;
-      const L3 = this.uniforms.uSunDir.value;
+      const L4 = this.uniforms.uSunDir.value;
       if (this.causticsEnabled && (this.oceanWaves || this.inlandWaves)) {
         if (!this._causticsRT) {
           this._causticsRT = makeTarget(512, 512, {
@@ -27798,7 +30284,7 @@ void main(){ gl_FragColor = vec4(sampleEnv(vec3(0.0, 1.0, 0.0), 1.0), 1.0); }`,
         let first = true;
         for (const g of [this.caustics.ocean, this.caustics.inland]) {
           if (!g) continue;
-          g.update(L3, first);
+          g.update(L4, first);
           first = false;
         }
         const co = this.caustics.ocean, ci = this.caustics.inland;
@@ -27817,9 +30303,9 @@ void main(){ gl_FragColor = vec4(sampleEnv(vec3(0.0, 1.0, 0.0), 1.0), 1.0); }`,
         pu.uCausticsStrength.value = 0;
       }
       const eta = 1 / 1.333;
-      const cosi = Math.max(L3.y, 0.05);
+      const cosi = Math.max(L4.y, 0.05);
       const k = 1 - eta * eta * (1 - cosi * cosi);
-      pu.uRefrSun.value.set(-eta * L3.x, -Math.sqrt(Math.max(k, 0)), -eta * L3.z).normalize();
+      pu.uRefrSun.value.set(-eta * L4.x, -Math.sqrt(Math.max(k, 0)), -eta * L4.z).normalize();
       for (let i = 0; i < Math.min(this.bodies.length, MAX_PATCH_BODIES); i++) {
         const b = this.bodies[i];
         if (!b.bodyUniforms) continue;
@@ -27916,9 +30402,9 @@ void main(){ gl_FragColor = vec4(sampleEnv(vec3(0.0, 1.0, 0.0), 1.0), 1.0); }`,
         this._usFresh = true;
       } else {
         for (let i = 0; i < this.underwaterViewFaces; i++) {
-          const f10 = [0, 1, 2, 4, 5][this._usFace++ % 5];
-          r.setRenderTarget(this._usRT, f10);
-          r.render(this.scene, cube.children[f10]);
+          const f12 = [0, 1, 2, 4, 5][this._usFace++ % 5];
+          r.setRenderTarget(this._usRT, f12);
+          r.render(this.scene, cube.children[f12]);
         }
       }
       this._panoPass.render(r, this._panoRT);
@@ -28580,13 +31066,13 @@ function buildPublicLakeGeometry(THREE, pond, spec, { auditPrecision = false } =
       if (p.length < 6 || polygonArea(p) === 0) continue;
       for (let k = 2; k < p.length - 2; k += 2) {
         const ideal = [p[0], p[1], p[k], p[k + 1], p[k + 2], p[k + 3]], idealArea = polygonArea(ideal), a = vertex3(p[0], p[1]), b2 = vertex3(p[k], p[k + 1]), c2 = vertex3(p[k + 2], p[k + 3]);
-        const cross9 = (position3[b2 * 3] - position3[a * 3]) * (position3[c2 * 3 + 2] - position3[a * 3 + 2]) - (position3[b2 * 3 + 2] - position3[a * 3 + 2]) * (position3[c2 * 3] - position3[a * 3]);
-        if (a === b2 || b2 === c2 || a === c2 || cross9 === 0) {
+        const cross10 = (position3[b2 * 3] - position3[a * 3]) * (position3[c2 * 3 + 2] - position3[a * 3 + 2]) - (position3[b2 * 3 + 2] - position3[a * 3 + 2]) * (position3[c2 * 3] - position3[a * 3]);
+        if (a === b2 || b2 === c2 || a === c2 || cross10 === 0) {
           collapsedIdealArea += idealArea;
           collapsedTriangles++;
           continue;
         }
-        if (cross9 < 0) throw new RangeError("Public Float32 upload inverted a triangle");
+        if (cross10 < 0) throw new RangeError("Public Float32 upload inverted a triangle");
         if (indices.length / 3 >= limits.triangles) throw new RangeError("Public lake emitted triangle budget");
         indices.push(a, c2, b2);
         triangleCells.push(z * nx + x);
@@ -28608,8 +31094,8 @@ function buildPublicLakeGeometry(THREE, pond, spec, { auditPrecision = false } =
 function insideRing(r, x, z) {
   let yes = false;
   for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
-    const a = r[j], b = r[i], cross9 = (x - a.x) * (b.z - a.z) - (z - a.z) * (b.x - a.x);
-    if (cross9 === 0 && x >= Math.min(a.x, b.x) && x <= Math.max(a.x, b.x) && z >= Math.min(a.z, b.z) && z <= Math.max(a.z, b.z)) return true;
+    const a = r[j], b = r[i], cross10 = (x - a.x) * (b.z - a.z) - (z - a.z) * (b.x - a.x);
+    if (cross10 === 0 && x >= Math.min(a.x, b.x) && x <= Math.max(a.x, b.x) && z >= Math.min(a.z, b.z) && z <= Math.max(a.z, b.z)) return true;
     if (a.z > z !== b.z > z && x < (b.x - a.x) * (z - a.z) / (b.z - a.z) + a.x) yes = !yes;
   }
   return yes;
@@ -28655,7 +31141,7 @@ var HYDROLOGY_SURFACE_GRID_LIMITS = Object.freeze({
   maxGridCoordinate: 2 ** 30
 });
 var finite7 = Number.isFinite;
-var cross3 = (a, b, c2) => (b.x - a.x) * (c2.z - a.z) - (b.z - a.z) * (c2.x - a.x);
+var cross4 = (a, b, c2) => (b.x - a.x) * (c2.z - a.z) - (b.z - a.z) * (c2.x - a.x);
 function orientation(a, b, c2) {
   const first = (b.x - a.x) * (c2.z - a.z), second = (b.z - a.z) * (c2.x - a.x);
   const value = first - second, error = 64 * Number.EPSILON * (Math.abs(first) + Math.abs(second) + 1);
@@ -28722,7 +31208,7 @@ function buildHydrologySurfaceGrid(polygon2, options = {}) {
   if (!Number.isSafeInteger(bboxCells) || bboxCells <= 0 || bboxCells > maxBBoxCells) return reject2("surface-grid-bbox-budget");
   if (bounds6.iz1 - bounds6.iz0 > maxCells) return reject2("surface-grid-cell-budget");
   let area = 0;
-  for (let i = 1; i + 1 < points.length; i++) area += cross3(points[0], points[i], points[i + 1]);
+  for (let i = 1; i + 1 < points.length; i++) area += cross4(points[0], points[i], points[i + 1]);
   if (!finite7(area) || Math.abs(area) <= 64 * Number.EPSILON * Math.max(1, (maxX - minX) * (maxZ - minZ))) return reject2("degenerate-polygon-area");
   const edges = [];
   for (let i = 0; i < points.length; i++) {
@@ -28850,12 +31336,12 @@ var TERMINAL_RECEIVER_MASK_LIMITS = Object.freeze({
   capOutwardExcess: 25e-5
 });
 var finite8 = Number.isFinite;
-var cross4 = (a, b, p) => (b.x - a.x) * (p.z - a.z) - (b.z - a.z) * (p.x - a.x);
+var cross5 = (a, b, p) => (b.x - a.x) * (p.z - a.z) - (b.z - a.z) * (p.x - a.x);
 var same = (a, b) => a.x === b.x && a.z === b.z;
 function area2(points) {
   let area = 0;
   const a = points[0];
-  for (let i = 1; i + 1 < points.length; i++) area += cross4(a, points[i], points[i + 1]);
+  for (let i = 1; i + 1 < points.length; i++) area += cross5(a, points[i], points[i + 1]);
   if (!finite8(area)) throw new RangeError("Finite terminal mask area required");
   return area;
 }
@@ -28879,7 +31365,7 @@ function polygon(points, { allowEmpty = false } = {}) {
 }
 function convex(points) {
   const result = polygon(points);
-  for (let i = 0; i < result.length; i++) if (cross4(result[i], result[(i + 1) % result.length], result[(i + 2) % result.length]) < 0)
+  for (let i = 0; i < result.length; i++) if (cross5(result[i], result[(i + 1) % result.length], result[(i + 2) % result.length]) < 0)
     throw new TypeError("Convex terminal subtraction polygons required");
   return result;
 }
@@ -28907,7 +31393,7 @@ function subtractTerminalConvex(subject, clip5) {
   for (let edge2 = 0; edge2 < mask.length && remainder.length; edge2++) {
     const a = mask[edge2], b = mask[(edge2 + 1) % mask.length], inside3 = [], outside = [];
     for (let i = 0; i < remainder.length; i++) {
-      const p = remainder[i], q = remainder[(i + 1) % remainder.length], dp = cross4(a, b, p), dq = cross4(a, b, q);
+      const p = remainder[i], q = remainder[(i + 1) % remainder.length], dp = cross5(a, b, p), dq = cross5(a, b, q);
       if (!finite8(dp) || !finite8(dq)) throw new RangeError("Finite terminal mask clipping distances required");
       const ip = dp >= 0, iq = dq >= 0;
       (ip ? inside3 : outside).push(p);
@@ -28956,7 +31442,7 @@ function buildTerminalReceiverMasks(THREE, binding, { bounds: bounds6 } = {}) {
     capExcessMaximum: 0,
     limits
   };
-  function add3(points, kind, metadata = {}) {
+  function add4(points, kind, metadata = {}) {
     points = polygon(points);
     const maskBounds = boundsOf4(points);
     if (window2 && !intersects(maskBounds, window2)) {
@@ -28988,7 +31474,7 @@ function buildTerminalReceiverMasks(THREE, binding, { bounds: bounds6 } = {}) {
     const points = polygon(face.map((index2) => flat[index2]));
     triangleArea += area2(points) * 0.5;
     stats.pondTriangles++;
-    add3(points, "pond-triangle", { eligible: true, pondId: receiver.id, featureId: receiver.featureId });
+    add4(points, "pond-triangle", { eligible: true, pondId: receiver.id, featureId: receiver.featureId });
   }
   const areaRoundoff = Number.EPSILON * 64 * Math.max(1, expectedArea, triangleArea) * stats.ringVertices;
   if (Math.abs(triangleArea - expectedArea) > areaRoundoff) throw new RangeError("Terminal pond triangulation does not preserve ring area");
@@ -29014,7 +31500,7 @@ function buildTerminalReceiverMasks(THREE, binding, { bounds: bounds6 } = {}) {
     stats.maxCapTangents = Math.max(stats.maxCapTangents, intervals + 1);
     stats.maxCapOutwardExcess = Math.max(stats.maxCapOutwardExcess, excess);
     stats.capExcessMaximum = stats.maxCapOutwardExcess;
-    add3(points, kind, { ...metadata, capTangents: intervals + 1, maxOutwardExcess: excess });
+    add4(points, kind, { ...metadata, capTangents: intervals + 1, maxOutwardExcess: excess });
   }
   for (let index2 = 0; index2 < binding.segments.length; index2++) {
     const segment2 = binding.segments[index2], a = segment2?.a, b = segment2?.b;
@@ -29039,7 +31525,7 @@ function buildTerminalReceiverMasks(THREE, binding, { bounds: bounds6 } = {}) {
       ...segment2.segmentId === void 0 ? {} : { segmentId: segment2.segmentId },
       segmentIndex: index2
     };
-    add3([
+    add4([
       { x: a.x - nx * ra, z: a.z - nz * ra },
       { x: b.x - nx * rb, z: b.z - nz * rb },
       { x: b.x + nx * rb, z: b.z + nz * rb },
@@ -29081,7 +31567,7 @@ function intersect(subject, clip5) {
 function partitionTerminalReceiverGeometry(THREE, geometry3, fallOwners, falls, featureId, hydrology2, height2) {
   const limits = TERMINAL_PARTITION_LIMITS, position3 = geometry3.getAttribute("position"), count = position3.count;
   if (fallOwners.length !== count) throw new TypeError("Exact terminal vertex provenance required");
-  const byId = new Map(falls.map((f10) => [f10.id, f10])), compiled = /* @__PURE__ */ new Map(), caches2 = /* @__PURE__ */ new Map(), stats = { inputTriangles: count / 3, candidateTriangles: 0, outputTriangles: 0, excludedArea: 0, capExcessMaximum: 0, collapsedArea: 0, maskVisits: 0, maskBoundsTests: 0, roundingRepairs: 0, maxRoundingDistance: 0, newApronArea: 0, latticeCandidates: 0, latticeRepairs: 0 };
+  const byId = new Map(falls.map((f12) => [f12.id, f12])), compiled = /* @__PURE__ */ new Map(), caches2 = /* @__PURE__ */ new Map(), stats = { inputTriangles: count / 3, candidateTriangles: 0, outputTriangles: 0, excludedArea: 0, capExcessMaximum: 0, collapsedArea: 0, maskVisits: 0, maskBoundsTests: 0, roundingRepairs: 0, maxRoundingDistance: 0, newApronArea: 0, latticeCandidates: 0, latticeRepairs: 0 };
   for (const fall of falls) {
     const masks = buildTerminalReceiverMasks(THREE, fall.profile.terminalBinding, { bounds: fall.profile.bounds });
     compiled.set(fall.id, masks);
@@ -29277,13 +31763,13 @@ var CLEAR_WATER_OPTICS = Object.freeze({
 var HYDROLOGY_WATER_LIMITS = Object.freeze({ features: 12, standardFeatures: 8, range: 480, standardRange: 360, sprayRange: 105, gridStep: 4 / 3, maxCells: 32768, maxBoundsCells: 131072, maxTriangles: 72e3, sprayPerFall: 144, maxFalls: 3, fallColumns: 40, fallRows: 52, impactCellsPerFall: 2048, lipRefinementDepth: 3, lipCellsPerFall: 256 });
 var STEP2 = HYDROLOGY_WATER_LIMITS.gridStep;
 var EPS4 = 0.026;
-var clamp27 = (v, a, b) => Math.max(a, Math.min(b, v));
-var smooth19 = (a, b, v) => {
-  const t = clamp27((v - a) / (b - a), 0, 1);
+var clamp29 = (v, a, b) => Math.max(a, Math.min(b, v));
+var smooth20 = (a, b, v) => {
+  const t = clamp29((v - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
 };
 var EMPTY3 = Object.freeze([]);
-function geometryFrom(data) {
+function geometryFrom2(data) {
   const g = new BufferGeometry();
   g.setAttribute("position", new Float32BufferAttribute(data.position, 3));
   g.setAttribute("hydroData", new Float32BufferAttribute(data.data, 4));
@@ -29296,10 +31782,10 @@ function geometryFrom(data) {
   return g;
 }
 function buildHydrologySurfaceGeometry(feature, hydrology2, height2, { terminalReceiverId = null } = {}) {
-  const terminalReceiver = terminalReceiverId === null ? null : (feature.falls || EMPTY3).find((f10) => f10.id === terminalReceiverId);
+  const terminalReceiver = terminalReceiverId === null ? null : (feature.falls || EMPTY3).find((f12) => f12.id === terminalReceiverId);
   if (terminalReceiverId !== null && (!terminalReceiver || terminalReceiver.profile?.terminalBinding?.version !== 1 || terminalReceiver.profile.terminalBinding.receiver?.level !== terminalReceiver.base.y || terminalReceiver.profile.outlet.y !== terminalReceiver.base.y))
     throw new TypeError("Exact flat bound terminal receiver required");
-  const terminalFalls = terminalReceiver ? [terminalReceiver] : (feature.falls || EMPTY3).filter((f10) => f10.profile?.terminalBinding);
+  const terminalFalls = terminalReceiver ? [terminalReceiver] : (feature.falls || EMPTY3).filter((f12) => f12.profile?.terminalBinding);
   for (const fall of terminalFalls) if (fall.profile.terminalBinding.version !== 1 || fall.profile.terminalBinding.receiver?.level !== fall.base.y || fall.profile.outlet?.y !== fall.base.y)
     throw new TypeError("Exact flat bound terminal profile required");
   const terminalVertexOwners = [];
@@ -29467,7 +31953,7 @@ function buildHydrologySurfaceGeometry(feature, hydrology2, height2, { terminalR
     return wet;
   }
   function foam(p2) {
-    let f10 = p2.kind === "stream" ? 0.035 : 0;
+    let f12 = p2.kind === "stream" ? 0.035 : 0;
     for (const fall of feature.falls || EMPTY3) {
       const impactPoint = fallImpact(fall), dx = p2.x - impactPoint.x, dz = p2.z - impactPoint.z, along = dx * fall.flow.x + dz * fall.flow.z, across2 = -dx * fall.flow.z + dz * fall.flow.x;
       const impact = Math.hypot((along - 0.7) / 4.2, across2 / Math.max(1.3, fall.width * 0.62));
@@ -29475,11 +31961,11 @@ function buildHydrologySurfaceGeometry(feature, hydrology2, height2, { terminalR
       if (fall.profile) {
         const frame3 = fallFrame(fall, p2.x, p2.z), profile = fallProfile(fall, frame3.t, frame3.across);
         if (!profile.receiving) continue;
-        edgeWeight = smooth19(0, 0.55, profile.receiverEdge);
+        edgeWeight = smooth20(0, 0.55, profile.receiverEdge);
       }
-      f10 = Math.max(f10, (1 - smooth19(0.12, 1, impact)) * 0.88 * edgeWeight);
+      f12 = Math.max(f12, (1 - smooth20(0.12, 1, impact)) * 0.88 * edgeWeight);
     }
-    return f10;
+    return f12;
   }
   function vertex3(p2) {
     if (terminalFalls.length) terminalVertexOwners.push(p2.terminalApronId ?? null);
@@ -29627,7 +32113,7 @@ function buildHydrologySurfaceGeometry(feature, hydrology2, height2, { terminalR
       }
     }
   }
-  const lipFalls = (feature.falls || EMPTY3).slice(0, HYDROLOGY_WATER_LIMITS.maxFalls), profileBounds = lipFalls.map((f10) => f10.profile ? fallProfileBounds(f10) : null), lipMidpoints = /* @__PURE__ */ new Map();
+  const lipFalls = (feature.falls || EMPTY3).slice(0, HYDROLOGY_WATER_LIMITS.maxFalls), profileBounds = lipFalls.map((f12) => f12.profile ? fallProfileBounds(f12) : null), lipMidpoints = /* @__PURE__ */ new Map();
   function midpoint(a, b2) {
     const x = (a.x + b2.x) * 0.5, z = (a.z + b2.z) * 0.5, key3 = x + "," + z;
     if (!lipMidpoints.has(key3)) lipMidpoints.set(key3, sample2(x, z));
@@ -29779,11 +32265,11 @@ function buildHydrologySurfaceGeometry(feature, hydrology2, height2, { terminalR
     }
     const [a, b2, c2] = t, ab = midpoint(a, b2), bc = midpoint(b2, c2), ca = midpoint(c2, a);
     if (!count && !ab.wet && !bc.wet && !ca.wet && !sample2((a.x + b2.x + c2.x) / 3, (a.z + b2.z + c2.z) / 3).wet) {
-      const crossesCrest = lipFalls.some((f10) => {
-        if (!f10.profile) return false;
+      const crossesCrest = lipFalls.some((f12) => {
+        if (!f12.profile) return false;
         const v = t.map((p2) => {
-          const frame3 = fallFrame(f10, p2.x, p2.z);
-          return frame3.t - fallLipT(f10, frame3.across);
+          const frame3 = fallFrame(f12, p2.x, p2.z);
+          return frame3.t - fallLipT(f12, frame3.across);
         });
         return Math.min(...v) <= 0 && Math.max(...v) >= 0;
       });
@@ -29794,11 +32280,11 @@ function buildHydrologySurfaceGeometry(feature, hydrology2, height2, { terminalR
     for (const triangle4 of [[a, ab, ca], [ab, b2, bc], [ca, bc, c2], [ab, bc, ca]]) lipClip(triangle4, depth - 1, boundary);
   }
   function nearLip(x, z, pad = 0) {
-    return lipFalls.some((f10, i) => {
+    return lipFalls.some((f12, i) => {
       const b2 = profileBounds[i];
       if (b2) return x >= b2.minX - pad && x <= b2.maxX + pad && z >= b2.minZ - pad && z <= b2.maxZ + pad;
-      const frame3 = fallFrame(f10, x, z);
-      return Math.abs(frame3.t) * frame3.length < STEP2 * 1.5 && Math.abs(frame3.across) < f10.width * 0.5 + STEP2;
+      const frame3 = fallFrame(f12, x, z);
+      return Math.abs(frame3.t) * frame3.length < STEP2 * 1.5 && Math.abs(frame3.across) < f12.width * 0.5 + STEP2;
     });
   }
   let emptyFeatureDiscovery = false;
@@ -29836,7 +32322,7 @@ function buildHydrologySurfaceGeometry(feature, hydrology2, height2, { terminalR
     emptyFeatureDiscovery = true;
     for (let ix = ix0; ix < ix1; ix++) for (let iz = iz0; iz < iz1; iz++) buildCell(ix, iz);
   }
-  const geometry3 = geometryFrom(data);
+  const geometry3 = geometryFrom2(data);
   geometry3.userData.hydrology = { cells, boundsCells, sparse: !!surfaceGrid, samples, groundSamples, clipped, lipCells, lipSubdivisions, crestBoundaries: [], triangles: data.position.length / 9, float32: roundingWork, gradePartition: { segments: gradeRegions.size, groups: streamGrades.length, exactFlatSegments: exactFlatRegions.size, exactFlatRuns: new Set(exactFlatRegions.values()).size, roundoffUlps: 64, maxPieces: 64 }, ...lake ? { lakePartition: { method: "native-triangle-boundary-arrangement", ...lakeWork, limits: lakeLimits } } : { boundaryRefinement: { cells: boundaryCells, samples: boundarySamples, subdivisions: boundarySubdivisions, limits: boundaryLimits } } };
   if (terminalFalls.length) {
     try {
@@ -29857,16 +32343,16 @@ function buildHydrologySurfaceGeometry(feature, hydrology2, height2, { terminalR
     };
     return geometry3;
   }
-  if (!lipFalls.some((f10) => f10.profile)) return geometry3;
+  if (!lipFalls.some((f12) => f12.profile)) return geometry3;
   const p = geometry3.attributes.position, n = geometry3.attributes.normal, sums = /* @__PURE__ */ new Map();
   const positionKey = (x, y, z) => Math.fround(x) + "," + Math.fround(y) + "," + Math.fround(z);
   for (let i = 0; i < p.count; i += 3) {
-    const ax = p.getX(i), ay = p.getY(i), az = p.getZ(i), ux = p.getX(i + 1) - ax, uy = p.getY(i + 1) - ay, uz = p.getZ(i + 1) - az, vx = p.getX(i + 2) - ax, vy = p.getY(i + 2) - ay, vz = p.getZ(i + 2) - az, cross9 = [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx];
+    const ax = p.getX(i), ay = p.getY(i), az = p.getZ(i), ux = p.getX(i + 1) - ax, uy = p.getY(i + 1) - ay, uz = p.getZ(i + 1) - az, vx = p.getX(i + 2) - ax, vy = p.getY(i + 2) - ay, vz = p.getZ(i + 2) - az, cross10 = [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx];
     for (let j = i; j < i + 3; j++) {
       const x = p.getX(j), y = p.getY(j), z = p.getZ(j);
       if (!nearLip(x, z, STEP2)) continue;
       const key3 = positionKey(x, y, z), sum = sums.get(key3) || [0, 0, 0];
-      for (let k = 0; k < 3; k++) sum[k] += cross9[k];
+      for (let k = 0; k < 3; k++) sum[k] += cross10[k];
       sums.set(key3, sum);
     }
   }
@@ -29922,7 +32408,7 @@ var TERMINAL_RECEIVER_GEOMETRY_LIMITS = Object.freeze({
   gridStep: HYDROLOGY_WATER_LIMITS.gridStep
 });
 var finite9 = Number.isFinite;
-var cross5 = (ax, az, bx, bz, cx, cz) => (bx - ax) * (cz - az) - (bz - az) * (cx - ax);
+var cross6 = (ax, az, bx, bz, cx, cz) => (bx - ax) * (cz - az) - (bz - az) * (cx - ax);
 function validate(feature, fall, spec, hydrology2, height2) {
   const binding = fall?.profile?.terminalBinding, level = fall?.base?.y;
   if (!feature?.id || !feature.falls?.includes(fall) || binding?.version !== 1 || !finite9(level) || binding.receiver?.level !== level || fall.profile.outlet?.y !== level || spec?.type !== "terminal-receiver" || spec.method !== "addPond" || spec.featureId !== feature.id || spec.mapping?.fallId !== fall.id || spec.mapping?.level !== level || spec.options?.level !== level || typeof hydrology2?.surfaceAt !== "function" || typeof height2 !== "function") throw new TypeError("Exact terminal receiver descriptor and final owner required");
@@ -29954,7 +32440,7 @@ function buildTerminalReceiverGeometry(feature, fall, spec, { hydrology: hydrolo
     let binEntries = 0;
     for (let i = 0; i < count; i += 3) {
       const v = [0, 1, 2].map((k) => ({ x: position3.getX(i + k), z: position3.getZ(i + k) }));
-      const signed2 = cross5(v[0].x, v[0].z, v[1].x, v[1].z, v[2].x, v[2].z);
+      const signed2 = cross6(v[0].x, v[0].z, v[1].x, v[1].z, v[2].x, v[2].z);
       if (!finite9(signed2) || signed2 === 0) throw new RangeError("Degenerate terminal receiver triangle");
       area += Math.abs(signed2) * 0.5;
       const checks = [
@@ -29994,7 +32480,7 @@ function buildTerminalReceiverGeometry(feature, fall, spec, { hydrology: hydrolo
       if (!finite9(x) || !finite9(z)) return false;
       const rows = bins.get(Math.floor(x / step) + "," + Math.floor(z / step)) || [];
       for (const i of rows) {
-        const ax = position3.getX(i), az = position3.getZ(i), bx = position3.getX(i + 1), bz = position3.getZ(i + 1), cx = position3.getX(i + 2), cz = position3.getZ(i + 2), a = cross5(ax, az, bx, bz, x, z), b = cross5(bx, bz, cx, cz, x, z), c2 = cross5(cx, cz, ax, az, x, z);
+        const ax = position3.getX(i), az = position3.getZ(i), bx = position3.getX(i + 1), bz = position3.getZ(i + 1), cx = position3.getX(i + 2), cz = position3.getZ(i + 2), a = cross6(ax, az, bx, bz, x, z), b = cross6(bx, bz, cx, cz, x, z), c2 = cross6(cx, cz, ax, az, x, z);
         if (a >= 0 && b >= 0 && c2 >= 0 || a <= 0 && b <= 0 && c2 <= 0) {
           const owner2 = hydrology2.surfaceAt(x, z), frame3 = fallFrame(fall, x, z);
           return owner2?.featureId === feature.id && owner2.fallId === fall.id && owner2.level === level && fallProfile(fall, frame3.t, frame3.across).receiving;
@@ -33100,8 +35586,8 @@ var DynamicSky = class extends Group {
       camera.getWorldDirection(_camDir);
       viewUp = clamp013(_camDir.y);
       const az = Math.atan2(_camDir.z, _camDir.x);
-      const f10 = isFinite(az) ? wrap3(az / (2 * Math.PI) * 32 - 0.5, 32) : 0;
-      const i0 = Math.floor(f10) % 32, i1 = (i0 + 1) % 32, t = f10 - Math.floor(f10);
+      const f12 = isFinite(az) ? wrap3(az / (2 * Math.PI) * 32 - 0.5, 32) : 0;
+      const i0 = Math.floor(f12) % 32, i1 = (i0 + 1) % 32, t = f12 - Math.floor(f12);
       for (let c2 = 0; c2 < 3; c2++) viewSky[c2] = pr.ring[i0][c2] * (1 - t) + pr.ring[i1][c2] * t;
     }
     const sunY = Math.max(this.sunDirection.y, 0), moonY = Math.max(this.moonDirection.y, 0);
@@ -33553,9 +36039,9 @@ var CHANNELS = Object.freeze(["rain", "snow", "wind", "cloud", "fog", "haze", "s
 var EMPTY_CONTEXT = Object.freeze({});
 var TICK = 0.25;
 var EPSILON = 1e-9;
-var TAU15 = Math.PI * 2;
+var TAU17 = Math.PI * 2;
 var clamp014 = (value) => Math.max(0, Math.min(1, value));
-var smooth20 = (a, b, value) => {
+var smooth21 = (a, b, value) => {
   const t = clamp014((value - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
@@ -33596,8 +36082,8 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
   let selectedFront = "clear", frontStrength = 1, frontRemaining = 0;
   let localBiome = 0, altitude = 30, hour = 12, ambientTemperature = 18;
   let firstEnvironment = true, inDungeon = false, underwater = false;
-  let windAngle = random7() * TAU15, targetWindAngle = windAngle;
-  const gustPhase = random7() * TAU15;
+  let windAngle = random9() * TAU17, targetWindAngle = windAngle;
+  const gustPhase = random9() * TAU17;
   const weights = new Float64Array(8), target = new Float64Array(7);
   const state2 = {
     seed: normalizedSeed,
@@ -33632,7 +36118,7 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
     transition: 0,
     frontSerial: 0
   };
-  function random7() {
+  function random9() {
     randomState = randomState + 1831565813 >>> 0;
     let value = randomState;
     value = Math.imul(value ^ value >>> 15, value | 1);
@@ -33640,20 +36126,20 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
     return ((value ^ value >>> 14) >>> 0) / 4294967296;
   }
   function holdFront() {
-    frontRemaining = Math.floor((150 + random7() * 180) / TICK) * TICK;
-    targetWindAngle = windAngle + (random7() - 0.5) * Math.PI * 0.85;
+    frontRemaining = Math.floor((150 + random9() * 180) / TICK) * TICK;
+    targetWindAngle = windAngle + (random9() - 0.5) * Math.PI * 0.85;
     state2.frontSerial++;
   }
   function selectAutomaticFront() {
-    const cold = smooth20(5, -4, ambientTemperature);
+    const cold = smooth21(5, -4, ambientTemperature);
     const warm = 1 - cold, swamp = localBiome === 4, dry = localBiome === 3;
-    const dawn = 1 - smooth20(1.5, 4.5, Math.abs(hour - 6));
+    const dawn = 1 - smooth21(1.5, 4.5, Math.abs(hour - 6));
     weights[0] = dry ? 48 : swamp ? 14 : localBiome === 1 ? 34 : 24;
     weights[1] = 25;
     weights[2] = (dry ? 10 : swamp ? 33 : 28) * warm;
     weights[3] = (dry ? 4 : swamp ? 12 : 9) * warm * warm;
     weights[4] = 47 * cold;
-    weights[5] = 13 * cold * (0.55 + smooth20(250, 500, altitude) * 0.45);
+    weights[5] = 13 * cold * (0.55 + smooth21(250, 500, altitude) * 0.45);
     weights[6] = (swamp ? 19 : dry ? 2 : 7) * (1 + dawn * 0.55);
     weights[7] = (swamp ? 20 : dry ? 5 : 10) * (1 + dawn * 0.7);
     let total = 0;
@@ -33661,7 +36147,7 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
       if (FRONT_NAMES[i] === selectedFront) weights[i] *= 0.3;
       total += weights[i];
     }
-    let choice = random7() * total;
+    let choice = random9() * total;
     for (let i = 0; i < weights.length; i++) {
       choice -= weights[i];
       if (choice <= 0 || i === weights.length - 1) {
@@ -33669,7 +36155,7 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
         break;
       }
     }
-    frontStrength = 0.86 + random7() * 0.14;
+    frontStrength = 0.86 + random9() * 0.14;
     holdFront();
   }
   function refreshTarget() {
@@ -33699,7 +36185,7 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
     state2.outsideFog = state2.fog * exposure;
     state2.outsideHaze = state2.haze * exposure;
     state2.outsideStorm = state2.storm * exposure;
-    state2.blizzard = state2.snow * smooth20(0.62, 0.9, state2.wind);
+    state2.blizzard = state2.snow * smooth21(0.62, 0.9, state2.wind);
     state2.label = WEATHER_LABELS[state2.current];
     state2.remaining = state2.mode === "auto" ? frontRemaining : 0;
   }
@@ -33722,23 +36208,23 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
     }
     state2.transition = clamp014(state2.transition + TICK / (manual ? 12 : 40));
     if (largestGap < 0.075) state2.current = state2.target;
-    let angleDifference = (targetWindAngle - windAngle) % TAU15;
-    if (angleDifference > Math.PI) angleDifference -= TAU15;
-    if (angleDifference < -Math.PI) angleDifference += TAU15;
+    let angleDifference = (targetWindAngle - windAngle) % TAU17;
+    if (angleDifference > Math.PI) angleDifference -= TAU17;
+    if (angleDifference < -Math.PI) angleDifference += TAU17;
     windAngle += angleDifference * (1 - Math.exp(-TICK / 28));
     state2.windX = Math.cos(windAngle + Math.sin(state2.elapsed * 0.071 + gustPhase) * 0.045);
     state2.windZ = Math.sin(windAngle + Math.sin(state2.elapsed * 0.071 + gustPhase) * 0.045);
     const forcedCold = manual && (selectedFront === "snow" || selectedFront === "blizzard");
     const temperatureTarget = forcedCold ? coldTemperature(selectedFront) : ambientTemperature - state2.cloud * 1.1 - state2.rain * 2;
     state2.temperature += (temperatureTarget - state2.temperature) * (1 - Math.exp(-TICK / 45));
-    const warmth = smooth20(-3, 22, state2.temperature);
+    const warmth = smooth21(-3, 22, state2.temperature);
     const melting = state2.snowCover * Math.max(0, state2.temperature) * 32e-6;
-    const snowRetention = 0.4 + 0.6 * (1 - smooth20(-3, 5, state2.temperature));
+    const snowRetention = 0.4 + 0.6 * (1 - smooth21(-3, 5, state2.temperature));
     state2.snowCover = clamp014(state2.snowCover + (state2.snow * 35e-4 * snowRetention - melting - 15e-6 * (1 - state2.snow)) * TICK);
     const waterSupply = state2.rain * 0.015 + melting * 0.75;
     const drying = (2e-4 + warmth * 75e-5 + (1 - state2.cloud) * 7e-4 + state2.wind * 3e-4) * (1 - state2.rain * 0.85);
     state2.wetness = clamp014(state2.wetness + (waterSupply * (1 - state2.wetness) - drying * state2.wetness) * TICK);
-    const saturation = smooth20(0.57, 0.89, state2.wetness);
+    const saturation = smooth21(0.57, 0.89, state2.wetness);
     const filling = (state2.rain * 42e-4 + melting * 1.8) * saturation;
     const draining = 5e-4 + warmth * 4e-4 + (1 - state2.cloud) * 35e-5;
     state2.puddles = clamp014(state2.puddles + (filling * (1 - state2.puddles) - draining * state2.puddles) * TICK);
@@ -33752,7 +36238,7 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
       if (Number.isFinite(context.altitude)) altitude = Math.max(-100, Math.min(2e3, context.altitude));
     }
     if (Number.isFinite(context.timeOfDay)) hour = (context.timeOfDay % 24 + 24) % 24;
-    ambientTemperature = 17 + Math.cos((hour - 14) / 24 * TAU15) * 3 - altitude * 0.052;
+    ambientTemperature = 17 + Math.cos((hour - 14) / 24 * TAU17) * 3 - altitude * 0.052;
     if (localBiome === 2) ambientTemperature -= 4;
     else if (localBiome === 3) ambientTemperature += 5;
     else if (localBiome === 4) ambientTemperature -= 1.5;
@@ -33818,10 +36304,10 @@ var PRECIPITATION_QUALITY = Object.freeze({
   high: Object.freeze({ rain: 7600, snow: 6200, samples: 48 }),
   ultra: Object.freeze({ rain: 10800, snow: 8600, samples: 64 })
 });
-var clamp28 = (n, a = 0, b = 1) => Math.max(a, Math.min(b, Number.isFinite(n) ? n : a));
+var clamp30 = (n, a = 0, b = 1) => Math.max(a, Math.min(b, Number.isFinite(n) ? n : a));
 var mod = (n, d) => (n % d + d) % d;
 var finite11 = (n, fallback = 0) => Number.isFinite(n) ? n : fallback;
-var TAU16 = Math.PI * 2;
+var TAU18 = Math.PI * 2;
 function seededRandom(seed) {
   let value = (Number(seed) || 1) >>> 0;
   return () => {
@@ -34038,7 +36524,7 @@ void main() {
 }`;
 function createWeatherPrecipitation({ THREE, scene, camera, quality = "high", heightAt, waterAt, shelterAt, onThunder, seed = 71423 } = {}) {
   if (!THREE || !scene || !camera) throw new TypeError("Precipitation requires THREE, scene, and camera");
-  const random7 = seededRandom(seed), lightningRandom = seededRandom(seed + 907);
+  const random9 = seededRandom(seed), lightningRandom = seededRandom(seed + 907);
   const heightGrid = createPrecipitationHeightGrid({ heightAt, waterAt, shelterAt });
   const gridTexture = new THREE.DataTexture(heightGrid.data, heightGrid.size, heightGrid.size, THREE.RGBAFormat, THREE.FloatType);
   gridTexture.name = "weather-local-ground";
@@ -34058,7 +36544,7 @@ function createWeatherPrecipitation({ THREE, scene, camera, quality = "high", he
     geometry3.setAttribute("uv", new THREE.Float32BufferAttribute([0, 0, 1, 0, 0, 1, 1, 1], 2));
     geometry3.setIndex([0, 1, 2, 2, 1, 3]);
     const seeds = new Float32Array(maxCount * 4);
-    for (let i = 0; i < seeds.length; i++) seeds[i] = random7();
+    for (let i = 0; i < seeds.length; i++) seeds[i] = random9();
     geometry3.setAttribute("particleSeed", new THREE.InstancedBufferAttribute(seeds, 4));
     geometry3.instanceCount = 0;
     const uniforms = { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), ...shared, kind: { value: kind }, particleColor: { value: color3 }, intensity: { value: 0 } };
@@ -34116,7 +36602,7 @@ function createWeatherPrecipitation({ THREE, scene, camera, quality = "high", he
     boltOther.set([bx, by, bz, bx, by, bz, ax, ay, az, ax, ay, az], offset);
   }
   function strike(strength) {
-    const angle = lightningRandom() * TAU16, distance4 = 240 + lightningRandom() * 480;
+    const angle = lightningRandom() * TAU18, distance4 = 240 + lightningRandom() * 480;
     const x = center2.x + Math.cos(angle) * distance4, z = center2.z + Math.sin(angle) * distance4;
     const ground = finite11(heightAt?.(x, z), center2.y - 2), top = Math.max(ground + 110, center2.y + 150 + lightningRandom() * 65);
     const cloudOnly = lightningRandom() < 0.36;
@@ -34126,11 +36612,11 @@ function createWeatherPrecipitation({ THREE, scene, camera, quality = "high", he
     if (!cloudOnly) {
       let ax = x, ay = top, az = z;
       for (let i = 1; i <= 16; i++) {
-        const f10 = i / 16, bx = x + (lightningRandom() - 0.5) * 24 * Math.sin(f10 * Math.PI), by = top + (ground - top) * f10, bz = z + (lightningRandom() - 0.5) * 20 * Math.sin(f10 * Math.PI);
+        const f12 = i / 16, bx = x + (lightningRandom() - 0.5) * 24 * Math.sin(f12 * Math.PI), by = top + (ground - top) * f12, bz = z + (lightningRandom() - 0.5) * 20 * Math.sin(f12 * Math.PI);
         addBoltSegment(ax, ay, az, bx, by, bz);
         if ((i === 5 || i === 9) && lightningRandom() > 0.18) {
           let px = bx, py = by, pz = bz;
-          const direction = lightningRandom() * TAU16;
+          const direction = lightningRandom() * TAU18;
           for (let j = 0; j < 6; j++) {
             const qx = px + Math.cos(direction) * (5 + lightningRandom() * 7), qy = py - 5 - lightningRandom() * 8, qz = pz + Math.sin(direction) * (4 + lightningRandom() * 6);
             addBoltSegment(px, py, pz, qx, qy, qz);
@@ -34150,7 +36636,7 @@ function createWeatherPrecipitation({ THREE, scene, camera, quality = "high", he
     strikeAge = 0;
     sinceStrike = 0;
     strikeDuration = 0.3 + lightningRandom() * 0.19;
-    strikeStrength = clamp28(strength) * (0.7 + lightningRandom() * 0.3);
+    strikeStrength = clamp30(strength) * (0.7 + lightningRandom() * 0.3);
     strikeCount++;
     const delay = distance4 / 343;
     thunder = { distance: distance4, delay, strength: strikeStrength * (1 - distance4 / 1600), x, y: ground, z };
@@ -34158,7 +36644,7 @@ function createWeatherPrecipitation({ THREE, scene, camera, quality = "high", he
   }
   function update(dt, weather = {}, context = {}) {
     if (disposed) return frameState;
-    const step = clamp28(dt, 0, 0.25), activeCamera = context.camera || camera;
+    const step = clamp30(dt, 0, 0.25), activeCamera = context.camera || camera;
     const p = context.position || activeCamera.position;
     center2.set(finite11(p.x), finite11(p.y), finite11(p.z));
     elapsed += step;
@@ -34166,11 +36652,11 @@ function createWeatherPrecipitation({ THREE, scene, camera, quality = "high", he
     sinceStrike += step;
     strikeAge += step;
     const hidden3 = !!(context.inDungeon || context.underwater || context.sheltered);
-    const rain = hidden3 ? 0 : clamp28(weather.rain), snow = hidden3 ? 0 : clamp28(weather.snow), storm = hidden3 ? 0 : clamp28(weather.storm);
-    const wind = typeof weather.wind === "object" ? Math.min(1, Math.hypot(finite11(weather.wind?.x), finite11(weather.wind?.z)) / 12) : clamp28(weather.wind);
+    const rain = hidden3 ? 0 : clamp30(weather.rain), snow = hidden3 ? 0 : clamp30(weather.snow), storm = hidden3 ? 0 : clamp30(weather.storm);
+    const wind = typeof weather.wind === "object" ? Math.min(1, Math.hypot(finite11(weather.wind?.x), finite11(weather.wind?.z)) / 12) : clamp30(weather.wind);
     let wx = typeof weather.wind === "object" ? finite11(weather.wind?.x) : finite11(weather.windX, 1), wz = typeof weather.wind === "object" ? finite11(weather.wind?.z) : finite11(weather.windZ);
     const windLength = Math.hypot(wx, wz) || 1;
-    const whiteout = Math.max(clamp28(weather.blizzard), snow * clamp28((wind - 0.54) / 0.46));
+    const whiteout = Math.max(clamp30(weather.blizzard), snow * clamp30((wind - 0.54) / 0.46));
     const windSpeed = wind * (7 + whiteout * 10);
     windVelocity.set(wx / windLength * windSpeed, wz / windLength * windSpeed);
     windTravel.x += windVelocity.x * step;
@@ -34190,7 +36676,7 @@ function createWeatherPrecipitation({ THREE, scene, camera, quality = "high", he
     snowMesh.geometry.instanceCount = Math.ceil(limits.snow * snow * (0.62 + whiteout * 0.38));
     rainMesh.material.uniforms.intensity.value = (0.23 + 0.15 * rain) * Math.min(1, rain * 12);
     snowMesh.material.uniforms.intensity.value = (0.66 + whiteout * 0.14) * Math.min(1, snow * 12);
-    const daylight = clamp28(context.daylight ?? weather.daylight ?? 1);
+    const daylight = clamp30(context.daylight ?? weather.daylight ?? 1);
     colorRain.setRGB(0.08 + 0.47 * daylight, 0.1 + 0.5 * daylight, 0.15 + 0.52 * daylight);
     colorSnow.setRGB(0.09 + 0.72 * daylight, 0.12 + 0.72 * daylight, 0.19 + 0.72 * daylight);
     if (scene.fog?.color) {
@@ -34280,15 +36766,15 @@ var WEATHER_SURFACE_LIMITS = Object.freeze({
   addedSurfaceSamplers: 0,
   addedWaterBodies: 0
 });
-var L = WEATHER_SURFACE_LIMITS;
+var L2 = WEATHER_SURFACE_LIMITS;
 var clamp015 = (x) => Number.isFinite(x) ? Math.max(0, Math.min(1, x)) : 0;
-var GRID3 = L.exposureSize;
+var GRID3 = L2.exposureSize;
 var CELLS = GRID3 * GRID3;
-var KEY = L.revision;
-var TAU17 = Math.PI * 2;
+var KEY = L2.revision;
+var TAU19 = Math.PI * 2;
 var finite12 = Number.isFinite;
 var EMPTY_CONTEXT2 = Object.freeze({});
-var qualityCount = (q) => q === "low" ? L.lowPuddles : q === "balanced" || q === "medium" ? L.balancedPuddles : q === "ultra" ? L.puddles : L.highPuddles;
+var qualityCount = (q) => q === "low" ? L2.lowPuddles : q === "balanced" || q === "medium" ? L2.balancedPuddles : q === "ultra" ? L2.puddles : L2.highPuddles;
 var offsets = [];
 for (let z = -5; z <= 5; z++) for (let x = -5; x <= 5; x++) offsets.push({ x, z, d: x * x + z * z });
 offsets.sort((a, b) => a.d - b.d || a.z - b.z || a.x - b.x);
@@ -34300,7 +36786,7 @@ function hash5(x, z, seed) {
 function requireSeam(source2, seam) {
   if (!source2.includes(seam)) throw new Error("Weather surface shader seam missing: " + seam);
 }
-var VERTEX_PARS2 = `
+var VERTEX_PARS3 = `
 varying vec3 vWeatherWorldPosition;
 varying vec3 vWeatherWorldNormal;
 varying float vWeatherExposure;
@@ -34358,18 +36844,18 @@ function patchWeatherSurfaceShader(shader, uniforms) {
   requireSeam(shader.vertexShader, "#include <project_vertex>");
   requireSeam(shader.fragmentShader, "#include <lights_physical_fragment>");
   Object.assign(shader.uniforms, uniforms);
-  shader.vertexShader = VERTEX_PARS2 + shader.vertexShader.replace("#include <project_vertex>", "#include <project_vertex>\n" + VERTEX_BODY2);
+  shader.vertexShader = VERTEX_PARS3 + shader.vertexShader.replace("#include <project_vertex>", "#include <project_vertex>\n" + VERTEX_BODY2);
   shader.fragmentShader = FRAGMENT_PARS2 + shader.fragmentShader.replace("#include <lights_physical_fragment>", FRAGMENT_BODY + "\n#include <lights_physical_fragment>");
   return shader;
 }
-function sampleWeatherPuddle({ height: height2, slope: slope2, waterAt, getShelter, isBlocked, terrainStep = L.terrainStep }, x, z, rx, rz, angle, out2) {
-  if (!finite12(x) || !finite12(z) || !finite12(rx) || !finite12(rz) || !finite12(angle) || !finite12(terrainStep) || rx <= 0 || rz <= 0 || Math.max(rx, rz) > 1.3 || terrainStep < L.terrainStep) return false;
+function sampleWeatherPuddle({ height: height2, slope: slope2, waterAt, getShelter, isBlocked, terrainStep = L2.terrainStep }, x, z, rx, rz, angle, out2) {
+  if (!finite12(x) || !finite12(z) || !finite12(rx) || !finite12(rz) || !finite12(angle) || !finite12(terrainStep) || rx <= 0 || rz <= 0 || Math.max(rx, rz) > 1.3 || terrainStep < L2.terrainStep) return false;
   const y = height2(x, z), radius = Math.max(rx, rz), gradient = slope2(x, z);
-  if (!finite12(y) || !finite12(gradient) || gradient > L.maxSlope || waterAt(x, z, y) || getShelter(x, y + 0.12, z, radius) > 0.01 || isBlocked(x, z, radius + 0.18)) return false;
+  if (!finite12(y) || !finite12(gradient) || gradient > L2.maxSlope || waterAt(x, z, y) || getShelter(x, y + 0.12, z, radius) > 0.01 || isBlocked(x, z, radius + 0.18)) return false;
   const c2 = Math.cos(angle), s = Math.sin(angle);
   let minimum = y, maximum = y, rimMinimum = Infinity, rimSum = 0;
   for (let ring2 = 0; ring2 < 3; ring2++) for (let i = 0, samples = ring2 === 1 ? 24 : 8; i < samples; i++) {
-    const a = i * TAU17 / samples, r = ring2 === 0 ? 0.5 : ring2 === 1 ? 1 : 1.6, u = Math.cos(a) * rx * r, v = Math.sin(a) * rz * r;
+    const a = i * TAU19 / samples, r = ring2 === 0 ? 0.5 : ring2 === 1 ? 1 : 1.6, u = Math.cos(a) * rx * r, v = Math.sin(a) * rz * r;
     const px = x + c2 * u - s * v, pz = z + s * u + c2 * v, h = height2(px, pz);
     if (!finite12(h) || waterAt(px, pz, h) || getShelter(px, h + 0.12, pz, 0.18) > 0.01 || isBlocked(px, pz, 0.18)) return false;
     if (ring2 === 2) {
@@ -34392,10 +36878,10 @@ function sampleWeatherPuddle({ height: height2, slope: slope2, waterAt, getShelt
   }
   const spread = maximum - minimum, depression = rimSum / 8 - y;
   const microFilm = radius <= 0.8 && spread <= 0.02;
-  if (spread > L.maxHeightSpread || !microFilm && (rimMinimum < y - 0.012 || depression < 2e-3 && spread > 8e-3)) return false;
+  if (spread > L2.maxHeightSpread || !microFilm && (rimMinimum < y - 0.012 || depression < 2e-3 && spread > 8e-3)) return false;
   out2.x = x;
   out2.z = z;
-  out2.y = maximum + L.minClearance;
+  out2.y = maximum + L2.minClearance;
   out2.rx = rx;
   out2.rz = rz;
   out2.angle = angle;
@@ -34447,12 +36933,12 @@ function createWeatherSurfaces({ scene, seed = 0, height: height2, slope: slope2
   if (!scene?.isScene || [height2, slope2, waterAt, getShelter, isBlocked].some((fn) => typeof fn !== "function")) throw new TypeError("Weather surfaces require an outdoor scene and authoritative terrain/water/shelter/solid callbacks");
   const query = { height: height2, slope: slope2, waterAt, getShelter, isBlocked };
   const exposure = new Float32Array(CELLS), targets = new Float32Array(CELLS), scratch3 = new Float32Array(CELLS), scratchTargets = new Float32Array(CELLS);
-  const uniforms = { weatherWetness: { value: 0 }, weatherSnowCover: { value: 0 }, weatherExposure: { value: exposure }, weatherExposureOrigin: { value: new Vector2() }, weatherExposureStep: { value: L.exposureStep } };
+  const uniforms = { weatherWetness: { value: 0 }, weatherSnowCover: { value: 0 }, weatherExposure: { value: exposure }, weatherExposureOrigin: { value: new Vector2() }, weatherExposureStep: { value: L2.exposureStep } };
   const clock = { value: 0 }, rain = { value: 0 }, geometry3 = new CircleGeometry(1, 24);
   geometry3.rotateX(-Math.PI / 2);
-  const data = new Float32Array(L.puddles * 2), attribute = new InstancedBufferAttribute(data, 2).setUsage(DynamicDrawUsage);
+  const data = new Float32Array(L2.puddles * 2), attribute = new InstancedBufferAttribute(data, 2).setUsage(DynamicDrawUsage);
   geometry3.setAttribute("weatherPuddleData", attribute);
-  const material2 = makePuddleMaterial(clock, rain), mesh2 = new InstancedMesh(geometry3, material2, L.puddles);
+  const material2 = makePuddleMaterial(clock, rain), mesh2 = new InstancedMesh(geometry3, material2, L2.puddles);
   mesh2.name = "weather-puddles";
   mesh2.frustumCulled = false;
   mesh2.castShadow = false;
@@ -34463,7 +36949,7 @@ function createWeatherSurfaces({ scene, seed = 0, height: height2, slope: slope2
   mesh2.renderOrder = 2;
   mesh2.visible = false;
   scene.add(mesh2);
-  const dummy6 = new Object3D(), candidate = {}, searchHeights = new Float64Array(25), slots2 = Array.from({ length: L.puddles }, () => ({ active: false, cx: 0, cz: 0, x: 0, y: 0, z: 0, rx: 0, rz: 0, angle: 0, opacity: 0, phase: 0 }));
+  const dummy6 = new Object3D(), candidate = {}, searchHeights = new Float64Array(25), slots2 = Array.from({ length: L2.puddles }, () => ({ active: false, cx: 0, cz: 0, x: 0, y: 0, z: 0, rx: 0, rz: 0, angle: 0, opacity: 0, phase: 0 }));
   const materials = [], installed2 = /* @__PURE__ */ new WeakSet();
   let disposed = false, countLimit = qualityCount(quality), gridX = NaN, gridZ = NaN, gridCursor = 0;
   let scanX = NaN, scanZ = NaN, scanCursor = 0, scanClock = 0, activePuddles = 0, indoor = false, shelterCursor = 0;
@@ -34474,7 +36960,7 @@ function createWeatherSurfaces({ scene, seed = 0, height: height2, slope: slope2
       return source2;
     }
     if (disposed || !source2?.isMeshStandardMaterial || source2.transparent || source2.alphaTest > 0 || source2 === material2 || source2.userData?.weatherSurfaceExclude || installed2.has(source2)) return source2;
-    if (materials.length >= L.materialSources) return source2;
+    if (materials.length >= L2.materialSources) return source2;
     const previous = source2.onBeforeCompile, ownKey = Object.hasOwn(source2, "customProgramCacheKey") ? source2.customProgramCacheKey : null, oldSource = previous?.toString() || "";
     const compile = function(shader, renderer) {
       previous?.call(this, shader, renderer);
@@ -34507,7 +36993,7 @@ function createWeatherSurfaces({ scene, seed = 0, height: height2, slope: slope2
     if (index2 >= 0) materials.splice(index2, 1);
   }
   function moveExposureGrid(px, pz) {
-    const nextX = Math.floor(px / L.exposureStep) - 4, nextZ = Math.floor(pz / L.exposureStep) - 4;
+    const nextX = Math.floor(px / L2.exposureStep) - 4, nextZ = Math.floor(pz / L2.exposureStep) - 4;
     if (nextX === gridX && nextZ === gridZ) return;
     scratch3.set(exposure);
     scratchTargets.set(targets);
@@ -34520,12 +37006,12 @@ function createWeatherSurfaces({ scene, seed = 0, height: height2, slope: slope2
     gridX = nextX;
     gridZ = nextZ;
     gridCursor = 0;
-    uniforms.weatherExposureOrigin.value.set(gridX * L.exposureStep, gridZ * L.exposureStep);
+    uniforms.weatherExposureOrigin.value.set(gridX * L2.exposureStep, gridZ * L2.exposureStep);
   }
   function refreshExposure(dt) {
-    const radius = L.exposureStep * Math.SQRT1_2;
-    for (let n = 0; n < L.exposureProbesPerFrame; n++) {
-      const i = gridCursor++ % CELLS, x = (gridX + i % GRID3) * L.exposureStep, z = (gridZ + Math.floor(i / GRID3)) * L.exposureStep, y = height2(x, z);
+    const radius = L2.exposureStep * Math.SQRT1_2;
+    for (let n = 0; n < L2.exposureProbesPerFrame; n++) {
+      const i = gridCursor++ % CELLS, x = (gridX + i % GRID3) * L2.exposureStep, z = (gridZ + Math.floor(i / GRID3)) * L2.exposureStep, y = height2(x, z);
       targets[i] = finite12(y) && !isBlocked(x, z, radius) ? 1 - clamp015(getShelter(x, y + 0.12, z, radius)) : 0;
       if (targets[i] < exposure[i]) exposure[i] = targets[i];
       counters.exposureProbes++;
@@ -34535,7 +37021,7 @@ function createWeatherSurfaces({ scene, seed = 0, height: height2, slope: slope2
     for (let i = 0; i < CELLS; i++) exposure[i] += (targets[i] - exposure[i]) * blend2;
   }
   function tryCandidate(px, pz) {
-    const cellX = Math.floor(px / L.candidateStep), cellZ = Math.floor(pz / L.candidateStep);
+    const cellX = Math.floor(px / L2.candidateStep), cellZ = Math.floor(pz / L2.candidateStep);
     if (cellX !== scanX || cellZ !== scanZ) {
       scanX = cellX;
       scanZ = cellZ;
@@ -34543,8 +37029,8 @@ function createWeatherSurfaces({ scene, seed = 0, height: height2, slope: slope2
     }
     const offset = offsets[scanCursor++ % offsets.length], cx = cellX + offset.x, cz = cellZ + offset.z;
     if (hash5(cx, cz, seed + 41) < 0.33) return;
-    let x = (cx + 0.5) * L.candidateStep, z = (cz + 0.5) * L.candidateStep;
-    if (Math.hypot(x - px, z - pz) > L.puddleRadius) return;
+    let x = (cx + 0.5) * L2.candidateStep, z = (cz + 0.5) * L2.candidateStep;
+    if (Math.hypot(x - px, z - pz) > L2.puddleRadius) return;
     let free = null;
     for (let i = 0; i < countLimit; i++) {
       const slot = slots2[i];
@@ -34554,11 +37040,11 @@ function createWeatherSurfaces({ scene, seed = 0, height: height2, slope: slope2
     if (!free) return;
     counters.candidateProbes++;
     counters.lastCandidateProbes++;
-    const ox = Math.round(x / L.terrainStep) - 2, oz = Math.round(z / L.terrainStep) - 2;
-    for (let iz = 0; iz < 5; iz++) for (let ix = 0; ix < 5; ix++) searchHeights[iz * 5 + ix] = height2((ox + ix) * L.terrainStep, (oz + iz) * L.terrainStep);
+    const ox = Math.round(x / L2.terrainStep) - 2, oz = Math.round(z / L2.terrainStep) - 2;
+    for (let iz = 0; iz < 5; iz++) for (let ix = 0; ix < 5; ix++) searchHeights[iz * 5 + ix] = height2((ox + ix) * L2.terrainStep, (oz + iz) * L2.terrainStep);
     let best = Infinity, selected = -1;
     for (let iz = 1; iz < 4; iz++) for (let ix = 1; ix < 4; ix++) {
-      const i = iz * 5 + ix, gradient = Math.hypot(searchHeights[i + 1] - searchHeights[i - 1], searchHeights[i + 5] - searchHeights[i - 5]) / (2 * L.terrainStep);
+      const i = iz * 5 + ix, gradient = Math.hypot(searchHeights[i + 1] - searchHeights[i - 1], searchHeights[i + 5] - searchHeights[i - 5]) / (2 * L2.terrainStep);
       const score = gradient + hash5(cx * 5 + ix, cz * 5 + iz, seed + 71) * 1e-5;
       if (score < best) {
         best = score;
@@ -34566,17 +37052,17 @@ function createWeatherSurfaces({ scene, seed = 0, height: height2, slope: slope2
       }
     }
     if (selected < 0) return;
-    x = (ox + selected % 5) * L.terrainStep;
-    z = (oz + Math.floor(selected / 5)) * L.terrainStep;
-    if (Math.hypot(x - px, z - pz) > L.puddleRadius) return;
-    const rx = 0.32 + hash5(cx, cz, seed + 191) * 0.46, rz = rx * (0.55 + hash5(cx, cz, seed + 223) * 0.35), angle = hash5(cx, cz, seed + 277) * TAU17;
+    x = (ox + selected % 5) * L2.terrainStep;
+    z = (oz + Math.floor(selected / 5)) * L2.terrainStep;
+    if (Math.hypot(x - px, z - pz) > L2.puddleRadius) return;
+    const rx = 0.32 + hash5(cx, cz, seed + 191) * 0.46, rz = rx * (0.55 + hash5(cx, cz, seed + 223) * 0.35), angle = hash5(cx, cz, seed + 277) * TAU19;
     if (!sampleWeatherPuddle(query, x, z, rx, rz, angle, candidate)) return;
     Object.assign(free, candidate);
     free.active = true;
     free.cx = cx;
     free.cz = cz;
     free.opacity = 0;
-    free.phase = hash5(cx, cz, seed + 337) * TAU17;
+    free.phase = hash5(cx, cz, seed + 337) * TAU19;
     counters.accepted++;
   }
   function update(dt, state2, player, context = EMPTY_CONTEXT2) {
@@ -34597,7 +37083,7 @@ function createWeatherSurfaces({ scene, seed = 0, height: height2, slope: slope2
       moveExposureGrid(px, pz);
       refreshExposure(dt);
     }
-    if (!indoor) for (let n = 0; n < L.shelterRechecksPerFrame; n++) {
+    if (!indoor) for (let n = 0; n < L2.shelterRechecksPerFrame; n++) {
       const slot = slots2[shelterCursor++ % countLimit];
       if (!slot.active) continue;
       const radius = Math.max(slot.rx, slot.rz);
@@ -34607,21 +37093,21 @@ function createWeatherSurfaces({ scene, seed = 0, height: height2, slope: slope2
         slot.opacity = 0;
       }
     }
-    scanClock = Math.min(scanClock + dt, L.candidateSeconds * L.candidatesPerFrame);
-    if (!indoor && puddles > 0.025) while (scanClock >= L.candidateSeconds) {
-      scanClock -= L.candidateSeconds;
+    scanClock = Math.min(scanClock + dt, L2.candidateSeconds * L2.candidatesPerFrame);
+    if (!indoor && puddles > 0.025) while (scanClock >= L2.candidateSeconds) {
+      scanClock -= L2.candidateSeconds;
       tryCandidate(px, pz);
     }
     activePuddles = 0;
-    for (let i = 0; i < L.puddles; i++) {
+    for (let i = 0; i < L2.puddles; i++) {
       const slot = slots2[i];
       if (!slot.active || i >= countLimit) {
         slot.active = false;
         data[i * 2] = 0;
         continue;
       }
-      const distance4 = Math.hypot(slot.x - px, slot.z - pz), inRange = distance4 < L.retentionRadius;
-      const target = inRange ? puddles * Math.min(1, Math.max(0, (L.retentionRadius - distance4) / 7)) : 0;
+      const distance4 = Math.hypot(slot.x - px, slot.z - pz), inRange = distance4 < L2.retentionRadius;
+      const target = inRange ? puddles * Math.min(1, Math.max(0, (L2.retentionRadius - distance4) / 7)) : 0;
       slot.opacity += (target - slot.opacity) * (1 - Math.exp(-dt / (target > slot.opacity ? 2 : 3)));
       if ((!inRange || puddles < 1e-3) && slot.opacity < 3e-3) {
         slot.active = false;
@@ -34703,9 +37189,9 @@ var QUALITY = Object.freeze({
   balanced: Object.freeze({ side: 4, radius: 44 }),
   low: Object.freeze({ side: 3, radius: 30 })
 });
-var clamp29 = (value, low = 0, high = 1) => Math.max(low, Math.min(high, Number.isFinite(value) ? value : low));
-var smooth21 = (low, high, value) => {
-  const t = clamp29((value - low) / (high - low));
+var clamp31 = (value, low = 0, high = 1) => Math.max(low, Math.min(high, Number.isFinite(value) ? value : low));
+var smooth22 = (low, high, value) => {
+  const t = clamp31((value - low) / (high - low));
   return t * t * (3 - 2 * t);
 };
 var normalizeQuality = (quality) => quality === "low" ? "low" : quality === "balanced" || quality === "medium" ? "balanced" : "high";
@@ -34720,7 +37206,7 @@ function cellRandom(seed, x, z, channel2) {
   value = Math.imul(value ^ value >>> 13, 1274126177);
   return ((value ^ value >>> 16) >>> 0) / 4294967296;
 }
-var VERTEX4 = (
+var VERTEX6 = (
   /* glsl */
   `
   attribute vec3 mistData;
@@ -34745,7 +37231,7 @@ var VERTEX4 = (
   }
 `
 );
-var FRAGMENT3 = (
+var FRAGMENT5 = (
   /* glsl */
   `
   uniform float uTime;
@@ -34817,8 +37303,8 @@ function createWeatherMist({ THREE, scene, camera, seed = 1, heightAt, waterAt, 
   const material2 = new THREE.ShaderMaterial({
     name: "weather-ground-mist",
     uniforms,
-    vertexShader: VERTEX4,
-    fragmentShader: FRAGMENT3,
+    vertexShader: VERTEX6,
+    fragmentShader: FRAGMENT5,
     transparent: true,
     depthTest: true,
     depthWrite: false,
@@ -34854,10 +37340,10 @@ function createWeatherMist({ THREE, scene, camera, seed = 1, heightAt, waterAt, 
     }
   };
   function sampleCell(xCell, zCell) {
-    const random7 = (channel2) => cellRandom(normalizedSeed, xCell, zCell, channel2);
-    const x = (xCell + 0.2 + random7(1) * 0.6) * CELL_SIZE;
-    const z = (zCell + 0.2 + random7(2) * 0.6) * CELL_SIZE;
-    const width = 19 + random7(3) * 11, height2 = 1.5 + random7(4) * 1.6;
+    const random9 = (channel2) => cellRandom(normalizedSeed, xCell, zCell, channel2);
+    const x = (xCell + 0.2 + random9(1) * 0.6) * CELL_SIZE;
+    const z = (zCell + 0.2 + random9(2) * 0.6) * CELL_SIZE;
+    const width = 19 + random9(3) * 11, height2 = 1.5 + random9(4) * 1.6;
     const reach = width * 0.5;
     const points = [[x, z], [x - reach, z], [x + reach, z], [x, z - reach], [x, z + reach]];
     let minY = Infinity, maxY = -Infinity, centerY = NaN, totalY = 0, wet = 0;
@@ -34887,11 +37373,11 @@ function createWeatherMist({ THREE, scene, camera, seed = 1, heightAt, waterAt, 
     }
     const relief = maxY - minY;
     if (relief > 2.6) return null;
-    const hollow = smooth21(-0.1, 1.1, totalY / points.length - centerY);
-    const lowland = 1 - smooth21(35, 230, centerY);
-    const smoothGround = 1 - smooth21(0.6, 2.6, relief) * 0.75;
-    const moisture = clamp29(0.28 + lowland * 0.24 + hollow * 0.25 + wet * 0.09) * smoothGround;
-    return { x, z, y: maxY + 0.025, width, height: height2, moisture, phase: random7(5) * 40 };
+    const hollow = smooth22(-0.1, 1.1, totalY / points.length - centerY);
+    const lowland = 1 - smooth22(35, 230, centerY);
+    const smoothGround = 1 - smooth22(0.6, 2.6, relief) * 0.75;
+    const moisture = clamp31(0.28 + lowland * 0.24 + hollow * 0.25 + wet * 0.09) * smoothGround;
+    return { x, z, y: maxY + 0.025, width, height: height2, moisture, phase: random9(5) * 40 };
   }
   function rebuild(xCell, zCell) {
     const side2 = QUALITY[selectedQuality].side, start2 = -Math.floor((side2 - 1) / 2);
@@ -34921,7 +37407,7 @@ function createWeatherMist({ THREE, scene, camera, seed = 1, heightAt, waterAt, 
     if (disposed) return;
     state2 = state2 || {};
     context = context || {};
-    const seconds = clamp29(dt, 0, 0.25);
+    const seconds = clamp31(dt, 0, 0.25);
     elapsed += seconds;
     uniforms.uTime.value = elapsed;
     const observer = context.position || context.camera?.position || camera?.position;
@@ -34930,13 +37416,13 @@ function createWeatherMist({ THREE, scene, camera, seed = 1, heightAt, waterAt, 
       mesh2.visible = false;
       return;
     }
-    lastDaylight = clamp29(context.daylight ?? lastDaylight);
-    const fog = clamp29(state2.fog), haze = clamp29(state2.haze), wind = clamp29(state2.wind);
-    const rain = clamp29(state2.rain), snow = clamp29(state2.snow), wetness = clamp29(state2.wetness);
-    const cool = 1 - smooth21(8, 24, Number.isFinite(state2.temperature) ? state2.temperature : 16);
-    const calm = 1 - smooth21(0.24, 0.92, wind) * 0.85;
+    lastDaylight = clamp31(context.daylight ?? lastDaylight);
+    const fog = clamp31(state2.fog), haze = clamp31(state2.haze), wind = clamp31(state2.wind);
+    const rain = clamp31(state2.rain), snow = clamp31(state2.snow), wetness = clamp31(state2.wetness);
+    const cool = 1 - smooth22(8, 24, Number.isFinite(state2.temperature) ? state2.temperature : 16);
+    const calm = 1 - smooth22(0.24, 0.92, wind) * 0.85;
     const humid = fog * 0.88 + haze * 0.35 + rain * 0.13 + wetness * cool * 0.16;
-    const target = clamp29((humid - 0.035) * (1.05 + cool * 0.2 + (1 - lastDaylight) * 0.2) * calm * (1 - snow * 0.65));
+    const target = clamp31((humid - 0.035) * (1.05 + cool * 0.2 + (1 - lastDaylight) * 0.2) * calm * (1 - snow * 0.65));
     strength += (target - strength) * (1 - Math.exp(-seconds / 2.6));
     uniforms.uStrength.value = strength;
     uniforms.uObserver.value.set(observer.x, observer.z);
@@ -35009,7 +37495,7 @@ function createWeatherMist({ THREE, scene, camera, seed = 1, heightAt, waterAt, 
 }
 
 // weather-sky.js
-var clamp30 = (value, min = 0, max = 1) => Math.max(min, Math.min(max, Number.isFinite(value) ? value : min));
+var clamp32 = (value, min = 0, max = 1) => Math.max(min, Math.min(max, Number.isFinite(value) ? value : min));
 var OPTIONS = Object.freeze(["cloudCoverage", "cloudDensity", "windSpeed", "windDirection", "fogDensity", "sunLightIntensity", "exposure"]);
 function createWeatherSky({ sky }) {
   if (!sky) throw new TypeError("Weather requires the installed DynamicSky");
@@ -35021,18 +37507,18 @@ function createWeatherSky({ sky }) {
       restore();
       return;
     }
-    const rain = clamp30(state2.rain), snow = clamp30(state2.snow), storm = clamp30(state2.storm), wind = clamp30(state2.wind);
-    const cloud = clamp30(Number.isFinite(state2.cloud) ? state2.cloud : baseline.cloudCoverage);
-    const fog = clamp30(state2.fog), haze = clamp30(state2.haze), blizzard = clamp30(state2.blizzard ?? snow * wind);
+    const rain = clamp32(state2.rain), snow = clamp32(state2.snow), storm = clamp32(state2.storm), wind = clamp32(state2.wind);
+    const cloud = clamp32(Number.isFinite(state2.cloud) ? state2.cloud : baseline.cloudCoverage);
+    const fog = clamp32(state2.fog), haze = clamp32(state2.haze), blizzard = clamp32(state2.blizzard ?? snow * wind);
     sky.cloudCoverage = cloud;
     sky.cloudDensity = baseline.cloudDensity * (1 + 0.44 * rain + 0.66 * storm + 0.26 * snow + 0.2 * cloud);
     sky.windSpeed = 3 + 33 * wind;
     if (Number.isFinite(state2.windX) && Number.isFinite(state2.windZ) && Math.hypot(state2.windX, state2.windZ) > 1e-3)
       sky.windDirection = (Math.atan2(state2.windZ, state2.windX) * 180 / Math.PI + 540) % 360;
-    sky.fogDensity = clamp30(baseline.fogDensity + 9e-3 * Math.pow(fog, 1.45) + 2e-3 * haze + 12e-4 * rain + 3e-3 * blizzard, baseline.fogDensity, 0.014);
-    const overcast = clamp30((cloud - 0.4) / 0.6);
-    const sunlight = clamp30(1 - 0.28 * overcast - 0.2 * rain - 0.3 * storm - 0.13 * snow - 0.08 * fog, 0.22, 1);
-    const pulse = clamp30(flash, 0, 0.5);
+    sky.fogDensity = clamp32(baseline.fogDensity + 9e-3 * Math.pow(fog, 1.45) + 2e-3 * haze + 12e-4 * rain + 3e-3 * blizzard, baseline.fogDensity, 0.014);
+    const overcast = clamp32((cloud - 0.4) / 0.6);
+    const sunlight = clamp32(1 - 0.28 * overcast - 0.2 * rain - 0.3 * storm - 0.13 * snow - 0.08 * fog, 0.22, 1);
+    const pulse = clamp32(flash, 0, 0.5);
     sky.sunLightIntensity = baseline.sunLightIntensity * (sunlight + 4 * pulse);
     sky.exposure = baseline.exposure * (1 - 0.035 * rain - 0.05 * storm + 0.3 * pulse);
   }
@@ -35340,12 +37826,12 @@ function createIslandBackdrop(world2, { height: height2, climate: climate3 = sam
 }
 
 // hydrology-wetness.js
-var smooth22 = (a, b, value) => {
+var smooth23 = (a, b, value) => {
   const t = Math.max(0, Math.min(1, (value - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
 var HYDROLOGY_WETNESS = Object.freeze({ radius: 3.6, dry: [0.06, 1.05], reach: [0.4, 3.6] });
-var wetnessFrom = (shore, y) => (1 - smooth22(HYDROLOGY_WETNESS.dry[0], HYDROLOGY_WETNESS.dry[1], y - shore.level)) * (1 - smooth22(HYDROLOGY_WETNESS.reach[0], HYDROLOGY_WETNESS.reach[1], shore.distance));
+var wetnessFrom = (shore, y) => (1 - smooth23(HYDROLOGY_WETNESS.dry[0], HYDROLOGY_WETNESS.dry[1], y - shore.level)) * (1 - smooth23(HYDROLOGY_WETNESS.reach[0], HYDROLOGY_WETNESS.reach[1], shore.distance));
 function attachHydrologyWetness(geometry3, hydrology2, bounds6) {
   const steps = attachHydrologyWetnessSteps(geometry3, hydrology2, bounds6);
   let result;
@@ -35358,7 +37844,7 @@ function* attachHydrologyWetnessSteps(geometry3, hydrology2, bounds6) {
   const positions = geometry3.attributes.position, values = new Float32Array(positions.count), banks = new Float32Array(positions.count);
   const pad = HYDROLOGY_WETNESS.radius + 0.5, wetFeatures = hydrology2 && bounds6 ? hydrology2.queryBounds({ minX: bounds6.minX - pad, maxX: bounds6.maxX + pad, minZ: bounds6.minZ - pad, maxZ: bounds6.maxZ + pad }) : [];
   const range = RIVER_BANK_SURFACE.range;
-  const bankFeatures = hydrology2?.generationMode === "water-first" && bounds6 ? hydrology2.queryBounds({ minX: bounds6.minX - range, maxX: bounds6.maxX + range, minZ: bounds6.minZ - range, maxZ: bounds6.maxZ + range }).filter((f10) => f10.generationMode === "water-first" && f10.kind === "stream") : [];
+  const bankFeatures = hydrology2?.generationMode === "water-first" && bounds6 ? hydrology2.queryBounds({ minX: bounds6.minX - range, maxX: bounds6.maxX + range, minZ: bounds6.minZ - range, maxZ: bounds6.maxZ + range }).filter((f12) => f12.generationMode === "water-first" && f12.kind === "stream") : [];
   const admits = (feature, x, z, pad2) => {
     const b = feature.bounds;
     return x >= b.minX - pad2 && x <= b.maxX + pad2 && z >= b.minZ - pad2 && z <= b.maxZ + pad2;
@@ -35367,7 +37853,7 @@ function* attachHydrologyWetnessSteps(geometry3, hydrology2, bounds6) {
   if (wetFeatures.length || bankFeatures.length) for (let i = 0; i < positions.count; i++) {
     if (i && i % 64 === 0) yield { phase: "ground-wetness", completedUnits: i, totalUnits: positions.count };
     const x = positions.getX(i), z = positions.getZ(i), y = positions.getY(i);
-    const wetNearby = wetFeatures.some((f10) => admits(f10, x, z, pad)), riverNearby = bankFeatures.some((f10) => admits(f10, x, z, range));
+    const wetNearby = wetFeatures.some((f12) => admits(f12, x, z, pad)), riverNearby = bankFeatures.some((f12) => admits(f12, x, z, range));
     if (!wetNearby && !riverNearby) continue;
     let shore = null;
     if (wetNearby) {
@@ -35464,16 +37950,16 @@ function appendTerrainBoundaryStitch(geometry3, { farVertexHeight }) {
   for (let edge2 = 0; edge2 < 4; edge2++) {
     let triangle4 = function(a, b, c2) {
       const ax = position3.getX(a), ay = position3.getY(a), az = position3.getZ(a), bx = position3.getX(b), by = position3.getY(b), bz = position3.getZ(b), cx = position3.getX(c2), cy = position3.getY(c2), cz = position3.getZ(c2);
-      const nx = (by - ay) * (cz - az) - (bz - az) * (cy - ay), nz = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax), dot4 = nx * spec.nx + nz * spec.nz;
-      if (dot4 === 0) return;
-      if (dot4 < 0) [b, c2] = [c2, b];
+      const nx = (by - ay) * (cz - az) - (bz - az) * (cy - ay), nz = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax), dot5 = nx * spec.nx + nz * spec.nz;
+      if (dot5 === 0) return;
+      if (dot5 < 0) [b, c2] = [c2, b];
       indices.push(a, b, c2, a + SIDE_VERTICES, c2 + SIDE_VERTICES, b + SIDE_VERTICES);
     };
     const spec = EDGES2[edge2], points = [], indices = [];
     for (let i = 0; i <= SEGMENTS4; i++) {
-      const source2 = spec.vertex(i), x = original.position.getX(source2), z = original.position.getZ(source2), near = original.position.getY(source2), along = spec.dx ? z : x, cross9 = spec.dx ? x : z;
+      const source2 = spec.vertex(i), x = original.position.getX(source2), z = original.position.getZ(source2), near = original.position.getY(source2), along = spec.dx ? z : x, cross10 = spec.dx ? x : z;
       const coarse2 = Math.floor(along / 4) * 4, t = (along - coarse2) / 4;
-      const farA = spec.dx ? farVertex(cross9, coarse2) : farVertex(coarse2, cross9), farB = spec.dx ? farVertex(cross9, coarse2 + 4) : farVertex(coarse2 + 4, cross9), far = farA + (farB - farA) * t;
+      const farA = spec.dx ? farVertex(cross10, coarse2) : farVertex(coarse2, cross10), farB = spec.dx ? farVertex(cross10, coarse2 + 4) : farVertex(coarse2 + 4, cross10), far = farA + (farB - farA) * t;
       const base = put2(edge2, i * 2, x, z, Math.min(near, far), Math.max(near, far), 0, source2, source2);
       points.push({ source: source2, x, z, along, near, far, base });
     }
@@ -35543,7 +38029,7 @@ var GROUNDING_LIMIT = 32;
 var GROUNDING_SKIN_SAMPLES = 96;
 var localFits = /* @__PURE__ */ new WeakMap();
 var skinGroups = /* @__PURE__ */ new WeakMap();
-var smooth23 = MathUtils.smoothstep;
+var smooth24 = MathUtils.smoothstep;
 var work3 = new Vector3();
 var center = new Vector3();
 var extent = new Vector3();
@@ -35561,7 +38047,7 @@ function fitGroundCapsule(points, kind = "rock") {
   const radius = Math.min(extent.getComponent(others[0]), extent.getComponent(others[1])) * 0.86;
   if (!(radius > 0.025) || !Number.isFinite(radius)) return null;
   const major = extent.getComponent(axis2), second = Math.max(extent.getComponent(others[0]), extent.getComponent(others[1]));
-  const elongation = kind === "actor" ? smooth23((major - second) / Math.max(major, 1e-4), 0, 0.18) : 1;
+  const elongation = kind === "actor" ? smooth24((major - second) / Math.max(major, 1e-4), 0, 0.18) : 1;
   const length = Math.max(0, major - radius) * elongation;
   const a = center.clone(), b = center.clone();
   a.setComponent(axis2, a.getComponent(axis2) - length);
@@ -35799,7 +38285,7 @@ function createOutdoorGrounding(world2) {
     selected = candidates.slice(0, GROUNDING_LIMIT).filter((c2) => c2.rank < cutoff);
     for (let i = 0; i < selected.length; i++) {
       const c2 = selected[i];
-      c2.weight = 1 - smooth23(c2.rank, Math.max(0, cutoff - 4), cutoff);
+      c2.weight = 1 - smooth24(c2.rank, Math.max(0, cutoff - 4), cutoff);
       uniforms.groundCapsuleA.value[i].set(c2.a.x, c2.a.y, c2.a.z, c2.radius);
       uniforms.groundCapsuleB.value[i].set(c2.b.x, c2.b.y, c2.b.z, c2.weight);
     }
@@ -35856,12 +38342,12 @@ function createPOIActions({ removed, discovered, entities, remember = () => {
     if (object2.action === "inspect") return { ...base, kind: "inspect", message: object2.text || "古い旅の痕跡が残っている。", sound: "uiSelect" };
     if (object2.action === "rest") {
       const danger = [...entities.values()].some((e) => e.hp > 0 && e.type !== "deer" && Math.hypot(e.x - player.x, e.z - player.z) < 18);
-      if (danger) return { ...base, kind: "blocked", message: "敵が近くにいる。安全を確かめてから休もう。", sound: "error" };
+      if (danger) return { ...base, kind: "blocked", message: "敵が近くにいる。安全を確かめてから休もう。", sound: "deny" };
       return { ...base, kind: "rest", message: object2.text || "火のそばで体力を回復した。", restore: { hp: true }, changed: true, sound: "rest" };
     }
     if (object2.action === "loot") {
       if (removed.has(object2.id)) return { ...base, kind: "empty", message: "中は空になっている。" };
-      if ((object2.guardIds || []).some((id2) => !removed.has(id2) && (!entities.has(id2) || entities.get(id2).hp > 0))) return { ...base, kind: "blocked", message: object2.lockedText || "近くの守り手を倒すまで開けられない。", sound: "error" };
+      if ((object2.guardIds || []).some((id2) => !removed.has(id2) && (!entities.has(id2) || entities.get(id2).hp > 0))) return { ...base, kind: "blocked", message: object2.lockedText || "近くの守り手を倒すまで開けられない。", sound: "locked" };
       const reward = contentReward(object2.reward);
       removed.add(object2.id);
       return { ...base, kind: "loot", message: object2.text || "旅に役立つ品を手に入れた。", reward, removeId: object2.id, changed: true, sound: "chest" };
@@ -36159,8 +38645,8 @@ function priorFernEnvelope(rnd, bearing) {
       point5([root[0] + dx * t + sx * w * side2, y + roll * w * side2, root[2] + dz * t + sz * w * side2]);
     }
   }
-  for (let f10 = 0; f10 < 5; f10++) {
-    const a = bearing + f10 * 2.399963 + (rnd(2, f10) - 0.5) * 0.45, cs = Math.cos(a), sn = Math.sin(a), root = [cs * 0.025, 0, sn * 0.025], reach = 0.3 + 0.08 * rnd(3, f10), height2 = 0.34 + 0.13 * rnd(4, f10), points = [root, ...[0.5, 1].map((t) => [root[0] + cs * reach * t, 8e-3 + height2 * Math.sin(Math.PI * t * 0.86), root[2] + sn * reach * t])];
+  for (let f12 = 0; f12 < 5; f12++) {
+    const a = bearing + f12 * 2.399963 + (rnd(2, f12) - 0.5) * 0.45, cs = Math.cos(a), sn = Math.sin(a), root = [cs * 0.025, 0, sn * 0.025], reach = 0.3 + 0.08 * rnd(3, f12), height2 = 0.34 + 0.13 * rnd(4, f12), points = [root, ...[0.5, 1].map((t) => [root[0] + cs * reach * t, 8e-3 + height2 * Math.sin(Math.PI * t * 0.86), root[2] + sn * reach * t])];
     for (let i = 0; i < 3; i++) {
       const before = points[Math.max(0, i - 1)], after = points[Math.min(2, i + 1)], dx = after[0] - before[0], dz = after[2] - before[2], len3 = Math.hypot(dx, dz) || 1, w = 23e-4 * (1 - 0.8 * i / 2);
       for (const side2 of [-1, 1]) point5([points[i][0] - dz / len3 * w * side2, points[i][1], points[i][2] + dx / len3 * w * side2]);
@@ -36170,7 +38656,7 @@ function priorFernEnvelope(rnd, bearing) {
       return points[i].map((p, k) => p + (points[i + 1][k] - p) * u);
     };
     for (let k = 0; k < 3; k++) for (const side2 of [-1, 1]) {
-      const t = 0.22 + k * 0.23, base = joint(t), span = (0.098 + 0.03 * rnd(5, f10 * 8 + k * 2 + (side2 + 1) / 2)) * Math.sin(Math.PI * t), forward = 0.035 + 0.028 * (1 - t), tip = [base[0] + cs * forward - sn * side2 * span, base[1] - 0.022 + 0.02 * (1 - t), base[2] + sn * forward + cs * side2 * span];
+      const t = 0.22 + k * 0.23, base = joint(t), span = (0.098 + 0.03 * rnd(5, f12 * 8 + k * 2 + (side2 + 1) / 2)) * Math.sin(Math.PI * t), forward = 0.035 + 0.028 * (1 - t), tip = [base[0] + cs * forward - sn * side2 * span, base[1] - 0.022 + 0.02 * (1 - t), base[2] + sn * forward + cs * side2 * span];
       pinna(base, tip, span * 0.39, side2 * 0.24);
     }
     pinna(joint(0.8), points[2], 0.027, 0);
@@ -36227,8 +38713,8 @@ function woodlandUnderstory(base, hash12) {
   }
   const bearing = rnd(1) * Math.PI * 2;
   if (profile === 3) {
-    for (let f10 = 0; f10 < 4; f10++) {
-      const a = bearing + f10 * 2.399963 + (rnd(2, f10) - 0.5) * 0.45, cs = Math.cos(a), sn = Math.sin(a), root = [cs * 0.025, 0, sn * 0.025], reach = 0.3 + 0.08 * rnd(3, f10), height2 = 0.34 + 0.13 * rnd(4, f10), id2 = "frond/" + f10;
+    for (let f12 = 0; f12 < 4; f12++) {
+      const a = bearing + f12 * 2.399963 + (rnd(2, f12) - 0.5) * 0.45, cs = Math.cos(a), sn = Math.sin(a), root = [cs * 0.025, 0, sn * 0.025], reach = 0.3 + 0.08 * rnd(3, f12), height2 = 0.34 + 0.13 * rnd(4, f12), id2 = "frond/" + f12;
       const at = (t) => [root[0] + cs * reach * t, 8e-3 + height2 * Math.sin(Math.PI * t * 0.86), root[2] + sn * reach * t];
       const points = Array.from({ length: 4 }, (_, i) => at(i / 3));
       points[0] = root;
@@ -36238,12 +38724,12 @@ function woodlandUnderstory(base, hash12) {
         return points[i].map((q, k) => q + (points[i + 1][k] - q) * u);
       };
       for (let k = 0; k < 6; k++) for (const side2 of [-1, 1]) {
-        const t = 0.16 + k * 0.126 + (side2 === 1 ? 0.012 : 0), basePoint = joint(t), key3 = f10 * 16 + k * 2 + (side2 + 1) / 2;
+        const t = 0.16 + k * 0.126 + (side2 === 1 ? 0.012 : 0), basePoint = joint(t), key3 = f12 * 16 + k * 2 + (side2 + 1) / 2;
         const span = (0.104 + 0.025 * rnd(5, key3)) * Math.sin(Math.PI * t), forward = 0.025 + 0.033 * (1 - t), tip = [basePoint[0] + cs * forward - sn * side2 * span, basePoint[1] - 0.012 - 0.016 * t, basePoint[2] + sn * forward + cs * side2 * span];
         leaf(basePoint, tip, span * (0.105 + 0.027 * rnd(6, key3)), side2 * (0.12 + 0.13 * rnd(7, key3)), id2 + "/pinna/" + k + "/" + side2, id2);
       }
       const start2 = joint(0.88), end = points[3], tipLength = Math.hypot(end[0] - start2[0], end[2] - start2[2]), w = Math.min(9e-3, tipLength * 0.18), center2 = start2.map((v4, k) => (v4 + end[k]) * 0.5), v = p.length / 3;
-      if (f10 < 3) {
+      if (f12 < 3) {
         leaf(start2, end, w, 0, id2 + "/tip", id2);
         continue;
       }
@@ -36319,7 +38805,7 @@ function woodlandUnderstory(base, hash12) {
 }
 
 // procedural-grass-model.js
-var TAU18 = Math.PI * 2;
+var TAU20 = Math.PI * 2;
 var WOODLAND_STATIONS = Object.freeze({
   low: Object.freeze([0, 0.273388, 0.51386, 0.744698, 1]),
   arching: Object.freeze([0, 0.29143, 0.533477, 0.747517, 1]),
@@ -36396,14 +38882,14 @@ function buildGrassModel(seed = 728194, profile = 2, family = 0) {
   }
   const tillers = p.tillers + (profile !== 2 && rnd(1) > 0.6 ? 1 : 0);
   for (let i = 0; i < tillers; i++) {
-    const colony = i % 3, a = rnd(2, i) * TAU18, r = p.patch * (0.1 + 0.42 * Math.sqrt(rnd(3, i))), q = colonies[colony], root = [q[0] + Math.cos(a) * r, 0, q[2] + Math.sin(a) * r], id2 = "tiller/" + i;
+    const colony = i % 3, a = rnd(2, i) * TAU20, r = p.patch * (0.1 + 0.42 * Math.sqrt(rnd(3, i))), q = colonies[colony], root = [q[0] + Math.cos(a) * r, 0, q[2] + Math.sin(a) * r], id2 = "tiller/" + i;
     const rootRadius = Math.hypot(root[0], root[2]), rootLimit = 0.48 - p.bend * 1.3 - 0.015;
     if (rootRadius > rootLimit) {
       root[0] *= rootLimit / rootRadius;
       root[2] *= rootLimit / rootRadius;
     }
     nodes.push({ id: id2, parent: "colony/" + colony, point: root });
-    const count = p.leaves + ((profile === 2 ? i % 5 === 0 && rnd(4, i) > 0.5 : rnd(4, i) > 0.85) ? 1 : 0), bearing = rnd(5, i) * TAU18;
+    const count = p.leaves + ((profile === 2 ? i % 5 === 0 && rnd(4, i) > 0.5 : rnd(4, i) > 0.85) ? 1 : 0), bearing = rnd(5, i) * TAU20;
     if (profile === 1) {
       for (let j = 0; j < count; j++) {
         const k = i * 11 + j, young2 = j === count - 1, length = 0.46 + 0.5 * rnd(6, k), angle = bearing + (j % 2 ? 1 : -1) * (j * 0.78 + 0.18) + rnd(7, k) * 0.34;
@@ -36433,7 +38919,7 @@ function buildGrassModel(seed = 728194, profile = 2, family = 0) {
       ribbon(root, { angle, height: h, width: 12e-4, bend, droop: 0, twist: 0, hue: 0.96, segments: 1 }, stem, id2);
       const joint = [root[0] + Math.cos(angle) * bend, h, root[2] + Math.sin(angle) * bend];
       for (let leaf = 0; leaf < 3; leaf++) {
-        const key3 = k * 3 + leaf, theta = angle + leaf * TAU18 / 3 + (rnd(46, key3) - 0.5) * 0.2, tilt = 0.33 + 0.55 * rnd(47, key3), baselineLength = (0.05 + 0.03 * rnd(48, key3)) * (family === 1 ? 1.08 : 1), baselineWidth = baselineLength * (0.39 + 0.1 * rnd(49, key3)), length = baselineLength * 0.8, width = baselineWidth * 0.65, hue = 0.79 + 0.27 * rnd(50, key3), lid = stem + "/leaflet/" + leaf;
+        const key3 = k * 3 + leaf, theta = angle + leaf * TAU20 / 3 + (rnd(46, key3) - 0.5) * 0.2, tilt = 0.33 + 0.55 * rnd(47, key3), baselineLength = (0.05 + 0.03 * rnd(48, key3)) * (family === 1 ? 1.08 : 1), baselineWidth = baselineLength * (0.39 + 0.1 * rnd(49, key3)), length = baselineLength * 0.8, width = baselineWidth * 0.65, hue = 0.79 + 0.27 * rnd(50, key3), lid = stem + "/leaflet/" + leaf;
         nodes.push({ id: lid, parent: stem, point: joint });
         groundLeaves.push({ id: lid, parent: stem, root: [...joint], angle: theta, tilt, length, width });
         const ca = Math.cos(theta), sa = Math.sin(theta), ct = Math.cos(tilt), st = Math.sin(tilt), baselineOutline = [[0, 0], [-0.72, 0.24], [-1, 0.6], [-0.64, 0.94], [0, 0.84], [0.63, 0.97], [0.97, 0.59], [0.67, 0.23]], outline = [[0, 0], [-0.62, 0.28], [-0.95, 0.65], [-0.56, 0.98], [0, 0.79], [0.55, 1], [0.93, 0.64], [0.59, 0.27]], start2 = positions.length / 3;
@@ -36449,7 +38935,7 @@ function buildGrassModel(seed = 728194, profile = 2, family = 0) {
   }
   const headCount = p.heads + (profile === 0 && rnd(60) > 0.55 ? 1 : 0);
   for (let h = 0; h < headCount; h++) {
-    const a = rnd(21, h) * TAU18, root = [Math.cos(a) * p.patch * 0.6, 0, Math.sin(a) * p.patch * 0.6], stemH = p.height * (0.64 + 0.32 * rnd(22, h)), stemBend = 0.065 + 0.08 * rnd(23, h), stemDroop = 0.035 + 0.075 * rnd(61, h), stemId = "head/" + h;
+    const a = rnd(21, h) * TAU20, root = [Math.cos(a) * p.patch * 0.6, 0, Math.sin(a) * p.patch * 0.6], stemH = p.height * (0.64 + 0.32 * rnd(22, h)), stemBend = 0.065 + 0.08 * rnd(23, h), stemDroop = 0.035 + 0.075 * rnd(61, h), stemId = "head/" + h;
     nodes.push({ id: stemId, parent: "rhizome", point: root });
     const joint = (t) => [root[0] + Math.cos(a) * stemBend * t * t, stemH * (t - stemDroop * t * t * t), root[2] + Math.sin(a) * stemBend * t * t];
     ribbon(root, { angle: a, height: stemH, width: 13e-4, bend: stemBend, droop: stemDroop, twist: 0, hue: 1, straw: 0.32, segments: 4, role: "culm" }, stemId + "/culm", stemId);
@@ -36534,7 +39020,7 @@ vec3 grassLeafRelief(vec3 normal,vec3 viewPosition,vec2 leafUv,vec2 heightGradie
 }`;
 
 // procedural-grass-bake.js
-var clamp31 = (v, a, b) => Math.max(a, Math.min(b, v));
+var clamp33 = (v, a, b) => Math.max(a, Math.min(b, v));
 var srgb = (v) => v <= 31308e-7 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055;
 function bakeGrassAtlas(profiles, { tileSize = 256, supersample = 2, viewAngle = 0.43 } = {}) {
   const width = tileSize * 4, height2 = tileSize * 2, color3 = new Uint8Array(width * height2 * 4), normal4 = new Uint8Array(width * height2 * 4), S = tileSize * supersample, cs = Math.cos(viewAngle), sn = Math.sin(viewAngle), stats = [];
@@ -36553,7 +39039,7 @@ function bakeGrassAtlas(profiles, { tileSize = 256, supersample = 2, viewAngle =
         tu[k] = (e1 * (vc - va) - e2 * (vb - va)) / uvDet;
         tv[k] = (-e1 * (uc - ua) + e2 * (ub - ua)) / uvDet;
       }
-      const minX = clamp31(Math.floor(Math.min(a[0], b[0], d[0])), 0, S - 1), maxX = clamp31(Math.ceil(Math.max(a[0], b[0], d[0])), 0, S - 1), minY = clamp31(Math.floor(Math.min(a[1], b[1], d[1])), 0, S - 1), maxY = clamp31(Math.ceil(Math.max(a[1], b[1], d[1])), 0, S - 1);
+      const minX = clamp33(Math.floor(Math.min(a[0], b[0], d[0])), 0, S - 1), maxX = clamp33(Math.ceil(Math.max(a[0], b[0], d[0])), 0, S - 1), minY = clamp33(Math.floor(Math.min(a[1], b[1], d[1])), 0, S - 1), maxY = clamp33(Math.ceil(Math.max(a[1], b[1], d[1])), 0, S - 1);
       for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
         const u = ((b[1] - d[1]) * (x + 0.5 - d[0]) + (d[0] - b[0]) * (y + 0.5 - d[1])) / den, v = ((d[1] - a[1]) * (x + 0.5 - d[0]) + (a[0] - d[0]) * (y + 0.5 - d[1])) / den, w = 1 - u - v;
         if (u < 0 || v < 0 || w < 0) continue;
@@ -36606,11 +39092,11 @@ function bakeGrassAtlas(profiles, { tileSize = 256, supersample = 2, viewAngle =
       const out2 = ((oy + y) * width + ox + x) * 4;
       if (alpha) {
         coverage++;
-        for (let k = 0; k < 3; k++) color3[out2 + k] = Math.round(clamp31(srgb(rgb[k] / alpha), 0, 1) * 255);
+        for (let k = 0; k < 3; k++) color3[out2 + k] = Math.round(clamp33(srgb(rgb[k] / alpha), 0, 1) * 255);
         color3[out2 + 3] = Math.round(alpha / (supersample * supersample) * 255);
         const len3 = Math.hypot(...nn) || 1;
         for (let k = 0; k < 3; k++) normal4[out2 + k] = Math.round((nn[k] / len3 * 0.5 + 0.5) * 255);
-        normal4[out2 + 3] = Math.round(clamp31(ambient / alpha, 1 / 255, 1) * 255);
+        normal4[out2 + 3] = Math.round(clamp33(ambient / alpha, 1 / 255, 1) * 255);
       } else {
         normal4[out2] = 128;
         normal4[out2 + 1] = 128;
@@ -36669,11 +39155,11 @@ function buildGrassMipmaps(baked) {
         occupied[y * width + x] = 1;
         const len3 = Math.hypot(...nn) || 1;
         for (let k = 0; k < 3; k++) {
-          c2[out2 + k] = Math.round(clamp31(srgb(rgb[k] / alpha), 0, 1) * 255);
+          c2[out2 + k] = Math.round(clamp33(srgb(rgb[k] / alpha), 0, 1) * 255);
           n[out2 + k] = Math.round((nn[k] / len3 * 0.5 + 0.5) * 255);
         }
         c2[out2 + 3] = Math.round(alpha / samples * 255);
-        n[out2 + 3] = Math.round(clamp31(ambient / alpha, 1, 255));
+        n[out2 + 3] = Math.round(clamp33(ambient / alpha, 1, 255));
       } else {
         n[out2] = 128;
         n[out2 + 1] = 128;
@@ -36753,7 +39239,7 @@ function createLegacyGrassTemplates(world2) {
   }
   return pool.legacyTemplates;
 }
-function geometryFrom2(model) {
+function geometryFrom3(model) {
   const g = new BufferGeometry();
   for (const [name, itemSize, key3] of [["position", 3, "positions"], ["normal", 3, "normals"], ["uv", 2, "uvs"], ["color", 3, "colors"]]) g.setAttribute(name, new BufferAttribute(model[key3], itemSize));
   g.setAttribute("grassAmbientAccessibility", new BufferAttribute(model.ambientAccessibility, 1));
@@ -36889,7 +39375,7 @@ function getProceduralGrass(world2, seed = 728194) {
   decorateShader(pool.meadowMaterial, pool, true, pool.uniforms.meadowCardFade);
   decorateShader(pool.nearMaterial, pool, false);
   for (const p of models) for (const model of p.families) {
-    const geometry3 = geometryFrom2(model), capacity = Math.floor(MAX_TRIANGLES / model.triangles), mesh2 = new InstancedMesh(geometry3, pool.nearMaterial, capacity);
+    const geometry3 = geometryFrom3(model), capacity = Math.floor(MAX_TRIANGLES / model.triangles), mesh2 = new InstancedMesh(geometry3, pool.nearMaterial, capacity);
     mesh2.count = 0;
     mesh2.name = "procedural-grass-near-" + model.profile + "-" + model.family;
     mesh2.castShadow = false;
@@ -36915,7 +39401,7 @@ function attachProceduralGrass(world2, chunk) {
     if (!mesh2.userData.habitatMeadow) {
       const meta = new Float32Array(count * 3), m = mesh2.userData.originalMatrices;
       for (let i = 0; i < count; i++) {
-        const x = m[i * 16 + 12], z = m[i * 16 + 14], local = vegetationClimate(world2.terrainFunctions, x, z, m[i * 16 + 13], climate3), dry = local.ash > 0.55 || local.snow > 0.5, phase2 = grassHash(pool.seed, Math.round(x * 100), Math.round(z * 100)), profile = dry ? 1 : mesh2.userData.natureType === "grass_tall" ? phase2 < 0.22 ? 0 : 3 : 2;
+        const x = m[i * 16 + 12], z = m[i * 16 + 14], local2 = vegetationClimate(world2.terrainFunctions, x, z, m[i * 16 + 13], climate3), dry = local2.ash > 0.55 || local2.snow > 0.5, phase2 = grassHash(pool.seed, Math.round(x * 100), Math.round(z * 100)), profile = dry ? 1 : mesh2.userData.natureType === "grass_tall" ? phase2 < 0.22 ? 0 : 3 : 2;
         meta.set([profile, 0.5, phase2], i * 3);
       }
       mesh2.userData.originalColors = meta;
@@ -37105,7 +39591,7 @@ function createRockPhotoOcclusion({ loader = new TextureLoader() } = {}) {
 
 // procedural-rock-support.js
 var feet = /* @__PURE__ */ new WeakMap();
-var TAU19 = Math.PI * 2;
+var TAU21 = Math.PI * 2;
 function lowerFoot(geometry3) {
   let cached = feet.get(geometry3);
   if (cached) return cached;
@@ -37116,7 +39602,7 @@ function lowerFoot(geometry3) {
   mesh2.updateMatrixWorld(true);
   const samples = [], up7 = new Vector3(0, 1, 0), origin = new Vector3();
   for (let i = 0; i < 24; i++) {
-    const angle = i / 24 * TAU19, dx = Math.cos(angle), dz = Math.sin(angle);
+    const angle = i / 24 * TAU21, dx = Math.cos(angle), dz = Math.sin(angle);
     let radius = 0;
     const indices = geometry3.index.array;
     for (let j = 0; j < indices.length; j += 3) {
@@ -37295,14 +39781,14 @@ function createRockPools(world2, library) {
     return g;
   }
   function releaseFracture(r) {
-    const f10 = r.fracture;
-    if (!f10) return;
-    f10.ref.index = -1;
-    const i = r.object.refs.indexOf(f10.ref);
+    const f12 = r.fracture;
+    if (!f12) return;
+    f12.ref.index = -1;
+    const i = r.object.refs.indexOf(f12.ref);
     if (i >= 0) r.object.refs.splice(i, 1);
-    f10.mesh.removeFromParent();
-    f10.mesh.dispose();
-    f10.mesh.geometry.dispose();
+    f12.mesh.removeFromParent();
+    f12.mesh.dispose();
+    f12.mesh.geometry.dispose();
     r.fracture = null;
   }
   function installFracture(r, geometry3) {
@@ -37559,7 +40045,7 @@ function createRockPools(world2, library) {
 var HYDROLOGY_GEOLOGY_LIMITS = Object.freeze({ region: 384, rocksPerCatchment: 6, clusters: 3, range: 155, maxVisible: 24, cache: 64, gravelPerRock: 4, maxGravelHeight: 0.045 });
 var UPPER_RIVER_GEOLOGY_LIMITS = Object.freeze({ stationSlots: 32, candidates: 128, attempts: 128, clusters: 4, rocksPerFeature: 8, rocksPerFeatureChunk: 4, minSpacing: 18, maxProgress: 0.32, minUpper: 0.12 });
 var HYDROLOGY_GEOLOGY_FAMILIES = Object.freeze(["jointed-1", "bedded-2"]);
-var TAU20 = Math.PI * 2;
+var TAU22 = Math.PI * 2;
 var EMPTY4 = Object.freeze([]);
 var up4 = new Vector3(0, 1, 0);
 var down = new Vector3(0, -1, 0);
@@ -37568,8 +40054,8 @@ var transform2 = new Object3D();
 var ray = new Raycaster();
 var hash6 = (seed, id2, slot) => stableHash(seed, "hydro-geology-v1", id2, slot);
 var overlap3 = (a, b) => a.minX <= b.maxX && a.maxX >= b.minX && a.minZ <= b.maxZ && a.maxZ >= b.minZ;
-function frame(f10, x, z) {
-  const gx = (f10.height(x + 0.6, z) - f10.height(x - 0.6, z)) / 1.2, gz = (f10.height(x, z + 0.6) - f10.height(x, z - 0.6)) / 1.2, n = Math.hypot(gx, gz);
+function frame(f12, x, z) {
+  const gx = (f12.height(x + 0.6, z) - f12.height(x - 0.6, z)) / 1.2, gz = (f12.height(x, z + 0.6) - f12.height(x, z - 0.6)) / 1.2, n = Math.hypot(gx, gz);
   return { grade: n, tx: n ? gz / n : 1, tz: n ? -gx / n : 0, ux: n ? gx / n : 0, uz: n ? gz / n : 1 };
 }
 function freeze4(o) {
@@ -37584,7 +40070,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
   const cache2 = /* @__PURE__ */ new Map(), feet2 = /* @__PURE__ */ new Map();
   let lastPlanner = null, lastReservations = null, disposed = false, proxy = null;
   const counters = { builds: 0, candidates: 0, supportFits: 0, accepted: 0, blocked: 0, waterRejected: 0, groundRejected: 0, maxPlanMilliseconds: 0, totalPlanMilliseconds: 0, slowestFeatureId: null, maxSupportMilliseconds: 0, upperCandidates: 0, upperAttempts: 0, upperAccepted: 0, maxUpperCandidatesPerFeature: 0, maxUpperAttemptsPerFeature: 0, maxUpperRocksPerFeature: 0, maxUpperRocksPerFeatureChunk: 0 };
-  const f10 = world2.terrainFunctions, height2 = f10.height;
+  const f12 = world2.terrainFunctions, height2 = f12.height;
   const geometry3 = world2.hydrology?.geometry, morphology = world2.hydrology?.generationMode === "water-first" && geometry3?.plan ? getRiverReachMorphology({ plan: geometry3.plan, geometry: geometry3 }) : null;
   for (const id2 of HYDROLOGY_GEOLOGY_FAMILIES) library.getFamily(id2);
   function localFeet(asset) {
@@ -37596,7 +40082,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
     proxy.material = asset.material;
     proxy.matrixWorld.identity();
     for (let i = 0; i < 20; i++) {
-      const a = i / 20 * TAU20, dx = Math.cos(a), dz = Math.sin(a);
+      const a = i / 20 * TAU22, dx = Math.cos(a), dz = Math.sin(a);
       let radius = 0;
       const index2 = g.index.array;
       for (let j = 0; j < index2.length; j += 3) for (let k = 0; k < 3; k++) {
@@ -37629,7 +40115,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
   }
   function existingObstacle(x, z, r) {
     for (let cz = Math.floor((z - r - 4) / 64); cz <= Math.floor((z + r + 4) / 64); cz++) for (let cx = Math.floor((x - r - 4) / 64); cx <= Math.floor((x + r + 4) / 64); cx++) {
-      const rng2 = (i, n) => f10.hash(cx * 229 + cz * 733 + i * 13, n);
+      const rng2 = (i, n) => f12.hash(cx * 229 + cz * 733 + i * 13, n);
       for (let i = 0; i < 19; i++) {
         const rx = cx * 64 + rng2(i, 9) * 64, rz = cz * 64 + rng2(i, 10) * 64, rr = 0.45 + rng2(i, 11) * 2.9;
         if (Math.hypot(rx - x, rz - z) < r + rr * 1.25 + 0.2) return true;
@@ -37638,7 +40124,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
         const tx = cx * 64 + rng2(i, 1) * 64, tz = cz * 64 + rng2(i, 2) * 64;
         if (Math.hypot(tx - x, tz - z) > r + 1.1) continue;
         const y = height2(tx, tz);
-        if (y > 1.5 && !world2.hydrology.waterAt(tx, tz, y) && f10.slope(tx, tz) <= 0.9) return true;
+        if (y > 1.5 && !world2.hydrology.waterAt(tx, tz, y) && f12.slope(tx, tz) <= 0.9) return true;
       }
     }
     return false;
@@ -37646,7 +40132,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
   function accept(feature, anchor, index2, side2) {
     counters.candidates++;
     const familyId = side2 ? "bedded-2" : "jointed-1", identity3 = anchor.x + "," + anchor.z + ":" + familyId, r = (side2 ? 1.35 : 1.7) + hash6(seed, feature.id, identity3 + ":scale") * 0.55;
-    const fr = frame(f10, anchor.x, anchor.z);
+    const fr = frame(f12, anchor.x, anchor.z);
     if (fr.grade < 0.27 || fr.grade > 5.8) {
       counters.groundRejected++;
       return null;
@@ -37719,19 +40205,19 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
     if (!morphology || feature.generationMode !== "water-first" || feature.kind !== "stream" || feature.streams.length !== 1) return;
     const stream = feature.streams[0];
     if (stream.oceanConnected || stream.kind === "estuary") return;
-    const L3 = UPPER_RIVER_GEOLOGY_LIMITS, points = stream.points, candidates = [], seenRows = /* @__PURE__ */ new Set(), context = {};
-    for (let slot = 0; slot < L3.stationSlots; slot++) {
-      const row2 = Math.min(points.length - 1, Math.max(1, Math.floor((slot + 0.5) * (points.length - 1) / L3.stationSlots)));
+    const L4 = UPPER_RIVER_GEOLOGY_LIMITS, points = stream.points, candidates = [], seenRows = /* @__PURE__ */ new Set(), context = {};
+    for (let slot = 0; slot < L4.stationSlots; slot++) {
+      const row2 = Math.min(points.length - 1, Math.max(1, Math.floor((slot + 0.5) * (points.length - 1) / L4.stationSlots)));
       if (seenRows.has(row2)) continue;
       seenRows.add(row2);
       const a = points[row2 - 1], b = points[row2], run = Math.hypot(b.x - a.x, b.z - a.z);
       if (run < 0.01 || a.fallToNext || (a.y - b.y) / run < 0.045) continue;
       const cx = (a.x + b.x) * 0.5, cz = (a.z + b.z) * 0.5, m = morphology.sample(cx, cz, context);
-      if (!m || m.featureId !== feature.id || m.upper < L3.minUpper || m.progress >= L3.maxProgress) continue;
-      const band = Math.min(L3.clusters - 1, Math.floor(m.progress / L3.maxProgress * L3.clusters)), tx = -(b.z - a.z) / run, tz = (b.x - a.x) / run;
+      if (!m || m.featureId !== feature.id || m.upper < L4.minUpper || m.progress >= L4.maxProgress) continue;
+      const band = Math.min(L4.clusters - 1, Math.floor(m.progress / L4.maxProgress * L4.clusters)), tx = -(b.z - a.z) / run, tz = (b.x - a.x) / run;
       for (const sign of [-1, 1]) for (const offset of [16, 24]) {
-        if (candidates.length >= L3.candidates) break;
-        const x = cx + tx * sign * (Math.max(a.width, b.width) * 0.5 + offset), z = cz + tz * sign * (Math.max(a.width, b.width) * 0.5 + offset), fr = frame(f10, x, z);
+        if (candidates.length >= L4.candidates) break;
+        const x = cx + tx * sign * (Math.max(a.width, b.width) * 0.5 + offset), z = cz + tz * sign * (Math.max(a.width, b.width) * 0.5 + offset), fr = frame(f12, x, z);
         candidates.push({ x, z, band, score: fr.grade * 3 + hash6(seed, feature.id, "upper:" + row2 + ":" + sign + ":" + offset) * 0.03 });
       }
     }
@@ -37739,11 +40225,11 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
     let attempts = 0, accepted = 0, clusters = 0;
     const usedBands = /* @__PURE__ */ new Set(), chunkCounts = /* @__PURE__ */ new Map();
     function admit(anchor, index2, side2) {
-      if (attempts >= L3.attempts || accepted >= L3.rocksPerFeature) return null;
+      if (attempts >= L4.attempts || accepted >= L4.rocksPerFeature) return null;
       const key3 = Math.floor(anchor.x / 64) + "," + Math.floor(anchor.z / 64), owned = chunkCounts.get(key3) || 0;
-      if (owned >= L3.rocksPerFeatureChunk) return null;
+      if (owned >= L4.rocksPerFeatureChunk) return null;
       const m = morphology.sample(anchor.x, anchor.z, context);
-      if (!m || m.featureId !== feature.id || m.upper < L3.minUpper || m.progress >= L3.maxProgress) return null;
+      if (!m || m.featureId !== feature.id || m.upper < L4.minUpper || m.progress >= L4.maxProgress) return null;
       attempts++;
       const rock = accept(feature, anchor, index2, side2);
       if (!rock) return null;
@@ -37752,14 +40238,14 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
       return rock;
     }
     for (const c2 of candidates) {
-      if (attempts >= L3.attempts || accepted >= L3.rocksPerFeature || clusters >= L3.clusters) break;
-      if (usedBands.has(c2.band) || rocks.some((r) => Math.hypot(r.x - c2.x, r.z - c2.z) < L3.minSpacing)) continue;
+      if (attempts >= L4.attempts || accepted >= L4.rocksPerFeature || clusters >= L4.clusters) break;
+      if (usedBands.has(c2.band) || rocks.some((r) => Math.hypot(r.x - c2.x, r.z - c2.z) < L4.minSpacing)) continue;
       const first = admit(c2, 3 + c2.band, 0);
       if (!first) continue;
       rocks.push(first);
       usedBands.add(c2.band);
       clusters++;
-      const fr = frame(f10, c2.x, c2.z);
+      const fr = frame(f12, c2.x, c2.z);
       let paired = false;
       for (const along of [2.7, 2.1, 3.3]) {
         for (const sign of [1, -1]) {
@@ -37770,7 +40256,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
             break;
           }
         }
-        if (paired || attempts >= L3.attempts || accepted >= L3.rocksPerFeature) break;
+        if (paired || attempts >= L4.attempts || accepted >= L4.rocksPerFeature) break;
       }
     }
     counters.upperCandidates += candidates.length;
@@ -37794,13 +40280,13 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
       const tx = -fall.flow.z, tz = fall.flow.x;
       for (const side2 of [-1, 1]) for (const along of [0.4, 0.7, 0.15, 0.9]) for (const offset of [2.5, 3.8, 5.2, 6.8, 8.3]) {
         const x = fall.lip.x + (fall.base.x - fall.lip.x) * along + tx * (fall.width * 0.5 + offset) * side2, z = fall.lip.z + (fall.base.z - fall.lip.z) * along + tz * (fall.width * 0.5 + offset) * side2;
-        candidates.push({ x, z, score: 20 + frame(f10, x, z).grade, kind: "fall", side: side2 });
+        candidates.push({ x, z, score: 20 + frame(f12, x, z).grade, kind: "fall", side: side2 });
       }
     }
     for (const pond of feature.ponds) {
       if (pond.kind === "marsh") continue;
       for (let i = 0; i < 40; i++) for (const radius of [1.25, 1.55, 1.9, 2.25]) {
-        const q = pondPoint(pond, (i + 0.13) / 40 * TAU20, radius), fr = frame(f10, q.x, q.z), rise = height2(q.x, q.z) - pond.level;
+        const q = pondPoint(pond, (i + 0.13) / 40 * TAU22, radius), fr = frame(f12, q.x, q.z), rise = height2(q.x, q.z) - pond.level;
         if (rise < 0.45 || rise > 12) continue;
         candidates.push({ ...q, score: fr.grade * 3 + Math.min(rise, 5) * 0.2 + hash6(seed, feature.id, "rank:" + i) * 0.03, kind: "pond" });
       }
@@ -37813,7 +40299,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
         const tx = -(b.z - a.z) / run, tz = (b.x - a.x) / run;
         for (const sign of [-1, 1]) for (const offset of [4.4, 6.5]) {
           const x = (a.x + b.x) * 0.5 + tx * sign * (Math.max(a.width, b.width) * 0.5 + offset), z = (a.z + b.z) * 0.5 + tz * sign * (Math.max(a.width, b.width) * 0.5 + offset);
-          candidates.push({ x, z, score: frame(f10, x, z).grade * 3 + 2, kind: "rapid" });
+          candidates.push({ x, z, score: frame(f12, x, z).grade * 3 + 2, kind: "rapid" });
         }
       }
     }
@@ -37825,7 +40311,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
       const first = accept(feature, c2, cluster, 0);
       if (!first) continue;
       rocks.push(first);
-      const fr = frame(f10, c2.x, c2.z);
+      const fr = frame(f12, c2.x, c2.z);
       let paired = false;
       for (const along of [2.7, 2.1, 3.3]) {
         for (const sign of [1, -1]) {
@@ -37864,7 +40350,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
     if (disposed) return EMPTY4;
     invalidate();
     const expanded = { minX: bounds6.minX - 32, maxX: bounds6.maxX + 32, minZ: bounds6.minZ - 32, maxZ: bounds6.maxZ + 32 }, records = [];
-    const features = world2.hydrology.queryBounds(expanded).filter((f11) => f11.kind !== "wetland").sort((a, b) => a.id.localeCompare(b.id));
+    const features = world2.hydrology.queryBounds(expanded).filter((f13) => f13.kind !== "wetland").sort((a, b) => a.id.localeCompare(b.id));
     for (const feature of features) for (const r of plan(feature)) if (overlap3(bounds6, r.hydroGeology.bounds)) records.push(r);
     return records;
   }
@@ -37875,12 +40361,12 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
     const records = [];
     for (const r of queryBounds({ minX: chunk.cx * 64 - 4, maxX: chunk.cx * 64 + 68, minZ: chunk.cz * 64 - 4, maxZ: chunk.cz * 64 + 68 })) {
       if (world2.removed?.has(r.id)) continue;
-      const fr = frame(f10, r.x, r.z);
+      const fr = frame(f12, r.x, r.z);
       for (let i = 0; i < 4; i++) {
         const id2 = r.id + ":scree:" + i, d = r.r * (1.1 + hash6(seed, id2, "distance") * 0.65), s = (hash6(seed, id2, "side") - 0.5) * r.r * 1.7, x = r.x - fr.ux * d + fr.tx * s, z = r.z - fr.uz * d + fr.tz * s;
-        if (Math.floor(x / 64) !== chunk.cx || Math.floor(z / 64) !== chunk.cz || world2.hydrology.surfaceAt(x, z) || world2.hydrology.waterAt(x, z, height2(x, z)) || f10.slope(x, z) > 0.65) continue;
+        if (Math.floor(x / 64) !== chunk.cx || Math.floor(z / 64) !== chunk.cz || world2.hydrology.surfaceAt(x, z) || world2.hydrology.waterAt(x, z, height2(x, z)) || f12.slope(x, z) > 0.65) continue;
         const scale5 = 0.05 + hash6(seed, id2, "size") * 0.035;
-        records.push({ id: id2, featureId: r.hydroGeology.featureId, kind: "stone", x, y: height2(x, z) - scale5 * 0.1, z, scale: scale5, yaw: hash6(seed, id2, "yaw") * TAU20, winter: false, marsh: false, rank: 0.05 + hash6(seed, id2, "rank") * 0.05, hydroGeology: true });
+        records.push({ id: id2, featureId: r.hydroGeology.featureId, kind: "stone", x, y: height2(x, z) - scale5 * 0.1, z, scale: scale5, yaw: hash6(seed, id2, "yaw") * TAU22, winter: false, marsh: false, rank: 0.05 + hash6(seed, id2, "rank") * 0.05, hydroGeology: true });
       }
     }
     return records;
@@ -38046,6 +40532,8 @@ function geometry2(THREE, p) {
 var TREE_WIND = Object.freeze({ bend: 0.022, period: Object.freeze({ pine: 4.5, broadleaf: 3.6 }), flutter: Object.freeze({ pine: 0.02, broadleaf: 0.045 }) });
 var WIND_PARS = "uniform vec4 meadowWind;uniform float meadowTime;\n" + MEADOW_GUST_GLSL + "\n";
 var CROWN_VERTEX_PARS = "attribute vec4 crownLight;uniform vec4 treeCrownSun;varying vec2 vCrown;\n";
+var BARE_VERTEX_PARS = "attribute float treeBare;varying float vTreeBare;varying float vTreeFoot;\n";
+var BARE_VERTEX = "#ifdef USE_INSTANCING\nvTreeBare=treeBare;vTreeFoot=(modelMatrix*instanceMatrix)[3].y;\n#else\nvTreeBare=0.;vTreeFoot=modelMatrix[3].y;\n#endif\n";
 var CROWN_VERTEX = `#ifdef USE_INSTANCING
  mat3 crownFrame=mat3(modelMatrix*instanceMatrix);
 #else
@@ -38056,18 +40544,35 @@ var CROWN_VERTEX = `#ifdef USE_INSTANCING
  vCrown=vec2(clamp((crownLight.w+crownLight.y*.6667)/${CROWN_LIGHT.openSky.toFixed(6)},0.,1.),clamp(crownLight.w+dot(crownLight.xyz,crownSunLocal),0.,1.));
 `;
 var CROWN_FRAGMENT_PARS = "uniform vec4 treeCrownTune;varying vec2 vCrown;\n";
-var crownFragment = (leaf) => `{float crownFar=smoothstep(treeCrownTune.z,treeCrownTune.w,distance(vOrganicWorld,cameraPosition)),crownShare=${leaf ? "1." : ".5"};
+var BARE_FRAGMENT_PARS = "varying float vTreeBare;varying float vTreeFoot;\n";
+var BARK_MOSS = `
+ {IslandClimate barkClimate=islandClimate(vOrganicWorld);
+  float barkAbove=vOrganicWorld.y-vTreeFoot-.3;
+  #ifdef LAND_SUN_FIELD
+  if(land_sunFieldReady>.5){vec2 barkField=vOrganicWorld.xz*land_sunFieldMap.xy+land_sunFieldMap.zw;if(all(greaterThan(barkField,vec2(.002)))&&all(lessThan(barkField,vec2(.998))))barkAbove=vOrganicWorld.y-textureLod(land_sunField,barkField*land_sunAtlas,0.).g;}
+  #endif
+  float barkDamp=(1.-barkClimate.ash)*(1.-barkClimate.snow)*smoothstep(.15,.6,barkClimate.forest+barkClimate.swamp*.7);
+  if(barkDamp>.01&&barkAbove<2.){
+   vec3 barkN=inverseTransformDirection(vNormal,viewMatrix);
+   float barkNoise=.5+.5*sin(vOrganicWorld.x*5.1+vOrganicWorld.z*4.3+sin(vOrganicWorld.y*3.7+vOrganicWorld.x*1.3)*2.);
+   float barkSide=.5+.5*clamp(dot(normalize(barkN.xz+vec2(1e-4)),vec2(.28,-.96)),-1.,1.);
+   float barkMoss=barkDamp*(1.-smoothstep(.05,.75+.8*barkNoise,barkAbove))*(.45+.55*barkSide);
+   diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.085,.13,.04)*(.75+.5*barkNoise),clamp(barkMoss,0.,1.)*.88);
+  }
+ }
+`;
+var crownFragment = (leaf) => `{float crownFar=smoothstep(treeCrownTune.z,treeCrownTune.w,distance(vOrganicWorld,cameraPosition)),crownShare=${leaf ? "1." : "1.-vTreeBare"};
  float crownSky=mix(1.,vCrown.x,treeCrownTune.x*crownShare),crownSun=mix(1.,vCrown.y,treeCrownTune.y*crownFar*crownShare);
  reflectedLight.indirectDiffuse*=crownSky;reflectedLight.indirectSpecular*=crownSky;reflectedLight.directDiffuse*=crownSun;reflectedLight.directSpecular*=crownSun;}
 `;
 function windCode(height2, species, leaf) {
-  const f10 = (v) => v.toFixed(6);
+  const f12 = (v) => v.toFixed(6);
   return `#ifdef USE_INSTANCING
  mat4 treeToWorld=modelMatrix*instanceMatrix;vec2 treeRoot=treeToWorld[3].xz;
  float treePhase=fract(sin(dot(treeRoot,vec2(12.9898,78.233)))*43758.5453)*6.283185;
- float treeUp=clamp(position.y/${f10(height2)},0.,1.),treeTall=length(treeToWorld[1].xyz)*${f10(height2)};
- vec2 treeSway=meadowSway(treeRoot,treePhase,${f10(TREE_WIND.period[species])},meadowWind,meadowTime)*(treeTall*${f10(TREE_WIND.bend)}*treeUp*treeUp);
- ${leaf ? `treeSway+=vec2(sin(meadowTime*6.981317+dot(position,vec3(2.9,1.3,2.1))+treePhase),sin(meadowTime*5.585054+dot(position,vec3(1.7,2.3,3.1))-treePhase))*(${f10(TREE_WIND.flutter[species])}*(.25+meadowWind.z)*treeUp);` : ""}
+ float treeUp=clamp(position.y/${f12(height2)},0.,1.),treeTall=length(treeToWorld[1].xyz)*${f12(height2)};
+ vec2 treeSway=meadowSway(treeRoot,treePhase,${f12(TREE_WIND.period[species])},meadowWind,meadowTime)*(treeTall*${f12(TREE_WIND.bend)}*treeUp*treeUp);
+ ${leaf ? `treeSway+=vec2(sin(meadowTime*6.981317+dot(position,vec3(2.9,1.3,2.1))+treePhase),sin(meadowTime*5.585054+dot(position,vec3(1.7,2.3,3.1))-treePhase))*(${f12(TREE_WIND.flutter[species])}*(.25+meadowWind.z)*treeUp);` : ""}
  transformed+=inverse(mat3(treeToWorld))*vec3(treeSway.x,0.,treeSway.y);
 #endif
 `;
@@ -38090,18 +40595,18 @@ function createMaterial(THREE, source2, { leaf, height: height2, species, time }
     windUniforms(shader);
     for (const key3 of ["land_coastKinds", "land_coastRect", "land_coastClamp", "land_skyMix"]) shader.uniforms[key3] = terrainCoastUniforms[key3];
     for (const [key3, uniform] of Object.entries(crownLightUniforms)) shader.uniforms[key3] = uniform;
-    shader.vertexShader = "uniform float uTime;varying vec3 vOrganicWorld;varying float vOrganicUp;varying float vTreeSky;\n" + CROWN_VERTEX_PARS + WIND_PARS + LAND_SKY_VIEW_GLSL + shader.vertexShader;
+    shader.vertexShader = "uniform float uTime;varying vec3 vOrganicWorld;varying float vOrganicUp;varying float vTreeSky;\n" + CROWN_VERTEX_PARS + (leaf ? "" : BARE_VERTEX_PARS) + WIND_PARS + LAND_SKY_VIEW_GLSL + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n" + windCode(height2, species, leaf) + `#ifdef USE_INSTANCING
 vOrganicWorld=(modelMatrix*instanceMatrix*vec4(transformed,1.)).xyz;vOrganicUp=inverseTransformDirection(transformedNormal,viewMatrix).y;vTreeSky=treeSkyLight(landSkyViewAt((modelMatrix*instanceMatrix)[3].xz));
 #else
 vOrganicWorld=(modelMatrix*vec4(transformed,1.)).xyz;vOrganicUp=inverseTransformDirection(transformedNormal,viewMatrix).y;vTreeSky=treeSkyLight(landSkyViewAt(modelMatrix[3].xz));
 #endif
-` + CROWN_VERTEX);
-    shader.fragmentShader = islandBiomeGLSL + "varying vec3 vOrganicWorld;varying float vOrganicUp;varying float vTreeSky;\n" + CROWN_FRAGMENT_PARS + shader.fragmentShader;
+` + CROWN_VERTEX + (leaf ? "" : BARE_VERTEX));
+    shader.fragmentShader = islandBiomeGLSL + "varying vec3 vOrganicWorld;varying float vOrganicUp;varying float vTreeSky;\n" + CROWN_FRAGMENT_PARS + (leaf ? "" : BARE_FRAGMENT_PARS) + shader.fragmentShader;
     if (!shader.fragmentShader.includes("#include <aomap_fragment>")) throw Error("Tree sky view seam missing");
     shader.fragmentShader = shader.fragmentShader.replace("#include <aomap_fragment>", "#include <aomap_fragment>\nreflectedLight.indirectDiffuse*=vTreeSky;reflectedLight.indirectSpecular*=vTreeSky;\n" + crownFragment(leaf));
     shader.fragmentShader = shader.fragmentShader.replace("#include <map_fragment>", `#include <map_fragment>
-float organicSnow=islandSnow(vOrganicWorld)*smoothstep(.08,.8,vOrganicUp);float organicVariation=.5+.5*sin(vOrganicWorld.x*8.7+sin(vOrganicWorld.z*7.1)*1.6+vOrganicWorld.y*6.3);organicSnow*=${leaf ? "smoothstep(.42,.78,organicVariation)*.48" : ".82+.18*organicVariation"};diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.66,.71,.74),organicSnow*.93);`);
+float organicSnow=islandSnow(vOrganicWorld)*smoothstep(.08,.8,vOrganicUp);float organicVariation=.5+.5*sin(vOrganicWorld.x*8.7+sin(vOrganicWorld.z*7.1)*1.6+vOrganicWorld.y*6.3);organicSnow*=${leaf ? "smoothstep(.42,.78,organicVariation)*.48" : ".82+.18*organicVariation"};diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.66,.71,.74),organicSnow*.93);${leaf ? "" : BARK_MOSS}`);
     if (leaf) {
       if (!shader.fragmentShader.includes("#include <lights_fragment_begin>")) throw Error("Tree leaf lighting chunk missing");
       shader.fragmentShader = shader.fragmentShader.replace("#include <lights_fragment_begin>", foliageLighting);
@@ -38135,7 +40640,7 @@ function mainThreadFamily(spec) {
 function workerGenerator() {
   if (typeof Worker === "undefined") return null;
   try {
-    const worker2 = new Worker(new URL("./tree-worker-27GGTG47.js", import.meta.url), { type: "module" });
+    const worker2 = new Worker(new URL("./tree-worker-44IRK2U7.js", import.meta.url), { type: "module" });
     let pending = null, transportFailure = null;
     const failTransport = (event) => {
       event?.preventDefault?.();
@@ -38321,7 +40826,7 @@ async function loadBroadleafGeometricNormal(THREE, { url = new URL("../broadleaf
 }
 function collectMaterials(THREE, world2) {
   const targets = /* @__PURE__ */ new Set(), protectedMaterials = /* @__PURE__ */ new Set(), leafGeometry = /* @__PURE__ */ new Set();
-  const add3 = (parts, broadleaf) => {
+  const add4 = (parts, broadleaf) => {
     for (const part2 of parts || []) {
       if (broadleaf && part2.leaf) {
         targets.add(part2.material);
@@ -38330,11 +40835,11 @@ function collectMaterials(THREE, world2) {
     }
   };
   if (!world2.nature?.broadleaf?.parts?.some((p) => p.leaf)) throw Error("Load broadleaf source templates before installing normal detail");
-  for (const [name, asset] of Object.entries(world2.nature || {})) add3(asset.parts, name === "broadleaf" || name === "broadleaf_lod");
+  for (const [name, asset] of Object.entries(world2.nature || {})) add4(asset.parts, name === "broadleaf" || name === "broadleaf_lod");
   if (world2.proceduralTrees?.family) for (const species of ["pine", "broadleaf"]) for (let index2 = 0; index2 < 8; index2++) {
     const family = world2.proceduralTrees.family(species, index2);
     if (!family) throw Error("Expected all current procedural tree families before installation");
-    for (const lod of ["near", "far"]) add3(family[lod]?.parts, species === "broadleaf");
+    for (const lod of ["near", "far"]) add4(family[lod]?.parts, species === "broadleaf");
   }
   let poolGroup = false, broadleafLeafPool = false;
   world2.scene?.traverse((object2) => {
@@ -38511,15 +41016,15 @@ async function loadPineNeedleNormal(THREE, {
 }
 function collectMaterials2(THREE, world2, families) {
   const targets = /* @__PURE__ */ new Set(), protectedMaterials = /* @__PURE__ */ new Set();
-  const add3 = (parts, pine) => {
+  const add4 = (parts, pine) => {
     for (const part2 of parts || []) (pine && part2.leaf ? targets : protectedMaterials).add(part2.material);
   };
   if (!world2.nature?.pine?.parts?.some((p) => p.leaf)) throw Error("Pine source templates must load first");
-  for (const [name, asset] of Object.entries(world2.nature)) add3(asset.parts, name === "pine" || name === "pine_lod");
+  for (const [name, asset] of Object.entries(world2.nature)) add4(asset.parts, name === "pine" || name === "pine_lod");
   for (const species of ["pine", "broadleaf"]) for (let i = 0; i < 8; i++) {
     const family = families.get(species + ":" + i);
     if (!family) throw Error("Expected all sixteen tree families");
-    for (const lod of ["near", "far"]) add3(family[lod]?.parts, species === "pine");
+    for (const lod of ["near", "far"]) add4(family[lod]?.parts, species === "pine");
   }
   for (const material2 of targets) {
     if (protectedMaterials.has(material2) || !material2?.isMeshStandardMaterial || material2.side !== THREE.DoubleSide || material2.normalMap) throw Error("Expected separate DoubleSide pine leaf materials without a normal map");
@@ -38999,14 +41504,14 @@ function createWorldPlanner({ terrainFunctions, landmarks = [], seed = 728194, e
       for (let j = k === 1 ? 0 : 1; j <= n; j++) {
         const t = j / n, x = a.x + (b.x - a.x) * t, z = a.z + (b.z - a.z) * t, y = height2(x, z);
         if (!Number.isFinite(y) || y < PLANNER_CONFIG.dryY || terrain.waterAt?.(x, z, y) || !ignoreProtected && protectedAt(x, z, width / 2)) return null;
-        const l = height2(x + nx * width / 2, z + nz * width / 2), r = height2(x - nx * width / 2, z - nz * width / 2), cross9 = Math.abs(l - r) / width;
-        if (l < PLANNER_CONFIG.dryY || r < PLANNER_CONFIG.dryY || cross9 > PLANNER_CONFIG.maxTrailCrossGrade) return null;
+        const l = height2(x + nx * width / 2, z + nz * width / 2), r = height2(x - nx * width / 2, z - nz * width / 2), cross10 = Math.abs(l - r) / width;
+        if (l < PLANNER_CONFIG.dryY || r < PLANNER_CONFIG.dryY || cross10 > PLANNER_CONFIG.maxTrailCrossGrade) return null;
         if (sampled.length) {
           const prev = sampled[sampled.length - 1], d = Math.hypot(x - prev.x, z - prev.z), grade = Math.abs(y - prev.y) / d;
           if (grade > PLANNER_CONFIG.maxTrailGrade) return null;
           maxGrade = Math.max(maxGrade, grade);
         }
-        maxCrossGrade = Math.max(maxCrossGrade, cross9);
+        maxCrossGrade = Math.max(maxCrossGrade, cross10);
         sampled.push({ x, y, z });
       }
     }
@@ -39246,7 +41751,7 @@ function createWorldPlanner({ terrainFunctions, landmarks = [], seed = 728194, e
   function completeRegion(rx, rz) {
     const raw = rawRegion(rx, rz);
     if (raw.complete) return raw.complete;
-    const others = neighbors(rx, rz), local = [raw.poi, raw.crossing].filter(Boolean), all = [...others, ...local];
+    const others = neighbors(rx, rz), local2 = [raw.poi, raw.crossing].filter(Boolean), all = [...others, ...local2];
     const pois = [], selected = accepted(raw.poi, all) ? [raw.poi] : [], crossings = accepted(raw.crossing, all) ? [raw.crossing] : [], routes = [], reservations = [];
     for (const poi of selected) {
       const trail = trailFor(poi, all), ownedRoutes = trail ? [trail] : [], ownedReservations = [...poi.reservations, ...trail?.reservations || []];
@@ -39582,13 +42087,13 @@ function invalidateNaturalAnchor(world2, id2) {
 
 // world-content-collision.js
 var EPS5 = 1e-7;
-var clamp32 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp34 = (x, a, b) => Math.max(a, Math.min(b, x));
 var finite13 = (v, label) => {
   if (!Number.isFinite(v)) throw new TypeError(label + " must be finite");
   return v;
 };
 var closest = (x, z, ax, az, bx, bz) => {
-  const dx = bx - ax, dz = bz - az, t = clamp32(((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1), 0, 1);
+  const dx = bx - ax, dz = bz - az, t = clamp34(((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1), 0, 1);
   return { x: ax + t * dx, z: az + t * dz, t };
 };
 function polygonPoint(points, x, z) {
@@ -39644,10 +42149,10 @@ function prepare(input, owner2) {
     if (r.points.some((p) => p.length !== 3)) throw new RangeError("Deck points are [x,y,z]");
     let sign = 0;
     for (let i = 0; i < r.points.length; i++) {
-      const a = r.points[i], b = r.points[(i + 1) % r.points.length], c2 = r.points[(i + 2) % r.points.length], cross9 = (b[0] - a[0]) * (c2[2] - b[2]) - (b[2] - a[2]) * (c2[0] - b[0]);
-      if (Math.abs(cross9) < EPS5) throw new RangeError("Degenerate deck edge");
-      if (sign && sign !== Math.sign(cross9)) throw new RangeError("Deck must be convex");
-      sign = Math.sign(cross9);
+      const a = r.points[i], b = r.points[(i + 1) % r.points.length], c2 = r.points[(i + 2) % r.points.length], cross10 = (b[0] - a[0]) * (c2[2] - b[2]) - (b[2] - a[2]) * (c2[0] - b[0]);
+      if (Math.abs(cross10) < EPS5) throw new RangeError("Degenerate deck edge");
+      if (sign && sign !== Math.sign(cross10)) throw new RangeError("Deck must be convex");
+      sign = Math.sign(cross10);
     }
     r.thickness = finite13(r.thickness ?? 0.18, "thickness");
     if (r.thickness <= 0) throw new RangeError("Deck thickness");
@@ -39789,7 +42294,7 @@ function createWorldContentCollision({ cellSize = 32 } = {}) {
           if (r.undersideTriangles) {
             let q = polygon2 ? polygon2.inside ? { x, z } : polygon2 : { x, z };
             if (!polygon2) {
-              const lx = clamp32((x - r.x) * r.cos + (z - r.z) * r.sin, -r.halfX, r.halfX), lz = clamp32(-(x - r.x) * r.sin + (z - r.z) * r.cos, -r.halfZ, r.halfZ);
+              const lx = clamp34((x - r.x) * r.cos + (z - r.z) * r.sin, -r.halfX, r.halfX), lz = clamp34(-(x - r.x) * r.sin + (z - r.z) * r.cos, -r.halfZ, r.halfZ);
               q = { x: r.x + lx * r.cos - lz * r.sin, z: r.z + lx * r.sin + lz * r.cos };
             }
             let authoredBottom = Infinity;
@@ -39819,7 +42324,7 @@ function createWorldContentCollision({ cellSize = 32 } = {}) {
             px = q.x + ux * inv;
             pz = q.z + uz * inv;
           } else if (r.shape === "obb") {
-            const lx = (x - r.x) * r.cos + (z - r.z) * r.sin, lz = -(x - r.x) * r.sin + (z - r.z) * r.cos, qx = clamp32(lx, -r.halfX, r.halfX), qz = clamp32(lz, -r.halfZ, r.halfZ), d = Math.hypot(lx - qx, lz - qz);
+            const lx = (x - r.x) * r.cos + (z - r.z) * r.sin, lz = -(x - r.x) * r.sin + (z - r.z) * r.cos, qx = clamp34(lx, -r.halfX, r.halfX), qz = clamp34(lz, -r.halfZ, r.halfZ), d = Math.hypot(lx - qx, lz - qz);
             let ox = lx, oz = lz;
             if (d >= radius - EPS5) continue;
             if (d > EPS5) {
@@ -40028,8 +42533,8 @@ async function loadFantasyLandmarks(world2) {
     },
     update(time) {
       if (disposed) return;
-      for (const f10 of floaters) {
-        for (const p of f10.parts) {
+      for (const f12 of floaters) {
+        for (const p of f12.parts) {
           p.node.position.y = Math.sin(time * 0.48 + p.seed) * 0.036;
           p.node.position.z = p.restZ + Math.sin(time * 0.31 + p.seed) * 0.023;
           p.node.rotation.z = p.restRotation + Math.sin(time * 0.26 + p.seed) * 4e-3;
@@ -40100,7 +42605,7 @@ function makeRuneTexture() {
   canvas2.width = canvas2.height = 2048;
   const ctx = canvas2.getContext("2d");
   ctx.clearRect(0, 0, 2048, 2048);
-  const unit = 2048 / 4.7, c2 = 1024, pen = (r, a) => [c2 + Math.cos(a) * r * unit, c2 - Math.sin(a) * r * unit];
+  const unit2 = 2048 / 4.7, c2 = 1024, pen = (r, a) => [c2 + Math.cos(a) * r * unit2, c2 - Math.sin(a) * r * unit2];
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.strokeStyle = "#b7d7c6";
@@ -40112,7 +42617,7 @@ function makeRuneTexture() {
   };
   for (let i = 0; i < 32; i++) {
     const a = (i + 0.5) / 32 * Math.PI * 2, p = pen(1.965, a), radial = [Math.cos(a), -Math.sin(a)], tangent = [-Math.sin(a), -Math.cos(a)];
-    const pt = (x, y) => [p[0] + (tangent[0] * x + radial[0] * y) * unit, p[1] + (tangent[1] * x + radial[1] * y) * unit];
+    const pt = (x, y) => [p[0] + (tangent[0] * x + radial[0] * y) * unit2, p[1] + (tangent[1] * x + radial[1] * y) * unit2];
     line([pt(0, -0.105), pt(0, 0.105)], 3.3);
     if (i % 4 === 0) {
       line([pt(-0.055, 0.025), pt(0, 0.092), pt(0.052, 0.025)], 3.2);
@@ -40199,8 +42704,8 @@ function makeWisps(keep, count) {
 
 // crystal-resource.js
 var sharedByThree = /* @__PURE__ */ new WeakMap();
-var clamp33 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
-var mix11 = (a, b, t) => a + (b - a) * t;
+var clamp35 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+var mix12 = (a, b, t) => a + (b - a) * t;
 function hash7(x, y = 0, seed = 37) {
   let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ Math.imul(seed, 1442695041);
   h = Math.imul(h ^ h >>> 13, 1274126177);
@@ -40211,7 +42716,7 @@ function noise4(x, y, seed) {
   let u = x - ix, v = y - iy;
   u = u * u * (3 - 2 * u);
   v = v * v * (3 - 2 * v);
-  return mix11(mix11(hash7(ix, iy, seed), hash7(ix + 1, iy, seed), u), mix11(hash7(ix, iy + 1, seed), hash7(ix + 1, iy + 1, seed), u), v);
+  return mix12(mix12(hash7(ix, iy, seed), hash7(ix + 1, iy, seed), u), mix12(hash7(ix, iy + 1, seed), hash7(ix + 1, iy + 1, seed), u), v);
 }
 function fbm(x, y, seed) {
   return noise4(x, y, seed) * 0.62 + noise4(x * 2.07, y * 2.07, seed + 5) * 0.27 + noise4(x * 4.17, y * 4.17, seed + 11) * 0.11;
@@ -40220,7 +42725,7 @@ function mineralTextures(THREE, size) {
   const tile = size / 4, pad = 4, color3 = new Uint8Array(size * size * 4), detail = new Uint8Array(size * size * 4), relief = new Float32Array(size * size);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const tx = Math.floor(x / tile), ty = Math.floor(y / tile), panel = tx + ty * 4;
-    const u = clamp33((x % tile - pad) / (tile - 2 * pad - 1)), v = clamp33((y % tile - pad) / (tile - 2 * pad - 1));
+    const u = clamp35((x % tile - pad) / (tile - 2 * pad - 1)), v = clamp35((y % tile - pad) / (tile - 2 * pad - 1));
     const seed = 101 + panel * 17, i = y * size + x, o = i * 4;
     const cloud = fbm(u * 5.3, v * 3.8, seed), grain = noise4(u * 95, v * 125, seed + 3);
     let r, g, b, h, rough;
@@ -40251,12 +42756,12 @@ function mineralTextures(THREE, size) {
       h = grain * 75e-5 + etch * 28e-5 + fracture * 5e-4 - inclusion * 12e-4;
       rough = 0.225 + (cloud - 0.5) * 0.11 + veil * 0.23 + fracture * 0.12 + inclusion * 0.19 + (etch - 0.5) * 0.018;
     }
-    color3[o] = clamp33(r, 0, 255);
-    color3[o + 1] = clamp33(g, 0, 255);
-    color3[o + 2] = clamp33(b, 0, 255);
+    color3[o] = clamp35(r, 0, 255);
+    color3[o + 1] = clamp35(g, 0, 255);
+    color3[o + 2] = clamp35(b, 0, 255);
     color3[o + 3] = 255;
     relief[i] = h;
-    detail[o + 3] = Math.round(clamp33(rough, 0.16, 0.96) * 255);
+    detail[o + 3] = Math.round(clamp35(rough, 0.16, 0.96) * 255);
   }
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const x0 = Math.floor(x / tile) * tile, y0 = Math.floor(y / tile) * tile, i = y * size + x, o = i * 4;
@@ -40314,11 +42819,11 @@ function material(THREE, textures, stone = false) {
   m.userData.packedNormalRoughness = true;
   return m;
 }
-function builder3(THREE, textures) {
+function builder4(THREE, textures) {
   const positions = [], uvs = [], colors = [];
   function uv(panel, u, v) {
     const { size, tile, pad } = textures;
-    return [(panel % 4 * tile + pad + clamp33(u) * (tile - 2 * pad - 1) + 0.5) / size, (Math.floor(panel / 4) * tile + pad + clamp33(v) * (tile - 2 * pad - 1) + 0.5) / size];
+    return [(panel % 4 * tile + pad + clamp35(u) * (tile - 2 * pad - 1) + 0.5) / size, (Math.floor(panel / 4) * tile + pad + clamp35(v) * (tile - 2 * pad - 1) + 0.5) / size];
   }
   function tri(a, b, c2, ta, tb, tc, tint4) {
     for (const [p, t] of [[a, ta], [b, tb], [c2, tc]]) {
@@ -40344,7 +42849,7 @@ function builder3(THREE, textures) {
   return { tri, quad, uv, finish: finish3 };
 }
 function crystalGeometry(THREE, textures) {
-  const b = builder3(THREE, textures), specs = [
+  const b = builder4(THREE, textures), specs = [
     // x,z,height,radius,tiltX,tiltZ,yaw,broken. Heights include the termination.
     [-0.035, 5e-3, 0.73, 0.129, -0.06, 0.045, 0.12, false],
     [0.092, 0.055, 0.58, 0.086, -0.075, 0.07, 0.2, false],
@@ -40366,8 +42871,8 @@ function crystalGeometry(THREE, textures) {
     const polygon2 = [];
     for (let i = 0; i < 6; i++) {
       const prev = corners3[(i + 5) % 6], c2 = corners3[i], next = corners3[(i + 1) % 6], bevel = 0.055 + hash7(index2, i, 51) * 0.025;
-      polygon2.push([mix11(c2[0], prev[0], bevel), mix11(c2[1], prev[1], bevel)]);
-      polygon2.push([mix11(c2[0], next[0], bevel), mix11(c2[1], next[1], bevel)]);
+      polygon2.push([mix12(c2[0], prev[0], bevel), mix12(c2[1], prev[1], bevel)]);
+      polygon2.push([mix12(c2[0], next[0], bevel), mix12(c2[1], next[1], bevel)]);
     }
     const point5 = (px, py, pz) => new THREE.Vector3(px, py, pz).applyQuaternion(q).add(new THREE.Vector3(x, 0.115, z));
     const levels = broken ? [0, 0.11, 0.91, 1] : [0, 0.1, 0.69, 1];
@@ -40396,7 +42901,7 @@ function crystalGeometry(THREE, textures) {
   return b.finish();
 }
 function matrixGeometry(THREE, textures, useAtlas = true) {
-  const b = builder3(THREE, textures);
+  const b = builder4(THREE, textures);
   function rock(cx, cz, rx, rz, h, seed) {
     const count = seed === 87 ? 11 : 7, rings2 = [[], [], []];
     for (let i = 0; i < count; i++) {
@@ -40454,10 +42959,10 @@ function createCrystalResource(THREE, { textureSize = 1024, matrixMaterial = nul
 }
 
 // shadow-body.js
-var TAU21 = Math.PI * 2;
-var clamp34 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
-var smooth25 = (a, b, x) => {
-  const t = clamp34((x - a) / (b - a));
+var TAU23 = Math.PI * 2;
+var clamp36 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+var smooth26 = (a, b, x) => {
+  const t = clamp36((x - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
 function shadowAndReflectionOnly(world2, mesh2) {
@@ -40478,7 +42983,7 @@ function createShadowBody(world2) {
   const material2 = (color3, roughness = 0.9) => new MeshStandardMaterial({ color: color3, roughness, metalness: 0 });
   const mats = { cloth: material2(6116420), dark: material2(3486252), skin: material2(11570288, 0.8), leather: material2(4535850, 0.85) };
   const geometries = /* @__PURE__ */ new Set(), meshes = [];
-  const add3 = (parent, geometry3, mat2, x = 0, y = 0, z = 0) => {
+  const add4 = (parent, geometry3, mat2, x = 0, y = 0, z = 0) => {
     geometries.add(geometry3);
     const mesh2 = new Mesh(geometry3, mat2);
     mesh2.position.set(x, y, z);
@@ -40506,35 +43011,35 @@ function createShadowBody(world2) {
   const trunk = new CapsuleGeometry(0.155, 0.32, 3, 9);
   trunk.scale(1.15, 1, 0.72);
   trunk.translate(0, 0.27, 0);
-  add3(torso, trunk, mats.cloth);
+  add4(torso, trunk, mats.cloth);
   const belt = new CylinderGeometry(0.168, 0.17, 0.07, 10);
   belt.scale(1.1, 1, 0.76);
   belt.translate(0, 0.07, 0);
-  add3(torso, belt, mats.leather);
+  add4(torso, belt, mats.leather);
   const head2 = joint(torso, 0, 0.66, 0.01, "head");
   const skull = new SphereGeometry(0.112, 12, 9);
   skull.scale(1, 1.12, 1.05);
-  add3(head2, skull, mats.skin);
-  const hair = new SphereGeometry(0.12, 12, 8, 0, TAU21, 0, Math.PI * 0.55);
+  add4(head2, skull, mats.skin);
+  const hair = new SphereGeometry(0.12, 12, 8, 0, TAU23, 0, Math.PI * 0.55);
   hair.scale(1, 1.1, 1.08);
   hair.translate(0, 0.01, -0.012);
-  add3(head2, hair, mats.dark);
+  add4(head2, hair, mats.dark);
   const upperArm = limb(0.05, 0.24), foreArm = limb(0.044, 0.2), hand = new SphereGeometry(0.05, 8, 6), thigh = limb(0.072, 0.35, 8), shin = limb(0.058, 0.35), foot = new BoxGeometry(0.1, 0.075, 0.24);
   foot.translate(0, -0.035, 0.055);
   const rig = { model, body: body2, pelvis, torso, head: head2, target: {}, value: {} };
   for (const [side2, s] of [["L", 1], ["R", -1]]) {
     const shoulder = joint(torso, s * 0.205, 0.45, 0, "shoulder" + side2);
-    add3(shoulder, upperArm, mats.cloth);
+    add4(shoulder, upperArm, mats.cloth);
     const elbow = joint(shoulder, 0, -0.3, 0, "elbow" + side2);
-    add3(elbow, foreArm, mats.cloth);
+    add4(elbow, foreArm, mats.cloth);
     const palm = joint(elbow, 0, -0.27, 0.01, "hand" + side2);
-    add3(palm, hand, mats.skin);
+    add4(palm, hand, mats.skin);
     const hip = joint(pelvis, s * 0.1, 0, 0, "hip" + side2);
-    add3(hip, thigh, mats.dark);
+    add4(hip, thigh, mats.dark);
     const knee = joint(hip, 0, -0.45, 0, "knee" + side2);
-    add3(knee, shin, mats.dark);
+    add4(knee, shin, mats.dark);
     const ankle = joint(knee, 0, -0.43, 0, "ankle" + side2);
-    add3(ankle, foot, mats.leather);
+    add4(ankle, foot, mats.leather);
     Object.assign(rig, { ["shoulder" + side2]: shoulder, ["elbow" + side2]: elbow, ["hand" + side2]: palm, ["hip" + side2]: hip, ["knee" + side2]: knee });
   }
   return { model, rig, meshes, dispose() {
@@ -40610,7 +43115,7 @@ function animateShadowBody(world2, dt) {
   avatar.time += dt;
   const swim = !!m.swimming, dead = !!m.dead, air = m.grounded === false && !swim && !dead;
   const speed = m.speed || 0, moving2 = !swim && !air && !dead && speed > 0.18;
-  const amp = moving2 ? 0.28 + 0.5 * clamp34(speed / 5.8) : 0, g = (m.gaitPhase || 0) * TAU21;
+  const amp = moving2 ? 0.28 + 0.5 * clamp36(speed / 5.8) : 0, g = (m.gaitPhase || 0) * TAU23;
   t.hipL = -Math.sin(g) * amp;
   t.hipR = Math.sin(g) * amp;
   t.kneeL = moving2 ? Math.max(0, Math.sin(g + 0.9)) * amp * 1.5 : 0.05;
@@ -40621,7 +43126,7 @@ function animateShadowBody(world2, dt) {
   t.lean = moving2 ? 0.05 + 0.03 * speed : 0;
   t.pitch = 0;
   t.drop = 0;
-  t.roll = moving2 ? -clamp34(m.turn || 0, -1, 1) * 0.09 : 0;
+  t.roll = moving2 ? -clamp36(m.turn || 0, -1, 1) * 0.09 : 0;
   let state2 = moving2 ? m.sprint ? "Run" : "Walk" : "Idle";
   if (air) {
     state2 = "Jump";
@@ -40631,7 +43136,7 @@ function animateShadowBody(world2, dt) {
   }
   if (swim) {
     state2 = "Swim";
-    const p = (m.swimPhase || 0) * TAU21, e = 0.5 + 0.5 * clamp34(m.swimEffort || 0);
+    const p = (m.swimPhase || 0) * TAU23, e = 0.5 + 0.5 * clamp36(m.swimEffort || 0);
     t.pitch = 1.3;
     t.lean = 0;
     t.shoulderL = -2.4 + Math.sin(p) * 1.1 * e;
@@ -40643,15 +43148,15 @@ function animateShadowBody(world2, dt) {
   }
   if (m.attack && !swim) {
     state2 = "Attack";
-    const p = clamp34((m.attackElapsed || 0) / (m.attackDuration || 0.74)), contact = m.combo === 0 || m.combo === 2 ? 0.6226 : 0.6364;
-    const raise = smooth25(0, contact * 0.75, p), strike = smooth25(contact * 0.75, contact * 1.04, p), settle2 = smooth25(contact * 1.1, 1, p);
+    const p = clamp36((m.attackElapsed || 0) / (m.attackDuration || 0.74)), contact = m.combo === 0 || m.combo === 2 ? 0.6226 : 0.6364;
+    const raise = smooth26(0, contact * 0.75, p), strike = smooth26(contact * 0.75, contact * 1.04, p), settle2 = smooth26(contact * 1.1, 1, p);
     t.shoulderR = -2.5 * raise * (1 - strike) + -0.55 * strike * (1 - settle2) + t.shoulderR * settle2;
     t.elbowR = -1.2 * raise * (1 - strike) + -0.12 * strike * (1 - settle2) + t.elbowR * settle2;
     t.lean += -0.08 * raise * (1 - strike) + 0.14 * strike * (1 - settle2);
   }
   if (m.hurt > 0 && !dead) {
     state2 = state2 === "Attack" ? state2 : "Hit";
-    t.lean -= 0.22 * clamp34(m.hurt / 0.36);
+    t.lean -= 0.22 * clamp36(m.hurt / 0.36);
   }
   if (dead) {
     state2 = "Death";
@@ -40726,11 +43231,11 @@ function installRiverMineralMaterial(material2) {
 // river-bank-ecology.js
 var RIVER_MARGIN_LIMITS = Object.freeze({ grid: 4, candidates: 64, rootRadius: 0.22, maxSupportError: 0.055, maxGrade: 0.42, minWaterClearance: 0.28 });
 var RIVER_REED_LIMITS = Object.freeze({ colonies: 24, stems: [6, 10], spread: 1.25, rise: [-0.22, 0.42], maxDepth: 0.22, maxGrade: 0.38, height: [1.15, 1.7] });
-var smooth26 = (a, b, v) => {
+var smooth27 = (a, b, v) => {
   const t = Math.max(0, Math.min(1, (v - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
-function planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f10, chunk, allowed = () => true, seed = hydrology2?.seed ?? 728194 }) {
+function planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f12, chunk, allowed = () => true, seed = hydrology2?.seed ?? 728194 }) {
   if (hydrology2?.generationMode !== "water-first") return [];
   const x0 = chunk.cx * 64, z0 = chunk.cz * 64, features = hydrology2.queryBounds({ minX: x0 - 22, maxX: x0 + 86, minZ: z0 - 22, maxZ: z0 + 86 });
   if (!features.some((feature) => feature.kind === "stream")) return [];
@@ -40739,11 +43244,11 @@ function planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f10, c
     const id2 = gx + "," + gz, x = (gx + 0.15 + hash12(id2, "x") * 0.7) * 4, z = (gz + 0.15 + hash12(id2, "z") * 0.7) * 4;
     const shore = hydrology2.nearWater(x, z, 20);
     if (shore?.kind !== "stream") continue;
-    const y = f10.height(x, z), cover = riverBankVegetationAt(seed, x, y, z, shore, hydrology2);
+    const y = f12.height(x, z), cover = riverBankVegetationAt(seed, x, y, z, shore, hydrology2);
     const rise = y - shore.level;
-    if (rise > RIVER_REED_LIMITS.rise[0] && rise < RIVER_REED_LIMITS.rise[1] + 0.2 && shore.distance < 2.6 && hash12(Math.floor(gx / 3) + "," + Math.floor(gz / 3), "reed-colony") < 0.6 && hash12(id2, "reed") < 0.6 * (1 - smooth26(0.5, 0.78, riverBankDepositAt(hydrology2, x, z, seed)))) reedSites.push({ id: id2, x, z, featureId: shore.featureId, rank: hash12(id2, "reed-rank") });
+    if (rise > RIVER_REED_LIMITS.rise[0] && rise < RIVER_REED_LIMITS.rise[1] + 0.2 && shore.distance < 2.6 && hash12(Math.floor(gx / 3) + "," + Math.floor(gz / 3), "reed-colony") < 0.6 && hash12(id2, "reed") < 0.6 * (1 - smooth27(0.5, 0.78, riverBankDepositAt(hydrology2, x, z, seed)))) reedSites.push({ id: id2, x, z, featureId: shore.featureId, rank: hash12(id2, "reed-rank") });
     if (cover < 0.16 || hash12(id2, "colony") > cover * 0.85 || hydrology2.waterAt(x, z, y)) continue;
-    const climate3 = f10.climate?.(x, z, y);
+    const climate3 = f12.climate?.(x, z, y);
     if (climate3 && (climate3.ash > 0.45 || climate3.snow > 0.2)) continue;
     for (let i = 0; i < 3; i++) candidates.push({
       id: "river-margin:" + id2 + ":" + i,
@@ -40767,13 +43272,13 @@ function planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f10, c
     const [low, high] = RIVER_REED_LIMITS.stems, count = low + Math.floor(hash12(site.id, "reed-count") * (high - low + 1));
     for (let i = 0; i < count; i++) {
       const key3 = site.id + "/" + i, a = hash12(key3, "reed-angle") * Math.PI * 2, d = Math.sqrt(hash12(key3, "reed-offset")) * RIVER_REED_LIMITS.spread, px = site.x + Math.cos(a) * d, pz = site.z + Math.sin(a) * d;
-      const py = f10.height(px, pz), s = hydrology2.nearWater(px, pz, 8);
+      const py = f12.height(px, pz), s = hydrology2.nearWater(px, pz, 8);
       if (s?.featureId !== site.featureId || !Number.isFinite(s.level)) continue;
       const rise = py - s.level, water = hydrology2.waterAt(px, pz, py);
       if (rise < RIVER_REED_LIMITS.rise[0] || rise > RIVER_REED_LIMITS.rise[1] || water && water.depth > RIVER_REED_LIMITS.maxDepth) continue;
-      const gx = (f10.height(px + 0.2, pz) - f10.height(px - 0.2, pz)) / 0.4, gz = (f10.height(px, pz + 0.2) - f10.height(px, pz - 0.2)) / 0.4;
+      const gx = (f12.height(px + 0.2, pz) - f12.height(px - 0.2, pz)) / 0.4, gz = (f12.height(px, pz + 0.2) - f12.height(px, pz - 0.2)) / 0.4;
       if (Math.hypot(gx, gz) > RIVER_REED_LIMITS.maxGrade || !allowed(px, pz, 0.12)) continue;
-      const climate3 = f10.climate?.(px, pz, py);
+      const climate3 = f12.climate?.(px, pz, py);
       if (climate3 && (climate3.ash > 0.45 || climate3.snow > 0.2)) continue;
       const [h0, h1] = RIVER_REED_LIMITS.height;
       records.push(Object.freeze({
@@ -40797,12 +43302,12 @@ function planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f10, c
     }
   }
   for (const c2 of candidates.slice(0, RIVER_MARGIN_LIMITS.candidates)) {
-    const y = f10.height(c2.x, c2.z), shore = hydrology2.nearWater(c2.x, c2.z, 22);
+    const y = f12.height(c2.x, c2.z), shore = hydrology2.nearWater(c2.x, c2.z, 22);
     if (shore?.kind !== "stream" || shore.featureId !== c2.featureId || riverBankVegetationAt(seed, c2.x, y, c2.z, shore, hydrology2) < 0.13 || hydrology2.waterAt(c2.x, c2.z, y) || !allowed(c2.x, c2.z, 0.35)) continue;
     let good = true;
     const heights = [];
     for (const [dx, dz] of [[r, 0], [-r, 0], [0, r], [0, -r]]) {
-      const x = c2.x + dx, z = c2.z + dz, h = f10.height(x, z), s = hydrology2.nearWater(x, z, 22);
+      const x = c2.x + dx, z = c2.z + dz, h = f12.height(x, z), s = hydrology2.nearWater(x, z, 22);
       heights.push(h);
       if (s?.featureId !== c2.featureId || h - s.level < RIVER_MARGIN_LIMITS.minWaterClearance || hydrology2.waterAt(x, z, h) || !allowed(x, z, 0.12)) {
         good = false;
@@ -40821,7 +43326,7 @@ function planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f10, c
 // marsh-riparian-model.js
 var MARSH_PATCH_LIMITS = Object.freeze({ triangles: 254, radius: 0.78, rootRadius: 0.34, maxSlope: 0.58, maxSupportError: 0.045 });
 var MARSH_ROOTS = Object.freeze([[-0.16, -0.08], [0.12, 0.04], [0.21, -0.15], [-0.11, 0.17], [-0.29, 0.11], [0.06, -0.27]].map(Object.freeze));
-var TAU22 = Math.PI * 2;
+var TAU24 = Math.PI * 2;
 var linear2 = (v) => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
 var color2 = (hex) => [(hex >> 16 & 255) / 255, (hex >> 8 & 255) / 255, (hex & 255) / 255].map(linear2);
 var green = color2(12701330);
@@ -40863,7 +43368,7 @@ function buildMarshRiparianModel() {
   for (let n = 0; n < 3; n++) {
     const root = colonies[n], h = [0.82, 1.22, 0.97][n], lean = 0.08 + n * 0.017, a = 0.6 + n * 2.27, cs = Math.cos(a), sn = Math.sin(a), base = positions.length / 9;
     const at = (s, k, extra = 0, radius = 9e-3) => {
-      const t2 = s / 3, q = k * TAU22 / 3, r = radius * (1 - 0.65 * t2);
+      const t2 = s / 3, q = k * TAU24 / 3, r = radius * (1 - 0.65 * t2);
       return [root[0] + cs * lean * t2 * t2 + Math.cos(q) * r, h * t2 + extra, root[1] + sn * lean * t2 * t2 + Math.sin(q) * r];
     };
     for (let s = 0; s < 3; s++) for (let k = 0; k < 3; k++) {
@@ -40877,7 +43382,7 @@ function buildMarshRiparianModel() {
     if (n !== 0) {
       const start2 = positions.length / 9, tip = [root[0] + cs * lean, root[1] + sn * lean];
       for (let k = 0; k < 3; k++) {
-        const p = (y, j, r) => [tip[0] + Math.cos(j * TAU22 / 3) * r, h + y, tip[1] + Math.sin(j * TAU22 / 3) * r];
+        const p = (y, j, r) => [tip[0] + Math.cos(j * TAU24 / 3) * r, h + y, tip[1] + Math.sin(j * TAU24 / 3) * r];
         triangle4(p(-0.095, k, 0.017), p(0.035, k, 0.01), p(-0.095, k + 1, 0.017), head, root);
         triangle4(p(-0.095, k + 1, 0.017), p(0.035, k, 0.01), p(0.035, k + 1, 0.01), head, root);
       }
@@ -40890,17 +43395,17 @@ function buildMarshRiparianModel() {
 
 // riparian-plan.js
 var RIPARIAN_LIMITS = Object.freeze({ chunkReeds: 112, chunkStones: 12, reeds: 640, stones: 1024, draws: 2, range: 118, lowRange: 76, scanSeconds: 0.5 });
-function planRiparian({ hydrology: hydrology2, terrainFunctions: f10, chunk, allowed = () => true, seed = 728194 }) {
+function planRiparian({ hydrology: hydrology2, terrainFunctions: f12, chunk, allowed = () => true, seed = 728194 }) {
   const x0 = chunk.cx * 64, z0 = chunk.cz * 64, bounds6 = { minX: x0 - 3, minZ: z0 - 3, maxX: x0 + 67, maxZ: z0 + 67 };
   const features = hydrology2?.queryBounds(bounds6) || [];
   if (!features.length) return [];
-  const marshChunk = features.some((f11) => f11.kind === "wetland");
+  const marshChunk = features.some((f13) => f13.kind === "wetland");
   const swampCoverage = hydrology2?.generationMode === "water-first" ? hydrology2.geometry?.plan?.swampCoverage : null;
-  const mappedChunk = Array.isArray(swampCoverage) && features.some((f11) => swampCoverage.some((c2) => c2.bodyId === f11.id));
+  const mappedChunk = Array.isArray(swampCoverage) && features.some((f13) => swampCoverage.some((c2) => c2.bodyId === f13.id));
   const records = [], hash12 = (id2, slot) => stableHash(seed, "riparian-v1", id2, slot), heights = /* @__PURE__ */ new Map();
   const height2 = (x, z) => {
     const key3 = x + "," + z;
-    if (!heights.has(key3)) heights.set(key3, f10.height(x, z));
+    if (!heights.has(key3)) heights.set(key3, f12.height(x, z));
     return heights.get(key3);
   };
   for (let gz = chunk.cz * 32; gz < (chunk.cz + 1) * 32; gz++) for (let gx = chunk.cx * 32; gx < (chunk.cx + 1) * 32; gx++) {
@@ -40909,11 +43414,11 @@ function planRiparian({ hydrology: hydrology2, terrainFunctions: f10, chunk, all
     if (colony > (marshChunk || mappedChunk ? 0.44 : 0.22)) continue;
     const near = hydrology2.nearWater(x, z, 2.6);
     if (!near || near.kind === "river" || near.kind === "stream" || near.kind === "ocean" || !near.featureId) continue;
-    const context = wetlandPlantContext(hydrology2, f10, x, z, near), marsh = context.marsh, maxReedDepth = context.maxDepth;
+    const context = wetlandPlantContext(hydrology2, f12, x, z, near), marsh = context.marsh, maxReedDepth = context.maxDepth;
     if (colony > (marshChunk || context.swampRegionId !== null ? 0.44 : 0.22)) continue;
     const y = height2(x, z);
-    if (y - near.level < -maxReedDepth || y - near.level > 1.05 || f10.slope(x, z) > 0.65) continue;
-    const biome2 = f10.biome(x, z), winter = (typeof biome2 === "number" ? biome2 : biome2.id) === 2;
+    if (y - near.level < -maxReedDepth || y - near.level > 1.05 || f12.slope(x, z) > 0.65) continue;
+    const biome2 = f12.biome(x, z), winter = (typeof biome2 === "number" ? biome2 : biome2.id) === 2;
     if (winter && hash12(id2, "winter") > 0.43) continue;
     const kind = hash12(id2, "kind") < (marsh ? 0.94 : 0.74) ? "reed" : "stone", count = kind === "reed" ? marsh ? 4 : 3 : 2;
     for (let i = 0; i < count; i++) {
@@ -40921,11 +43426,11 @@ function planRiparian({ hydrology: hydrology2, terrainFunctions: f10, chunk, all
       const bank = hydrology2.nearWater(px, pz, 2.6);
       if (!bank || bank.featureId !== near.featureId) continue;
       if (context.swampRegionId !== null) {
-        const shifted = wetlandPlantContext(hydrology2, f10, px, pz, bank);
+        const shifted = wetlandPlantContext(hydrology2, f12, px, pz, bank);
         if (!shifted.marsh || shifted.swampRegionId !== context.swampRegionId) continue;
       }
       const py = height2(px, pz), relative = py - bank.level, water = hydrology2.waterAt(px, pz, py);
-      if (relative < -(kind === "reed" ? maxReedDepth : 0.08) || relative > (kind === "reed" ? 0.86 : 1.15) || water && water.depth > (kind === "reed" ? maxReedDepth : 0.08) || f10.slope(px, pz) > (kind === "reed" ? 0.58 : 0.82)) continue;
+      if (relative < -(kind === "reed" ? maxReedDepth : 0.08) || relative > (kind === "reed" ? 0.86 : 1.15) || water && water.depth > (kind === "reed" ? maxReedDepth : 0.08) || f12.slope(px, pz) > (kind === "reed" ? 0.58 : 0.82)) continue;
       const size = kind === "reed" ? marsh ? 0.9 + hash12(slot, "scale") * 0.58 : 0.66 + hash12(slot, "scale") * 0.48 : 0.1 + hash12(slot, "scale") * 0.23;
       const yaw2 = hash12(slot, "yaw") * Math.PI * 2;
       if (!allowed(px, pz, kind === "reed" ? 0.14 : size * 0.85)) continue;
@@ -40933,7 +43438,7 @@ function planRiparian({ hydrology: hydrology2, terrainFunctions: f10, chunk, all
       records.push(Object.freeze(record2));
     }
   }
-  records.push(...planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f10, chunk, allowed, seed }));
+  records.push(...planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f12, chunk, allowed, seed }));
   function support(record2) {
     const { x: px, z: pz, scale: size, yaw: yaw2 } = record2, py = record2.y + 0.025;
     if (!allowed(px, pz, MARSH_PATCH_LIMITS.radius * size)) return null;
@@ -40943,7 +43448,7 @@ function planRiparian({ hydrology: hydrology2, terrainFunctions: f10, chunk, all
       const ox = (rx * Math.cos(yaw2) + rz * Math.sin(yaw2)) * size, oz = (-rx * Math.sin(yaw2) + rz * Math.cos(yaw2)) * size, h = height2(px + ox, pz + oz), s = hydrology2.nearWater(px + ox, pz + oz, 2.6), w = hydrology2.waterAt(px + ox, pz + oz, h);
       if (Math.abs(h - py - dx * ox - dz * oz) > MARSH_PATCH_LIMITS.maxSupportError || !s || s.featureId !== record2.featureId || h - s.level < -0.3 || h - s.level > 0.86 || w && w.depth > 0.3) return null;
       if (record2.swampRegionId != null) {
-        const context = wetlandPlantContext(hydrology2, f10, px + ox, pz + oz, s);
+        const context = wetlandPlantContext(hydrology2, f12, px + ox, pz + oz, s);
         if (!context.marsh || context.swampRegionId !== record2.swampRegionId || w && w.featureId !== record2.featureId) return null;
       }
     }
@@ -40990,14 +43495,14 @@ function selectRiparian(chunks, activeFeatures, position3, quality = "high") {
 
 // river-cobbles.js
 var RIVER_COBBLE_LIMITS = Object.freeze({ chunk: 320, candidates: 640, clusterMax: 28, bankWidth: 5.2, maxDepth: 0.14, maxCrown: 0.3, range: 64, visible: 1024 });
-var TAU23 = Math.PI * 2;
+var TAU25 = Math.PI * 2;
 var EMPTY6 = Object.freeze([]);
-function planRiverCobbles({ hydrology: hydrology2, terrainFunctions: f10, chunk, allowed = () => true, seed = hydrology2?.seed ?? 728194 }) {
+function planRiverCobbles({ hydrology: hydrology2, terrainFunctions: f12, chunk, allowed = () => true, seed = hydrology2?.seed ?? 728194 }) {
   if (hydrology2?.generationMode !== "water-first") return EMPTY6;
   const x0 = chunk.cx * 64, z0 = chunk.cz * 64, area = { minX: x0 - 8, minZ: z0 - 8, maxX: x0 + 72, maxZ: z0 + 72 };
   const features = hydrology2.queryBounds(area).filter((feature) => feature.generationMode === "water-first" && feature.streams?.length).sort((a, b) => a.id.localeCompare(b.id));
   if (!features.length) return EMPTY6;
-  const hash12 = (id2, slot) => stableHash(seed, "river-cobbles-v2", id2, slot), candidates = [], L3 = RIVER_COBBLE_LIMITS;
+  const hash12 = (id2, slot) => stableHash(seed, "river-cobbles-v2", id2, slot), candidates = [], L4 = RIVER_COBBLE_LIMITS;
   for (const feature of features) for (const stream of feature.streams) {
     const points = stream.points;
     for (let row2 = 2; row2 < points.length - 2; row2++) {
@@ -41013,18 +43518,18 @@ function planRiverCobbles({ hydrology: hydrology2, terrainFunctions: f10, chunk,
         const bar = hash12(stream.id + ":" + knot + ":" + side2, "bar") * (1 - u) + hash12(stream.id + ":" + (knot + 1) + ":" + side2, "bar") * u;
         const chance = Math.max(0, Math.min(1, (bar - 0.2) / 0.34)) * Math.min(1, (deposit - 0.3) * 2.6);
         if (hash12(id2, "clump") >= chance) continue;
-        const coarse2 = hash12(id2, "coarse"), count = 3 + Math.floor(Math.pow(hash12(id2, "count"), 1.4) * (L3.clusterMax - 3) * Math.min(1, 0.4 + deposit * 0.8));
+        const coarse2 = hash12(id2, "coarse"), count = 3 + Math.floor(Math.pow(hash12(id2, "count"), 1.4) * (L4.clusterMax - 3) * Math.min(1, 0.4 + deposit * 0.8));
         const centerAlong = (hash12(id2, "along") - 0.5) * 2.4, centerAcross = -0.2 + Math.pow(hash12(id2, "across"), 1.5) * (0.9 + deposit * 3.4);
         const spread = 0.2 + hash12(id2, "spread") * 0.75, stretch = 1.15 + hash12(id2, "stretch") * 1.3, flowYaw = Math.atan2(-p.fz, p.fx);
         for (let slot = 0; slot < count; slot++) {
-          const key3 = id2 + ":" + slot, radial = Math.sqrt(-2 * Math.log(1 - hash12(key3, "r") * 0.999)), angle = hash12(key3, "a") * TAU23;
-          const along = centerAlong + radial * Math.cos(angle) * spread * stretch, offset = Math.max(-0.3, Math.min(L3.bankWidth, centerAcross + radial * Math.sin(angle) * spread));
+          const key3 = id2 + ":" + slot, radial = Math.sqrt(-2 * Math.log(1 - hash12(key3, "r") * 0.999)), angle = hash12(key3, "a") * TAU25;
+          const along = centerAlong + radial * Math.cos(angle) * spread * stretch, offset = Math.max(-0.3, Math.min(L4.bankWidth, centerAcross + radial * Math.sin(angle) * spread));
           const x = bankX + p.fx * along + normalX * offset, z = bankZ + p.fz * along + normalZ * offset;
           if (Math.floor(x / 64) !== chunk.cx || Math.floor(z / 64) !== chunk.cz) continue;
           if (riverBankDepositAt(hydrology2, x, z, seed) < 0.3) continue;
           const scale5 = Math.min(0.5, 0.08 / Math.pow(1 - hash12(key3, "size") * 0.985, 1 / 1.9) * (0.65 + coarse2 * 0.9));
           const scaleY = Math.min(0.19, scale5 * (0.34 + hash12(key3, "flat") * 0.38)), scaleZ = scale5 * (0.56 + hash12(key3, "elongation") * 0.42);
-          const pick = hash12(key3, "yaw"), yaw2 = pick < 0.78 ? flowYaw + (pick < 0.42 ? 0 : Math.PI / 2) + (hash12(key3, "yawJitter") - 0.5) * 0.9 : hash12(key3, "yawFree") * TAU23;
+          const pick = hash12(key3, "yaw"), yaw2 = pick < 0.78 ? flowYaw + (pick < 0.42 ? 0 : Math.PI / 2) + (hash12(key3, "yawJitter") - 0.5) * 0.9 : hash12(key3, "yawFree") * TAU25;
           candidates.push({
             id: "river-cobble:" + key3,
             featureId: feature.id,
@@ -41051,20 +43556,20 @@ function planRiverCobbles({ hydrology: hydrology2, terrainFunctions: f10, chunk,
   }
   candidates.sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id));
   const records = [];
-  for (let i = 0; i < Math.min(candidates.length, L3.candidates) && records.length < L3.chunk; i++) {
-    const r = candidates[i], y = f10.height(r.x, r.z), shore = hydrology2.nearWater(r.x, r.z, 6);
-    if (!shore || shore.featureId !== r.featureId || shore.kind !== "stream" || shore.distance > L3.bankWidth + 0.5) continue;
+  for (let i = 0; i < Math.min(candidates.length, L4.candidates) && records.length < L4.chunk; i++) {
+    const r = candidates[i], y = f12.height(r.x, r.z), shore = hydrology2.nearWater(r.x, r.z, 6);
+    if (!shore || shore.featureId !== r.featureId || shore.kind !== "stream" || shore.distance > L4.bankWidth + 0.5) continue;
     const water = hydrology2.waterAt(r.x, r.z, y);
-    if (water && (water.featureId !== r.featureId || water.depth > L3.maxDepth) || y < shore.level - L3.maxDepth || y > shore.level + 2) continue;
+    if (water && (water.featureId !== r.featureId || water.depth > L4.maxDepth) || y < shore.level - L4.maxDepth || y > shore.level + 2) continue;
     if (!allowed(r.x, r.z, r.scale)) continue;
-    const radius = r.scale, heights = [f10.height(r.x + radius, r.z), f10.height(r.x - radius, r.z), f10.height(r.x, r.z + radius), f10.height(r.x, r.z - radius)];
+    const radius = r.scale, heights = [f12.height(r.x + radius, r.z), f12.height(r.x - radius, r.z), f12.height(r.x, r.z + radius), f12.height(r.x, r.z - radius)];
     const gx = (heights[0] - heights[1]) / (2 * radius), gz = (heights[2] - heights[3]) / (2 * radius), grade = Math.hypot(gx, gz);
     if (grade > 0.65) continue;
     let error = Math.max(Math.abs(heights[0] - y - gx * radius), Math.abs(heights[1] - y + gx * radius), Math.abs(heights[2] - y - gz * radius), Math.abs(heights[3] - y + gz * radius));
-    for (const [dx, dz] of [[0.707, 0.707], [0.707, -0.707], [-0.707, 0.707], [-0.707, -0.707]]) error = Math.max(error, Math.abs(f10.height(r.x + dx * radius, r.z + dz * radius) - y - gx * dx * radius - gz * dz * radius));
+    for (const [dx, dz] of [[0.707, 0.707], [0.707, -0.707], [-0.707, 0.707], [-0.707, -0.707]]) error = Math.max(error, Math.abs(f12.height(r.x + dx * radius, r.z + dz * radius) - y - gx * dx * radius - gz * dz * radius));
     if (error > 0.055) continue;
     const inv = 1 / Math.hypot(gx, 1, gz), rise = r.scaleY / inv, crown = rise * (1.5 - r.bury) - error;
-    if (crown < 0.02 || crown > L3.maxCrown) continue;
+    if (crown < 0.02 || crown > L4.maxCrown) continue;
     const bankNormal3 = Object.freeze({ x: -gx * inv, y: inv, z: -gz * inv });
     let ox = bankNormal3.x - r.flowX * r.lean, oy = bankNormal3.y, oz = bankNormal3.z - r.flowZ * r.lean;
     const ol = Math.hypot(ox, oy, oz);
@@ -41121,14 +43626,14 @@ function createRiverCobbleGeometry(THREE) {
 // water-stones.js
 var WATER_STONE_LIMITS = Object.freeze({ cell: 4, candidates: 128, chunk: 48, visible: 256, balanced: 128, low: 64, range: 64, balancedRange: 48, lowRange: 36, minDepth: 0.06, maxDepth: 4, maxGrade: 0.42, maxError: 0.055, nativeStep: 4 / 3, maxGridProbes: 25, unitEnvelope: 1.02, maxCrown: 0.45, maxWaterCrown: 0.18, edgeMargin: 0.04 });
 var EMPTY7 = Object.freeze([]);
-var TAU24 = Math.PI * 2;
+var TAU26 = Math.PI * 2;
 var finite14 = Number.isFinite;
 var intersects3 = (a, b) => a.minX <= b.maxX && a.maxX >= b.minX && a.minZ <= b.maxZ && a.maxZ >= b.minZ;
 function wetlandIds(h) {
   return new Set((h.geometry?.plan?.swampCoverage || EMPTY7).filter((p) => p.type !== "existing-lake-shallows").map((p) => p.bodyId));
 }
-function supportedFeature(f10, wetlands) {
-  return f10?.generationMode === "water-first" && !wetlands.has(f10.id) && (["lake", "pond"].includes(f10.kind) ? !f10.ponds?.some((p) => p.wetlandPool || p.wetlandId) : f10.kind === "stream" && !f10.streams?.some((s) => s.oceanConnected || s.kind === "estuary"));
+function supportedFeature(f12, wetlands) {
+  return f12?.generationMode === "water-first" && !wetlands.has(f12.id) && (["lake", "pond"].includes(f12.kind) ? !f12.ponds?.some((p) => p.wetlandPool || p.wetlandId) : f12.kind === "stream" && !f12.streams?.some((s) => s.oceanConnected || s.kind === "estuary"));
 }
 function wetFootprint(h, s, x, z, radius) {
   const pad = radius + WATER_STONE_LIMITS.edgeMargin, b = { minX: x - pad, minZ: z - pad, maxX: x + pad, maxZ: z + pad };
@@ -41153,9 +43658,9 @@ function wetFootprint(h, s, x, z, radius) {
   }
   return matched ? { minLevel, maxLevel } : null;
 }
-function planWaterStones({ hydrology: h, terrainFunctions: f10, chunk, allowed = () => true, existing = EMPTY7, seed = h?.seed ?? 728194 }) {
-  if (h?.generationMode !== "water-first" || !h.geometry || !h.surfaceAt || !h.waterAt || typeof f10?.height !== "function") return EMPTY7;
-  const L3 = WATER_STONE_LIMITS, x0 = chunk.cx * 64, z0 = chunk.cz * 64, bounds6 = { minX: x0, minZ: z0, maxX: x0 + 64, maxZ: z0 + 64 };
+function planWaterStones({ hydrology: h, terrainFunctions: f12, chunk, allowed = () => true, existing = EMPTY7, seed = h?.seed ?? 728194 }) {
+  if (h?.generationMode !== "water-first" || !h.geometry || !h.surfaceAt || !h.waterAt || typeof f12?.height !== "function") return EMPTY7;
+  const L4 = WATER_STONE_LIMITS, x0 = chunk.cx * 64, z0 = chunk.cz * 64, bounds6 = { minX: x0, minZ: z0, maxX: x0 + 64, maxZ: z0 + 64 };
   const wetlands = wetlandIds(h), features = new Map(h.queryBounds(bounds6).filter((p) => supportedFeature(p, wetlands)).map((p) => [p.id, p]));
   if (!features.size) return EMPTY7;
   const hash12 = (id2, slot) => stableHash(seed, "water-stones-v1", id2, slot), candidates = [];
@@ -41166,29 +43671,29 @@ function planWaterStones({ hydrology: h, terrainFunctions: f10, chunk, allowed =
     const surface4 = h.surfaceAt(x, z);
     if (!surface4 || !finite14(surface4.level) || !features.has(surface4.featureId) || !["stream", "lake", "pond"].includes(surface4.kind)) continue;
     const broad = hash12(id2, "form") < 0.26, scale5 = broad ? 0.55 + hash12(id2, "size") * 0.4 : 0.18 + hash12(id2, "size") * 0.28;
-    candidates.push({ id: "water-stone:" + id2, featureId: surface4.featureId, bodyKind: surface4.kind, kind: "stone", waterStone: true, riverCobble: true, x, z, scale: scale5, scaleY: 0.1 + scale5 * 0.32, scaleZ: scale5 * (0.76 + hash12(id2, "elongation") * 0.2), yaw: hash12(id2, "yaw") * TAU24, rank: hash12(id2, "rank"), tint: 0.9 + hash12(id2, "tint") * 0.18, wet: true, surface: surface4 });
+    candidates.push({ id: "water-stone:" + id2, featureId: surface4.featureId, bodyKind: surface4.kind, kind: "stone", waterStone: true, riverCobble: true, x, z, scale: scale5, scaleY: 0.1 + scale5 * 0.32, scaleZ: scale5 * (0.76 + hash12(id2, "elongation") * 0.2), yaw: hash12(id2, "yaw") * TAU26, rank: hash12(id2, "rank"), tint: 0.9 + hash12(id2, "tint") * 0.18, wet: true, surface: surface4 });
   }
   candidates.sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id));
   const records = [];
-  for (let i = 0; i < Math.min(candidates.length, L3.candidates) && records.length < L3.chunk; i++) {
-    const r = candidates[i], x = r.x, z = r.z, y = f10.height(x, z);
+  for (let i = 0; i < Math.min(candidates.length, L4.candidates) && records.length < L4.chunk; i++) {
+    const r = candidates[i], x = r.x, z = r.z, y = f12.height(x, z);
     if (!finite14(y)) continue;
     const water = h.waterAt(x, z, y);
-    if (!water || !finite14(water.depth) || water.featureId !== r.featureId || water.depth < L3.minDepth || water.depth > L3.maxDepth) continue;
-    const radius = r.scale * L3.unitEnvelope, foot = wetFootprint(h, r.surface, x, z, radius);
+    if (!water || !finite14(water.depth) || water.featureId !== r.featureId || water.depth < L4.minDepth || water.depth > L4.maxDepth) continue;
+    const radius = r.scale * L4.unitEnvelope, foot = wetFootprint(h, r.surface, x, z, radius);
     if (!foot) continue;
     if (existing.some((o) => o.kind === "stone" && Math.hypot(o.x - x, o.z - z) < radius + Math.max(o.cobbleFootprint?.x ?? o.scale, o.cobbleFootprint?.z ?? o.scaleZ ?? o.scale) + 0.04)) continue;
-    if (records.some((o) => Math.hypot(o.x - x, o.z - z) < radius + o.scale * L3.unitEnvelope + 0.04)) continue;
+    if (records.some((o) => Math.hypot(o.x - x, o.z - z) < radius + o.scale * L4.unitEnvelope + 0.04)) continue;
     if (!allowed(x, z, radius, r.featureId)) continue;
-    const gx = (f10.height(x + 0.6, z) - f10.height(x - 0.6, z)) / 1.2, gz = (f10.height(x, z + 0.6) - f10.height(x, z - 0.6)) / 1.2;
-    if (!finite14(gx + gz) || Math.hypot(gx, gz) > L3.maxGrade) continue;
-    const s = L3.nativeStep, minX = Math.floor((x - radius) / s), maxX = Math.ceil((x + radius) / s), minZ = Math.floor((z - radius) / s), maxZ = Math.ceil((z + radius) / s);
-    if ((maxX - minX + 1) * (maxZ - minZ + 1) > L3.maxGridProbes) continue;
+    const gx = (f12.height(x + 0.6, z) - f12.height(x - 0.6, z)) / 1.2, gz = (f12.height(x, z + 0.6) - f12.height(x, z - 0.6)) / 1.2;
+    if (!finite14(gx + gz) || Math.hypot(gx, gz) > L4.maxGrade) continue;
+    const s = L4.nativeStep, minX = Math.floor((x - radius) / s), maxX = Math.ceil((x + radius) / s), minZ = Math.floor((z - radius) / s), maxZ = Math.ceil((z + radius) / s);
+    if ((maxX - minX + 1) * (maxZ - minZ + 1) > L4.maxGridProbes) continue;
     let minError = 0, maxError = 0, maxGround = -Infinity, minGround = Infinity, valid = true, probes = 0;
     for (let iz = minZ; iz <= maxZ && valid; iz++) for (let ix = minX; ix <= maxX; ix++) {
-      const px = ix * s, pz = iz * s, ground = f10.height(px, pz), error = ground - y - gx * (px - x) - gz * (pz - z);
+      const px = ix * s, pz = iz * s, ground = f12.height(px, pz), error = ground - y - gx * (px - x) - gz * (pz - z);
       probes++;
-      if (!finite14(error) || Math.abs(error) > L3.maxError) {
+      if (!finite14(error) || Math.abs(error) > L4.maxError) {
         valid = false;
         break;
       }
@@ -41197,18 +43702,18 @@ function planWaterStones({ hydrology: h, terrainFunctions: f10, chunk, allowed =
       maxGround = Math.max(maxGround, ground);
       minGround = Math.min(minGround, ground);
     }
-    if (!valid || foot.minLevel - maxGround <= 0.025 || foot.maxLevel - minGround > L3.maxDepth + 0.25) continue;
+    if (!valid || foot.minLevel - maxGround <= 0.025 || foot.maxLevel - minGround > L4.maxDepth + 0.25) continue;
     const ny = 1 / Math.hypot(gx, 1, gz), seat = y + minError - 0.02;
-    const crown = L3.unitEnvelope * r.scaleY / ny + minError - 0.02;
-    const worldTop = seat + L3.unitEnvelope * Math.hypot(r.scale * Math.sqrt(Math.max(0, 1 - ny * ny)), r.scaleY * ny);
-    if (crown < 0.1 || crown > L3.maxCrown || worldTop - foot.minLevel > L3.maxWaterCrown) continue;
+    const crown = L4.unitEnvelope * r.scaleY / ny + minError - 0.02;
+    const worldTop = seat + L4.unitEnvelope * Math.hypot(r.scale * Math.sqrt(Math.max(0, 1 - ny * ny)), r.scaleY * ny);
+    if (crown < 0.1 || crown > L4.maxCrown || worldTop - foot.minLevel > L4.maxWaterCrown) continue;
     const { surface: surface4, ...record2 } = r;
     records.push(Object.freeze({ ...record2, y: seat, ground: y, depth: water.depth, crown, worldTop, waterCrown: worldTop - foot.minLevel, bankNormal: Object.freeze({ x: -gx * ny, y: ny, z: -gz * ny }), support: Object.freeze({ radius, minError, maxError, probes, minWaterLevel: foot.minLevel, maxWaterLevel: foot.maxLevel }) }));
   }
   return Object.freeze(records.sort((a, b) => a.id.localeCompare(b.id)));
 }
 function selectWaterStones(chunks, activeFeatures, position3, quality = "high") {
-  const L3 = WATER_STONE_LIMITS, full = quality === "high" || quality === "ultra", low = quality === "low", range = full ? L3.range : low ? L3.lowRange : L3.balancedRange, cap = full ? L3.visible : low ? L3.low : L3.balanced, candidates = [];
+  const L4 = WATER_STONE_LIMITS, full = quality === "high" || quality === "ultra", low = quality === "low", range = full ? L4.range : low ? L4.lowRange : L4.balancedRange, cap = full ? L4.visible : low ? L4.low : L4.balanced, candidates = [];
   for (const entry of chunks.values()) for (const record2 of entry.waterStones || EMPTY7) {
     if (!activeFeatures?.has(record2.featureId)) continue;
     const d2 = (record2.x - position3.x) ** 2 + (record2.z - position3.z) ** 2;
@@ -41312,17 +43817,17 @@ function createRiverCobbleCatalog(THREE) {
 // river-gravel.js
 var GRAVEL_LIMITS = Object.freeze({ visible: 3500, balanced: 1400, low: 600, range: 32, balancedRange: 30, lowRange: 24, coreRange: 24, chunk: 3072, coreChunk: 2304, candidates: 3072, patchCell: 4, spacing: 0.22, maxDepth: 0.065, maxCrown: 0.12, triangles: 64 });
 var EMPTY8 = Object.freeze([]);
-var TAU25 = Math.PI * 2;
+var TAU27 = Math.PI * 2;
 var SQRT3 = Math.sqrt(3);
-var clamp35 = (n) => Math.max(0, Math.min(1, n));
+var clamp37 = (n) => Math.max(0, Math.min(1, n));
 var ease = (n) => {
-  const t = clamp35(n);
+  const t = clamp37(n);
   return t * t * (3 - 2 * t);
 };
-function* planRiverGravelSteps({ hydrology: hydrology2, terrainFunctions: f10, chunk, allowed = () => true, seed = hydrology2?.seed ?? 728194 }, cobbles = EMPTY8) {
+function* planRiverGravelSteps({ hydrology: hydrology2, terrainFunctions: f12, chunk, allowed = () => true, seed = hydrology2?.seed ?? 728194 }, cobbles = EMPTY8) {
   if (hydrology2?.generationMode !== "water-first" || !cobbles.length) return EMPTY8;
   const hash12 = (id2, slot) => stableHash(seed, "river-gravel-v1", id2, slot), patches = /* @__PURE__ */ new Map(), largeCells = /* @__PURE__ */ new Map();
-  const height2 = (x, z) => f10.height(x, z);
+  const height2 = (x, z) => f12.height(x, z);
   for (const rock of cobbles) {
     if (!rock.riverCobble || !rock.bankNormal) continue;
     const bx = Math.floor(rock.x / 2), bz = Math.floor(rock.z / 2), largeKey = bx + "," + bz, list = largeCells.get(largeKey) || [];
@@ -41344,7 +43849,7 @@ function* planRiverGravelSteps({ hydrology: hydrology2, terrainFunctions: f10, c
     const lengthHash = hash12(patch2.id, "length"), widthHash = hash12(patch2.id, "width"), coreAlong = 1.18 + lengthHash * 0.52, coreAcross = 0.65 + widthHash * 0.33;
     const along = 1.7 + lengthHash * 0.8, across2 = 0.94 + widthHash * 0.44;
     const centerX = anchor.x + tx * (hash12(patch2.id, "center") - 0.5) * 0.35, centerZ = anchor.z + tz * (hash12(patch2.id, "center") - 0.5) * 0.35;
-    const phase1 = hash12(patch2.id, "outline1") * TAU25, phase2 = hash12(patch2.id, "outline2") * TAU25, grain = 0.6 + hash12(patch2.id, "grain") * 0.8;
+    const phase1 = hash12(patch2.id, "outline1") * TAU27, phase2 = hash12(patch2.id, "outline2") * TAU27, grain = 0.6 + hash12(patch2.id, "grain") * 0.8;
     const rows = Math.ceil(across2 / (GRAVEL_LIMITS.spacing * SQRT3 * 0.5)), cols = Math.ceil(along / GRAVEL_LIMITS.spacing), coreRows = Math.ceil(coreAcross / (GRAVEL_LIMITS.spacing * SQRT3 * 0.5)), coreCols = Math.ceil(coreAlong / GRAVEL_LIMITS.spacing);
     for (let iz = -rows; iz <= rows; iz++) for (let ix = -cols; ix <= cols; ix++) {
       const id2 = patch2.id + ":" + ix + "," + iz, u = (ix + (iz & 1) * 0.5) * GRAVEL_LIMITS.spacing + (hash12(id2, "jx") - 0.5) * GRAVEL_LIMITS.spacing * 0.9, v = iz * GRAVEL_LIMITS.spacing * SQRT3 * 0.5 + (hash12(id2, "jz") - 0.5) * GRAVEL_LIMITS.spacing * 0.8;
@@ -41377,7 +43882,7 @@ function* planRiverGravelSteps({ hydrology: hydrology2, terrainFunctions: f10, c
         scale: scale5,
         scaleY,
         scaleZ,
-        yaw: hash12(id2, "yaw") * TAU25,
+        yaw: hash12(id2, "yaw") * TAU27,
         rank: patch2.rank + hash12(id2, "priority") * 1e-4,
         fadeRank: hash12(id2, "fade"),
         tint: 0.73 + hash12(id2, "color") * 0.46
@@ -41753,7 +44258,7 @@ function hash8(a, b, c2) {
   h = Math.imul(h ^ h >>> 15, 2221713035);
   return ((h ^ h >>> 16) >>> 0) / 4294967296;
 }
-var smooth27 = (a, b, v) => {
+var smooth28 = (a, b, v) => {
   const t = Math.max(0, Math.min(1, (v - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
@@ -41801,7 +44306,7 @@ function reedGeometry2(rand2) {
   for (let i = 0; i < 11; i++) {
     const a = rand2() * Math.PI * 2, r = 0.05 + 0.2 * Math.sqrt(rand2()), x = Math.cos(a) * r, z = Math.sin(a) * r, h = 0.72 + 0.28 * rand2(), lean = 0.05 + 0.08 * rand2();
     blade(out2, { x, z, angle: a, lean, h, w: 0.016, segments: 4, arch: 0.92, base: stem, tip: stemTip });
-    if (i < 6) for (const f10 of [0, Math.PI / 2]) blade(out2, { x: x + Math.cos(a) * lean * 0.9, z: z + Math.sin(a) * lean * 0.9, angle: a, lean: 0.06, h: 0.17, w: 0.018, segments: 2, arch: 0.7, base: plume, tip: plumeTip, face: a + f10, y0: h * 0.88, taper: 0.3, tipScale: 0.4 });
+    if (i < 6) for (const f12 of [0, Math.PI / 2]) blade(out2, { x: x + Math.cos(a) * lean * 0.9, z: z + Math.sin(a) * lean * 0.9, angle: a, lean: 0.06, h: 0.17, w: 0.018, segments: 2, arch: 0.7, base: plume, tip: plumeTip, face: a + f12, y0: h * 0.88, taper: 0.3, tipScale: 0.4 });
   }
   for (let i = 0; i < 9; i++) {
     const a = rand2() * Math.PI * 2, r = 0.04 + 0.15 * rand2();
@@ -41819,7 +44324,7 @@ function cattailGeometry(rand2) {
     const a = rand2() * Math.PI * 2, r = 0.03 + 0.1 * rand2(), x = Math.cos(a) * r, z = Math.sin(a) * r, h = 0.86 + 0.16 * rand2(), lean = 0.03 + 0.04 * rand2();
     blade(out2, { x, z, angle: a, lean, h, w: 0.012, segments: 3, arch: 0.95, base: stem, tip: stem });
     const hx = x + Math.cos(a) * lean * 0.82, hz = z + Math.sin(a) * lean * 0.82;
-    for (const f10 of [0, Math.PI / 3, Math.PI * 2 / 3]) blade(out2, { x: hx, z: hz, angle: a, lean: 5e-3, h: 0.11, w: 0.024, segments: 2, arch: 0.5, base: head2, tip: headTip, face: a + f10, y0: h * 0.78, taper: 0, tipScale: 0.8 });
+    for (const f12 of [0, Math.PI / 3, Math.PI * 2 / 3]) blade(out2, { x: hx, z: hz, angle: a, lean: 5e-3, h: 0.11, w: 0.024, segments: 2, arch: 0.5, base: head2, tip: headTip, face: a + f12, y0: h * 0.78, taper: 0, tipScale: 0.8 });
     blade(out2, { x: hx, z: hz, angle: a, lean: 4e-3, h: 0.08, w: 6e-3, segments: 1, arch: 0.5, base: stem, tip: stem, y0: h * 0.78 + 0.11, taper: 0.5 });
   }
   return finish(out2, 1.15);
@@ -41986,7 +44491,7 @@ function deadTreeGeometry(rand2, variant) {
   trunk.radii[1] *= 1.2;
   tube5(trunk.points, trunk.radii, 7);
   const along = (path, t) => {
-    const f10 = t * (path.points.length - 1), i = Math.min(path.points.length - 2, Math.floor(f10)), u = f10 - i;
+    const f12 = t * (path.points.length - 1), i = Math.min(path.points.length - 2, Math.floor(f12)), u = f12 - i;
     return { p: path.points[i].clone().lerp(path.points[i + 1], u), r: path.radii[i] + (path.radii[i + 1] - path.radii[i]) * u, d: path.points[i + 1].clone().sub(path.points[i]).normalize() };
   };
   const limbs = snapped ? 2 + Math.floor(rand2() * 3) : 4 + Math.floor(rand2() * 4);
@@ -42041,8 +44546,8 @@ function plantMaterial(kind, uniforms) {
   return material2;
 }
 function boardwalkPath(world2, marsh) {
-  const W = MARSH_FLORA.walk, f10 = world2.terrainFunctions, sampler = world2.worldModel?.sampler, poly = marsh.polygon, L3 = marsh.level;
-  if (!sampler?.marshDistance || !poly?.length || !f10?.height) return null;
+  const W = MARSH_FLORA.walk, f12 = world2.terrainFunctions, sampler = world2.worldModel?.sampler, poly = marsh.polygon, L4 = marsh.level;
+  if (!sampler?.marshDistance || !poly?.length || !f12?.height) return null;
   const salt = marsh.index * 977, angle = hash8(marsh.index, 3, 401 + salt) * Math.PI, dx = Math.cos(angle), dz = Math.sin(angle);
   let cx = 0, cz = 0;
   for (const q of poly) {
@@ -42097,10 +44602,10 @@ function boardwalkPath(world2, marsh) {
     carry = d - (along - W.span);
   }
   for (const q of points) {
-    q.ground = f10.height(q.x, q.z);
-    q.y = Math.max(L3 + W.above, q.ground + W.ground);
+    q.ground = f12.height(q.x, q.z);
+    q.y = Math.max(L4 + W.above, q.ground + W.ground);
   }
-  for (let pass = 0; pass < 3; pass++) for (let i = 1; i + 1 < points.length; i++) points[i].y = Math.max(points[i].y, (points[i - 1].y + points[i + 1].y) / 2 - 0.05, L3 + W.above);
+  for (let pass = 0; pass < 3; pass++) for (let i = 1; i + 1 < points.length; i++) points[i].y = Math.max(points[i].y, (points[i - 1].y + points[i + 1].y) / 2 - 0.05, L4 + W.above);
   return points;
 }
 function walkIndex(points) {
@@ -42175,8 +44680,8 @@ function boardwalkGeometry(points, salt, level) {
   return { geometry: g, decks: colliders };
 }
 function* placeMarsh(world2, marsh, out2) {
-  const S = MARSH_FLORA, f10 = world2.terrainFunctions, sampler = world2.worldModel?.sampler, L3 = marsh.level, b = marsh.bounds;
-  if (!b || !f10?.height || !sampler?.marshDistance) return;
+  const S = MARSH_FLORA, f12 = world2.terrainFunctions, sampler = world2.worldModel?.sampler, L4 = marsh.level, b = marsh.bounds;
+  if (!b || !f12?.height || !sampler?.marshDistance) return;
   const x0 = b.minX - S.edge - 12, x1 = b.maxX + S.edge + 12, z0 = b.minZ - S.edge - 12, z1 = b.maxZ + S.edge + 12, s = S.spacing;
   const gx0 = Math.floor(x0 / s), gx1 = Math.ceil(x1 / s), gz0 = Math.floor(z0 / s), gz1 = Math.ceil(z1 / s), salt = marsh.index * 977;
   const plants = [], pads = [], spots = [], W = S.walk;
@@ -42189,14 +44694,14 @@ function* placeMarsh(world2, marsh, out2) {
       const x = (gx + 0.15 + 0.7 * hash8(gx, gz, 11 + salt)) * s, z = (gz + 0.15 + 0.7 * hash8(gx, gz, 12 + salt)) * s;
       const d = sampler.marshDistance(x, z);
       if (d < -S.edge) continue;
-      const y = f10.height(x, z), e = y - L3, r = hash8(gx, gz, 13 + salt);
+      const y = f12.height(x, z), e = y - L4, r = hash8(gx, gz, 13 + salt);
       const bed = vnoise(x / 26 + 3.1, z / 26 - 1.7, 31 + salt) * 0.7 + vnoise(x / 6.5, z / 6.5, 32 + salt) * 0.3;
       let type = -1, scale5 = 1;
-      const reeds = smooth27(S.beds[0], S.beds[1], bed);
+      const reeds = smooth28(S.beds[0], S.beds[1], bed);
       if (d > 10) {
         if (e < -S.open) {
           if (e > -0.9 && r < 0.5 * vnoise(x / 9 + 7.3, z / 9, 33 + salt) ** 1.5) {
-            pads.push(x, L3 + 0.012, z, 0.2 + 0.26 * hash8(gx, gz, 14 + salt), hash8(gx, gz, 15 + salt));
+            pads.push(x, L4 + 0.012, z, 0.2 + 0.26 * hash8(gx, gz, 14 + salt), hash8(gx, gz, 15 + salt));
           }
         } else if (e < -S.shallow) {
           if (r < 0.04 + 0.82 * reeds) {
@@ -42264,7 +44769,7 @@ function* placeMarsh(world2, marsh, out2) {
   const wantInside = Math.round(area / 1e4 * D.inside);
   for (let k = 0, placed2 = 0; k < spots.length / 4 && placed2 < wantInside; k++) {
     const i = Math.floor(hash8(k, 66, salt) * (spots.length / 4)) * 4, x = spots[i], y = spots[i + 1], z = spots[i + 2];
-    if (hash8(k, 70, salt) > 0.12 + 0.88 * smooth27(0.42, 0.7, vnoise(x / D.groves + 5.3, z / D.groves - 2.1, 71 + salt))) continue;
+    if (hash8(k, 70, salt) > 0.12 + 0.88 * smooth28(0.42, 0.7, vnoise(x / D.groves + 5.3, z / D.groves - 2.1, 71 + salt))) continue;
     if (!clear(x, z, D.spacing * 1.3)) continue;
     plantDead(x, y, z, 1e3 + k, true);
     placed2++;
@@ -42279,8 +44784,8 @@ function* placeMarsh(world2, marsh, out2) {
       if (d < D.band[0] || d > D.band[1]) continue;
       const t = d < 0 ? 1 - d / D.band[0] : 1;
       if (hash8(gx, gz, 69 + salt) > chance * (0.35 + 0.65 * t)) continue;
-      const y = f10.height(x, z);
-      if (!(y > L3 - 0.45) || world2.hydrology?.waterAt?.(x, z, y)?.kind === "stream" || (f10.slope?.(x, z) ?? 0) > 0.7 || !landmarksClear(x, z) || !clear(x, z, D.spacing)) continue;
+      const y = f12.height(x, z);
+      if (!(y > L4 - 0.45) || world2.hydrology?.waterAt?.(x, z, y)?.kind === "stream" || (f12.slope?.(x, z) ?? 0) > 0.7 || !landmarksClear(x, z) || !clear(x, z, D.spacing)) continue;
       plantDead(x, y, z, gx * 7919 + gz * 104729, false);
     }
     if (performance.now() - started > S.budgetMs) {
@@ -42299,13 +44804,13 @@ function* placeMarsh(world2, marsh, out2) {
     }
     for (let j = 0; j < logs.length && !near; j += 6) if ((logs[j] - x) ** 2 + (logs[j + 2] - z) ** 2 < 100) near = true;
     if (near || walkDistance(x, z) < W.deadClear + 5.5) continue;
-    const len3 = 5 + 5 * hash8(k, 92, salt), yaw2 = hash8(k, 93, salt) * Math.PI * 2, y = Math.max(spots[i + 1], L3 - 0.18);
+    const len3 = 5 + 5 * hash8(k, 92, salt), yaw2 = hash8(k, 93, salt) * Math.PI * 2, y = Math.max(spots[i + 1], L4 - 0.18);
     logs.push(x, y + 0.08, z, len3, yaw2, (hash8(k, 94, salt) - 0.5) * 0.06);
   }
   out2.snags = new Float32Array(snags);
   out2.logs = new Float32Array(logs);
   yield;
-  out2.walkMesh = walk ? boardwalkGeometry(walk, salt, L3) : null;
+  out2.walkMesh = walk ? boardwalkGeometry(walk, salt, L4) : null;
   yield;
   out2.cells = bucketPlants(out2, salt);
   out2.ready = true;
@@ -42686,13 +45191,13 @@ var climate = (world2, x, z, y) => vegetationClimate(world2.terrainFunctions, x,
 var rockDetailColor;
 var rockDetailNormal;
 function plantWindCode(height2) {
-  const tree = height2 > 4, f10 = (v) => v.toFixed(6), bend = tree ? 0.022 : 0.06, period = tree ? 3.6 : 2.4, flutter = tree ? 0.04 : 0.03;
+  const tree = height2 > 4, f12 = (v) => v.toFixed(6), bend = tree ? 0.022 : 0.06, period = tree ? 3.6 : 2.4, flutter = tree ? 0.04 : 0.03;
   return `#ifdef USE_INSTANCING
 mat4 plantToWorld=modelMatrix*instanceMatrix;vec2 plantRoot=plantToWorld[3].xz;
 float plantPhase=fract(sin(dot(plantRoot,vec2(12.9898,78.233)))*43758.5453)*6.283185;
-float plantUp=clamp(position.y/${f10(height2)},0.,1.),plantTall=length(plantToWorld[1].xyz)*${f10(height2)};
-vec2 plantSway=meadowSway(plantRoot,plantPhase,${f10(period)},meadowWind,meadowTime)*(plantTall*${f10(bend)}*plantUp*plantUp)
- +vec2(sin(meadowTime*6.981317+dot(position,vec3(2.9,1.3,2.1))*${tree ? "1." : "4."}+plantPhase),sin(meadowTime*5.585054+dot(position,vec3(1.7,2.3,3.1))*${tree ? "1." : "4."}-plantPhase))*(${f10(flutter)}*(.25+meadowWind.z)*plantUp);
+float plantUp=clamp(position.y/${f12(height2)},0.,1.),plantTall=length(plantToWorld[1].xyz)*${f12(height2)};
+vec2 plantSway=meadowSway(plantRoot,plantPhase,${f12(period)},meadowWind,meadowTime)*(plantTall*${f12(bend)}*plantUp*plantUp)
+ +vec2(sin(meadowTime*6.981317+dot(position,vec3(2.9,1.3,2.1))*${tree ? "1." : "4."}+plantPhase),sin(meadowTime*5.585054+dot(position,vec3(1.7,2.3,3.1))*${tree ? "1." : "4."}-plantPhase))*(${f12(flutter)}*(.25+meadowWind.z)*plantUp);
 transformed+=inverse(mat3(plantToWorld))*vec3(plantSway.x,0.,plantSway.y);
 #endif
 `;
@@ -42934,11 +45439,11 @@ function* decorateChunkSteps(world2, c2, { deferSharedPublication = false } = {}
   c2.reservePreparationBytes?.(Math.ceil(max * density + 620 * density * cap) * 128);
   for (let i = 0; i < max * density; i++) {
     if (i && i % 32 === 0) yield "nature:grass-candidates";
-    let x = x0 + rng2(i, 201) * 64, z = z0 + rng2(i, 202) * 64, y = height2(x, z), local = climate(world2, x, z, y);
-    if (local.winter > 0.75 || slope2(x, z) > 0.9 || rng2(i, 207) > vegetationCover(local) / cap || y < 0.8 || world2.hydrology?.waterAt(x, z, y) || world2.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear * 0.38)) continue;
+    let x = x0 + rng2(i, 201) * 64, z = z0 + rng2(i, 202) * 64, y = height2(x, z), local2 = climate(world2, x, z, y);
+    if (local2.winter > 0.75 || slope2(x, z) > 0.9 || rng2(i, 207) > vegetationCover(local2) / cap || y < 0.8 || world2.hydrology?.waterAt(x, z, y) || world2.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear * 0.38)) continue;
     const patch2 = noise7(x * 0.13 + 2, z * 0.13), scale5 = 1.2 + rng2(i, 205) * 1.3;
     if (patch2 < 0.37) continue;
-    const p = { x, y: y - 0.025, z, scale: scale5 * (1 + local.meadow * 0.35), rot: rng2(i, 206) * Math.PI * 2, color: local.dry > 0.5 ? 13022867 : 16777215 };
+    const p = { x, y: y - 0.025, z, scale: scale5 * (1 + local2.meadow * 0.35), rot: rng2(i, 206) * Math.PI * 2, color: local2.dry > 0.5 ? 13022867 : 16777215 };
     (i % 4 === 0 ? grass : tall).push(p);
   }
   yield* instancesSteps(world2, c2, "grass", grass.filter((p, i) => i % 5 === 0), false);
@@ -42946,9 +45451,9 @@ function* decorateChunkSteps(world2, c2, { deferSharedPublication = false } = {}
   yield* addMeadowSteps(world2, c2, b, rng2, density, { deferSharedPublication });
   for (let i = 0; i < 620 * density * cap; i++) {
     if (i && i % 128 === 0) yield "nature:shrub-candidates";
-    const x = x0 + rng2(i, 220) * 64, z = z0 + rng2(i, 221) * 64, y = height2(x, z), patch2 = noise7(x * 0.1 + 3, z * 0.1), local = climate(world2, x, z, y);
-    if (local.winter > 0.7 || slope2(x, z) > 0.72 || rng2(i, 225) > vegetationCover(local) / cap * (1 - local.dry * 0.8) || y < 1 || world2.hydrology?.waterAt(x, z, y) || patch2 < 0.42 || world2.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear * 0.5)) continue;
-    if (local.meadow > 0 && rng2(i, 226) > 1 - local.meadow * 0.9 * (1 - smoothstep01((noise7(x * 0.031 + 11, z * 0.031 - 7) - 0.58) / 0.16))) continue;
+    const x = x0 + rng2(i, 220) * 64, z = z0 + rng2(i, 221) * 64, y = height2(x, z), patch2 = noise7(x * 0.1 + 3, z * 0.1), local2 = climate(world2, x, z, y);
+    if (local2.winter > 0.7 || slope2(x, z) > 0.72 || rng2(i, 225) > vegetationCover(local2) / cap * (1 - local2.dry * 0.8) || y < 1 || world2.hydrology?.waterAt(x, z, y) || patch2 < 0.42 || world2.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear * 0.5)) continue;
+    if (local2.meadow > 0 && rng2(i, 226) > 1 - local2.meadow * 0.9 * (1 - smoothstep01((noise7(x * 0.031 + 11, z * 0.031 - 7) - 0.58) / 0.16))) continue;
     shrubs.push({ x, y: y - 0.02, z, scale: 1.6 + rng2(i, 223) * 2.5, rot: rng2(i, 224) * Math.PI * 2 });
   }
   yield* instancesSteps(world2, c2, "shrub", shrubs, true);
@@ -43177,15 +45682,15 @@ function* addMeadowSteps(world2, c2, b, rng2, density, { deferSharedPublication 
       if (patch2 < 0.34 || world2.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear * 0.28)) continue;
       const y = height2(x, z);
       if (y < 0.8 || world2.hydrology?.waterAt(x, z, y)) continue;
-      const local = climate(world2, x, z, y);
-      if (rng2(i, 335) > vegetationCover(local) / cap || patch2 < 0.34 + local.dry * 0.22 || slope2(x, z) > 0.95) continue;
+      const local2 = climate(world2, x, z, y);
+      if (rng2(i, 335) > vegetationCover(local2) / cap || patch2 < 0.34 + local2.dry * 0.22 || slope2(x, z) > 0.95) continue;
       count++;
     }
   } else {
     for (let i = 0; i < max; i++) {
       if (i && i % 128 === 0) yield "nature:meadow-count";
-      const x = c2.cx * 64 + rng2(i, 330) * 64, z = c2.cz * 64 + rng2(i, 331) * 64, y = height2(x, z), patch2 = noise7(x * 0.14 + 4, z * 0.14), local = climate(world2, x, z, y);
-      if (rng2(i, 335) > vegetationCover(local) / cap || slope2(x, z) > 0.95 || y < 0.8 || world2.hydrology?.waterAt(x, z, y) || patch2 < 0.34 + local.dry * 0.22 || world2.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear * 0.28)) continue;
+      const x = c2.cx * 64 + rng2(i, 330) * 64, z = c2.cz * 64 + rng2(i, 331) * 64, y = height2(x, z), patch2 = noise7(x * 0.14 + 4, z * 0.14), local2 = climate(world2, x, z, y);
+      if (rng2(i, 335) > vegetationCover(local2) / cap || slope2(x, z) > 0.95 || y < 0.8 || world2.hydrology?.waterAt(x, z, y) || patch2 < 0.34 + local2.dry * 0.22 || world2.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear * 0.28)) continue;
       if (planned) {
         count++;
         continue;
@@ -43193,7 +45698,7 @@ function* addMeadowSteps(world2, c2, b, rng2, density, { deferSharedPublication 
       const scale5 = 0.28 + Math.pow(rng2(i, 333), 1.25) * 0.9;
       dummy4.position.set(x, y - 0.015, z);
       dummy4.rotation.set(0, rng2(i, 334) * 6.28, 0);
-      dummy4.scale.set(scale5 * (0.8 + rng2(i, 336) * 0.45), scale5 * (1 + local.meadow * 0.4), scale5);
+      dummy4.scale.set(scale5 * (0.8 + rng2(i, 336) * 0.45), scale5 * (1 + local2.meadow * 0.4), scale5);
       dummy4.updateMatrix();
       mesh2.setMatrixAt(count++, dummy4.matrix);
     }
@@ -43257,7 +45762,7 @@ async function refreshRockQuality(world2) {
 
 // eye-adaptation.js
 var EYE_ADAPTATION = Object.freeze({
-  revision: "eye-adaptation-v1",
+  revision: "eye-adaptation-v2",
   // Measured cells across the view and taps per cell (n x n).
   grid: Object.freeze([48, 27]),
   taps: 3,
@@ -43271,34 +45776,44 @@ var EYE_ADAPTATION = Object.freeze({
   // Key: the log-mean luminance of an ordinary open view by day (linear HDR,
   // after the sky's own exposure), which this leaves unchanged.
   key: 0.065,
-  // Share of the difference the eye makes up (1 all of it).
-  strength: 0.58,
+  // Share of the difference the eye makes up (1 all of it). v95: more by day
+  // (.58 was hard to notice), with wider day limits below.
+  strength: 0.7,
   // Seconds (time constants) to get brighter (dark adaptation, slow) and
   // darker (light adaptation, faster); a dead band (log2 steps) in which it
   // barely moves, so small changes while looking round do not sway it.
-  brighten: 3.2,
-  darken: 1.1,
+  brighten: 4,
+  darken: 1.4,
   deadBand: Object.freeze([0.07, 0.32]),
+  // v95: the sky near the sun's place on screen counts this many times more
+  // (falling off over this many view heights), so the eye narrows when the
+  // sun is in view: the land darkens a little and the glare round the sun
+  // with it.
+  sunWeight: 6,
+  sunRadius: 0.15,
   // Exposure limits (darker, brighter) by day, at night and in the caves.
-  day: Object.freeze([0.75, 1.6]),
+  // v95: by day from .75-1.6 to .62-2.2 (a forest's shade brightens clearly as
+  // the eye gets used to it; the open and the sky ahead dim a little more).
+  day: Object.freeze([0.62, 2.2]),
   night: Object.freeze([0.8, 1.2]),
   cave: Object.freeze([0.8, 1.3])
 });
 var QUAD = "varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}";
-var f8 = (v) => Number(v).toFixed(6);
+var f10 = (v) => Number(v).toFixed(6);
 var E = EYE_ADAPTATION;
 var MEASURE = `
- varying vec2 vUv;uniform sampler2D colorBuffer;uniform sampler2D depthBuffer;uniform vec2 aspect;
+ varying vec2 vUv;uniform sampler2D colorBuffer;uniform sampler2D depthBuffer;uniform vec2 aspect;uniform vec3 sunScreen;
  void main(){
-  vec2 cell=vec2(${f8(1 / E.grid[0])},${f8(1 / E.grid[1])});vec2 origin=vUv-cell*.5;float sum=0.,sky=0.;
+  vec2 cell=vec2(${f10(1 / E.grid[0])},${f10(1 / E.grid[1])});vec2 origin=vUv-cell*.5;float sum=0.,sky=0.;
   for(int j=0;j<${E.taps};j++)for(int i=0;i<${E.taps};i++){
-   vec2 uv=origin+cell*(vec2(float(i),float(j))+.5)/${f8(E.taps)};
-   vec3 c=texture2D(colorBuffer,uv).rgb;float l=clamp(dot(c,vec3(.2126,.7152,.0722)),1e-4,${f8(E.key * E.highlight)});
+   vec2 uv=origin+cell*(vec2(float(i),float(j))+.5)/${f10(E.taps)};
+   vec3 c=texture2D(colorBuffer,uv).rgb;float l=clamp(dot(c,vec3(.2126,.7152,.0722)),1e-4,${f10(E.key * E.highlight)});
    sum+=log2(l);sky+=texture2D(depthBuffer,uv).r>.99999?1.:0.;
   }
-  float n=${f8(E.taps * E.taps)};
-  vec2 q=(vUv-.5)*aspect;float w=${f8(E.base)}+${f8(1 - E.base)}*exp(-dot(q,q)/${f8(E.radius * E.radius)});
-  w*=mix(1.,${f8(E.sky)},sky/n);
+  float n=${f10(E.taps * E.taps)};
+  vec2 q=(vUv-.5)*aspect;float w=${f10(E.base)}+${f10(1 - E.base)}*exp(-dot(q,q)/${f10(E.radius * E.radius)});
+  w*=mix(1.,${f10(E.sky)},sky/n);
+  vec2 ds=(vUv-sunScreen.xy)*aspect;w*=1.+${f10(E.sunWeight)}*sunScreen.z*exp(-dot(ds,ds)/${f10(E.sunRadius * E.sunRadius)})*sky/n;
   gl_FragColor=vec4(sum/n,w,0.,1.);
  }`;
 var REDUCE = `
@@ -43312,8 +45827,8 @@ var ADAPT = `
  uniform sampler2D measured;uniform sampler2D previous;uniform float dt;uniform float reset;
  void main(){
   float m=texelFetch(measured,ivec2(0),0).r,p=texelFetch(previous,ivec2(0),0).r;
-  float d=m-p,tau=d<0.?${f8(E.brighten)}:${f8(E.darken)};
-  float k=(1.-exp(-dt/tau))*mix(.06,1.,smoothstep(${f8(E.deadBand[0])},${f8(E.deadBand[1])},abs(d)));
+  float d=m-p,tau=d<0.?${f10(E.brighten)}:${f10(E.darken)};
+  float k=(1.-exp(-dt/tau))*mix(.06,1.,smoothstep(${f10(E.deadBand[0])},${f10(E.deadBand[1])},abs(d)));
   gl_FragColor=vec4(reset>.5?m:p+d*k,m,0.,1.);
  }`;
 var EYE_ADAPTATION_GLSL = `
@@ -43321,7 +45836,7 @@ var EYE_ADAPTATION_GLSL = `
  float eyeExposureFactor(){
   if(eyeExposure.z<.5)return 1.;
   float level=texelFetch(eyeAdapted,ivec2(0),0).r;
-  return clamp(exp2(${f8(E.strength)}*(${f8(Math.log2(E.key))}-level)),eyeExposure.x,eyeExposure.y);
+  return clamp(exp2(${f10(E.strength)}*(${f10(Math.log2(E.key))}-level)),eyeExposure.x,eyeExposure.y);
  }`;
 function eyeLimits(daylight, cave, out2 = [1, 1]) {
   if (cave) {
@@ -43345,7 +45860,7 @@ var EyeAdaptation = class {
     this.levels = [new WebGLRenderTarget(1, 1, opts), new WebGLRenderTarget(1, 1, opts)];
     this.current = 0;
     const material2 = (fragmentShader, uniforms) => new ShaderMaterial({ depthTest: false, depthWrite: false, uniforms, vertexShader: QUAD, fragmentShader });
-    this.measureUniforms = { colorBuffer: { value: colorTexture }, depthBuffer: { value: depthTexture }, aspect: { value: new Vector2(16 / 9, 1) } };
+    this.measureUniforms = { colorBuffer: { value: colorTexture }, depthBuffer: { value: depthTexture }, aspect: { value: new Vector2(16 / 9, 1) }, sunScreen: { value: new Vector3(0.5, 0.5, 0) } };
     this.measureMaterial = material2(MEASURE, this.measureUniforms);
     this.reduceMaterial = material2(REDUCE, { cells: { value: this.cells.texture } });
     this.adaptUniforms = { measured: { value: this.measured.texture }, previous: { value: this.levels[0].texture }, dt: { value: 0 }, reset: { value: 1 } };
@@ -43359,7 +45874,8 @@ var EyeAdaptation = class {
     this.stats = { updates: 0, resets: 0 };
   }
   // After the scene is drawn into the colour target: measure and adapt.
-  update(dt, { daylight = 1, cave = false, aspect = 16 / 9 } = {}) {
+  // sun: [x, y, weight] the sun's place on screen (0..1) and how much it is in view.
+  update(dt, { daylight = 1, cave = false, aspect = 16 / 9, sun = null } = {}) {
     const limits = eyeLimits(daylight, cave);
     this.uniforms.eyeExposure.value.set(limits[0], limits[1], this.enabled ? 1 : 0);
     if (!this.enabled) {
@@ -43368,6 +45884,8 @@ var EyeAdaptation = class {
     }
     const r = this.renderer, previousTarget = r.getRenderTarget();
     this.measureUniforms.aspect.value.set(aspect, 1);
+    if (sun) this.measureUniforms.sunScreen.value.set(sun[0], sun[1], cave ? 0 : sun[2]);
+    else this.measureUniforms.sunScreen.value.z = 0;
     const pass = (m, t) => {
       this.quad.material = m;
       r.setRenderTarget(t);
@@ -43419,11 +45937,14 @@ var ATMOSPHERE_LOOK = Object.freeze({
   shaftSamples: 24,
   shaftDecay: 0.955,
   // Sky luminance taken into the shafts (HDR, clamped) and how far around the
-  // sun on screen (Gaussian falloff in screen heights).
-  shaftSkyClamp: 6,
-  shaftSpread: 2.6
+  // sun on screen (Gaussian falloff in screen heights). v95: 6 and 2.6 made a
+  // wide white halo round the sun and a pale veil over the land below it
+  // (the sun's disk, taken in at 6, streamed out over everything); now the
+  // disk counts little more than the bright sky round it.
+  shaftSkyClamp: 2,
+  shaftSpread: 3.5
 });
-var SUN_SHAFTS = Object.freeze({ strength: 0.22 });
+var SUN_SHAFTS = Object.freeze({ strength: 0.12 });
 function sunShaftStrength(sunY, weather) {
   const s = MathUtils.smoothstep, rain = weather?.outsideRain || 0, cloud = weather?.cloud ?? 0.3, haze = weather?.outsideHaze || 0, fog = weather?.outsideFog || 0;
   const elevation = s(sunY, -0.03, 0.06) * (1 - 0.45 * s(sunY, 0.35, 0.85));
@@ -43446,8 +45967,10 @@ var VOLUMETRIC_LIGHT = Object.freeze({
   density: 0.01,
   height: 10,
   // Phase: share of the forward lobe (Henyey-Greenstein, g) and the rest even.
-  forward: 0.65,
-  g: 0.5,
+  // v95: .65 and .5 lit the air round the sun white when looking into it; the
+  // beams seen from the side are a little brighter, toward the sun 40% less.
+  forward: 0.6,
+  g: 0.38,
   // Trees (over 8 m) within this many metres: none and full shafts.
   forestRadius: 22,
   forestTrees: Object.freeze([3, 11])
@@ -43470,8 +45993,8 @@ var BLOOM = Object.freeze({
   strength: 0.1
 });
 var QUAD_VERTEX = "varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}";
-var L2 = ATMOSPHERE_LOOK;
-var f9 = (v) => Number(v).toFixed(6);
+var L3 = ATMOSPHERE_LOOK;
+var f11 = (v) => Number(v).toFixed(6);
 var Atmosphere = class {
   constructor(renderer, camera) {
     this.renderer = renderer;
@@ -43494,7 +46017,7 @@ var Atmosphere = class {
       legacyGrade: { value: 1 },
       shaftBuffer: { value: this.shaftTargets[0].texture },
       shaftColor: { value: new Vector3() },
-      vignette: { value: new Vector2(L2.vignette, L2.vignetteStart) },
+      vignette: { value: new Vector2(L3.vignette, L3.vignetteStart) },
       ...this.eye.uniforms,
       // A place's mood (v93, the marshes): x strength, y desaturation, z darkening; its haze colour and density (1/m).
       mood: { value: new Vector3(0, 0.5, 0.34) },
@@ -43610,13 +46133,13 @@ var Atmosphere = class {
    void main(){
     if(texture2D(depthBuffer,vUv).r<.99999){gl_FragColor=vec4(0.,0.,0.,1.);return;}
     vec3 c=texture2D(colorBuffer,vUv).rgb;vec2 d=(vUv-sun)*vec2(aspect,1.);
-    gl_FragColor=vec4(min(dot(c,vec3(.2126,.7152,.0722)),${f9(L2.shaftSkyClamp)})*exp(-dot(d,d)*${f9(L2.shaftSpread)}),0.,0.,1.);
+    gl_FragColor=vec4(min(dot(c,vec3(.2126,.7152,.0722)),${f11(L3.shaftSkyClamp)})*exp(-dot(d,d)*${f11(L3.shaftSpread)}),0.,0.,1.);
    }` });
     this.shaftBlur = new ShaderMaterial({ depthTest: false, depthWrite: false, uniforms: this.shaftUniforms, vertexShader: QUAD_VERTEX, fragmentShader: `
    varying vec2 vUv;uniform sampler2D source;uniform vec2 sun;uniform float span;
    void main(){
-    vec2 step=(sun-vUv)*(span/${f9(L2.shaftSamples)}),uv=vUv;float sum=0.,weight=1.,total=0.;
-    for(int i=0;i<${L2.shaftSamples};i++){sum+=texture2D(source,uv).r*weight;total+=weight;uv+=step;weight*=${f9(L2.shaftDecay)};}
+    vec2 step=(sun-vUv)*(span/${f11(L3.shaftSamples)}),uv=vUv;float sum=0.,weight=1.,total=0.;
+    for(int i=0;i<${L3.shaftSamples};i++){sum+=texture2D(source,uv).r*weight;total+=weight;uv+=step;weight*=${f11(L3.shaftDecay)};}
     gl_FragColor=vec4(sum/total,0.,0.,1.);
    }` });
     this.sunPoint = new Vector3();
@@ -43650,9 +46173,9 @@ var Atmosphere = class {
     float d=texture2D(depthBuffer,vUv).r;vec4 v=projectionInverse*vec4(vUv*2.-1.,d*2.-1.,1.);vec3 view=v.xyz/v.w;
     vec3 ray=(cameraWorld*vec4(view,1.)).xyz-eye;float len=length(ray);ray/=max(len,1e-4);
     float end=min(len,reach.y),dt=end/steps,j=ign(gl_FragCoord.xy),sum=0.,shade=0.;
-    for(int i=0;i<${Math.max(...Object.values(V5.steps))};i++){if(float(i)>=steps)break;float t=(float(i)+j)*dt,w=(1.-smoothstep(reach.x,reach.y,t))*exp(-max(ray.y*t,0.)*${f9(1 / V5.height)}),lit=sunlit(eye+ray*t);sum+=lit*w;shade+=(1.-lit)*w;}
-    float mu=dot(ray,sunDir),hg=${f9(1 - g * g)}/(12.566371*pow(max(${f9(1 + g * g)}-${f9(2 * g)}*mu,1e-4),1.5)),lit=sum*dt,shaded=shade*dt;
-    gl_FragColor=vec4(lit*shaded/max(lit+shaded,1e-3)*(${f9(V5.forward)}*hg+${f9((1 - V5.forward) / (4 * Math.PI))}),d<.99999?-view.z:1e4,0.,1.);
+    for(int i=0;i<${Math.max(...Object.values(V5.steps))};i++){if(float(i)>=steps)break;float t=(float(i)+j)*dt,w=(1.-smoothstep(reach.x,reach.y,t))*exp(-max(ray.y*t,0.)*${f11(1 / V5.height)}),lit=sunlit(eye+ray*t);sum+=lit*w;shade+=(1.-lit)*w;}
+    float mu=dot(ray,sunDir),hg=${f11(1 - g * g)}/(12.566371*pow(max(${f11(1 + g * g)}-${f11(2 * g)}*mu,1e-4),1.5)),lit=sum*dt,shaded=shade*dt;
+    gl_FragColor=vec4(lit*shaded/max(lit+shaded,1e-3)*(${f11(V5.forward)}*hg+${f11((1 - V5.forward) / (4 * Math.PI))}),d<.99999?-view.z:1e4,0.,1.);
    }` });
     this.volumetricBlur = new ShaderMaterial({ depthTest: false, depthWrite: false, uniforms: this.volumetricUniforms, vertexShader: QUAD_VERTEX, fragmentShader: `
    varying vec2 vUv;uniform sampler2D source;uniform vec2 direction;
@@ -43694,7 +46217,7 @@ var Atmosphere = class {
     const r = this.renderer.getDrawingBufferSize(new Vector2());
     this.target.setSize(r.x, r.y);
     this.uniforms.resolution.value.copy(r);
-    for (const t of this.shaftTargets) t.setSize(Math.max(1, Math.round(r.x * L2.shaftScale)), Math.max(1, Math.round(r.y * L2.shaftScale)));
+    for (const t of this.shaftTargets) t.setSize(Math.max(1, Math.round(r.x * L3.shaftScale)), Math.max(1, Math.round(r.y * L3.shaftScale)));
     const vw = Math.max(1, Math.round(r.x * VOLUMETRIC_LIGHT.scale)), vh = Math.max(1, Math.round(r.y * VOLUMETRIC_LIGHT.scale));
     for (const t of this.volumetricTargets) t.setSize(vw, vh);
     this.uniforms.volumetricSize.value.set(vw, vh);
@@ -43717,6 +46240,16 @@ var Atmosphere = class {
     const fade = MathUtils.smoothstep(facing, 0.05, 0.55);
     this.uniforms.shaftColor.value.set(s.color.r, s.color.g, s.color.b).multiplyScalar(s.strength * fade);
     return true;
+  }
+  // v95: the sun's place on screen and how much it is in view (for the eye).
+  sunScreen() {
+    const s = this.shafts;
+    if (!(s.strength > 1e-3)) return null;
+    this.camera.getWorldDirection(this.viewForward);
+    const facing = this.viewForward.dot(s.direction);
+    if (facing < 0.05) return null;
+    this.sunPoint.copy(s.direction).multiplyScalar(1e3).add(this.camera.position).project(this.camera);
+    return [this.sunPoint.x * 0.5 + 0.5, this.sunPoint.y * 0.5 + 0.5, MathUtils.smoothstep(facing, 0.05, 0.55)];
   }
   pass(material2, target) {
     this.quad.material = material2;
@@ -43812,7 +46345,7 @@ var Atmosphere = class {
     if (!(this.camera.position.distanceToSquared(this.cameraLast) < 900)) this.eye.reset();
     this.cameraLast.copy(this.camera.position);
     const res = this.uniforms.resolution.value;
-    this.eye.update(dt, { daylight, cave, aspect: res.y > 0 ? res.x / res.y : 16 / 9 });
+    this.eye.update(dt, { daylight, cave, aspect: res.y > 0 ? res.x / res.y : 16 / 9, sun: this.sunScreen() });
     if (this.shaftView()) {
       const [a, b] = this.shaftTargets;
       this.shaftUniforms.aspect.value = a.width / a.height;
@@ -43821,7 +46354,7 @@ var Atmosphere = class {
       this.shaftUniforms.span.value = 1;
       this.pass(this.shaftBlur, b);
       this.shaftUniforms.source.value = b.texture;
-      this.shaftUniforms.span.value = 1 / L2.shaftSamples;
+      this.shaftUniforms.span.value = 1 / L3.shaftSamples;
       this.pass(this.shaftBlur, a);
       this.shaftStats.drawn++;
     } else {
@@ -43866,7 +46399,7 @@ function paintTextures(kind) {
   requests.set(kind, { promise, resolve, done: false });
   try {
     if (!worker) {
-      worker = new Worker(new URL("./texture-paint-worker-KXEOKWKJ.js", import.meta.url), { type: "module" });
+      worker = new Worker(new URL("./texture-paint-worker-ZJKHHVZT.js", import.meta.url), { type: "module" });
       worker.onmessage = (event) => {
         reportWorker(WORKER_NAMES.paint, true);
         settle(event.data?.kind, event.data?.result);
@@ -43889,27 +46422,27 @@ function paintTextures(kind) {
 }
 
 // hand-tool-geometry.js
-var TAU26 = Math.PI * 2;
+var TAU28 = Math.PI * 2;
 var ARROW_LENGTH = 0.7;
 var TOOL_HEADS = Object.freeze({ axe: Object.freeze({ S: 1.75, T: 1.55, Y: 0.425 }), pickaxe: Object.freeze({ S: 1.45, T: 1.75, Y: 0.478 }) });
-var clamp36 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
-var mix12 = (a, b, t) => a + (b - a) * t;
-var smooth28 = (a, b, x) => {
-  const t = clamp36((x - a) / (b - a));
+var clamp38 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+var mix13 = (a, b, t) => a + (b - a) * t;
+var smooth29 = (a, b, x) => {
+  const t = clamp38((x - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
-var add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-var sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+var add2 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+var sub2 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 var scale3 = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
-var dot2 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-var cross6 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+var dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+var cross7 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 var len = (a) => Math.hypot(a[0], a[1], a[2]);
 var norm = (a) => {
   const l = len(a) || 1;
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 var hexRgb = (h) => [(h >> 16 & 255) / 255, (h >> 8 & 255) / 255, (h & 255) / 255].map((c2) => c2 <= 0.04045 ? c2 / 12.92 : ((c2 + 0.055) / 1.055) ** 2.4);
-function random2(seed) {
+function random4(seed) {
   let s = seed >>> 0;
   return () => {
     s = s + 1831565813 >>> 0;
@@ -43925,32 +46458,32 @@ function vnoise2(x, y, z, seed = 0) {
     n = Math.imul(n ^ n >>> 13, 1274126177);
     return ((n ^ n >>> 16) >>> 0) / 4294967296;
   };
-  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf), l = mix12;
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf), l = mix13;
   return l(l(l(h(xi, yi, zi), h(xi + 1, yi, zi), u), l(h(xi, yi + 1, zi), h(xi + 1, yi + 1, zi), u), v), l(l(h(xi, yi, zi + 1), h(xi + 1, yi, zi + 1), u), l(h(xi, yi + 1, zi + 1), h(xi + 1, yi + 1, zi + 1), u), v), w);
 }
 function spline(points, n) {
   const out2 = [];
   for (let i = 0; i < n; i++) {
-    const f10 = i / (n - 1) * (points.length - 1), k = Math.min(points.length - 2, Math.floor(f10)), t = f10 - k;
+    const f12 = i / (n - 1) * (points.length - 1), k = Math.min(points.length - 2, Math.floor(f12)), t = f12 - k;
     const p0 = points[Math.max(0, k - 1)], p1 = points[k], p2 = points[k + 1], p3 = points[Math.min(points.length - 1, k + 2)];
     out2.push([0, 1, 2].map((j) => 0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t * t + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t * t * t)));
   }
   return out2;
 }
-function frames(path, closed = false) {
-  const m = path.length, at = (i) => closed ? path[(i + m) % m] : path[clamp36(i, 0, m - 1)];
-  const tangents = path.map((p, i) => norm(sub(at(i + 1), at(i - 1))));
+function frames2(path, closed = false) {
+  const m = path.length, at = (i) => closed ? path[(i + m) % m] : path[clamp38(i, 0, m - 1)];
+  const tangents = path.map((p, i) => norm(sub2(at(i + 1), at(i - 1))));
   let n = Math.abs(tangents[0][1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
-  n = norm(cross6(cross6(tangents[0], n), tangents[0]));
+  n = norm(cross7(cross7(tangents[0], n), tangents[0]));
   return tangents.map((t, i) => {
     if (i) {
-      const t0 = tangents[i - 1], axis2 = cross6(t0, t), s = len(axis2);
+      const t0 = tangents[i - 1], axis2 = cross7(t0, t), s = len(axis2);
       if (s > 1e-6) {
-        const a = Math.atan2(s, dot2(t0, t)), k = norm(axis2);
-        n = add(add(scale3(n, Math.cos(a)), scale3(cross6(k, n), Math.sin(a))), scale3(k, dot2(k, n) * (1 - Math.cos(a))));
+        const a = Math.atan2(s, dot3(t0, t)), k = norm(axis2);
+        n = add2(add2(scale3(n, Math.cos(a)), scale3(cross7(k, n), Math.sin(a))), scale3(k, dot3(k, n) * (1 - Math.cos(a))));
       }
     }
-    return { t, n, b: cross6(t, n) };
+    return { t, n, b: cross7(t, n) };
   });
 }
 var Part = class {
@@ -43978,40 +46511,40 @@ var Part = class {
   }
 };
 function tube2(part2, path, radius, { sides = 8, uv, colour = () => [1, 1, 1], cap = null, shape = null }) {
-  const f10 = frames(path), lengths2 = [0];
-  for (let i = 1; i < path.length; i++) lengths2.push(lengths2[i - 1] + len(sub(path[i], path[i - 1])));
+  const f12 = frames2(path), lengths2 = [0];
+  for (let i = 1; i < path.length; i++) lengths2.push(lengths2[i - 1] + len(sub2(path[i], path[i - 1])));
   const total = lengths2.at(-1) || 1, rings2 = [];
   for (let i = 0; i < path.length; i++) {
     const t = lengths2[i] / total, ring2 = [];
     for (let j = 0; j <= sides; j++) {
-      const a = j / sides * TAU26, r = radius(t, a) * (shape ? shape(t, a) : 1), dir = add(scale3(f10[i].n, Math.cos(a)), scale3(f10[i].b, Math.sin(a)));
-      ring2.push(part2.vertex(add(path[i], scale3(dir, r)), dir, uv(t, j / sides, lengths2[i]), colour(t, a)));
+      const a = j / sides * TAU28, r = radius(t, a) * (shape ? shape(t, a) : 1), dir = add2(scale3(f12[i].n, Math.cos(a)), scale3(f12[i].b, Math.sin(a)));
+      ring2.push(part2.vertex(add2(path[i], scale3(dir, r)), dir, uv(t, j / sides, lengths2[i]), colour(t, a)));
     }
     rings2.push(ring2);
   }
   for (let i = 0; i < rings2.length - 1; i++) for (let j = 0; j < sides; j++) part2.quad(rings2[i][j], rings2[i][j + 1], rings2[i + 1][j + 1], rings2[i + 1][j]);
   if (cap) for (const end of [0, path.length - 1]) {
     if (!cap[end ? 1 : 0]) continue;
-    const dir = end ? f10[end].t : scale3(f10[end].t, -1), mid = add(path[end], scale3(dir, radius(end ? 1 : 0, 0) * 0.06)), c2 = part2.vertex(mid, dir, cap[end ? 1 : 0](0.5, 0.5), colour(end ? 1 : 0, 0));
+    const dir = end ? f12[end].t : scale3(f12[end].t, -1), mid = add2(path[end], scale3(dir, radius(end ? 1 : 0, 0) * 0.06)), c2 = part2.vertex(mid, dir, cap[end ? 1 : 0](0.5, 0.5), colour(end ? 1 : 0, 0));
     const ring2 = [];
     for (let j = 0; j <= sides; j++) {
-      const a = j / sides * TAU26, d = add(scale3(f10[end].n, Math.cos(a)), scale3(f10[end].b, Math.sin(a))), r = radius(end ? 1 : 0, a) * (shape ? shape(end ? 1 : 0, a) : 1);
-      ring2.push(part2.vertex(add(path[end], scale3(d, r)), norm(add(dir, scale3(d, 0.3))), cap[end ? 1 : 0](0.5 + Math.cos(a) * 0.47, 0.5 + Math.sin(a) * 0.47), colour(end ? 1 : 0, a)));
+      const a = j / sides * TAU28, d = add2(scale3(f12[end].n, Math.cos(a)), scale3(f12[end].b, Math.sin(a))), r = radius(end ? 1 : 0, a) * (shape ? shape(end ? 1 : 0, a) : 1);
+      ring2.push(part2.vertex(add2(path[end], scale3(d, r)), norm(add2(dir, scale3(d, 0.3))), cap[end ? 1 : 0](0.5 + Math.cos(a) * 0.47, 0.5 + Math.sin(a) * 0.47), colour(end ? 1 : 0, a)));
     }
     for (let j = 0; j < sides; j++) end ? part2.tri(c2, ring2[j], ring2[j + 1]) : part2.tri(c2, ring2[j + 1], ring2[j]);
   }
   return rings2;
 }
 function loop(part2, points, r, { sides = 6, colour = () => [1, 1, 1] } = {}) {
-  const f10 = frames(points, true), m = points.length, rings2 = [];
+  const f12 = frames2(points, true), m = points.length, rings2 = [];
   let length = 0;
   for (let i = 0; i <= m; i++) {
     const k = i % m;
-    if (i) length += len(sub(points[k], points[i - 1]));
+    if (i) length += len(sub2(points[k], points[i - 1]));
     const ring2 = [];
     for (let j = 0; j <= sides; j++) {
-      const a = j / sides * TAU26, dir = add(scale3(f10[k].n, Math.cos(a)), scale3(f10[k].b, Math.sin(a)));
-      ring2.push(part2.vertex(add(points[k], scale3(dir, r)), dir, [j / sides, length / 0.02], colour(i / m)));
+      const a = j / sides * TAU28, dir = add2(scale3(f12[k].n, Math.cos(a)), scale3(f12[k].b, Math.sin(a)));
+      ring2.push(part2.vertex(add2(points[k], scale3(dir, r)), dir, [j / sides, length / 0.02], colour(i / m)));
     }
     rings2.push(ring2);
   }
@@ -44023,10 +46556,10 @@ function surface2(part2, rows, cols, at, { outward = null, flip = false } = {}) 
     const row2 = [];
     for (let j = 0; j <= cols; j++) {
       const u = j / cols, v = i / rows, q = at(u, v);
-      const tu = sub(at(Math.min(1, u + du), v).p, at(Math.max(0, u - du), v).p), tv = sub(at(u, Math.min(1, v + dv)).p, at(u, Math.max(0, v - dv)).p);
-      let n = norm(cross6(tu, tv));
+      const tu = sub2(at(Math.min(1, u + du), v).p, at(Math.max(0, u - du), v).p), tv = sub2(at(u, Math.min(1, v + dv)).p, at(u, Math.max(0, v - dv)).p);
+      let n = norm(cross7(tu, tv));
       if (!Number.isFinite(n[0]) || len(n) < 0.5) n = outward ? norm(outward(q.p)) : [0, 1, 0];
-      if (outward && dot2(n, outward(q.p)) < 0) n = scale3(n, -1);
+      if (outward && dot3(n, outward(q.p)) < 0) n = scale3(n, -1);
       if (flip) n = scale3(n, -1);
       row2.push(part2.vertex(q.p, n, q.uv || [u, v], q.c || [1, 1, 1], q.k || [0, 0]));
     }
@@ -44036,34 +46569,34 @@ function surface2(part2, rows, cols, at, { outward = null, flip = false } = {}) 
   for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) {
     const a = ids2[i][j], b = ids2[i][j + 1], c2 = ids2[i + 1][j + 1], d = ids2[i + 1][j];
     const pa = [0, 1, 2].map((k) => at3(a, k)), pb = [0, 1, 2].map((k) => at3(b, k)), pc = [0, 1, 2].map((k) => at3(c2, k)), pd = [0, 1, 2].map((k) => at3(d, k));
-    let face = cross6(sub(pb, pa), sub(pc, pa));
-    if (len(face) < 1e-12) face = cross6(sub(pc, pa), sub(pd, pa));
+    let face = cross7(sub2(pb, pa), sub2(pc, pa));
+    if (len(face) < 1e-12) face = cross7(sub2(pc, pa), sub2(pd, pa));
     const vn = [0, 1, 2].map((k) => N[a * 3 + k] + N[b * 3 + k] + N[c2 * 3 + k] + N[d * 3 + k]);
-    dot2(face, vn) >= 0 ? part2.quad(a, b, c2, d) : part2.quad(a, d, c2, b);
+    dot3(face, vn) >= 0 ? part2.quad(a, b, c2, d) : part2.quad(a, d, c2, b);
   }
   return ids2;
 }
 function lathe(part2, profile, { sides = 14, at = [0, 0, 0], colour = () => [1, 1, 1], k = () => [0, 0], wobble = 0, seed = 1, outward = null } = {}) {
   const m = profile.length - 1, mid = (profile[0][1] + profile[m][1]) / 2;
   return surface2(part2, m, sides, (u, v) => {
-    const f10 = v * m, i = Math.min(m - 1, Math.floor(f10)), t = f10 - i, r0 = mix12(profile[i][0], profile[i + 1][0], t), y = mix12(profile[i][1], profile[i + 1][1], t), a = u * TAU26;
+    const f12 = v * m, i = Math.min(m - 1, Math.floor(f12)), t = f12 - i, r0 = mix13(profile[i][0], profile[i + 1][0], t), y = mix13(profile[i][1], profile[i + 1][1], t), a = u * TAU28;
     const r = r0 * (1 + wobble * (vnoise2(Math.cos(a) * 2 + 3, Math.sin(a) * 2, y * 40, seed) - 0.5));
     return { p: [at[0] + Math.cos(a) * r, at[1] + y, at[2] + Math.sin(a) * r], c: colour(v, a, y), k: k(v, a) };
   }, { outward: outward || ((p) => [p[0] - at[0], (p[1] - at[1] - mid) * 0.35, p[2] - at[2]]) });
 }
 function blob(part2, centre, radii, { rows = 10, cols = 16, colour = () => [1, 1, 1], k = () => [0, 0], lumps = 0, seed = 1 } = {}) {
   return surface2(part2, rows, cols, (u, v) => {
-    const a = u * TAU26, b = (v - 0.5) * Math.PI, dir = [Math.cos(b) * Math.cos(a), Math.sin(b), Math.cos(b) * Math.sin(a)];
+    const a = u * TAU28, b = (v - 0.5) * Math.PI, dir = [Math.cos(b) * Math.cos(a), Math.sin(b), Math.cos(b) * Math.sin(a)];
     const r = 1 + lumps * (vnoise2(dir[0] * 2.3 + 5, dir[1] * 2.3, dir[2] * 2.3, seed) - 0.5) * 2;
     const p = [centre[0] + dir[0] * radii[0] * r, centre[1] + dir[1] * radii[1] * r, centre[2] + dir[2] * radii[2] * r];
     return { p, c: colour(dir, p), k: k(dir) };
-  }, { outward: (p) => sub(p, centre) });
+  }, { outward: (p) => sub2(p, centre) });
 }
 function blade2(part2, base, dir, face, length, width, { colour = () => [1, 1, 1], k = () => [0, 0], curl = 0.25, fold: fold2 = 0.3, rows = 5, shape = (t) => Math.sin(Math.PI * Math.pow(t, 0.8)) } = {}) {
-  const d = norm(dir), side2 = norm(cross6(face, d)), n = norm(cross6(d, side2));
+  const d = norm(dir), side2 = norm(cross7(face, d)), n = norm(cross7(d, side2));
   return surface2(part2, rows, 2, (u, v) => {
     const w = (u - 0.5) * 2 * width * shape(v), along = v * length, bendBack = curl * v * v * length;
-    const p = add(add(add(base, scale3(d, along)), scale3(side2, w)), scale3(n, -bendBack + fold2 * Math.abs(w) * 0.6));
+    const p = add2(add2(add2(base, scale3(d, along)), scale3(side2, w)), scale3(n, -bendBack + fold2 * Math.abs(w) * 0.6));
     return { p, c: colour(v, u), k: k(v, u) };
   }, {});
 }
@@ -44134,25 +46667,25 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
   item.customProgramCacheKey = () => "hand-item-v91.2";
   const materials = { wood, cord, straw: straw2, stone, bowWood, item };
   const HAFT = { bottom: -0.17 };
-  const haftUv = () => (t, u) => [u, 1 - (0.25 + 0.75 * clamp36(t))];
+  const haftUv = () => (t, u) => [u, 1 - (0.25 + 0.75 * clamp38(t))];
   const endUv = (u, v) => [u, 1 - v * 0.25];
   function haft(parts, top, { radius = 0.021, seed = 1, topRadius = 0.019, butt = true, topCap = true } = {}) {
-    const rand2 = random2(seed), path = spline([[0, HAFT.bottom, 0], [2e-3 * (rand2() - 0.5), 0.05, 1e-3], [4e-3 * (rand2() - 0.5), 0.2, 2e-3 * (rand2() - 0.5)], [0, top, 0]], 30);
-    const knots = [[0.62, rand2() * TAU26], [0.84, rand2() * TAU26]];
-    const base = (y) => y < -0.13 ? mix12(radius * 1.22, radius * 1.04, smooth28(-0.17, -0.13, y)) : y < 0.12 ? radius * (1.02 + 0.02 * Math.sin(y * 40)) : mix12(radius, topRadius, smooth28(0.12, top, y));
+    const rand2 = random4(seed), path = spline([[0, HAFT.bottom, 0], [2e-3 * (rand2() - 0.5), 0.05, 1e-3], [4e-3 * (rand2() - 0.5), 0.2, 2e-3 * (rand2() - 0.5)], [0, top, 0]], 30);
+    const knots = [[0.62, rand2() * TAU28], [0.84, rand2() * TAU28]];
+    const base = (y) => y < -0.13 ? mix13(radius * 1.22, radius * 1.04, smooth29(-0.17, -0.13, y)) : y < 0.12 ? radius * (1.02 + 0.02 * Math.sin(y * 40)) : mix13(radius, topRadius, smooth29(0.12, top, y));
     const r = (t, a) => {
       let k = 1;
       for (const [kt, ka] of knots) k += 0.2 * Math.exp(-(((t - kt) / 0.025) ** 2)) * Math.max(0, Math.cos(a - ka)) ** 3;
-      return base(mix12(HAFT.bottom, top, t)) * k * (1 + 0.025 * (vnoise2(Math.cos(a) * 3, Math.sin(a) * 3, t * 30, seed) - 0.5));
+      return base(mix13(HAFT.bottom, top, t)) * k * (1 + 0.025 * (vnoise2(Math.cos(a) * 3, Math.sin(a) * 3, t * 30, seed) - 0.5));
     };
     const oval = (t, a) => 1 - 0.07 * Math.cos(2 * a);
     tube2(parts.wood, path, r, { sides: 16, uv: haftUv(), shape: oval, cap: [butt ? endUv : null, topCap ? endUv : null] });
-    return (y, phi) => r(clamp36((y - HAFT.bottom) / (top - HAFT.bottom)), -phi) * oval(0, -phi);
+    return (y, phi) => r(clamp38((y - HAFT.bottom) / (top - HAFT.bottom)), -phi) * oval(0, -phi);
   }
   function windings(parts, y0, y1, radiusAt, { seed = 3, r = 21e-4 } = {}) {
     const pitch2 = r * 2.08, turns = Math.max(1, (y1 - y0 - 2 * r) / pitch2), n = Math.ceil(turns * 16), path = [];
     for (let i = 0; i <= n; i++) {
-      const t = i / n, phi = t * turns * TAU26 + seed, y = y0 + r + t * turns * pitch2, rr = radiusAt(y, phi) + r * 0.8;
+      const t = i / n, phi = t * turns * TAU28 + seed, y = y0 + r + t * turns * pitch2, rr = radiusAt(y, phi) + r * 0.8;
       path.push([Math.cos(phi) * rr, y, Math.sin(phi) * rr]);
     }
     tube2(parts.cord, path, () => r, { sides: 6, uv: (t, u, l) => [u, l / 0.02], colour: (t) => {
@@ -44163,15 +46696,15 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
   function across2(parts, radiusAt, phi0, y0, phi1, y1, { r = 2e-3, n = 16 } = {}) {
     const path = [];
     for (let i = 0; i <= n; i++) {
-      const t = i / n, phi = mix12(phi0, phi1, t), y = mix12(y0, y1, t), rr = radiusAt(y, phi) + r * 0.75;
+      const t = i / n, phi = mix13(phi0, phi1, t), y = mix13(y0, y1, t), rr = radiusAt(y, phi) + r * 0.75;
       path.push([Math.cos(phi) * rr, y, Math.sin(phi) * rr]);
     }
     tube2(parts.cord, path, () => r, { sides: 6, uv: (t, u, l) => [u, l / 0.02], colour: () => [0.9, 0.89, 0.87] });
   }
   function knapped(parts, { outline, thickness, cols = 76, rows = 28, seed = 7, flakes = 16, retouch = 28, retouchAt = () => 1, cortexAt = () => 0, size = 1, wobble = 8e-4 * size, crest = 21e-5 * size }) {
-    const rand2 = random2(seed);
+    const rand2 = random4(seed);
     const tones = [3814963, 4406327, 5063741, 5917503, 5261893, 4078135].map(hexRgb), base = hexRgb(4603705), edge2 = hexRgb(9864819), cortex = hexRgb(12432027), cortexDark = hexRgb(10195067);
-    const at = (u, v) => outline.point(clamp36(u), clamp36(v));
+    const at = (u, v) => outline.point(clamp38(u), clamp38(v));
     const scars = [];
     for (const side2 of [-1, 1]) {
       const make = (kind) => {
@@ -44181,7 +46714,7 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
           const end = rand2() < (outline.endBias ?? 0.5) ? 1 : 0;
           u = end;
           v = 0.12 + rand2() * 0.76;
-          m = at(end ? 0.8 : 0.2, mix12(v, 0.5, 0.6));
+          m = at(end ? 0.8 : 0.2, mix13(v, 0.5, 0.6));
         } else {
           u = 0.04 + rand2() * 0.92;
           v = rand2() < 0.5 ? 0 : 1;
@@ -44193,7 +46726,7 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
         const mid = Math.max(2e-3, thickness(m[0], m[1], m[2])), slope2 = mid / reach;
         const tone = tones[Math.floor(rand2() * tones.length)], shade3 = 0.9 + rand2() * 0.2;
         if (kind === "flake") {
-          const w2 = clamp36((0.3 + 0.45 * rand2()) * reach, 7e-3 * size, 0.03 * size), s2 = slope2 * (0.55 + 0.33 * rand2());
+          const w2 = clamp38((0.3 + 0.45 * rand2()) * reach, 7e-3 * size, 0.03 * size), s2 = slope2 * (0.55 + 0.33 * rand2());
           return { side: side2, sx, sy, d, l: [-d[1], d[0]], s: s2, mu: 0.15 * s2 / reach, lambda: 0.5 * mid / (w2 * w2), z0: (rand2() - 0.6) * 5e-4 * size, colour: tone.map((c2) => c2 * shade3), rough: 0.34 + rand2() * 0.12 };
         }
         const w = (3e-3 + rand2() * 35e-4) * size, reachR = (4e-3 + rand2() * 5e-3) * size, s = slope2 * (0.4 + 0.2 * rand2());
@@ -44234,7 +46767,7 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
       if (!shadeToo) return { z };
       const colour = [0, 0, 0];
       let rough = 0;
-      const envColour = cortexMask > 0.3 ? cortexDark.map((c2, k) => mix12(c2, cortex[k], vnoise2(x * 300, y * 300, side2, 5))) : base;
+      const envColour = cortexMask > 0.3 ? cortexDark.map((c2, k) => mix13(c2, cortex[k], vnoise2(x * 300, y * 300, side2, 5))) : base;
       for (let i = 0; i <= scars.length; i++) {
         const w = heights[i] / sum;
         if (!w) continue;
@@ -44244,13 +46777,13 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
         colour[2] += c2[2] * w;
         rough += r * w;
       }
-      const chalk = heights[scars.length] / sum * smooth28(0.25, 0.5, cortexMask);
+      const chalk = heights[scars.length] / sum * smooth29(0.25, 0.5, cortexMask);
       return { z, colour, rough, chalk };
     };
-    const midline = (x, y, e) => wobble * Math.sin(x * 230 + seed) * Math.cos(y * 170 - seed * 0.7) * smooth28(0.45, 1, e);
+    const midline = (x, y, e) => wobble * Math.sin(x * 230 + seed) * Math.cos(y * 170 - seed * 0.7) * smooth29(0.45, 1, e);
     const sample2 = (u, v, side2, shadeToo = false) => {
-      const [x, y, e] = at(u, v), f10 = face(x, y, e, side2, shadeToo);
-      return { p: [x, y, side2 * f10.z + midline(x, y, e)], ...f10, e };
+      const [x, y, e] = at(u, v), f12 = face(x, y, e, side2, shadeToo);
+      return { p: [x, y, side2 * f12.z + midline(x, y, e)], ...f12, e };
     };
     const du = 0.3 / cols, dv = 0.3 / rows;
     for (const side2 of [-1, 1]) {
@@ -44259,13 +46792,13 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
         const row2 = [];
         for (let j = 0; j <= cols; j++) {
           const u = j / cols, v = i / rows, q = sample2(u, v, side2, true);
-          const tu = sub(sample2(u + du, v, side2).p, sample2(u - du, v, side2).p), tv = sub(sample2(u, v + dv, side2).p, sample2(u, v - dv, side2).p);
-          let n = norm(cross6(tu, tv));
+          const tu = sub2(sample2(u + du, v, side2).p, sample2(u - du, v, side2).p), tv = sub2(sample2(u, v + dv, side2).p, sample2(u, v - dv, side2).p);
+          let n = norm(cross7(tu, tv));
           if (n[2] * side2 < 0) n = scale3(n, -1);
           if (!Number.isFinite(n[0]) || len(n) < 0.5) n = [0, 0, side2];
-          const thin = smooth28(13e-4 * size, 3e-4 * size, q.z) * (1 - q.chalk);
-          const colour = q.colour.map((c2, k) => mix12(c2, edge2[k], thin * 0.5));
-          row2.push(parts.stone.vertex(q.p, n, [0, 0], colour, [mix12(q.rough, 0.92, smooth28(0.3, 0.7, q.chalk)), 0]));
+          const thin = smooth29(13e-4 * size, 3e-4 * size, q.z) * (1 - q.chalk);
+          const colour = q.colour.map((c2, k) => mix13(c2, edge2[k], thin * 0.5));
+          row2.push(parts.stone.vertex(q.p, n, [0, 0], colour, [mix13(q.rough, 0.92, smooth29(0.3, 0.7, q.chalk)), 0]));
         }
         ids2.push(row2);
       }
@@ -44339,11 +46872,11 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
       endBias: 0.8,
       // u along the blade (butt -> edge), v across (bottom -> top).
       point(u, v) {
-        const x = mix12(X0, X1, u), w = v * 2 - 1, scallop = 1 - 0.025 * (0.5 + 0.5 * Math.cos(u * TAU26 * 6.5 + (w > 0 ? 0 : 2.1)));
+        const x = mix13(X0, X1, u), w = v * 2 - 1, scallop = 1 - 0.025 * (0.5 + 0.5 * Math.cos(u * TAU28 * 6.5 + (w > 0 ? 0 : 2.1)));
         const butt = x < X0 + 0.016 ? Math.sqrt(Math.max(0.12, 1 - ((X0 + 0.016 - x) / 0.016) ** 2)) : 1;
-        const half = mix12(0.017, 0.04, smooth28(-0.04, 0.15, x)) * (x > 0.118 ? 1 + 0.18 * (x - 0.118) / 0.032 : 1) * scallop * butt;
-        const curve = x > 0.105 ? -w * w * 0.017 * smooth28(0.105, X1, x) : 0, nib = 7e-4 * Math.cos(v * TAU26 * 5.5) * smooth28(0.12, X1, x);
-        return [(x + curve + nib) * S, Y2 + w * half * (1 - 0.1 * u) * S, Math.max(Math.abs(w), smooth28(0.1, X1, x), smooth28(-0.03, X0, x))];
+        const half = mix13(0.017, 0.04, smooth29(-0.04, 0.15, x)) * (x > 0.118 ? 1 + 0.18 * (x - 0.118) / 0.032 : 1) * scallop * butt;
+        const curve = x > 0.105 ? -w * w * 0.017 * smooth29(0.105, X1, x) : 0, nib = 7e-4 * Math.cos(v * TAU28 * 5.5) * smooth29(0.12, X1, x);
+        return [(x + curve + nib) * S, Y2 + w * half * (1 - 0.1 * u) * S, Math.max(Math.abs(w), smooth29(0.1, X1, x), smooth29(-0.03, X0, x))];
       }
     };
     const stone2 = knapped(parts, {
@@ -44356,10 +46889,10 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
       size: S,
       thickness: (x, y, e) => {
         x /= S;
-        return (0.0138 * (1 - Math.pow(e, 1.7)) * mix12(1, 0.1, smooth28(0.02, 0.15, x)) + 12e-4 * (1 - e)) * T;
+        return (0.0138 * (1 - Math.pow(e, 1.7)) * mix13(1, 0.1, smooth29(0.02, 0.15, x)) + 12e-4 * (1 - e)) * T;
       },
       retouchAt: (u, v) => u > 0.62 ? 1 : 0.15,
-      cortexAt: (x, y, side2) => smooth28(-0.026, -0.042, x / S) * (side2 < 0 ? 0.9 : 0.5)
+      cortexAt: (x, y, side2) => smooth29(-0.026, -0.042, x / S) * (side2 < 0 ? 0.9 : 0.5)
     });
     const uAt = (x) => (x / S - X0) / (X1 - X0);
     windings(parts, 0.355, 0.389, radiusAt, { seed: 1 });
@@ -44375,14 +46908,14 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
   {
     const parts = buckets(), { S, T, Y: Y2 } = TOOL_HEADS.pickaxe, X0 = -0.086, X1 = 0.2, top = 0.53;
     const radiusAt = haft(parts, top, { seed: 12 });
-    const bend = (x) => -0.016 * smooth28(0.04, X1, x) ** 2;
+    const bend = (x) => -0.016 * smooth29(0.04, X1, x) ** 2;
     const outline = {
       ends: 0.12,
       endBias: 0.5,
       point(u, v) {
-        const x = mix12(X0, X1, u), w = v * 2 - 1, point5 = smooth28(0.07, X1, x) ** 1.5, scallop = 1 - 0.03 * (0.5 + 0.5 * Math.cos(u * TAU26 * 8 + (w > 0 ? 0.7 : 2.6)));
-        const half = mix12(0.022, 5e-3, point5) * (x < -0.06 ? 1 - 0.45 * smooth28(-0.06, X0, x) : 1) * scallop;
-        return [x * S, Y2 + (bend(x) + w * half) * S, Math.max(Math.abs(w), smooth28(0.172, X1, x), smooth28(-0.066, X0, x))];
+        const x = mix13(X0, X1, u), w = v * 2 - 1, point5 = smooth29(0.07, X1, x) ** 1.5, scallop = 1 - 0.03 * (0.5 + 0.5 * Math.cos(u * TAU28 * 8 + (w > 0 ? 0.7 : 2.6)));
+        const half = mix13(0.022, 5e-3, point5) * (x < -0.06 ? 1 - 0.45 * smooth29(-0.06, X0, x) : 1) * scallop;
+        return [x * S, Y2 + (bend(x) + w * half) * S, Math.max(Math.abs(w), smooth29(0.172, X1, x), smooth29(-0.066, X0, x))];
       }
     };
     const stone2 = knapped(parts, {
@@ -44395,10 +46928,10 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
       size: S,
       thickness: (x, y, e) => {
         x /= S;
-        return (0.0142 * (1 - Math.pow(e, 1.25)) * mix12(1, 0.4, smooth28(0.07, X1, x)) + 14e-4 * (1 - e)) * T;
+        return (0.0142 * (1 - Math.pow(e, 1.25)) * mix13(1, 0.4, smooth29(0.07, X1, x)) + 14e-4 * (1 - e)) * T;
       },
       retouchAt: (u, v) => u > 0.55 ? 1 : 0.2,
-      cortexAt: (x) => smooth28(-0.07, -0.086, x / S) * 0.7
+      cortexAt: (x) => smooth29(-0.07, -0.086, x / S) * 0.7
     });
     const uAt = (x) => (x / S - X0) / (X1 - X0);
     windings(parts, 0.413, 0.447, radiusAt, { seed: 4 });
@@ -44417,8 +46950,8 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
       parts.wood,
       path,
       (t, a) => {
-        const y = mix12(HAFT.bottom, 0.5, t);
-        return (y < 0.1 ? 0.021 : mix12(0.021, 0.05, smooth28(0.1, 0.42, y))) * (1 + 0.09 * Math.max(0, Math.sin(a * 3 + y * 20)) ** 4) * (y > 0.47 ? 1 - 0.5 * smooth28(0.47, 0.5, y) : 1);
+        const y = mix13(HAFT.bottom, 0.5, t);
+        return (y < 0.1 ? 0.021 : mix13(0.021, 0.05, smooth29(0.1, 0.42, y))) * (1 + 0.09 * Math.max(0, Math.sin(a * 3 + y * 20)) ** 4) * (y > 0.47 ? 1 - 0.5 * smooth29(0.47, 0.5, y) : 1);
       },
       { sides: 16, uv: haftUv(), cap: [endUv, endUv] }
     );
@@ -44430,29 +46963,29 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
     const parts = buckets(), top = 0.4, Y0 = 0.282, Y1 = 0.452, bands = [0.301, 0.368, 0.424];
     haft(parts, top, { seed: 13, radius: 0.0205, topRadius: 0.016, topCap: false });
     const profile = (y) => {
-      const t = clamp36((y - Y0) / (Y1 - Y0));
+      const t = clamp38((y - Y0) / (Y1 - Y0));
       let r = 0.0215 + 0.0105 * Math.sin(Math.PI * Math.min(1, t * 1.06)) ** 0.55;
       for (const b of bands) r -= 28e-4 * Math.exp(-(((y - b) / 65e-4) ** 2));
-      return r * (y > 0.438 ? 1 - 0.22 * smooth28(0.438, 0.458, y) : 1);
+      return r * (y > 0.438 ? 1 - 0.22 * smooth29(0.438, 0.458, y) : 1);
     };
-    const rand2 = random2(31);
+    const rand2 = random4(31);
     {
       const coreRows = 12, sides = 16, core = [];
       for (let i = 0; i <= coreRows; i++) {
-        const y = mix12(Y0, Y1 - 2e-3, i / coreRows), char = smooth28(0.425, 0.445, y), row2 = [];
+        const y = mix13(Y0, Y1 - 2e-3, i / coreRows), char = smooth29(0.425, 0.445, y), row2 = [];
         for (let j = 0; j <= sides; j++) {
-          const a = j / sides * TAU26, r = profile(y) * 0.93;
-          row2.push(parts.straw.vertex([Math.cos(a) * r, y, Math.sin(a) * r], [Math.cos(a), 0, Math.sin(a)], [j / sides, y / 0.16], [0.42, 0.37, 0.29].map((c2) => c2 * mix12(1, 0.16, char)), [char, 0]));
+          const a = j / sides * TAU28, r = profile(y) * 0.93;
+          row2.push(parts.straw.vertex([Math.cos(a) * r, y, Math.sin(a) * r], [Math.cos(a), 0, Math.sin(a)], [j / sides, y / 0.16], [0.42, 0.37, 0.29].map((c2) => c2 * mix13(1, 0.16, char)), [char, 0]));
         }
         core.push(row2);
       }
       for (let i = 0; i < coreRows; i++) for (let j = 0; j < sides; j++) parts.straw.quad(core[i][j], core[i + 1][j], core[i + 1][j + 1], core[i][j + 1]);
       const yTop = Y1 - 2e-3, rings2 = 5, ids2 = [parts.straw.vertex([0, yTop + 6e-3, 0], [0, 1, 0], [0.5, 0.5], [0.06, 0.05, 0.045], [1, 0])], ring2 = [];
       for (let i = 1; i <= rings2; i++) {
-        const f10 = i / rings2, row2 = [];
+        const f12 = i / rings2, row2 = [];
         for (let j = 0; j < sides; j++) {
-          const a = j / sides * TAU26, r = profile(yTop) * 0.93 * f10, y = yTop + 6e-3 * (1 - f10 * f10) + 25e-4 * (vnoise2(Math.cos(a) * 4 * f10, Math.sin(a) * 4 * f10, 0, 9) - 0.5);
-          row2.push(parts.straw.vertex([Math.cos(a) * r, y, Math.sin(a) * r], norm([Math.cos(a) * f10 * 0.8, 1, Math.sin(a) * f10 * 0.8]), [0.5 + Math.cos(a) * f10 * 0.4, 0.5 + Math.sin(a) * f10 * 0.4], [0.07, 0.055, 0.045].map((c2) => c2 * (0.8 + 0.4 * rand2())), [1, 0]));
+          const a = j / sides * TAU28, r = profile(yTop) * 0.93 * f12, y = yTop + 6e-3 * (1 - f12 * f12) + 25e-4 * (vnoise2(Math.cos(a) * 4 * f12, Math.sin(a) * 4 * f12, 0, 9) - 0.5);
+          row2.push(parts.straw.vertex([Math.cos(a) * r, y, Math.sin(a) * r], norm([Math.cos(a) * f12 * 0.8, 1, Math.sin(a) * f12 * 0.8]), [0.5 + Math.cos(a) * f12 * 0.4, 0.5 + Math.sin(a) * f12 * 0.4], [0.07, 0.055, 0.045].map((c2) => c2 * (0.8 + 0.4 * rand2())), [1, 0]));
         }
         ring2.push(row2);
       }
@@ -44464,24 +46997,24 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
     }
     for (const [count, layer, wMin, wMax, lift] of [[46, 0.972, 45e-4, 6e-3, -4e-3], [56, 1, 38e-4, 56e-4, 0]]) {
       for (let i = 0; i < count; i++) {
-        const a0 = (i + (layer < 1 ? 0 : 0.5)) / count * TAU26 + (rand2() - 0.5) * 0.06, twist = (rand2() - 0.5) * 0.14, w = mix12(wMin, wMax, rand2());
+        const a0 = (i + (layer < 1 ? 0 : 0.5)) / count * TAU28 + (rand2() - 0.5) * 0.06, twist = (rand2() - 0.5) * 0.14, w = mix13(wMin, wMax, rand2());
         const ya = Y0 + rand2() * 5e-3, yb = 0.447 + rand2() * 0.013 + lift, tone = 0.78 + rand2() * 0.3, u0 = rand2(), rows = 10, ids2 = [];
         for (let r = 0; r <= rows; r++) {
-          const s = r / rows, y = mix12(ya, yb, s), a = a0 + twist * s, out2 = [Math.cos(a), 0, Math.sin(a)], side2 = [-Math.sin(a), 0, Math.cos(a)];
-          const rr = profile(y) * layer + (rand2() - 0.5) * 5e-4, centre = add(scale3(out2, rr), [0, y, 0]), char = smooth28(0.427, 0.449, y), scorch = smooth28(0.395, 0.44, y);
-          const n = norm(add(out2, [0, (profile(y - 4e-3) - profile(y + 4e-3)) / 8e-3, 0]));
-          const tint4 = [tone * (1 - 0.25 * scorch), tone * 0.97 * (1 - 0.38 * scorch), tone * 0.92 * (1 - 0.5 * scorch)].map((c2) => c2 * mix12(1, 0.09, char));
-          ids2.push([parts.straw.vertex(add(centre, scale3(side2, -w)), n, [u0, y / 0.16], tint4, [char, 0]), parts.straw.vertex(add(centre, scale3(side2, w)), n, [u0 + 0.02, y / 0.16], tint4, [char, 0])]);
+          const s = r / rows, y = mix13(ya, yb, s), a = a0 + twist * s, out2 = [Math.cos(a), 0, Math.sin(a)], side2 = [-Math.sin(a), 0, Math.cos(a)];
+          const rr = profile(y) * layer + (rand2() - 0.5) * 5e-4, centre = add2(scale3(out2, rr), [0, y, 0]), char = smooth29(0.427, 0.449, y), scorch = smooth29(0.395, 0.44, y);
+          const n = norm(add2(out2, [0, (profile(y - 4e-3) - profile(y + 4e-3)) / 8e-3, 0]));
+          const tint4 = [tone * (1 - 0.25 * scorch), tone * 0.97 * (1 - 0.38 * scorch), tone * 0.92 * (1 - 0.5 * scorch)].map((c2) => c2 * mix13(1, 0.09, char));
+          ids2.push([parts.straw.vertex(add2(centre, scale3(side2, -w)), n, [u0, y / 0.16], tint4, [char, 0]), parts.straw.vertex(add2(centre, scale3(side2, w)), n, [u0 + 0.02, y / 0.16], tint4, [char, 0])]);
         }
         for (let r = 0; r < rows; r++) parts.straw.quad(ids2[r][0], ids2[r + 1][0], ids2[r + 1][1], ids2[r][1]);
       }
     }
     for (let i = 0; i < 8; i++) {
-      const a = rand2() * TAU26, y0 = 0.31 + rand2() * 0.1, lean = 0.18 + rand2() * 0.2, length = 0.014 + rand2() * 0.018, r0 = profile(y0) * 0.99, start2 = [Math.cos(a) * r0, y0, Math.sin(a) * r0];
+      const a = rand2() * TAU28, y0 = 0.31 + rand2() * 0.1, lean = 0.18 + rand2() * 0.2, length = 0.014 + rand2() * 0.018, r0 = profile(y0) * 0.99, start2 = [Math.cos(a) * r0, y0, Math.sin(a) * r0];
       const dir = norm([Math.cos(a) * Math.sin(lean), Math.cos(lean), Math.sin(a) * Math.sin(lean)]);
-      const path = [start2, add(start2, scale3(dir, length * 0.5)), add(start2, scale3(add(dir, [Math.cos(a) * 0.15, 0, Math.sin(a) * 0.15]), length))];
+      const path = [start2, add2(start2, scale3(dir, length * 0.5)), add2(start2, scale3(add2(dir, [Math.cos(a) * 0.15, 0, Math.sin(a) * 0.15]), length))];
       tube2(parts.straw, path, (t) => 11e-4 * (1 - t * 0.5), { sides: 3, uv: (t, u) => [u * 0.05 + rand2() * 0.9, t * 0.2], colour: (t) => {
-        const c2 = mix12(1, 0.3, smooth28(0.42, 0.45, y0 + t * length));
+        const c2 = mix13(1, 0.3, smooth29(0.42, 0.45, y0 + t * length));
         return [c2, c2 * 0.96, c2 * 0.88];
       } });
     }
@@ -44497,20 +47030,20 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
     tube2(parts.wood, shaft, () => 36e-4, { sides: 6, uv: (t, u) => [u * 0.25, 1 - (0.3 + 0.6 * t)] });
     const tip = x0 + length, base = tip - 0.045, flint = hexRgb(4866619), edge2 = hexRgb(9404784);
     surface2(parts.stone, 4, 8, (u, v) => {
-      const t = v, half = 85e-4 * Math.sin(Math.PI * Math.min(1, (1 - t) * 1.25)) * (t < 0.12 ? 0.7 + 2.5 * t : 1), a = u * TAU26, thick = 24e-4 * Math.sin(Math.PI * Math.min(1, (1 - t) * 1.1));
-      const p = [mix12(base, tip, t), y0 + Math.cos(a) * half, z0 + Math.sin(a) * thick];
-      return { p, c: flint.map((c2, k) => mix12(c2, edge2[k], smooth28(0.6, 1, Math.abs(Math.cos(a))) * 0.5)), k: [0.38, 0] };
+      const t = v, half = 85e-4 * Math.sin(Math.PI * Math.min(1, (1 - t) * 1.25)) * (t < 0.12 ? 0.7 + 2.5 * t : 1), a = u * TAU28, thick = 24e-4 * Math.sin(Math.PI * Math.min(1, (1 - t) * 1.1));
+      const p = [mix13(base, tip, t), y0 + Math.cos(a) * half, z0 + Math.sin(a) * thick];
+      return { p, c: flint.map((c2, k) => mix13(c2, edge2[k], smooth29(0.6, 1, Math.abs(Math.cos(a))) * 0.5)), k: [0.38, 0] };
     }, { outward: (p) => [0, p[1] - y0, p[2] - z0] });
     for (const [cx, w] of [[base - 6e-3, 0.012], [x0 + 0.012, 0.01]]) {
       const ring2 = [];
       for (let i = 0; i <= 10; i++) {
-        const t = i / 10, a = t * 2.5 * TAU26;
+        const t = i / 10, a = t * 2.5 * TAU28;
         ring2.push([cx - w / 2 + t * w, y0 + Math.cos(a) * 46e-4, z0 + Math.sin(a) * 46e-4]);
       }
       tube2(parts.cord, ring2, () => 12e-4, { sides: 5, uv: (t, u, l) => [u, l / 0.02], colour: () => [0.6, 0.5, 0.38] });
     }
     for (let i = 0; i < 3; i++) {
-      const a = i / 3 * TAU26 + 0.5, out2 = [0, Math.cos(a), Math.sin(a)];
+      const a = i / 3 * TAU28 + 0.5, out2 = [0, Math.cos(a), Math.sin(a)];
       const start2 = [x0 + 0.025, y0 + out2[1] * 36e-4, z0 + out2[2] * 36e-4];
       blade2(parts.straw, start2, [1, 0, 0], [0, -out2[2], out2[1]], 0.085, 75e-4, { curl: 0, fold: 0, rows: 4, shape: (t) => Math.sin(Math.PI * Math.pow(t, 0.6)) * (1 - 0.3 * t), colour: () => [0.86, 0.8, 0.62] });
     }
@@ -44521,8 +47054,8 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
     const parts = buckets(), { half, inner } = BOW;
     const s = (y) => Math.max(Math.abs(y) - inner, 0) / (half - inner);
     surface2(parts.bowWood, 34, 12, (u, v) => {
-      const y = (v - 0.5) * 2 * (half - 4e-3), q = s(y), a = u * TAU26;
-      const width = Math.abs(y) < inner ? 0.017 : mix12(0.0165, 62e-4, q ** 0.9), depth = Math.abs(y) < inner ? 0.015 : mix12(0.0105, 58e-4, q);
+      const y = (v - 0.5) * 2 * (half - 4e-3), q = s(y), a = u * TAU28;
+      const width = Math.abs(y) < inner ? 0.017 : mix13(0.0165, 62e-4, q ** 0.9), depth = Math.abs(y) < inner ? 0.015 : mix13(0.0105, 58e-4, q);
       const cx2 = BOW.restTip * q * q + (Math.abs(y) < inner ? 2e-3 : 0);
       return { p: [cx2 + Math.cos(a) * depth, y, Math.sin(a) * width], c: [1, 1, 1], uv: [u * 0.5, 1 - (0.32 + 0.5 * Math.abs(v - 0.5) * 2)] };
     }, { outward: (p) => [p[0] - BOW.restTip * s(p[1]) ** 2, 0, p[2]] });
@@ -44532,7 +47065,7 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
       blob(parts.bowWood, [cx(y), y, 0], [58e-4, 6e-3, 62e-4], { rows: 5, cols: 8 });
       const path = [];
       for (let i = 0; i <= 40; i++) {
-        const t = i / 40, yy = sign * (half - 0.03 + t * 0.018), a = t * 4 * TAU26;
+        const t = i / 40, yy = sign * (half - 0.03 + t * 0.018), a = t * 4 * TAU28;
         path.push([cx(yy) + Math.cos(a) * 68e-4, yy, Math.sin(a) * 74e-4]);
       }
       tube2(parts.bowWood, path, () => 14e-4, { sides: 5, uv: (t, u) => [u * 0.1, 0.55], colour: () => [0.42, 0.34, 0.25] });
@@ -44564,7 +47097,7 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
   const nockPoint = new THREE.Vector3(), restPoint = new THREE.Vector3(...BOW.rest), alongX = new THREE.Vector3(1, 0, 0), arrowLine = new THREE.Vector3();
   const arrowTipPoint = new THREE.Vector3();
   function setBow({ draw = 0, arrow: showArrow = false, twang = 0 } = {}) {
-    draw = clamp36(draw);
+    draw = clamp38(draw);
     bowBend.value = BOW.bend * draw;
     const tipX = BOW.restTip - BOW.bend * draw, nockX = BOW.brace - BOW.drawLength * draw + twang, tipY = BOW.half - 0.012;
     nockPoint.set(nockX, BOW.nockY, 0);
@@ -44587,30 +47120,30 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
   const rgb = hexRgb, jitter = (c2, r, amount = 0.08) => c2.map((x) => x * (1 + (r() - 0.5) * amount));
   const itemBuilders = {
     twigs(parts) {
-      const r = random2(51);
+      const r = random4(51);
       for (let i = 0; i < 5; i++) {
         const lean = [(r() - 0.5) * 0.05, 0, (r() - 0.5) * 0.05], top = 0.2 + r() * 0.07, bottom = -0.07 - r() * 0.02, path = spline([[lean[0] * -0.3 + (r() - 0.5) * 0.012, bottom, (r() - 0.5) * 0.012], [(r() - 0.5) * 6e-3, 0.05, (r() - 0.5) * 6e-3], [lean[0], top, lean[2]]], 10);
-        tube2(parts.wood, path, (t) => mix12(75e-4, 45e-4, t) * (0.85 + r() * 0.3), { sides: 7, uv: (t, u) => [u * 0.4 + i * 0.17, 1 - (0.3 + 0.55 * t)], cap: [endUv, endUv] });
+        tube2(parts.wood, path, (t) => mix13(75e-4, 45e-4, t) * (0.85 + r() * 0.3), { sides: 7, uv: (t, u) => [u * 0.4 + i * 0.17, 1 - (0.3 + 0.55 * t)], cap: [endUv, endUv] });
         if (i % 2 === 0) {
-          const at = path[7], twig = spline([at, add(at, [(r() - 0.5) * 0.05, 0.045, (r() - 0.5) * 0.03])], 4);
+          const at = path[7], twig = spline([at, add2(at, [(r() - 0.5) * 0.05, 0.045, (r() - 0.5) * 0.03])], 4);
           tube2(parts.wood, twig, (t) => 25e-4 * (1 - t * 0.6), { sides: 5, uv: (t, u) => [u * 0.2, 1 - (0.4 + 0.3 * t)] });
         }
       }
     },
     grass(parts) {
-      const r = random2(52);
+      const r = random4(52);
       for (let i = 0; i < 28; i++) {
-        const a = r() * TAU26, rr = 4e-3 + r() * 0.011, base = [Math.cos(a) * rr, -0.06 - r() * 0.02, Math.sin(a) * rr], length = 0.24 + r() * 0.1, out2 = [Math.cos(a) * 0.35 + (r() - 0.5) * 0.2, 1, Math.sin(a) * 0.35 + (r() - 0.5) * 0.2];
+        const a = r() * TAU28, rr = 4e-3 + r() * 0.011, base = [Math.cos(a) * rr, -0.06 - r() * 0.02, Math.sin(a) * rr], length = 0.24 + r() * 0.1, out2 = [Math.cos(a) * 0.35 + (r() - 0.5) * 0.2, 1, Math.sin(a) * 0.35 + (r() - 0.5) * 0.2];
         blade2(parts.straw, base, out2, [Math.cos(a + 1.6), 0, Math.sin(a + 1.6)], length, 42e-4 + r() * 2e-3, { curl: 0.12 + r() * 0.25, fold: 0.2, rows: 6, shape: (t) => 1 - 0.85 * t, colour: (t) => [0.92, 0.9, 0.7].map((c2) => c2 * (0.8 + 0.25 * r()) * (1 - 0.15 * t)) });
       }
       windings(parts, 0.038, 0.052, () => 0.0135, { seed: 3, r: 16e-4 });
     },
     rocks(parts) {
       const grey = rgb(9078657), warm = rgb(10195332);
-      blob(parts.item, [0, 0.066, 0], [0.04, 0.034, 0.036], { rows: 10, cols: 16, lumps: 0.16, seed: 62, colour: (d) => grey.map((c2, k) => mix12(c2, warm[k], vnoise2(d[0] * 3, d[1] * 3, d[2] * 3, 63)) * (0.85 + 0.2 * vnoise2(d[0] * 9, d[1] * 9, d[2] * 9, 64))), k: () => [0.9, 0] });
+      blob(parts.item, [0, 0.066, 0], [0.04, 0.034, 0.036], { rows: 10, cols: 16, lumps: 0.16, seed: 62, colour: (d) => grey.map((c2, k) => mix13(c2, warm[k], vnoise2(d[0] * 3, d[1] * 3, d[2] * 3, 63)) * (0.85 + 0.2 * vnoise2(d[0] * 9, d[1] * 9, d[2] * 9, 64))), k: () => [0.9, 0] });
     },
     log(parts) {
-      const path = spline([[0, -0.07, 0], [2e-3, 0.12, 1e-3], [0, 0.3, 0]], 12), r = random2(53);
+      const path = spline([[0, -0.07, 0], [2e-3, 0.12, 1e-3], [0, 0.3, 0]], 12), r = random4(53);
       tube2(parts.wood, path, (t, a) => 0.04 * (1 + 0.05 * Math.sin(a * 3 + t * 9)) * (Math.sin(a) < -0.55 ? 0.72 : 1), {
         sides: 16,
         uv: (t, u) => [u, 1 - (0.25 + 0.75 * (0.9 + 0.08 * t))],
@@ -44622,7 +47155,7 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
       for (let k = 0; k < 4; k++) {
         const points = [], rr = 0.05 + k * 4e-3, tilt = (k - 1.5) * 0.12;
         for (let i = 0; i < 28; i++) {
-          const a = i / 28 * TAU26;
+          const a = i / 28 * TAU28;
           points.push([Math.sin(a) * rr * 0.85, 0.055 - Math.cos(a) * rr, Math.sin(a) * tilt * 0.1 + (k - 1.5) * 7e-3]);
         }
         loop(parts.cord, points, 42e-4, { sides: 6, colour: () => [0.9 - k * 0.04, 0.87 - k * 0.04, 0.8 - k * 0.04] });
@@ -44642,31 +47175,31 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
       for (const [dx, dy] of [[0, 0.17], [-0.016, 0.155], [0.016, 0.155]]) blob(parts.item, [dx, dy, 4e-3], [8e-3, 8e-3, 8e-3], { rows: 5, cols: 8, lumps: 0.3, seed: 65 + dx * 100, colour: () => rgb(14215679), k: () => [0.5, 0.55] });
     },
     crystal(parts) {
-      const r = random2(66), blue = rgb(6272472), light = rgb(12576501);
+      const r = random4(66), blue = rgb(6272472), light = rgb(12576501);
       for (let i = 0; i < 4; i++) {
         const a = i * 1.7 + r(), lean = [Math.cos(a) * (i ? 0.35 : 0.05), 1, Math.sin(a) * (i ? 0.35 : 0.05)], d = norm(lean), length = i ? 0.045 + r() * 0.02 : 0.08, w = i ? 9e-3 : 0.014, base = [Math.cos(a) * (i ? 0.012 : 0), 0.035, Math.sin(a) * (i ? 0.012 : 0)];
-        const sideA = norm(cross6(d, [0, 0, 1])), sideB = cross6(d, sideA);
+        const sideA = norm(cross7(d, [0, 0, 1])), sideB = cross7(d, sideA);
         surface2(parts.item, 3, 6, (u, v) => {
-          const ang = u * TAU26, rad = v < 0.75 ? w : w * (1 - (v - 0.75) / 0.25), along = v < 0.75 ? v / 0.75 * length : length + (v - 0.75) / 0.25 * w * 1.6;
-          const p = add(add(base, scale3(d, along)), add(scale3(sideA, Math.cos(ang) * rad), scale3(sideB, Math.sin(ang) * rad)));
-          return { p, c: blue.map((c2, k) => mix12(c2, light[k], 0.35 * Math.abs(Math.cos(ang * 3)))), k: [0.18, 0.35] };
-        }, { outward: (p) => sub(p, add(base, scale3(d, dot2(sub(p, base), d) * 0.6))) });
+          const ang = u * TAU28, rad = v < 0.75 ? w : w * (1 - (v - 0.75) / 0.25), along = v < 0.75 ? v / 0.75 * length : length + (v - 0.75) / 0.25 * w * 1.6;
+          const p = add2(add2(base, scale3(d, along)), add2(scale3(sideA, Math.cos(ang) * rad), scale3(sideB, Math.sin(ang) * rad)));
+          return { p, c: blue.map((c2, k) => mix13(c2, light[k], 0.35 * Math.abs(Math.cos(ang * 3)))), k: [0.18, 0.35] };
+        }, { outward: (p) => sub2(p, add2(base, scale3(d, dot3(sub2(p, base), d) * 0.6))) });
       }
     },
     shard(parts) {
       const gold = rgb(15320666), pale = rgb(16774084);
       surface2(parts.item, 1, 10, (u, v) => {
-        const a = u * TAU26, r = (Math.round(u * 10) % 2 ? 0.016 : 0.036) * (1 - v * 0.999), z = (1 - v) * 0 + v * 8e-3;
-        return { p: [Math.sin(a) * r, 0.075 + Math.cos(a) * r, z], c: gold.map((c2, k) => mix12(c2, pale[k], v)), k: [0.25, 0.9] };
+        const a = u * TAU28, r = (Math.round(u * 10) % 2 ? 0.016 : 0.036) * (1 - v * 0.999), z = (1 - v) * 0 + v * 8e-3;
+        return { p: [Math.sin(a) * r, 0.075 + Math.cos(a) * r, z], c: gold.map((c2, k) => mix13(c2, pale[k], v)), k: [0.25, 0.9] };
       }, { outward: () => [0, 0, 1] });
       surface2(parts.item, 1, 10, (u, v) => {
-        const a = u * TAU26, r = (Math.round(u * 10) % 2 ? 0.016 : 0.036) * (1 - v * 0.999);
+        const a = u * TAU28, r = (Math.round(u * 10) % 2 ? 0.016 : 0.036) * (1 - v * 0.999);
         return { p: [Math.sin(a) * r, 0.075 + Math.cos(a) * r, -v * 8e-3], c: gold, k: [0.25, 0.7] };
       }, { outward: () => [0, 0, -1] });
     },
     rot(parts) {
       const dark = rgb(4866608), mould = rgb(8223322);
-      blob(parts.item, [0, 0.06, 0], [0.036, 0.028, 0.032], { lumps: 0.3, seed: 67, colour: (d) => dark.map((c2, k) => mix12(c2, mould[k], smooth28(0.55, 0.8, vnoise2(d[0] * 6, d[1] * 6, d[2] * 6, 68)))), k: () => [0.95, 0] });
+      blob(parts.item, [0, 0.06, 0], [0.036, 0.028, 0.032], { lumps: 0.3, seed: 67, colour: (d) => dark.map((c2, k) => mix13(c2, mould[k], smooth29(0.55, 0.8, vnoise2(d[0] * 6, d[1] * 6, d[2] * 6, 68)))), k: () => [0.95, 0] });
     },
     berries(parts) {
       sprig(parts, rgb(12855354), false);
@@ -44713,7 +47246,7 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
     bedroll(parts) {
       const path = spline([[0, -0.13, 0], [0, 0.05, 0], [0, 0.23, 0]], 12);
       tube2(parts.straw, path, (t, a) => {
-        const y = mix12(-0.13, 0.23, t);
+        const y = mix13(-0.13, 0.23, t);
         return 0.043 - 9e-3 * Math.exp(-((y / 0.02) ** 2)) + 15e-4 * Math.sin(a * 9 + y * 60);
       }, { sides: 16, uv: (t, u) => [u * 2, t * 1.4], cap: [(u, v) => [u, v], (u, v) => [u, v]], colour: () => [0.95, 0.92, 0.82] });
       for (const y of [-0.085, 0.185]) windings(parts, y - 8e-3, y + 8e-3, () => 0.0435, { seed: 5 + y * 10, r: 18e-4 });
@@ -44725,7 +47258,7 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
     },
     arrow(parts) {
       for (const [i, dz] of [[0, -6e-3], [1, 6e-3], [2, 0]]) {
-        const r = random2(70 + i), group = buckets();
+        const r = random4(70 + i), group = buckets();
         arrow(group, { at: [0, 0, 0], length: 0.62 });
         const turn = new THREE.Matrix4().makeRotationZ(Math.PI / 2 + (i - 1) * 0.07).setPosition((i - 1) * 6e-3, -0.16, dz);
         for (const [key3, part2] of Object.entries(group)) appendTransformed(parts[key3], part2, turn);
@@ -44737,17 +47270,17 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
     tube2(parts.item, stem, () => 26e-4, { sides: 5, uv: () => [0, 0], colour: () => rgb(5214010) });
     blade2(parts.item, stem[4], [0.8, 0.5, 0.3], [0, 0, 1], 0.04, 0.011, { colour: () => rgb(6265414), curl: 0.2 });
     for (let i = 0; i < count; i++) {
-      const a = i / count * TAU26;
+      const a = i / count * TAU28;
       blade2(parts.item, head2, [Math.cos(a), Math.sin(a), 0.35], [0, 0, 1], size, size * 0.42, { colour: (t) => petal2.map((c2) => c2 * (0.85 + 0.2 * t)), curl: -0.08, fold: 0.1, k: () => [0.55, 0] });
     }
-    blob(parts.item, add(head2, [0, 0, 4e-3]), [6e-3, 6e-3, 4e-3], { rows: 5, cols: 8, colour: () => centre, k: () => [0.6, 0] });
+    blob(parts.item, add2(head2, [0, 0, 4e-3]), [6e-3, 6e-3, 4e-3], { rows: 5, cols: 8, colour: () => centre, k: () => [0.6, 0] });
   }
   function sprig(parts, berry, cooked) {
-    const r = random2(cooked ? 72 : 71), stem = spline([[0, -0.06, 0], [2e-3, 0.05, 0], [-3e-3, 0.12, 4e-3]], 10);
-    tube2(parts.wood, stem, (t) => mix12(35e-4, 2e-3, t), { sides: 5, uv: (t, u) => [u * 0.2, 1 - (0.4 + 0.3 * t)] });
+    const r = random4(cooked ? 72 : 71), stem = spline([[0, -0.06, 0], [2e-3, 0.05, 0], [-3e-3, 0.12, 4e-3]], 10);
+    tube2(parts.wood, stem, (t) => mix13(35e-4, 2e-3, t), { sides: 5, uv: (t, u) => [u * 0.2, 1 - (0.4 + 0.3 * t)] });
     if (!cooked) for (const [i, a] of [[3, 0.9], [6, -1.1]]) blade2(parts.item, stem[i], [Math.cos(a), 0.6, 0.3], [0, 0, 1], 0.038, 0.012, { colour: () => rgb(6265414), curl: 0.25, k: () => [0.6, 0] });
     for (let i = 0; i < 7; i++) {
-      const at = add(stem[6 + i % 4], [(r() - 0.5) * 0.03, (r() - 0.5) * 0.025 + 6e-3, 6e-3 + (r() - 0.5) * 0.01]), size = cooked ? 85e-4 : 0.0105 + r() * 2e-3;
+      const at = add2(stem[6 + i % 4], [(r() - 0.5) * 0.03, (r() - 0.5) * 0.025 + 6e-3, 6e-3 + (r() - 0.5) * 0.01]), size = cooked ? 85e-4 : 0.0105 + r() * 2e-3;
       blob(parts.item, at, [size, size * 1.05, size], { rows: 7, cols: 10, lumps: cooked ? 0.25 : 0.08, seed: 73 + i, colour: (d) => jitter(berry, r, 0.1).map((c2) => c2 * (0.8 + 0.35 * (d[1] * 0.5 + 0.5))), k: () => [cooked ? 0.6 : 0.28, 0] });
     }
   }
@@ -44759,7 +47292,7 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
       seed: 74,
       colour: (v, a, y) => {
         let c2 = orange.map((x) => x * (0.85 + 0.15 * Math.sin(y * 260 + a * 2) ** 2));
-        if (cooked) c2 = c2.map((x, k) => mix12(x, char[k], 0.55 * smooth28(0.6, 1, Math.sin(y * 70 + a) ** 8)));
+        if (cooked) c2 = c2.map((x, k) => mix13(x, char[k], 0.55 * smooth29(0.6, 1, Math.sin(y * 70 + a) ** 8)));
         return c2;
       },
       k: () => [cooked ? 0.65 : 0.5, 0]
@@ -44777,9 +47310,9 @@ totalEmissiveRadiance += vec3(1.6, .55, .12) * smoothstep(.22, .55, tlEmber) * v
       lumps: 0.14,
       seed: 75,
       colour: (d, p) => {
-        const streak = smooth28(0.55, 0.7, Math.abs(Math.sin(p[1] * 90 + p[0] * 40)));
-        let c2 = flesh.map((x, k) => mix12(x, fat[k], streak * (cooked ? 0.25 : 0.45)));
-        if (cooked) c2 = c2.map((x) => x * (0.7 + 0.4 * smooth28(0.3, 0.7, vnoise2(d[0] * 8, d[1] * 8, d[2] * 8, 76))));
+        const streak = smooth29(0.55, 0.7, Math.abs(Math.sin(p[1] * 90 + p[0] * 40)));
+        let c2 = flesh.map((x, k) => mix13(x, fat[k], streak * (cooked ? 0.25 : 0.45)));
+        if (cooked) c2 = c2.map((x) => x * (0.7 + 0.4 * smooth29(0.3, 0.7, vnoise2(d[0] * 8, d[1] * 8, d[2] * 8, 76))));
         return c2;
       },
       k: () => [cooked ? 0.62 : 0.34, 0]
@@ -44870,17 +47403,17 @@ var FOREARM = 0.25;
 var UPPER = 0.3;
 var CUFF = 0.032;
 var SKIN = { roughness: 0.56, sheen: 0.35 };
-var smooth29 = (x) => {
+var smooth30 = (x) => {
   x = Math.max(0, Math.min(1, x));
   return x * x * (3 - 2 * x);
 };
 function bareHandPlacement(THREE, side2, pose, haft, gripForearm = GRIP_FOREARM) {
   const m = new THREE.Matrix4();
   if (pose === "open") {
-    const f10 = OPEN[side2], V5 = new THREE.Vector3(...f10.V).normalize(), N0 = new THREE.Vector3(...f10.N).normalize();
+    const f12 = OPEN[side2], V5 = new THREE.Vector3(...f12.V).normalize(), N0 = new THREE.Vector3(...f12.N).normalize();
     const U = new THREE.Vector3().crossVectors(V5, N0).normalize(), N = new THREE.Vector3().crossVectors(U, V5).normalize();
     m.makeBasis(U, V5, N);
-    const [u, v, n] = f10.wrist;
+    const [u, v, n] = f12.wrist;
     m.setPosition(U.clone().multiplyScalar(u).addScaledVector(V5, v).addScaledVector(N, n));
     return m;
   }
@@ -44941,7 +47474,7 @@ function createBareArms(THREE, meshes, { quality = "high", gripForearm = GRIP_FO
     }
     return { skin, sleeve, frame: frame3 };
   }
-  const poses = { right: { grip: build("right", "grip"), relaxed: build("right", "relaxed"), open: build("right", "open") }, left: { open: build("left", "open"), grip: build("left", "grip") } };
+  const poses = { right: { grip: build("right", "grip"), relaxed: build("right", "relaxed"), fist: build("right", "fist"), open: build("right", "open") }, left: { open: build("left", "open"), grip: build("left", "grip") } };
   const rigs = {};
   for (const side2 of ["right", "left"]) {
     const group = groups[side2], bones = [new THREE.Bone(), new THREE.Bone(), new THREE.Bone()];
@@ -45039,7 +47572,7 @@ function createBareArms(THREE, meshes, { quality = "high", gripForearm = GRIP_FO
   };
 }
 function prepareFrame(THREE, { wrist, elbow, shoulder }) {
-  const up7 = new THREE.Vector3(0, 1, 0), unit = new THREE.Vector3(1, 1, 1);
+  const up7 = new THREE.Vector3(0, 1, 0), unit2 = new THREE.Vector3(1, 1, 1);
   const forearm = elbow.clone().sub(wrist), upper = shoulder.clone().sub(elbow);
   return {
     wrist,
@@ -45051,8 +47584,8 @@ function prepareFrame(THREE, { wrist, elbow, shoulder }) {
     up: upper.clone().normalize(),
     inverses: [
       new THREE.Matrix4(),
-      new THREE.Matrix4().compose(wrist, new THREE.Quaternion().setFromUnitVectors(up7, forearm.clone().normalize()), unit).invert(),
-      new THREE.Matrix4().compose(elbow, new THREE.Quaternion().setFromUnitVectors(up7, upper.clone().normalize()), unit).invert()
+      new THREE.Matrix4().compose(wrist, new THREE.Quaternion().setFromUnitVectors(up7, forearm.clone().normalize()), unit2).invert(),
+      new THREE.Matrix4().compose(elbow, new THREE.Quaternion().setFromUnitVectors(up7, upper.clone().normalize()), unit2).invert()
     ]
   };
 }
@@ -45067,7 +47600,7 @@ function skinWeights(THREE, geometry3, frame3) {
       const d2 = q.copy(frame3.elbow).addScaledVector(frame3.up, t2).distanceTo(p);
       if (d2 < d1) along = frame3.foreLength + t2;
     }
-    const arm = smooth29((along - 6e-3) / 0.06), upper = smooth29((along - (frame3.foreLength - 0.05)) / 0.1);
+    const arm = smooth30((along - 6e-3) / 0.06), upper = smooth30((along - (frame3.foreLength - 0.05)) / 0.1);
     indices[i * 4] = 0;
     indices[i * 4 + 1] = 1;
     indices[i * 4 + 2] = 2;
@@ -45145,13 +47678,13 @@ float bareNoise(vec3 p) { vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. 
 }
 
 // hand-motion.js
-var smooth30 = (x) => x * x * (3 - 2 * x);
+var smooth31 = (x) => x * x * (3 - 2 * x);
 var TIP = { pickaxe: [0.29, 0.455, 0], axe: [0.258, 0.425, 0], club: [0.014, 0.5, 0], torch: [0, 0.448, 0] };
 var SLANT = { pickaxe: 0.5, axe: 0.5, club: 0.45, torch: 0.42 };
-var SHOULDER2 = [0.24, -0.3, 0.05];
+var SHOULDER3 = [0.24, -0.3, 0.05];
 var TARGET = [0.065, -0.075, -1.11];
 var CONTACT_LEAN = 0.68;
-var clamp37 = (x) => Math.max(0, Math.min(1, x));
+var clamp39 = (x) => Math.max(0, Math.min(1, x));
 function track(points, times, loop2 = false) {
   const tangents = points.map(() => [0, 0, 0]);
   if (loop2) {
@@ -45170,7 +47703,7 @@ function sample(track2, t, out2) {
   const { points, times, tangents } = track2;
   let i = 0;
   while (i < points.length - 2 && t > times[i + 1]) i++;
-  const span = times[i + 1] - times[i], u = clamp37((t - times[i]) / span), u2 = u * u, u3 = u2 * u;
+  const span = times[i + 1] - times[i], u = clamp39((t - times[i]) / span), u2 = u * u, u3 = u2 * u;
   const a = 2 * u3 - 3 * u2 + 1, b = u3 - 2 * u2 + u, c2 = -2 * u3 + 3 * u2, d = u3 - u2;
   for (let k = 0; k < 3; k++) out2.setComponent(k, a * points[i][k] + b * span * tangents[i][k] + c2 * points[i + 1][k] + d * span * tangents[i + 1][k]);
 }
@@ -45187,7 +47720,7 @@ function createHandMotion(THREE, { rightBaseQuaternion, leftBaseQuaternion, righ
   const slants = /* @__PURE__ */ Object.create(null);
   for (const weapon of Object.keys(SLANT)) for (let alternate = 0; alternate < 2; alternate++) {
     const contact = alternate ? 0.6226 : 0.6364, times = [0, contact * 0.5, contact, contact + (1 - contact) * 0.42, 1], a = SLANT[weapon] + (alternate ? 0.08 : 0);
-    const shoulder = new THREE.Vector3(...SHOULDER2), target = new THREE.Vector3(...TARGET);
+    const shoulder = new THREE.Vector3(...SHOULDER3), target = new THREE.Vector3(...TARGET);
     const up7 = new THREE.Vector3(Math.sin(a), Math.cos(a), 0.3).normalize(), ahead = target.clone().sub(shoulder).normalize();
     const axis2 = new THREE.Vector3().crossVectors(up7, ahead).normalize();
     const sweep2 = up7.angleTo(ahead), hit = up7.clone().applyAxisAngle(axis2, sweep2 * CONTACT_LEAN), after = up7.clone().applyAxisAngle(axis2, sweep2 * CONTACT_LEAN + 1.2);
@@ -45209,13 +47742,13 @@ function createHandMotion(THREE, { rightBaseQuaternion, leftBaseQuaternion, righ
     const positions = [[0, 0, 0], [0.065, 0.04, 0.025], contactOffset, [-0.13, -0.15, -0.06], [0, 0, 0]];
     (attacks[weapon] ??= [])[alternate] = { position: track(positions, times), rotation: track(rotations, times) };
   }
-  const frames3 = [
+  const frames4 = [
     { side: 1, base: rightBaseQuaternion, V: [-86661e-7, 0.9997265, 0.0217214], N: [-0.3704601, -0.0233864, 0.9285539] },
     { side: -1, base: leftBaseQuaternion, V: [-0.02, 0.36, -0.9327], N: [-0.295, -0.866, -0.404] }
   ];
   const m = new THREE.Matrix4(), u = new THREE.Vector3(), v = new THREE.Vector3(), n = new THREE.Vector3(), inverse2 = new THREE.Quaternion();
   const swimTimes = [0, 0.2, 0.52, 0.76, 1];
-  for (const frame3 of frames3) {
+  for (const frame3 of frames4) {
     v.fromArray(frame3.V).normalize();
     n.fromArray(frame3.N).normalize();
     u.crossVectors(v, n).normalize();
@@ -45239,7 +47772,7 @@ function createHandMotion(THREE, { rightBaseQuaternion, leftBaseQuaternion, righ
         const { turns, times } = slant;
         let i = 0;
         while (i < times.length - 2 && phase2 > times[i + 1]) i++;
-        const u2 = clamp37((phase2 - times[i]) / (times[i + 1] - times[i])), w = i === 1 ? u2 * (2 - u2) : i === 2 ? u2 * u2 * (3 - 2 * u2) : smooth30(u2);
+        const u2 = clamp39((phase2 - times[i]) / (times[i + 1] - times[i])), w = i === 1 ? u2 * (2 - u2) : i === 2 ? u2 * u2 * (3 - 2 * u2) : smooth31(u2);
         quaternion2.copy(turns[i]).slerp(turns[i + 1], w);
         return;
       }
@@ -45251,16 +47784,16 @@ function createHandMotion(THREE, { rightBaseQuaternion, leftBaseQuaternion, righ
     // Whether a tool swings on the slant (its yaw stays at rest: the hand turns it).
     slanted: (weapon) => !!SLANT[weapon],
     swim(side2, phase2, effort, offset, quaternion2) {
-      const frame3 = frames3[side2 === 1 ? 0 : 1];
+      const frame3 = frames4[side2 === 1 ? 0 : 1];
       phase2 = ((phase2 + (side2 < 0 ? 0.5 : 0)) % 1 + 1) % 1;
       sample(frame3.positions, phase2, offset);
-      const amplitude = 0.48 + 0.52 * clamp37(effort);
+      const amplitude = 0.48 + 0.52 * clamp39(effort);
       offset.x = side2 * 0.25 + (offset.x - side2 * 0.25) * amplitude;
       offset.y = -0.35 + (offset.y + 0.35) * amplitude;
       offset.z = -0.59 + (offset.z + 0.59) * amplitude;
       let i = 0;
       while (i < swimTimes.length - 2 && phase2 > swimTimes[i + 1]) i++;
-      const weight = smooth30((phase2 - swimTimes[i]) / (swimTimes[i + 1] - swimTimes[i]));
+      const weight = smooth31((phase2 - swimTimes[i]) / (swimTimes[i + 1] - swimTimes[i]));
       quaternion2.copy(frame3.rotations[i]).slerp(frame3.rotations[i + 1], weight);
     }
   };
@@ -45274,10 +47807,10 @@ var HAND_WEAPONS = Object.freeze([
   Object.freeze({ id: "torch", label: "松明" }),
   Object.freeze({ id: "bow", label: "弓" })
 ]);
-var TAU27 = Math.PI * 2;
-var clamp38 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
-var smooth31 = (x) => {
-  x = clamp38(x);
+var TAU29 = Math.PI * 2;
+var clamp40 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+var smooth32 = (x) => {
+  x = clamp40(x);
   return x * x * (3 - 2 * x);
 };
 var ACTIONS = Object.freeze({
@@ -45410,12 +47943,12 @@ function createHandTools(THREE, meshes, options = {}) {
         setActive(pending.index, pending.item);
         pending = null;
       }
-      lowered = switchTime < SWITCH.lower ? smooth31(switchTime / SWITCH.lower) : 1 - smooth31((switchTime - SWITCH.lower) / SWITCH.raise);
+      lowered = switchTime < SWITCH.lower ? smooth32(switchTime / SWITCH.lower) : 1 - smooth32((switchTime - SWITCH.lower) / SWITCH.raise);
       if (switchTime >= SWITCH.lower + SWITCH.raise && !pending) switchTime = -1;
     }
     const portrait = (world2?.camera?.aspect ?? options.aspect ?? 1.6) < 1, alive = !motion.dead;
     swimBlend += ((motion.swimming ? 1 : 0) - swimBlend) * (1 - Math.exp(-dt * 7));
-    const moving2 = motion.grounded !== false && (motion.speed || 0) > 0.15, gait = (motion.gaitPhase || 0) * TAU27;
+    const moving2 = motion.grounded !== false && (motion.speed || 0) > 0.15, gait = (motion.gaitPhase || 0) * TAU29;
     const gaitWeight = 1 - Math.exp(-dt * 10), bobTarget = moving2 ? Math.sin(gait * 2) * (motion.sprint ? 35e-4 : 3e-3) : Math.sin(time * 1.7) * 15e-4;
     bob += (bobTarget - bob) * gaitWeight;
     gaitSide += ((moving2 ? Math.sin(gait) * 2e-3 : 0) - gaitSide) * gaitWeight;
@@ -45447,7 +47980,7 @@ function createHandTools(THREE, meshes, options = {}) {
     }
     let swingTurn = 0;
     if (motion.attack) {
-      const phase2 = clamp38((motion.attackElapsed || 0) / (motion.attackDuration || 0.74));
+      const phase2 = clamp40((motion.attackElapsed || 0) / (motion.attackDuration || 0.74));
       const contact = motion.combo === 0 || motion.combo === 2 ? 0.6226 : 0.6364;
       swingTurn = phase2 <= contact ? Math.min(1, phase2 / (contact * 0.82)) : Math.max(0, 1 - (phase2 - contact) / (1 - contact));
       swingTurn = swingTurn * swingTurn * (3 - 2 * swingTurn);
@@ -45456,14 +47989,14 @@ function createHandTools(THREE, meshes, options = {}) {
       right.position.add(poseOffset);
       rightTilt.multiply(poseQuaternion);
     } else if (motion.hurt > 0) {
-      const flinch = Math.sin(clamp38(1 - motion.hurt / 0.36) * Math.PI);
+      const flinch = Math.sin(clamp40(1 - motion.hurt / 0.36) * Math.PI);
       right.position.z += flinch * 0.045;
       right.position.y -= flinch * 0.025;
       rightTilt.multiply(nextQuaternion.setFromEuler(euler2.set(-flinch * 0.13, 0, flinch * 0.05)));
     }
     if (action) {
       action.time += dt;
-      const u = clamp38(action.time / action.duration), weight = Math.sin(Math.PI * Math.min(1, u * 1.12)) ** 2 * (u < 0.9 ? 1 : 1 - smooth31((u - 0.9) / 0.1));
+      const u = clamp40(action.time / action.duration), weight = Math.sin(Math.PI * Math.min(1, u * 1.12)) ** 2 * (u < 0.9 ? 1 : 1 - smooth32((u - 0.9) / 0.1));
       let pulse = 0;
       for (const at of action.bites || action.knocks || []) pulse += Math.exp(-(((u - at) / 0.035) ** 2));
       right.position.x += action.offset[0] * weight;
@@ -45484,7 +48017,7 @@ function createHandTools(THREE, meshes, options = {}) {
     bowBlend += ((bowHeld && alive ? 1 : 0) - bowBlend) * (1 - Math.exp(-dt * 12));
     if (!bowHeld) bowBlend = 0;
     if (bowHeld) {
-      const aim = smooth31(motion.bowAim || 0), draw = clamp38(motion.bowDraw || 0);
+      const aim = smooth32(motion.bowAim || 0), draw = clamp40(motion.bowDraw || 0);
       if ((motion.bowShot || 0) !== lastShot) {
         lastShot = motion.bowShot || 0;
         shotTime = 0;
@@ -45511,12 +48044,12 @@ function createHandTools(THREE, meshes, options = {}) {
       nockAt.copy(nock).applyQuaternion(bowQuaternion).add(bowGrip);
       arrowTipAt.copy(tools.arrowTip).applyQuaternion(bowQuaternion).add(bowGrip);
       arrowTipShown = !!motion.bowArrow && aim > 0.35;
-      const reach = smooth31(clamp38(aim * 1.25));
+      const reach = smooth32(clamp40(aim * 1.25));
       holdTurn(bowY, toBody.subVectors(BODY2.right, nockAt).normalize(), "right", drawQuaternion);
       right.position.y -= 0.45 * (1 - reach);
       scratch3.copy(nockAt);
       if (shotTime < RELEASE.back + RELEASE.home && Number.isFinite(releaseAt.x)) {
-        const out2 = Math.sin(Math.min(1, shotTime / RELEASE.back) * Math.PI / 2), home = smooth31(clamp38((shotTime - RELEASE.back) / RELEASE.home));
+        const out2 = Math.sin(Math.min(1, shotTime / RELEASE.back) * Math.PI / 2), home = smooth32(clamp40((shotTime - RELEASE.back) / RELEASE.home));
         toBody.copy(releaseAt);
         toBody.x += RELEASE.follow[0] * out2;
         toBody.y += RELEASE.follow[1] * out2;
@@ -45557,7 +48090,8 @@ function createHandTools(THREE, meshes, options = {}) {
     }
     for (let i = 0; i < HAND_WEAPONS.length; i++) tools[HAND_WEAPONS[i].id].visible = i === activeIndex && swimBlend < 0.15;
     for (const [id2, model] of itemModels) if (model) model.visible = id2 === heldItem && swimBlend < 0.15 && !motion.underwater;
-    arms.setPose(swimBlend >= 0.4 ? "open" : activeIndex < 0 && !heldItem || bowHeld ? "relaxed" : "grip");
+    const emptyHand = activeIndex < 0 && !heldItem;
+    arms.setPose(swimBlend >= 0.4 ? "open" : bowHeld || emptyHand && (motion.attack || action) ? "fist" : emptyHand ? "relaxed" : "grip");
     arms.setPose(swimBlend >= 0.4 || !bowHeld ? "open" : "grip", "left");
     tools.torch.visible = tools.torch.visible && !motion.underwater;
     arms.update();
@@ -45923,13 +48457,13 @@ function prepareCavern(world2) {
 // moonveil-mouth.js
 var GRID4 = 4 / 3;
 var PHOTO_METERS = 2.2;
-var mix13 = MathUtils.lerp;
-var clamp39 = MathUtils.clamp;
+var mix14 = MathUtils.lerp;
+var clamp41 = MathUtils.clamp;
 var rand = (n, s = 0) => {
-  const f10 = Math.sin(n * 127.1 + s * 311.7 + 728194 * 0.013) * 43758.5453;
-  return f10 - Math.floor(f10);
+  const f12 = Math.sin(n * 127.1 + s * 311.7 + 728194 * 0.013) * 43758.5453;
+  return f12 - Math.floor(f12);
 };
-function builder4() {
+function builder5() {
   return { position: [], normal: [], uv: [], color: [] };
 }
 function triangle3(out2, a, b, c2, uv, color3) {
@@ -45958,7 +48492,7 @@ function clip3(poly, nx, nz, c2) {
     const db = nx * b.x + nz * b.z - c2;
     if (da <= 1e-9 !== db <= 1e-9) {
       const t = da / (da - db), v = {};
-      for (const key3 of Object.keys(a)) v[key3] = mix13(a[key3], b[key3], t);
+      for (const key3 of Object.keys(a)) v[key3] = mix14(a[key3], b[key3], t);
       out2.push(v);
     }
     if (db <= 1e-9) out2.push(b);
@@ -45992,13 +48526,13 @@ function conform(out2, polygon2, height2, origin, tone, rotation = 0, offset = [
   }
 }
 function shade2(z) {
-  return mix13(0.96, 0.17, MathUtils.smoothstep(-z, 0.4, 6));
+  return mix14(0.96, 0.17, MathUtils.smoothstep(-z, 0.4, 6));
 }
 function floorPoly(points, origin, rise) {
   return points.map(([x, z]) => ({ x: x + origin.x, z: z + origin.z, rise }));
 }
 function createMoonveilMouthGeometry(height2, origin) {
-  const rocks = builder4(), soil = builder4(), pavers = [];
+  const rocks = builder5(), soil = builder5(), pavers = [];
   const profiles = [
     { z: -0.7, cx: 0, w: 3.35, h: 4.6 },
     { z: -2.1, cx: -0.12, w: 3.02, h: 4.17 },
@@ -46069,7 +48603,7 @@ function createMoonveilMouthGeometry(height2, origin) {
     if (x > 2.94 || row2 >= 5 && (Math.abs(x) > 2.5 || rand(id2, 601) < 0.28)) continue;
     const w = 0.88 + rand(id2, 604) * 0.08, d = 0.55 + rand(id2, 605) * 0.07, cut = 0.07 + rand(id2, 606) * 0.05, rise = 0.021 + rand(id2, 607) * 9e-3;
     const outline = [[-w / 2 + cut, -d / 2], [w / 2 - cut, -d / 2], [w / 2, -d / 2 + cut], [w / 2, d / 2 - cut], [w / 2 - cut, d / 2], [-w / 2 + cut, d / 2], [-w / 2, d / 2 - cut], [-w / 2, -d / 2 + cut]].map(([px, pz]) => [x + px, z + pz]);
-    const inner = outline.map(([px, pz]) => [mix13(px, x, 0.055), mix13(pz, z, 0.075)]), rotation = Math.floor(rand(id2, 608) * 4) * Math.PI / 2, offset = [rand(id2, 609) * 5, rand(id2, 610) * 5], tone = 0.76 + rand(id2, 611) * 0.13;
+    const inner = outline.map(([px, pz]) => [mix14(px, x, 0.055), mix14(pz, z, 0.075)]), rotation = Math.floor(rand(id2, 608) * 4) * Math.PI / 2, offset = [rand(id2, 609) * 5, rand(id2, 610) * 5], tone = 0.76 + rand(id2, 611) * 0.13;
     conform(rocks, floorPoly(inner, origin, rise), height2, origin, tone, rotation, offset);
     for (let i = 0; i < 8; i++) {
       const j = (i + 1) % 8, a = floorPoly([outline[i], outline[j], inner[j], inner[i]], origin, 0.01);
@@ -46389,7 +48923,7 @@ function createCampfire(THREE, options = {}) {
   const owned = /* @__PURE__ */ new Set();
   const keep = (value) => (owned.add(value), value);
   const time = { value: 0 };
-  const random7 = (n) => {
+  const random9 = (n) => {
     const v = Math.sin((n + seed) * 12.9898) * 43758.5453;
     return v - Math.floor(v);
   };
@@ -46491,19 +49025,19 @@ function createCampfire(THREE, options = {}) {
   coals.castShadow = coals.receiveShadow = true;
   const dummy6 = new THREE.Object3D();
   for (let i = 0; i < 24; i++) {
-    const a = i * 2.39996, r = 0.46 * Math.sqrt(random7(i + 11));
-    dummy6.position.set(Math.cos(a) * r, 0.035 + random7(i + 61) * 0.035, Math.sin(a) * r);
-    dummy6.rotation.set(random7(i + 31) * 2, random7(i + 32) * 6, random7(i + 33) * 2);
-    dummy6.scale.set(0.055 + random7(i + 41) * 0.07, 0.025 + random7(i + 42) * 0.025, 0.05 + random7(i + 43) * 0.07);
+    const a = i * 2.39996, r = 0.46 * Math.sqrt(random9(i + 11));
+    dummy6.position.set(Math.cos(a) * r, 0.035 + random9(i + 61) * 0.035, Math.sin(a) * r);
+    dummy6.rotation.set(random9(i + 31) * 2, random9(i + 32) * 6, random9(i + 33) * 2);
+    dummy6.scale.set(0.055 + random9(i + 41) * 0.07, 0.025 + random9(i + 42) * 0.025, 0.05 + random9(i + 43) * 0.07);
     dummy6.updateMatrix();
     coals.setMatrixAt(i, dummy6.matrix);
   }
   group.add(coals);
   const noiseBytes = new Uint8Array(128 * 128 * 4);
   for (let i = 0; i < 128 * 128; i++) {
-    noiseBytes[i * 4] = random7(i + 1e3) * 255;
-    noiseBytes[i * 4 + 1] = random7(i + 17001) * 255;
-    noiseBytes[i * 4 + 2] = random7(i + 37001) * 255;
+    noiseBytes[i * 4] = random9(i + 1e3) * 255;
+    noiseBytes[i * 4 + 1] = random9(i + 17001) * 255;
+    noiseBytes[i * 4 + 2] = random9(i + 37001) * 255;
     noiseBytes[i * 4 + 3] = 255;
   }
   const noise7 = keep(new THREE.DataTexture(noiseBytes, 128, 128, THREE.RGBAFormat));
@@ -46619,7 +49153,7 @@ function createCampfire(THREE, options = {}) {
     for (const [x, y] of [[-0.5, 0], [0.5, 0], [-0.5, 1], [0.5, 1]]) {
       ep.push(x, y, 0);
       eu.push(x + 0.5, y);
-      es.push(random7(i + 901), random7(i + 1901), random7(i + 2901), random7(i + 3901));
+      es.push(random9(i + 901), random9(i + 1901), random9(i + 2901), random9(i + 3901));
     }
     ei.push(b, b + 1, b + 2, b + 1, b + 3, b + 2);
   }
@@ -46720,7 +49254,7 @@ function createCampfire(THREE, options = {}) {
 }
 
 // camp-stone-ring.js
-var TAU28 = Math.PI * 2;
+var TAU30 = Math.PI * 2;
 function hash9(i, j, k, s) {
   let n = i * 374761393 + j * 668265263 + k * 1440662683 + s * 1013904223 | 0;
   n = Math.imul(n ^ n >>> 13, 1274126177);
@@ -46745,7 +49279,7 @@ function createCampStoneRingGeometry({ seed = 11, radius = 0.74, count = 12, hei
     return r / 233280;
   };
   for (let i = 0; i < count; i++) {
-    const a = i / count * TAU28 + (rand2() - 0.5) * 0.22, ring2 = radius * (1 + (rand2() - 0.5) * 0.1);
+    const a = i / count * TAU30 + (rand2() - 0.5) * 0.22, ring2 = radius * (1 + (rand2() - 0.5) * 0.1);
     const sx = 0.15 + rand2() * 0.1, sy = 0.09 + rand2() * 0.06, sz = 0.12 + rand2() * 0.07, s = seed * 31 + i;
     const stone = source2.clone(), p = stone.attributes.position;
     for (let k = 0; k < p.count; k++) {
@@ -46787,14 +49321,14 @@ function createFireAshGeometry({ seed = 11, radius = 0.6, heightAt = null } = {}
   c2.copy(char);
   colours.push(c2.r, c2.g, c2.b);
   for (let i = 1; i <= rings2; i++) {
-    const f10 = i / rings2;
+    const f12 = i / rings2;
     for (let j = 0; j < sides; j++) {
-      const a = j / sides * TAU28, rr = radius * f10 * (1 + 0.26 * (noise32(Math.cos(a) * 2.2, Math.sin(a) * 2.2, 1, seed) - 0.5) * f10), lump = noise32(Math.cos(a) * rr * 14, Math.sin(a) * rr * 14, 3, seed + 1), h = 0.022 - 0.02 * f10 * f10 + 0.016 * Math.max(0, lump - 0.55) * (1 - f10) + 4e-3 * (lump - 0.5);
+      const a = j / sides * TAU30, rr = radius * f12 * (1 + 0.26 * (noise32(Math.cos(a) * 2.2, Math.sin(a) * 2.2, 1, seed) - 0.5) * f12), lump = noise32(Math.cos(a) * rr * 14, Math.sin(a) * rr * 14, 3, seed + 1), h = 0.022 - 0.02 * f12 * f12 + 0.016 * Math.max(0, lump - 0.55) * (1 - f12) + 4e-3 * (lump - 0.5);
       positions.push(Math.cos(a) * rr, ground(Math.cos(a) * rr, Math.sin(a) * rr) + h + 4e-3, Math.sin(a) * rr);
       const n = noise32(Math.cos(a) * rr * 7 + 3, Math.sin(a) * rr * 7, 1, seed + 2);
-      c2.copy(char).lerp(ash, Math.min(1, Math.max(0, (f10 - 0.3) * 1.7 + (n - 0.5) * 1.1)));
-      if (lump > 0.62 && f10 < 0.75) c2.copy(char).multiplyScalar(0.8);
-      if (f10 > 0.7) c2.lerp(scorch, Math.min(1, (f10 - 0.7) / 0.3 * 1.2));
+      c2.copy(char).lerp(ash, Math.min(1, Math.max(0, (f12 - 0.3) * 1.7 + (n - 0.5) * 1.1)));
+      if (lump > 0.62 && f12 < 0.75) c2.copy(char).multiplyScalar(0.8);
+      if (f12 > 0.7) c2.lerp(scorch, Math.min(1, (f12 - 0.7) / 0.3 * 1.2));
       colours.push(c2.r, c2.g, c2.b);
     }
   }
@@ -46854,9 +49388,9 @@ function installCampStoneRing(world2, parent) {
 // world.js
 var SEED = ISLAND_BIOME_SEED;
 var CHUNK5 = 64;
-var TAU29 = Math.PI * 2;
-var clamp40 = MathUtils.clamp;
-var mix14 = MathUtils.lerp;
+var TAU31 = Math.PI * 2;
+var clamp42 = MathUtils.clamp;
+var mix15 = MathUtils.lerp;
 var batchPlace = new Matrix4();
 var batchHidden = new Matrix4().makeScale(0, 0, 0);
 var batchLocal = new Matrix4();
@@ -46917,7 +49451,7 @@ function hash10(x, z = 0) {
 function noise5(x, z) {
   const i = Math.floor(x), j = Math.floor(z), u = x - i, v = z - j;
   const a = u * u * (3 - 2 * u), b = v * v * (3 - 2 * v);
-  return mix14(mix14(hash10(i, j), hash10(i + 1, j), a), mix14(hash10(i, j + 1), hash10(i + 1, j + 1), a), b);
+  return mix15(mix15(hash10(i, j), hash10(i + 1, j), a), mix15(hash10(i, j + 1), hash10(i + 1, j + 1), a), b);
 }
 var islandTerrain = worldModel.island;
 var terrainSampler = worldModel.sampler;
@@ -47596,6 +50130,9 @@ var World = class {
     this.ringMaterial = new MeshBasicMaterial({ color: 16777215, transparent: true, opacity: 0.6, side: DoubleSide, depthWrite: false });
     addPlainVariants(this, new RingGeometry(0.9, 1, 16), this.ringMaterial, null, "impact-ring");
     this.birdFlocks = createBirds(this, { seed: worldModel?.seed ?? 1 });
+    this.forestFloor = createForestFloor(this);
+    this.forestUnderstory = createForestUnderstory(this);
+    this.forestLife = createForestLife(this, { seed: worldModel?.seed ?? 1 });
   }
   getFoliage(b) {
     if (this.foliage.has(b.id)) return this.foliage.get(b.id);
@@ -47683,7 +50220,7 @@ var World = class {
       if (i && i % 64 === 0) yield { phase: "tree-instances", completedUnits: i, totalUnits: trees.length };
       let t = trees[i], treeBiome = biome(t.x, t.z, t.y).id;
       chunkDummy.position.set(t.x, t.y + t.h * 0.45, t.z);
-      chunkDummy.rotation.set(0, t.r * TAU29, t.lean);
+      chunkDummy.rotation.set(0, t.r * TAU31, t.lean);
       chunkDummy.scale.set(t.h * 0.024, t.h * 0.9, t.h * 0.024);
       chunkDummy.updateMatrix();
       trunk.setMatrixAt(i, chunkDummy.matrix);
@@ -47691,7 +50228,7 @@ var World = class {
       for (let j = 0; j < 8; j++) {
         let ratio = j / 8, branchPresent = !(t.r > 0.64 && j < 2);
         chunkDummy.position.set(t.x + t.lean * t.h * (0.26 + ratio * 0.72) + Math.sin(j * 2 + t.r * 5) * t.h * 0.018, t.y + t.h * (0.26 + ratio * 0.72), t.z + Math.cos(j * 2 + t.r * 5) * t.h * 0.018);
-        chunkDummy.rotation.set(0, t.r * TAU29 + j, 0);
+        chunkDummy.rotation.set(0, t.r * TAU31 + j, 0);
         chunkDummy.scale.set(t.h * (0.21 - ratio * 0.185) * (1 + Math.sin(j * 7 + t.r) * 0.2) * t.width, t.h * (0.24 - ratio * 0.13), t.h * (0.22 - ratio * 0.19) * t.width);
         if (!branchPresent) chunkDummy.scale.setScalar(0);
         chunkDummy.updateMatrix();
@@ -47738,7 +50275,7 @@ var World = class {
       if (i && i % 64 === 0) yield { phase: "rock-instances", completedUnits: i, totalUnits: rocks.length };
       let r = rocks[i], placementSlot = legacyPlacementSlot(r, i);
       chunkDummy.position.set(r.x, r.y + r.r * 0.15, r.z);
-      chunkDummy.rotation.set(rng2(placementSlot, 12), rng2(placementSlot, 13) * TAU29, rng2(placementSlot, 14) * 0.5);
+      chunkDummy.rotation.set(rng2(placementSlot, 12), rng2(placementSlot, 13) * TAU31, rng2(placementSlot, 14) * 0.5);
       chunkDummy.scale.set(r.r, r.r * 0.68, r.r * 0.83);
       chunkDummy.updateMatrix();
       rockMesh.setMatrixAt(i, chunkDummy.matrix);
@@ -47746,7 +50283,7 @@ var World = class {
     }
     group.add(rockMesh);
     yield { phase: "rock-instances", completedUnits: rocks.length, totalUnits: rocks.length };
-    const vegetationWeight = clamp40(hydrologyEnvironment.environmentAt(x0 + CHUNK5 / 2, z0 + CHUNK5 / 2).vegetationWeight, 1, 1.55);
+    const vegetationWeight = clamp42(hydrologyEnvironment.environmentAt(x0 + CHUNK5 / 2, z0 + CHUNK5 / 2).vegetationWeight, 1, 1.55);
     const grassCount = this.nature ? 0 : Math.floor((b.id === 3 ? 700 : b.id === 2 || b.id === 4 ? 2400 : 9500) * (this.quality === "low" ? 0.22 : this.quality === "balanced" ? 0.48 : 1) * vegetationWeight), grassGeo = ownGeo(new BufferGeometry()), verts = [], norms = [], grassColors = [];
     for (let a = 0; a < 6; a++) {
       let angle = a * 2.399;
@@ -47780,7 +50317,7 @@ var World = class {
       const patch2 = noise5(x * 0.17, z * 0.17);
       if (h < 0.7 || hydrology.waterAt(x, z, h) || patch2 < 0.18 || !reservationAllows(contentReservations, "groundcover", x, z, 0.08)) continue;
       chunkDummy.position.set(x, h - 0.025, z);
-      chunkDummy.rotation.set(0, rng2(i, 22) * TAU29, 0);
+      chunkDummy.rotation.set(0, rng2(i, 22) * TAU31, 0);
       let s = 0.55 + rng2(i, 23) * 1.2;
       chunkDummy.scale.set(s, s * (b.id === 1 ? 1.6 : 0.7 + patch2 * 0.8), s);
       chunkDummy.updateMatrix();
@@ -47804,7 +50341,7 @@ var World = class {
       let fs = 0.85 + rng2(i, 67) * 1.4;
       chunkDummy.position.set(x, y, z);
       chunkDummy.scale.set(fs, fs, fs);
-      chunkDummy.rotation.set((rng2(i, 69) - 0.5) * 0.2, rng2(i, 68) * TAU29, (rng2(i, 70) - 0.5) * 0.2);
+      chunkDummy.rotation.set((rng2(i, 69) - 0.5) * 0.2, rng2(i, 68) * TAU31, (rng2(i, 70) - 0.5) * 0.2);
       chunkDummy.updateMatrix();
       ferns.setMatrixAt(fi++, chunkDummy.matrix);
     }
@@ -47827,7 +50364,7 @@ var World = class {
           continue;
         }
         chunkDummy.position.set(x, y + 0.23, z);
-        chunkDummy.rotation.set(Math.PI / 2, 0, rng2(i, 73) * TAU29);
+        chunkDummy.rotation.set(Math.PI / 2, 0, rng2(i, 73) * TAU31);
         chunkDummy.scale.set(0.3, 4 + rng2(i, 74) * 3, 0.3);
         if (y < 1 || this.removed.has(id2)) chunkDummy.scale.setScalar(0);
         chunkDummy.updateMatrix();
@@ -47885,7 +50422,7 @@ var World = class {
         });
         mesh2.position.set(x, height(x, z), z);
         group.add(mesh2);
-        c2.preparationEntities.push({ id: id2, type, mesh: mesh2, x, z, hp: 24, maxHp: 24, phase: rng2(i, 44) * TAU29, homeX: x, homeZ: z, cooldown: 1, chunk: key3 });
+        c2.preparationEntities.push({ id: id2, type, mesh: mesh2, x, z, hp: 24, maxHp: 24, phase: rng2(i, 44) * TAU31, homeX: x, homeZ: z, cooldown: 1, chunk: key3 });
       }
     }
     yield { phase: "fauna", completedUnits: 1, totalUnits: 1 };
@@ -47948,7 +50485,7 @@ var World = class {
     const scratch3 = this.preparationByteScratch ??= { buffers: /* @__PURE__ */ new Set(), meshes: /* @__PURE__ */ new Set() };
     const { buffers: buffers2, meshes } = scratch3;
     let bytes = 0;
-    const add3 = (array) => {
+    const add4 = (array) => {
       if (array?.buffer && !buffers2.has(array.buffer)) {
         buffers2.add(array.buffer);
         bytes += array.buffer.byteLength;
@@ -47963,15 +50500,15 @@ var World = class {
         for (const key3 in g.attributes) {
           if (!Object.prototype.hasOwnProperty.call(g.attributes, key3)) continue;
           const a = g.attributes[key3];
-          add3(a.isInterleavedBufferAttribute ? a.data.array : a.array);
+          add4(a.isInterleavedBufferAttribute ? a.data.array : a.array);
         }
-        add3(g.index?.array);
+        add4(g.index?.array);
       }
       for (const mesh2 of meshes) {
-        add3(mesh2.instanceMatrix?.array);
-        add3(mesh2.instanceColor?.isInterleavedBufferAttribute ? mesh2.instanceColor.data.array : mesh2.instanceColor?.array);
-        add3(mesh2.userData.originalMatrices);
-        add3(mesh2.userData.originalColors);
+        add4(mesh2.instanceMatrix?.array);
+        add4(mesh2.instanceColor?.isInterleavedBufferAttribute ? mesh2.instanceColor.data.array : mesh2.instanceColor?.array);
+        add4(mesh2.userData.originalMatrices);
+        add4(mesh2.userData.originalColors);
       }
       return Math.max(bytes, c2.preparationReservedBytes || 0);
     } finally {
@@ -48014,7 +50551,7 @@ var World = class {
     const g = new Group();
     if (type === "herb") {
       for (let j = 0; j < 5; j++) {
-        let a = j / 5 * TAU29;
+        let a = j / 5 * TAU31;
         let leaf = part(g, new SphereGeometry(1, 6, 4), this.mats.herb, Math.sin(a) * 0.16, 0.18, Math.cos(a) * 0.16, 0.075, 0.26, 0.04);
         leaf.rotation.z = Math.sin(a) * 0.75;
         leaf.rotation.x = Math.cos(a) * 0.75;
@@ -48033,7 +50570,7 @@ var World = class {
     return merged.clone();
   }
   makeLandmarks() {
-    const add3 = (type, name, x, z, clear = 6) => {
+    const add4 = (type, name, x, z, clear = 6) => {
       let y = height(x, z), mesh2 = new Group();
       mesh2.position.set(x, y, z);
       this.scene.add(mesh2);
@@ -48041,7 +50578,7 @@ var World = class {
       this.landmarks.push(o);
       return o;
     };
-    const camp = add3("camp", "旅人の焚き火", -6, 11, 6);
+    const camp = add4("camp", "旅人の焚き火", -6, 11, 6);
     camp.reservations = startAccessTerrain.stats.paths.map((p, i) => ({ id: "start-access:" + i, ownerId: camp.id, shape: "polyline", points: [p.from, p.to], width: 3.5, layers: ["trees", "rocks", "decor"], bounds: { minX: Math.min(p.from.x, p.to.x) - 1.75, maxX: Math.max(p.from.x, p.to.x) + 1.75, minZ: Math.min(p.from.z, p.to.z) - 1.75, maxZ: Math.max(p.from.z, p.to.z) + 1.75 } }));
     this.fixedReservations.push(...camp.reservations);
     camp.stones = installCampStoneRing(this, camp.mesh);
@@ -48049,7 +50586,7 @@ var World = class {
     camp.mesh.add(fire.group);
     camp.fire = fire;
     camp.light = this.localLights.add(fire.light);
-    const cave = add3("cave", "月影の洞窟", landmarkPlan.byType.cave.x, landmarkPlan.byType.cave.z, landmarkPlan.byType.cave.clear);
+    const cave = add4("cave", "月影の洞窟", landmarkPlan.byType.cave.x, landmarkPlan.byType.cave.z, landmarkPlan.byType.cave.clear);
     Object.assign(cave, { caveId: landmarkPlan.byType.cave.caveId, caveSeed: landmarkPlan.byType.cave.caveSeed, returnPose: landmarkPlan.byType.cave.returnPose });
     for (let i = 0; i < 11; i++) {
       let a = i / 10 * Math.PI;
@@ -48067,12 +50604,12 @@ var World = class {
     const cl = this.localLights.add(new PointLight(6018504, 8, 13));
     cl.position.set(0, 2, 1);
     cave.mesh.add(cl);
-    const shrine = add3("shrine", "風詠みの祭壇", landmarkPlan.byType.shrine.x, landmarkPlan.byType.shrine.z, landmarkPlan.byType.shrine.clear);
+    const shrine = add4("shrine", "風詠みの祭壇", landmarkPlan.byType.shrine.x, landmarkPlan.byType.shrine.z, landmarkPlan.byType.shrine.clear);
     let g = shrine.mesh;
     part(g, cylinder, this.stone, 0, -0.1, 0, 7, 0.5, 7);
     part(g, cylinder, this.stone, 0, 0.22, 0, 5.5, 0.3, 5.5);
     for (let i = 0; i < 8; i++) {
-      let a = i / 8 * TAU29, x = Math.cos(a) * 5, z = Math.sin(a) * 5;
+      let a = i / 8 * TAU31, x = Math.cos(a) * 5, z = Math.sin(a) * 5;
       const pillar = part(g, cylinder, this.stone, x, 1.8, z, 0.45, 3.4 + i % 3 * 0.5, 0.45);
       pillar.rotation.z = (hash10(i, 3) - 0.5) * 0.15;
       part(g, box3, this.stone, x, 3.7, z, 1, 0.45, 1);
@@ -48083,10 +50620,10 @@ var World = class {
     const sl = this.localLights.add(new PointLight(8115146, 12, 15));
     sl.position.set(0, 2, 0);
     g.add(sl);
-    const boss = add3("boss", "朽ちた王庭", landmarkPlan.byType.boss.x, landmarkPlan.byType.boss.z, landmarkPlan.byType.boss.clear);
+    const boss = add4("boss", "朽ちた王庭", landmarkPlan.byType.boss.x, landmarkPlan.byType.boss.z, landmarkPlan.byType.boss.clear);
     part(boss.mesh, cylinder, this.stone, 0, -0.1, 0, 14, 0.4, 14);
     for (let i = 0; i < 12; i++) {
-      let a = i / 12 * TAU29;
+      let a = i / 12 * TAU31;
       let x = Math.sin(a) * 13, z = Math.cos(a) * 13;
       part(boss.mesh, cylinder, this.stone, x, 2.2, z, 0.6, 4.4, 0.6);
       part(boss.mesh, box3, this.stone, x, 4.5, z, 1.7, 0.5, 1.7);
@@ -48099,7 +50636,7 @@ var World = class {
     }
     const memorySite = landmarkPlan.byType.memory;
     for (let i = 0; i < 10; i++) {
-      const angle = hash10(i, 9201) * TAU29, radius = 5 + hash10(i, 9202) * 5, x = memorySite.x + Math.cos(angle) * radius, z = memorySite.z + Math.sin(angle) * radius, y = height(x, z), id2 = "landmark-resource:" + i;
+      const angle = hash10(i, 9201) * TAU31, radius = 5 + hash10(i, 9202) * 5, x = memorySite.x + Math.cos(angle) * radius, z = memorySite.z + Math.sin(angle) * radius, y = height(x, z), id2 = "landmark-resource:" + i;
       if (this.removed.has(id2) || hydrology.waterAt(x, z, y)) continue;
       const type = i % 3 === 0 ? "crystal" : "herb", mesh2 = this.makeResource(type);
       mesh2.position.set(x, y, z);
@@ -48176,8 +50713,8 @@ var World = class {
     const animal = e.mesh.userData.fauna?.model;
     if (animal && !this.inDungeon) {
       const yaw2 = e.mesh.rotation.y, fx = Math.sin(yaw2), fz = Math.cos(yaw2), rx = Math.cos(yaw2), rz = -Math.sin(yaw2), pitch2 = -Math.atan2(height(e.x + fx * 0.7, e.z + fz * 0.7) - height(e.x - fx * 0.7, e.z - fz * 0.7), 1.4), roll = Math.atan2(height(e.x + rx * 0.25, e.z + rz * 0.25) - height(e.x - rx * 0.25, e.z - rz * 0.25), 0.5);
-      animal.rotation.x = MathUtils.lerp(animal.rotation.x, clamp40(pitch2, -0.3, 0.3), 1 - Math.exp(-dt * 7));
-      animal.rotation.z = MathUtils.lerp(animal.rotation.z, clamp40(roll, -0.2, 0.2), 1 - Math.exp(-dt * 7));
+      animal.rotation.x = MathUtils.lerp(animal.rotation.x, clamp42(pitch2, -0.3, 0.3), 1 - Math.exp(-dt * 7));
+      animal.rotation.z = MathUtils.lerp(animal.rotation.z, clamp42(roll, -0.2, 0.2), 1 - Math.exp(-dt * 7));
     }
     const shadow = e.mesh.userData.contactShadow;
     if (shadow) {
@@ -48191,6 +50728,7 @@ var World = class {
   }
   remove(o) {
     this.removed.add(o.id);
+    if (o.type === "tree" || o.type === "rock") this.forestFloor?.invalidate(o.x, o.z);
     this.distantTrees?.remove(o.id);
     if (o.refs) {
       o.refs.gone = true;
@@ -48334,6 +50872,9 @@ var World = class {
     for (let m of [...this.foliage.values(), ...this.grassMats, this.fernMat]) if (m.userData.shader) m.userData.shader.uniforms.uTime.value = t;
     this.ambientParticles?.update(dt, player);
     this.birdFlocks?.update(dt, player);
+    this.forestFloor?.update(dt, player);
+    this.forestUnderstory?.update(dt, player);
+    this.forestLife?.update(dt, player);
     const camp = this.landmarks[0];
     camp.fire.update(t, this.dayNight?.state?.daylight ?? 0, camp.fireLevel ?? 1, camp.fireIntensity);
     this.bursts?.update(dt);
@@ -48345,7 +50886,7 @@ var World = class {
     this.wasAirborne = airborne;
     this.camera.position.set(player.x, this.eyeY, player.z);
     this.camera.rotation.set(-cameraPitch, cameraYaw, 0, "YXZ");
-    const fov = clamp40((this.fieldOfView || 68) * zoom2, 48, 92);
+    const fov = clamp42((this.fieldOfView || 68) * zoom2, 48, 92);
     if (this.camera.fov !== fov) {
       this.camera.fov = fov;
       this.camera.updateProjectionMatrix();
@@ -48823,7 +51364,7 @@ function familyFrame(geometries) {
   }
   return { centre, halfSpan: Math.max((maxY - minY) / 2, reach) * 1.03 };
 }
-function bakeFrames(frames3) {
+function bakeFrames(frames4) {
   const out2 = [], { tile, gutter, columns, width, height: height2 } = BAKE_LAYOUT;
   for (let i = 0; i < 128; i++) {
     const family = Math.floor(i / 8), state2 = i % 8 < 4 ? "live" : "leafless", k = i % 4, x = i % columns * tile + gutter, y = Math.floor(i / columns) * tile + gutter;
@@ -48832,8 +51373,8 @@ function bakeFrames(frames3) {
       family: (family < 8 ? "pine:" : "broadleaf:") + family % 8,
       state: state2,
       azimuthRadians: k * Math.PI / 2,
-      centre: frames3[family].centre.slice(),
-      halfSpan: frames3[family].halfSpan,
+      centre: frames4[family].centre.slice(),
+      halfSpan: frames4[family].halfSpan,
       uvMin: [x / width, y / height2],
       uvMax: [(x + tile - 2 * gutter) / width, (y + tile - 2 * gutter) / height2]
     });
@@ -48902,12 +51443,12 @@ function bakeIslandTreeAtlas(THREE, renderer, family, { seed = null, schedule = 
   const started = performance.now(), { tile, gutter, columns, width, height: height2, samples } = BAKE_LAYOUT, inner = tile - 2 * gutter;
   const list = [];
   for (const species of ["pine", "broadleaf"]) for (let i = 0; i < 8; i++) {
-    const f10 = family(species, i);
-    if (!f10?.near?.parts?.length) throw Error("Island tree family missing: " + species + ":" + i);
-    list.push(f10);
+    const f12 = family(species, i);
+    if (!f12?.near?.parts?.length) throw Error("Island tree family missing: " + species + ":" + i);
+    list.push(f12);
   }
-  const frames3 = list.map((f10) => familyFrame(f10.near.parts.map((p) => p.geometry)));
-  const manifest = { format: BAKE_FORMAT, seed, frames: bakeFrames(frames3), bake: { ...BAKE_LAYOUT, families: 16, states: ["live", "leafless"] }, normalEncoding: "octahedral bake-view normal RG; leaf identity B; resolved sample coverage A; linear data", albedoEncoding: "unlit source albedo in sRGB plus resolved sample coverage", uvOrigin: "bottom-left" };
+  const frames4 = list.map((f12) => familyFrame(f12.near.parts.map((p) => p.geometry)));
+  const manifest = { format: BAKE_FORMAT, seed, frames: bakeFrames(frames4), bake: { ...BAKE_LAYOUT, families: 16, states: ["live", "leafless"] }, normalEncoding: "octahedral bake-view normal RG; leaf identity B; resolved sample coverage A; linear data", albedoEncoding: "unlit source albedo in sRGB plus resolved sample coverage", uvOrigin: "bottom-left" };
   const target = (opts) => new THREE.WebGLRenderTarget(opts.w, opts.h, {
     type: THREE.UnsignedByteType,
     format: THREE.RGBAFormat,
@@ -48963,7 +51504,7 @@ function bakeIslandTreeAtlas(THREE, renderer, family, { seed = null, schedule = 
     if (renderer.xr) renderer.xr.enabled = saved2.xr;
   }
   function drawTile(index2, mode) {
-    const familyIndex = Math.floor(index2 / 8), leafless = index2 % 8 >= 4, k = index2 % 4, f10 = list[familyIndex], frame3 = frames3[familyIndex];
+    const familyIndex = Math.floor(index2 / 8), leafless = index2 % 8 >= 4, k = index2 % 4, f12 = list[familyIndex], frame3 = frames4[familyIndex];
     const a = k * Math.PI / 2, hs = frame3.halfSpan, [cx, cy, cz] = frame3.centre, distance4 = hs * 2 + 4;
     camera.left = -hs;
     camera.right = hs;
@@ -49014,8 +51555,8 @@ function bakeIslandTreeAtlas(THREE, renderer, family, { seed = null, schedule = 
       reject2(error);
     };
     try {
-      list.forEach((f10, familyIndex) => {
-        for (const part2 of f10.near.parts) {
+      list.forEach((f12, familyIndex) => {
+        for (const part2 of f12.near.parts) {
           const mesh2 = new THREE.Mesh(part2.geometry, bakeMaterial(part2));
           mesh2.userData = { family: familyIndex, leaf: !!part2.leaf };
           mesh2.frustumCulled = false;
@@ -49185,7 +51726,7 @@ function startDistantTreeContent(THREE, world2) {
 
 // prop-geometry.js
 var V3 = Vector3;
-var TAU30 = Math.PI * 2;
+var TAU32 = Math.PI * 2;
 var hash11 = (i, s = 0) => {
   const a = Math.sin(i * 127.1 + s * 311.7) * 43758.5453;
   return a - Math.floor(a);
@@ -49282,8 +51823,8 @@ function polygonSolid(profile, height2, { bevel = 8e-3, seed = 1, wood = false, 
   return b.finish(name);
 }
 function plank(length, width, thickness, seed = 1, split = false) {
-  const L3 = length / 2, W = width / 2, j = 0.018 + hash11(seed, 2) * 0.027, profile = [[-L3 + j, -W], [L3 - j * 0.4, -W], [L3, W * 0.1], [L3 - j, W], [-L3 + j * 0.6, W], [-L3, -W * 0.1]];
-  if (split) profile.splice(2, 0, [L3 - 0.13, W * -0.35], [L3 - 0.28, W * -0.19], [L3 - 0.045, W * 0.04]);
+  const L4 = length / 2, W = width / 2, j = 0.018 + hash11(seed, 2) * 0.027, profile = [[-L4 + j, -W], [L4 - j * 0.4, -W], [L4, W * 0.1], [L4 - j, W], [-L4 + j * 0.6, W], [-L4, -W * 0.1]];
+  if (split) profile.splice(2, 0, [L4 - 0.13, W * -0.35], [L4 - 0.28, W * -0.19], [L4 - 0.045, W * 0.04]);
   return polygonSolid(profile, thickness, { bevel: Math.min(0.012, thickness * 0.16), seed, wood: true, name: split ? "split-end-oak-board" : "beveled-oak-board" });
 }
 function tube3(points, radii, { sides = 8, twist = 0, cap = true, name = "tapered-member" } = {}) {
@@ -49292,7 +51833,7 @@ function tube3(points, radii, { sides = 8, twist = 0, cap = true, name = "tapere
     const tangent = path[Math.min(i + 1, path.length - 1)].clone().sub(path[Math.max(i - 1, 0)]).normalize(), ref = Math.abs(tangent.y) > 0.85 ? new V3(1, 0, 0) : new V3(0, 1, 0), u = new V3().crossVectors(tangent, ref).normalize(), v = new V3().crossVectors(tangent, u).normalize(), r = Array.isArray(radii) ? radii[i] : radii;
     const ring2 = [];
     for (let j = 0; j < sides; j++) {
-      const a = j / sides * TAU30 + twist * i;
+      const a = j / sides * TAU32 + twist * i;
       ring2.push(path[i].clone().addScaledVector(u, Math.cos(a) * r).addScaledVector(v, Math.sin(a) * r).toArray());
     }
     rings2.push(ring2);
@@ -49311,7 +51852,7 @@ function tube3(points, radii, { sides = 8, twist = 0, cap = true, name = "tapere
 function ring(radius, width, depth, { segments = 36, seed = 1, name = "closed-rim" } = {}) {
   const b = new Draft();
   for (let i = 0; i < segments; i++) {
-    const a = i / segments * TAU30, z = (i + 1) / segments * TAU30, shape = (t) => {
+    const a = i / segments * TAU32, z = (i + 1) / segments * TAU32, shape = (t) => {
       const wobble = Math.sin(t * 7 + seed) * 4e-3;
       return [[Math.cos(t) * (radius - width / 2 + wobble), Math.sin(t) * (radius - width / 2 + wobble), -depth / 2], [Math.cos(t) * (radius + width / 2 + wobble), Math.sin(t) * (radius + width / 2 + wobble), -depth / 2], [Math.cos(t) * (radius + width / 2 + wobble), Math.sin(t) * (radius + width / 2 + wobble), depth / 2], [Math.cos(t) * (radius - width / 2 + wobble), Math.sin(t) * (radius - width / 2 + wobble), depth / 2]];
     }, left = shape(a), right = shape(z);
@@ -49324,7 +51865,7 @@ function ring(radius, width, depth, { segments = 36, seed = 1, name = "closed-ri
 }
 function lathe2(profile, { segments = 16, seed = 1, irregular = 0.025, name = "formed-vessel" } = {}) {
   const b = new Draft(), rings2 = profile.map(([r, y], i) => Array.from({ length: segments }, (_, j) => {
-    const a = j / segments * TAU30, scale5 = 1 + Math.sin(a * 5 + seed) * irregular + Math.sin(a * 11 + seed * 3) * irregular * 0.35;
+    const a = j / segments * TAU32, scale5 = 1 + Math.sin(a * 5 + seed) * irregular + Math.sin(a * 11 + seed * 3) * irregular * 0.35;
     return [Math.cos(a) * r * scale5, y, Math.sin(a) * r * scale5];
   }));
   for (let i = 1; i < rings2.length; i++) for (let j = 0; j < segments; j++) {
@@ -49384,7 +51925,7 @@ function proceduralMaterial(name, color3, kind) {
 }
 function clothPanel(seed = 1) {
   const b = new Draft(), NX = 8, NZ = 16, half = 1.8, depth = 3.2, height2 = 2.35, point5 = (side2, u, v) => {
-    const z = (v - 0.5) * depth, x = side2 * (u * half + Math.sin(v * TAU30 * 2 + seed) * 0.026 * u), sag = Math.sin(v * Math.PI) * 0.115 * (1 - u), fold2 = Math.sin(v * TAU30 * 4 + u * 6 + seed) * 0.019 * u * (1 - u), y = height2 * (1 - u) + 0.075 * u - sag + fold2;
+    const z = (v - 0.5) * depth, x = side2 * (u * half + Math.sin(v * TAU32 * 2 + seed) * 0.026 * u), sag = Math.sin(v * Math.PI) * 0.115 * (1 - u), fold2 = Math.sin(v * TAU32 * 4 + u * 6 + seed) * 0.019 * u * (1 - u), y = height2 * (1 - u) + 0.075 * u - sag + fold2;
     return [x, y, z];
   };
   for (const side2 of [-1, 1]) for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) {
@@ -49399,7 +51940,7 @@ function clothPanel(seed = 1) {
 }
 function clothRear() {
   const b = new Draft(), N = 12, point5 = (u, v) => {
-    const x = (u * 2 - 1) * 1.8 * (1 - v), y = 0.075 + v * 2.275, z = -1.6 + Math.sin(u * TAU30 * 3) * Math.sin(v * Math.PI) * 0.022;
+    const x = (u * 2 - 1) * 1.8 * (1 - v), y = 0.075 + v * 2.275, z = -1.6 + Math.sin(u * TAU32 * 3) * Math.sin(v * Math.PI) * 0.022;
     return [x, y, z];
   };
   for (let j = 0; j < N; j++) for (let i = 0; i < N - j; i++) {
@@ -49418,10 +51959,10 @@ function graveGeometry(seed = 1, defaced = false) {
   }
   const cx = outline.reduce((v, p2) => v + p2[0], 0) / outline.length, cy = outline.reduce((v, p2) => v + p2[1], 0) / outline.length, r = Math.max(...outline.map((p2) => Math.hypot(p2[0] - cx, p2[1] - cy))), boundary = outline.map(([x, y]) => [cx + (x - cx) * (1 - 0.018 / r), cy + (y - cy) * (1 - 0.018 / r)]);
   function clip5(poly, a, b) {
-    const cross9 = (p2) => (b[0] - a[0]) * (p2[1] - a[1]) - (b[1] - a[1]) * (p2[0] - a[0]), out2 = [];
-    let prev = poly.at(-1), d0 = cross9(prev);
+    const cross10 = (p2) => (b[0] - a[0]) * (p2[1] - a[1]) - (b[1] - a[1]) * (p2[0] - a[0]), out2 = [];
+    let prev = poly.at(-1), d0 = cross10(prev);
     for (const now of poly) {
-      const d1 = cross9(now);
+      const d1 = cross10(now);
       if (d0 >= 0 !== d1 >= 0) {
         const t = d0 / (d0 - d1);
         out2.push([prev[0] + (now[0] - prev[0]) * t, prev[1] + (now[1] - prev[1]) * t]);
@@ -49467,7 +52008,7 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
     let create = function(id2, surfaceType = "Wood") {
       const buckets = /* @__PURE__ */ new Map(), colliders = [], anchors = [];
       let serial3 = 0;
-      const add3 = (geo, material2, position3 = [0, 0, 0], rotation = [0, 0, 0], scale5 = [1, 1, 1], keep = false) => {
+      const add4 = (geo, material2, position3 = [0, 0, 0], rotation = [0, 0, 0], scale5 = [1, 1, 1], keep = false) => {
         const transform3 = matrix5(position3, rotation, scale5);
         let d = buckets.get(material2);
         if (!d) buckets.set(material2, d = new Draft());
@@ -49481,9 +52022,9 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
           const top = upwardTriangles(g, transform3), bounds6 = g.boundingBox.clone().applyMatrix4(transform3);
           colliders.push({ slot, shape: "obb", x: (bounds6.min.x + bounds6.max.x) / 2, z: (bounds6.min.z + bounds6.max.z) / 2, yaw: 0, halfX: (bounds6.max.x - bounds6.min.x) / 2, halfZ: (bounds6.max.z - bounds6.min.z) / 2, minY: bounds6.min.y, maxY: bounds6.max.y, type: "Wood", support: true, ceiling: true, solid: true, supportTriangles: top });
         }
-        add3(g, materials.wood, position3, rotation);
+        add4(g, materials.wood, position3, rotation);
       };
-      const member = (points, radius, material2 = materials.wood, sides = 8) => add3(tube3(points, radius, { sides }), material2);
+      const member = (points, radius, material2 = materials.wood, sides = 8) => add4(tube3(points, radius, { sides }), material2);
       const anchor = (name, x, y, z) => anchors.push({ id: name, position: [x, y, z] });
       const finish3 = () => {
         const parts = [];
@@ -49499,10 +52040,10 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
         templates.set(id2, result);
         return result;
       };
-      return { add: add3, board, member, anchor, colliders, finish: finish3 };
+      return { add: add4, board, member, anchor, colliders, finish: finish3 };
     }, wheel = function(b, position3, rotation, seed) {
       let foot = null;
-      const group = matrix5(position3, rotation), add3 = (g, m, rot = [0, 0, 0], pos2 = [0, 0, 0]) => {
+      const group = matrix5(position3, rotation), add4 = (g, m, rot = [0, 0, 0], pos2 = [0, 0, 0]) => {
         const transform3 = new Matrix4().multiplyMatrices(group, matrix5(pos2, rot));
         let baked = g.clone().applyMatrix4(transform3);
         const p = baked.attributes.position;
@@ -49510,13 +52051,13 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
         g.dispose();
         b.add(baked, m);
       };
-      add3(ring(0.52, 0.085, 0.105, { seed }), materials.wood);
-      add3(ring(0.525, 0.027, 0.13, { seed }), materials.iron);
-      add3(tube3([[0, 0, -0.12], [0, 0, 0.14]], [0.1, 0.092], { sides: 12 }), materials.wood);
-      add3(ring(0.11, 0.03, 0.145, { segments: 20, seed }), materials.iron);
+      add4(ring(0.52, 0.085, 0.105, { seed }), materials.wood);
+      add4(ring(0.525, 0.027, 0.13, { seed }), materials.iron);
+      add4(tube3([[0, 0, -0.12], [0, 0, 0.14]], [0.1, 0.092], { sides: 12 }), materials.wood);
+      add4(ring(0.11, 0.03, 0.145, { segments: 20, seed }), materials.iron);
       for (let i = 0; i < 10; i++) {
-        const a = i / 10 * TAU30 + 0.06;
-        add3(tube3([[Math.cos(a) * 0.075, Math.sin(a) * 0.075, 0], [Math.cos(a) * 0.465, Math.sin(a) * 0.465, 0]], [0.035, 0.027], { sides: 6 }), materials.wood);
+        const a = i / 10 * TAU32 + 0.06;
+        add4(tube3([[Math.cos(a) * 0.075, Math.sin(a) * 0.075, 0], [Math.cos(a) * 0.465, Math.sin(a) * 0.465, 0]], [0.035, 0.027], { sides: 6 }), materials.wood);
       }
       b.anchor("wheel-contact-" + seed, ...foot);
     }, crate = function(b, position3, seed = 0, scale5 = 1, broken = false) {
@@ -49598,7 +52139,7 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
       if (!verts.length) return;
       const result = [], seen = /* @__PURE__ */ new Set();
       for (let i = 0; i < 8; i++) {
-        const dx = Math.cos(i * TAU30 / 8), dz = Math.sin(i * TAU30 / 8), p = verts.reduce((a, b) => b[0] * dx + b[2] * dz > a[0] * dx + a[2] * dz ? b : a), key3 = p.map((v) => v.toFixed(5)).join(",");
+        const dx = Math.cos(i * TAU32 / 8), dz = Math.sin(i * TAU32 / 8), p = verts.reduce((a, b) => b[0] * dx + b[2] * dz > a[0] * dx + a[2] * dz ? b : a), key3 = p.map((v) => v.toFixed(5)).join(",");
         if (!seen.has(key3)) {
           seen.add(key3);
           result.push({ id: "source-foot-" + i, position: p });
@@ -49682,7 +52223,7 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
       crate(b, [0, 0, 0], 78, 1, true);
       sack(b, [0.57, 0, -0.08], 0.85, 5);
       sack(b, [-0.43, 0, 0.42], 0.68, 11);
-      for (let i = 0; i < 5; i++) b.board("splinter-" + i, 0.26 + hash11(i, 8) * 0.38, 0.07, 0.018, [(hash11(i, 3) - 0.5) * 1.6, 0.025, (hash11(i, 7) - 0.5) * 1.2], [0, hash11(i, 9) * TAU30, 0.04], i + 69, true);
+      for (let i = 0; i < 5; i++) b.board("splinter-" + i, 0.26 + hash11(i, 8) * 0.38, 0.07, 0.018, [(hash11(i, 3) - 0.5) * 1.6, 0.025, (hash11(i, 7) - 0.5) * 1.2], [0, hash11(i, 9) * TAU32, 0.04], i + 69, true);
       b.finish();
     }
     {
@@ -49717,7 +52258,7 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
     {
       const b = create("old-bones", "Stone");
       for (let i = 0; i < 4; i++) {
-        const x = (hash11(i, 1) - 0.5) * 0.65, z = (hash11(i, 2) - 0.5) * 0.45, a = hash11(i, 3) * TAU30, dir = new V4(Math.sin(a), 0, Math.cos(a)), p = new V4(x, 0.025, z), points = [p.clone().addScaledVector(dir, -0.17).toArray(), p.clone().addScaledVector(dir, -0.125).add(new V4(0, 0.025, 0)).toArray(), p.clone().add(new V4(0, 8e-3, 0)).toArray(), p.clone().addScaledVector(dir, 0.13).toArray(), p.clone().addScaledVector(dir, 0.18).add(new V4(0, 0.012, 0)).toArray()];
+        const x = (hash11(i, 1) - 0.5) * 0.65, z = (hash11(i, 2) - 0.5) * 0.45, a = hash11(i, 3) * TAU32, dir = new V4(Math.sin(a), 0, Math.cos(a)), p = new V4(x, 0.025, z), points = [p.clone().addScaledVector(dir, -0.17).toArray(), p.clone().addScaledVector(dir, -0.125).add(new V4(0, 0.025, 0)).toArray(), p.clone().add(new V4(0, 8e-3, 0)).toArray(), p.clone().addScaledVector(dir, 0.13).toArray(), p.clone().addScaledVector(dir, 0.18).add(new V4(0, 0.012, 0)).toArray()];
         b.member(points, [0.033, 0.025, 0.014, 0.02, 0.03], bone, 9);
       }
       for (let i = 0; i < 5; i++) {
@@ -49733,18 +52274,18 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
     {
       const b = create("cold-firepit", "Stone");
       for (let i = 0; i < 10; i++) {
-        const a = i / 10 * TAU30, r = 0.66 + hash11(i, 18) * 0.025, profile = Array.from({ length: 7 }, (_, j) => {
-          const angle = j / 7 * TAU30;
+        const a = i / 10 * TAU32, r = 0.66 + hash11(i, 18) * 0.025, profile = Array.from({ length: 7 }, (_, j) => {
+          const angle = j / 7 * TAU32;
           return [Math.cos(angle) * (0.12 + hash11(j, i) * 0.05), Math.sin(angle) * (0.1 + hash11(j + 9, i) * 0.06)];
         });
         b.anchor("ring-stone-" + i, Math.cos(a) * r, 0.015, Math.sin(a) * r);
         b.add(polygonSolid(profile, 0.13 + hash11(i, 21) * 0.05, { bevel: 0.025, seed: i, stoneUV: true }), materials.stone, [Math.cos(a) * r, 0.015, Math.sin(a) * r], [0, a, 0.04]);
       }
       for (let i = 0; i < 7; i++) {
-        const x = (hash11(i, 24) - 0.5) * 0.75, z = (hash11(i, 30) - 0.5) * 0.6, a = hash11(i, 31) * TAU30;
+        const x = (hash11(i, 24) - 0.5) * 0.75, z = (hash11(i, 30) - 0.5) * 0.6, a = hash11(i, 31) * TAU32;
         b.add(tube3([[-0.3, 0, 0], [0, 0.012, 0.01], [0.33, 0.015, -0.01]], [0.045, 0.052, 0.025], { sides: 9, name: "split-charred-branch" }), char, [x, 0.075, z], [0, a, 0.03]);
       }
-      const ash = polygonSolid(Array.from({ length: 15 }, (_, j) => [Math.cos(j / 15 * TAU30) * (0.48 + hash11(j, 71) * 0.05), Math.sin(j / 15 * TAU30) * (0.48 + hash11(j, 71) * 0.05)]), 0.014, { bevel: 3e-3, name: "cold-ash-bed" });
+      const ash = polygonSolid(Array.from({ length: 15 }, (_, j) => [Math.cos(j / 15 * TAU32) * (0.48 + hash11(j, 71) * 0.05), Math.sin(j / 15 * TAU32) * (0.48 + hash11(j, 71) * 0.05)]), 0.014, { bevel: 3e-3, name: "cold-ash-bed" });
       b.add(ash, char, [0, 4e-3, 0]);
       b.finish();
     }
@@ -49996,7 +52537,7 @@ function createStoryFit({ kit, height: height2, seed = 728194, presets = STORY_P
       const template3 = kit.get(prop2.model);
       return template3 ? { id: prop2.id, model: prop2.model, ...storyFoundation(template3, prop2, height2) } : { id: prop2.id, model: prop2.model, fits: false, missing: true };
     });
-    return { supported: true, fits: fittings.every((f10) => f10.fits), fittings };
+    return { supported: true, fits: fittings.every((f12) => f12.fits), fittings };
   }
   return { inspect: inspect2, canFit: (descriptor) => inspect2(descriptor).fits };
 }
@@ -50004,28 +52545,28 @@ function createStoryFit({ kit, height: height2, seed = 728194, presets = STORY_P
 // story-builder.js
 var transformPoint = (matrix6, p) => new Vector3(...p).applyMatrix4(matrix6).toArray();
 var copyTriangle = (matrix6, t) => [...transformPoint(matrix6, t.slice(0, 3)), ...transformPoint(matrix6, t.slice(3, 6)), ...transformPoint(matrix6, t.slice(6, 9))];
-function transformCollider(local, matrix6, yaw2, owner2, propId, index2) {
-  const id2 = owner2 + "/" + propId + "/collider/" + (local.slot ?? index2), out2 = { ...local, id: id2 };
-  if (local.shape === "obb") {
-    const center2 = transformPoint(matrix6, [local.x, 0, local.z]);
+function transformCollider(local2, matrix6, yaw2, owner2, propId, index2) {
+  const id2 = owner2 + "/" + propId + "/collider/" + (local2.slot ?? index2), out2 = { ...local2, id: id2 };
+  if (local2.shape === "obb") {
+    const center2 = transformPoint(matrix6, [local2.x, 0, local2.z]);
     out2.x = center2[0];
     out2.z = center2[2];
-    out2.yaw = (local.yaw || 0) - yaw2;
-  } else if (local.shape === "capsule") {
-    const a = transformPoint(matrix6, [local.ax, 0, local.az]), b = transformPoint(matrix6, [local.bx, 0, local.bz]);
+    out2.yaw = (local2.yaw || 0) - yaw2;
+  } else if (local2.shape === "capsule") {
+    const a = transformPoint(matrix6, [local2.ax, 0, local2.az]), b = transformPoint(matrix6, [local2.bx, 0, local2.bz]);
     out2.ax = a[0];
     out2.az = a[2];
     out2.bx = b[0];
     out2.bz = b[2];
-  } else if (local.shape === "deck") out2.points = local.points.map((p) => transformPoint(matrix6, p));
-  else throw new TypeError("Unsupported story collider " + local.shape);
-  if (local.shape !== "deck") {
-    out2.minY = transformPoint(matrix6, [0, local.minY, 0])[1];
-    out2.maxY = transformPoint(matrix6, [0, local.maxY, 0])[1];
+  } else if (local2.shape === "deck") out2.points = local2.points.map((p) => transformPoint(matrix6, p));
+  else throw new TypeError("Unsupported story collider " + local2.shape);
+  if (local2.shape !== "deck") {
+    out2.minY = transformPoint(matrix6, [0, local2.minY, 0])[1];
+    out2.maxY = transformPoint(matrix6, [0, local2.maxY, 0])[1];
   }
-  if (local.supportTriangles) out2.supportTriangles = local.supportTriangles.map((t) => copyTriangle(matrix6, t));
-  if (local.undersideTriangles) out2.undersideTriangles = local.undersideTriangles.map((t) => copyTriangle(matrix6, t));
-  if (local.supportGroup) out2.supportGroup = owner2 + "/" + propId + "/support/" + local.supportGroup;
+  if (local2.supportTriangles) out2.supportTriangles = local2.supportTriangles.map((t) => copyTriangle(matrix6, t));
+  if (local2.undersideTriangles) out2.undersideTriangles = local2.undersideTriangles.map((t) => copyTriangle(matrix6, t));
+  if (local2.supportGroup) out2.supportGroup = owner2 + "/" + propId + "/support/" + local2.supportGroup;
   return out2;
 }
 function createStoryBuilder({ kit, height: height2, createGuard, batcher, seed = 728194, presets = STORY_PRESETS }) {
@@ -50345,19 +52886,19 @@ async function prepareWorldStories(world2, { createGuard, seed = 728194 }) {
     }
   });
   const kit = createPOIArtKit({ materials: { wood, iron, stone: world2.ecology?.contacts?.chipMaterial || world2.stone, masonry: world2.masonry, bark: world2.bark }, templates: { chest: world2.ruins.chest, pillar: world2.ruins.pillar, brokenPillar: world2.ruins.stump, deadTree: naturalKit.templates.get("snag-pine"), flowers: naturalKit.templates.get("flowers-a") } });
-  let batcher, builder5;
+  let batcher, builder6;
   try {
     const tent = kit.get("torn-tent");
     tent.colliders = createTentSideColliders(tent).colliders;
     batcher = createStoryBatches({ parent: world2.scene });
-    builder5 = createStoryBuilder({ kit, height: world2.terrainFunctions.height, createGuard, batcher, seed });
+    builder6 = createStoryBuilder({ kit, height: world2.terrainFunctions.height, createGuard, batcher, seed });
   } catch (error) {
     batcher?.dispose();
     kit.dispose();
     throw error;
   }
   let disposed = false;
-  const state2 = { kit, builder: builder5, batcher, update() {
+  const state2 = { kit, builder: builder6, batcher, update() {
     batcher.flush();
   }, dispose() {
     if (disposed) return;
@@ -50689,19 +53230,19 @@ function chart(seed, width) {
   const eligible = BANDS2.filter(([a, b]) => b - a >= width * TIMBER_UV_PER_METRE + 2e-3), bands = eligible.length ? eligible : BANDS2, band = bands[Math.floor(hash11(seed, 81) * bands.length)];
   return { u: hash11(seed, 86) * 0.91, v: (band[0] + band[1]) / 2, scale: TIMBER_UV_PER_METRE };
 }
-var cross7 = (a, b, c2) => (b[0] - a[0]) * (c2[1] - a[1]) - (b[1] - a[1]) * (c2[0] - a[0]);
+var cross8 = (a, b, c2) => (b[0] - a[0]) * (c2[1] - a[1]) - (b[1] - a[1]) * (c2[0] - a[0]);
 function distanceEdge(p, a, b) {
   const dx = b[0] - a[0], dz = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / (dx * dx + dz * dz || 1)));
   return Math.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dz * t);
 }
 function weatheredBoard(length, width, thickness, seed = 1, split = false) {
-  const collisionGeometry = plank(length, width, thickness, seed, split), L3 = length / 2, W = width / 2, j = 0.018 + hash11(seed, 2) * 0.027;
-  const reference = [[-L3 + j, -W], [L3 - j * 0.4, -W], [L3, W * 0.1], [L3 - j, W], [-L3 + j * 0.6, W], [-L3, -W * 0.1]];
-  if (split) reference.splice(2, 0, [L3 - 0.13, -W * 0.35], [L3 - 0.28, -W * 0.19], [L3 - 0.045, W * 0.04]);
-  const profile = [[-L3 + j, -W], [L3 - j * 0.4, -W]];
-  if (split) profile.push([L3 - 0.13, -W * 0.35], [L3 - Math.min(0.3, length * 0.17), -W * 0.19], [L3 - 0.045, W * 0.04]);
-  else profile.push([L3 - 0.035, -W * 0.33], [L3 - 0.06, -W * 0.18], [L3 - 0.015, W * 0.04]);
-  profile.push([L3, W * 0.1], [L3 - 0.016, W * 0.27], [L3 - Math.min(0.16, length * 0.11), W * 0.36], [L3 - 0.027, W * 0.43], [L3 - j, W], [-L3 + j * 0.6, W], [-L3 + 0.01, W * 0.2], [-L3, -W * 0.1], [-L3 + 0.018, -W * 0.29]);
+  const collisionGeometry = plank(length, width, thickness, seed, split), L4 = length / 2, W = width / 2, j = 0.018 + hash11(seed, 2) * 0.027;
+  const reference = [[-L4 + j, -W], [L4 - j * 0.4, -W], [L4, W * 0.1], [L4 - j, W], [-L4 + j * 0.6, W], [-L4, -W * 0.1]];
+  if (split) reference.splice(2, 0, [L4 - 0.13, -W * 0.35], [L4 - 0.28, -W * 0.19], [L4 - 0.045, W * 0.04]);
+  const profile = [[-L4 + j, -W], [L4 - j * 0.4, -W]];
+  if (split) profile.push([L4 - 0.13, -W * 0.35], [L4 - Math.min(0.3, length * 0.17), -W * 0.19], [L4 - 0.045, W * 0.04]);
+  else profile.push([L4 - 0.035, -W * 0.33], [L4 - 0.06, -W * 0.18], [L4 - 0.015, W * 0.04]);
+  profile.push([L4, W * 0.1], [L4 - 0.016, W * 0.27], [L4 - Math.min(0.16, length * 0.11), W * 0.36], [L4 - 0.027, W * 0.43], [L4 - j, W], [-L4 + j * 0.6, W], [-L4 + 0.01, W * 0.2], [-L4, -W * 0.1], [-L4 + 0.018, -W * 0.29]);
   const bevel = Math.min(0.012, thickness * 0.16), cx = reference.reduce((a, p) => a + p[0], 0) / reference.length, cz = reference.reduce((a, p) => a + p[1], 0) / reference.length, radius = Math.max(...reference.map((p) => Math.hypot(p[0] - cx, p[1] - cz))), shrink = 1 - bevel / Math.max(radius, 0.01), inner = profile.map(([x, z]) => [cx + (x - cx) * shrink, cz + (z - cz) * shrink]), levels = [[inner, 0], [profile, bevel], [profile, thickness - bevel], [inner, thickness]], draft = new Draft(), uv = chart(seed, width), N = profile.length;
   const tex = (x, z) => [uv.u + x * uv.scale, uv.v + z * uv.scale];
   for (let layer = 1; layer < levels.length; layer++) for (let i = 0; i < N; i++) {
@@ -50721,8 +53262,8 @@ function weatheredBoard(length, width, thickness, seed = 1, split = false) {
       return [corners3[0][0] * (1 - a - b) + corners3[1][0] * a + corners3[2][0] * b, corners3[0][1] * (1 - a - b) + corners3[1][1] * a + corners3[2][1] * b];
     };
     const emit = (points) => {
-      if (Math.abs(cross7(...points)) < 1e-12) return;
-      const sign = cross7(...points);
+      if (Math.abs(cross8(...points)) < 1e-12) return;
+      const sign = cross8(...points);
       if (top ? sign > 0 : sign < 0) [points[1], points[2]] = [points[2], points[1]];
       const tint4 = 0.88 + hash11(seed, 17) * 0.1;
       draft.tri(...points.map((p) => surface4(p, top)), points.map((p) => tex(...p)), [tint4, tint4 * 0.99, tint4 * 0.96]);
@@ -50841,8 +53382,8 @@ function chippedStone(original, seed, { rough = false, support = true } = {}) {
     const emit = (points) => {
       const q = points.map((v) => shape(v, keep));
       const grain = q.map((v) => {
-        const f10 = shade3 * (0.965 + 0.035 * Math.sin(v[0] * 2.1 + v[1] * 1.7 + v[2] * 3.3 + seed));
-        return [f10, f10 * 0.99, f10 * 0.96];
+        const f12 = shade3 * (0.965 + 0.035 * Math.sin(v[0] * 2.1 + v[1] * 1.7 + v[2] * 3.3 + seed));
+        return [f12, f12 * 0.99, f12 * 0.96];
       });
       draft.tri(...q, points.map(uv), grain);
     };
@@ -50906,7 +53447,7 @@ function incisedMonolith(original, seed = 37) {
     normal4.crossVectors(b.clone().sub(a), c2.clone().sub(a)).normalize();
     if (normal4.y > 0.42) supports.push(new Triangle(a.clone(), b.clone(), c2.clone()));
   }
-  const scars = Array.from({ length: 7 }, (_, i) => ({ a: hash11(i, seed + 2) * TAU30, y: 0.18 + hash11(i, seed + 9) * 1.8, w: 0.13 + hash11(i, seed + 31) * 0.2, h: 0.08 + hash11(i, seed + 6) * 0.18, d: 0.019 + hash11(i, seed + 8) * 0.035 }));
+  const scars = Array.from({ length: 7 }, (_, i) => ({ a: hash11(i, seed + 2) * TAU32, y: 0.18 + hash11(i, seed + 9) * 1.8, w: 0.13 + hash11(i, seed + 31) * 0.2, h: 0.08 + hash11(i, seed + 6) * 0.18, d: 0.019 + hash11(i, seed + 8) * 0.035 }));
   const shape = (v, keep) => {
     const key3 = v.map((x2) => Math.round(x2 * 1e6)).join(",");
     if (cache2.has(key3)) return cache2.get(key3);
@@ -50921,12 +53462,12 @@ function incisedMonolith(original, seed = 37) {
       const da = Math.atan2(Math.sin(angle - s.a), Math.cos(angle - s.a)) * rad;
       depth += s.d * Math.exp(-Math.pow(da / s.w, 2) - Math.pow((y - s.y) / s.h, 2));
     }
-    const chart2 = (angle / TAU30 + 1) % 1, u = chart2 * 7 % 1 - 0.5;
+    const chart2 = (angle / TAU32 + 1) % 1, u = chart2 * 7 % 1 - 0.5;
     for (let row2 = 0; row2 < 5; row2++) {
       const cy = 0.52 + row2 * 0.235, stroke = cy + 0.095 * Math.abs(u * 2), fade = Math.max(0, 1 - Math.max(0, Math.abs(u) - 0.26) / 0.075), notch = Math.max(0, 1 - Math.abs(y - stroke) / 0.045);
       depth += 0.018 * notch * fade;
     }
-    const f10 = Math.min(0.13, depth / Math.max(0.16, Math.hypot(x - center2.x, y - center2.y, z - center2.z))), q = v.map((value, i) => value + (center2.getComponent(i) - value) * f10);
+    const f12 = Math.min(0.13, depth / Math.max(0.16, Math.hypot(x - center2.x, y - center2.y, z - center2.z))), q = v.map((value, i) => value + (center2.getComponent(i) - value) * f12);
     cache2.set(key3, q);
     return q;
   };
@@ -50975,14 +53516,14 @@ function metricStone(original, seed = 0) {
 function chapelStoneTemplates(base, { stone, iron, wood }, ownGeometry) {
   const result = [], build = (id2, sourceId, assemble) => {
     const source2 = base.get(sourceId), buckets = /* @__PURE__ */ new Map();
-    const add3 = (g, m = stone, p = [0, 0, 0], r = [0, 0, 0]) => {
+    const add4 = (g, m = stone, p = [0, 0, 0], r = [0, 0, 0]) => {
       let d = buckets.get(m);
       if (!d) buckets.set(m, d = new Draft());
       d.append(g, matrix5(p, r));
       g.userData.rigidCollisionGeometry?.dispose();
       g.dispose();
     };
-    assemble(add3);
+    assemble(add4);
     const parts = [];
     for (const [material2, d] of buckets) {
       const geometry3 = d.finish(id2 + "|" + material2.name);
@@ -50991,27 +53532,27 @@ function chapelStoneTemplates(base, { stone, iron, wood }, ownGeometry) {
     }
     result.push({ ...source2, id: id2, parts, colliders: structuredClone(source2.colliders), anchors: structuredClone(source2.anchors), bounds: structuredClone(source2.bounds), dimensions: source2.dimensions.slice(), fit: { maxRelief: source2.fit?.maxRelief ?? STORY_FOOT_RELIEF[sourceId] ?? 0.18 } });
   };
-  build("chapel-cut-altar", "wind-altar", (add3) => {
+  build("chapel-cut-altar", "wind-altar", (add4) => {
     for (const [i, p] of [{ y: 0, h: 0.2, w: 2.15, d: 1.45 }, { y: 0.2, h: 0.64, w: 1.63, d: 1.03 }, { y: 0.84, h: 0.17, w: 2.2, d: 1.5 }].entries()) {
       const g = polygonSolid([[-p.w / 2, -p.d / 2], [p.w / 2 - 0.035, -p.d / 2], [p.w / 2, p.d / 2 - 0.025], [p.w / 2 - 0.08, p.d / 2], [-p.w / 2, p.d / 2]], p.h, { bevel: 0.028, seed: i + 70, stoneUV: true });
-      add3(chippedStone(g, 70 + i, { rough: i === 1, support: true }), stone, [0, p.y, 0]);
+      add4(chippedStone(g, 70 + i, { rough: i === 1, support: true }), stone, [0, p.y, 0]);
     }
-    for (const r of [0.29, 0.39]) add3(ring(r, 0.011, 0.01, { segments: 44, seed: r * 20, name: "old-wind-inlay" }), stone, [0, 1.012, 0], [Math.PI / 2, 0, 0]);
+    for (const r of [0.29, 0.39]) add4(ring(r, 0.011, 0.01, { segments: 44, seed: r * 20, name: "old-wind-inlay" }), stone, [0, 1.012, 0], [Math.PI / 2, 0, 0]);
     for (const side2 of [-1, 1]) {
       const x = side2 * 0.45, z = 0.485;
-      for (const [a, b] of [[[x - 0.13, 0.37, z], [x, 0.64, z]], [[x, 0.64, z], [x + 0.13, 0.37, z]], [[x + 0.13, 0.37, z], [x - 0.13, 0.37, z]]]) add3(tube3([a, b], 6e-3, { sides: 5, name: "worn-votive-triangle" }), iron);
+      for (const [a, b] of [[[x - 0.13, 0.37, z], [x, 0.64, z]], [[x, 0.64, z], [x + 0.13, 0.37, z]], [[x + 0.13, 0.37, z], [x - 0.13, 0.37, z]]]) add4(tube3([a, b], 6e-3, { sides: 5, name: "worn-votive-triangle" }), iron);
     }
   });
-  build("chapel-course-wall", "broken-wall", (add3) => {
+  build("chapel-course-wall", "broken-wall", (add4) => {
     let seed = 0;
     for (let row2 = 0; row2 < 4; row2++) for (let i = 0; i < 7; i++) {
       if (i === 4 && row2 > 0 || row2 === 3 && (i < 2 || i > 5) || i === 1 && row2 === 2) continue;
       const z = (i - 3) * 1.17 + row2 % 2 * 0.38, x = (hash11(i, row2 + 91) - 0.5) * 0.09, y = row2 * 0.42, g = polygonSolid([[-0.48, -0.53], [0.45, -0.56], [0.49, 0.46], [0.32, 0.55], [-0.46, 0.51]], 0.38 + hash11(i, row2 + 12) * 0.03, { bevel: 0.045, seed: seed++, stoneUV: true });
-      add3(chippedStone(g, 120 + row2 * 17 + i, { rough: true, support: true }), stone, [x, y, z], [0, (hash11(i, row2 + 77) - 0.5) * 0.045, 0]);
+      add4(chippedStone(g, 120 + row2 * 17 + i, { rough: true, support: true }), stone, [x, y, z], [0, (hash11(i, row2 + 77) - 0.5) * 0.045, 0]);
     }
   });
-  build("chapel-broken-pier", "broken-pillar", (add3) => {
-    for (const part2 of base.get("broken-pillar").parts) add3(metricStone(part2.geometry.clone(), 73), stone);
+  build("chapel-broken-pier", "broken-pillar", (add4) => {
+    for (const part2 of base.get("broken-pillar").parts) add4(metricStone(part2.geometry.clone(), 73), stone);
   });
   return result;
 }
@@ -51193,7 +53734,7 @@ function createSmallLandmarkKit(base) {
   function draft(id2, fit = 0.22) {
     const buckets = /* @__PURE__ */ new Map(), colliders = [], anchors = [], metadataBounds = new Box3();
     let serial3 = 0;
-    const add3 = (g, m = stone, p = [0, 0, 0], r = [0, 0, 0], s = [1, 1, 1]) => {
+    const add4 = (g, m = stone, p = [0, 0, 0], r = [0, 0, 0], s = [1, 1, 1]) => {
       let b = buckets.get(m);
       if (!b) buckets.set(m, b = new Draft());
       const tr = matrix5(p, r, s), proxy = g.userData.rigidCollisionGeometry || g.userData.timberCollisionGeometry, physical = (proxy || g).clone().applyMatrix4(tr);
@@ -51220,11 +53761,11 @@ function createSmallLandmarkKit(base) {
         g.dispose();
         return tr;
       }
-      return add3(g, m, visualP, r);
+      return add4(g, m, visualP, r);
     };
     const beam = (a, b, r = 0.08, m = wood) => {
       const seed = Math.round((a[0] * 7 + a[1] * 13 + a[2] * 17 + b[0] * 23 + b[1] * 29 + b[2] * 31) * 100);
-      add3(m === wood && r >= 0.04 ? hewnTimber([a, b], [r, r * 0.91], { sides: 9, seed }) : tube3([a, b], [r, r * 0.91], { sides: 9 }), m);
+      add4(m === wood && r >= 0.04 ? hewnTimber([a, b], [r, r * 0.91], { sides: 9, seed }) : tube3([a, b], [r, r * 0.91], { sides: 9 }), m);
       if (Math.abs(a[1] - b[1]) > 0.6 && Math.hypot(a[0] - b[0], a[2] - b[2]) < 0.4) capsule((a[0] + b[0]) / 2, (a[2] + b[2]) / 2, r, Math.min(a[1], b[1]), Math.max(a[1], b[1]), "Wood");
     };
     const block = (x, y, z, w, h, d, seed = 1, m = masonry, finish4 = 0) => {
@@ -51243,11 +53784,11 @@ function createSmallLandmarkKit(base) {
       templates.set(id2, result);
       return result;
     };
-    return { add: add3, anchor, capsule, solid: solid2, beam, block, finish: finish3, colliders };
+    return { add: add4, anchor, capsule, solid: solid2, beam, block, finish: finish3, colliders };
   }
   function rock(b, p, s, seed, refine = false) {
     const n = 7, profile = Array.from({ length: n }, (_, i) => {
-      const a = i / n * TAU30, r = 0.83 + hash11(i, seed) * 0.17;
+      const a = i / n * TAU32, r = 0.83 + hash11(i, seed) * 0.17;
       return [Math.cos(a) * s[0] * r, Math.sin(a) * s[2] * r];
     });
     const g = polygonSolid(profile, s[1], { bevel: Math.min(0.19, s[1] * 0.09), seed, stoneUV: true, name: "fractured-bedrock" });
@@ -51397,9 +53938,9 @@ function createSmallLandmarkKit(base) {
       for (let row2 = 0; row2 < 6; row2++) {
         const r = 1.9 - row2 * 0.18, y = row2 * 0.34, N = 16 - row2;
         for (let i = 0; i < N; i++) {
-          const a = (i + row2 % 2 * 0.5) / N * TAU30;
+          const a = (i + row2 % 2 * 0.5) / N * TAU32;
           if (row2 < 3 && Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) < 0.36) continue;
-          const width = TAU30 * r / N * 0.88, g = polygonSolid([[-width / 2, -0.22], [width / 2, -0.24], [width / 2, 0.23], [-width / 2, 0.22]], 0.3, { bevel: 0.04, seed: i + row2 * 31, stoneUV: true });
+          const width = TAU32 * r / N * 0.88, g = polygonSolid([[-width / 2, -0.22], [width / 2, -0.24], [width / 2, 0.23], [-width / 2, 0.22]], 0.3, { bevel: 0.04, seed: i + row2 * 31, stoneUV: true });
           b.solid(g, row2 < 3 ? stone : masonry, [Math.cos(a) * r, y, Math.sin(a) * r], [0, Math.PI / 2 - a, 0], false);
           if (row2 === 0) b.anchor(Math.cos(a) * r, Math.sin(a) * r);
         }
@@ -51427,7 +53968,7 @@ function createSmallLandmarkKit(base) {
     {
       const b = draft("dry-well", 0.22);
       for (let row2 = 0; row2 < 3; row2++) for (let i = 0; i < 12; i++) {
-        const a = (i + row2 % 2 * 0.5) / 12 * TAU30, g = polygonSolid([[-0.24, -0.17], [0.24, -0.17], [0.24, 0.17], [-0.24, 0.17]], 0.275, { bevel: 0.032, seed: i + row2 * 20, stoneUV: true });
+        const a = (i + row2 % 2 * 0.5) / 12 * TAU32, g = polygonSolid([[-0.24, -0.17], [0.24, -0.17], [0.24, 0.17], [-0.24, 0.17]], 0.275, { bevel: 0.032, seed: i + row2 * 20, stoneUV: true });
         b.solid(chippedStone(g, 140 + row2 * 12 + i, { rough: row2 < 2, support: true }), dressedStone, [Math.cos(a) * 0.94, row2 * 0.285, Math.sin(a) * 0.94], [0, Math.PI / 2 - a, 0]);
         if (row2 === 0) b.anchor(Math.cos(a) * 0.94, Math.sin(a) * 0.94);
       }
@@ -51442,13 +53983,13 @@ function createSmallLandmarkKit(base) {
       {
         const hemp = material2("torn-tent", /hemp/), coil = [];
         for (let j = 0; j <= 160; j++) {
-          const a = j / 160 * TAU30 * 10;
+          const a = j / 160 * TAU32 * 10;
           coil.push([-0.3 + j / 160 * 0.6, 2.4 + Math.sin(a) * 0.137, Math.cos(a) * 0.137]);
         }
         b.add(tube3(coil, 9e-3, { sides: 5, name: "cut-hemp-windlass-winding" }), hemp);
         for (const x of [-1.38, 1.38]) b.add(ring(0.115, 0.018, 0.055, { segments: 20, name: "forged-windlass-bearing" }), iron, [x, 2.4, 0], [0, Math.PI / 2, 0]);
         for (let j = 0; j < 5; j++) {
-          const a = j / 5 * TAU30;
+          const a = j / 5 * TAU32;
           b.add(tube3([[0.025, 1.48, 0.055], [0.025 + Math.cos(a) * 0.012, 1.45, 0.055 + Math.sin(a) * 0.01]], [3e-3, 8e-4], { sides: 4, name: "frayed-rope-tail" }), hemp);
         }
       }
@@ -51502,7 +54043,7 @@ function createSmallLandmarkKit(base) {
     {
       const b = draft("watch-beacon", 0.23);
       for (let row2 = 0; row2 < 3; row2++) for (let i = 0; i < 8; i++) {
-        const a = (i + row2 * 0.5) / 8 * TAU30, r = 0.96 - row2 * 0.12;
+        const a = (i + row2 * 0.5) / 8 * TAU32, r = 0.96 - row2 * 0.12;
         const g = polygonSolid([[-0.31, -0.25], [0.31, -0.25], [0.32, 0.25], [-0.31, 0.25]], 0.38, { bevel: 0.05, seed: 30 + i, stoneUV: true });
         b.solid(g, masonry, [Math.cos(a) * r, row2 * 0.39, Math.sin(a) * r], [0, Math.PI / 2 - a, 0]);
         if (!row2) b.anchor(Math.cos(a) * r, Math.sin(a) * r);
@@ -51520,7 +54061,7 @@ function createSmallLandmarkKit(base) {
       b.capsule(0, 0, 1.02, 0, 1.02);
       for (const r of [0.22, 0.48, 0.75]) b.add(ring(r, 0.017, 0.01, { segments: 48 }), patina, [0, 1.027, 0], [Math.PI / 2, 0, 0]);
       for (let i = 0; i < 12; i++) {
-        const a = i / 12 * TAU30;
+        const a = i / 12 * TAU32;
         b.beam([Math.cos(a) * 0.62, 1.03, Math.sin(a) * 0.62], [Math.cos(a) * 0.82, 1.03, Math.sin(a) * 0.82], 9e-3, patina);
       }
       for (const x of [-0.65, 0.65]) for (const z of [-0.65, 0.65]) b.anchor(x, z);
@@ -51633,7 +54174,7 @@ function createSmallLandmarkContent({ world: world2, kit: base, createGuard, bat
     const poly = d.footprint.points, waters = terrain.waterReservations?.(d.bounds) || [];
     if (waters.length && !reservationAllowsPolygon({ layers: { decor: waters } }, "decor", poly, 1)) return false;
     for (let i = 0; i <= 18; i++) {
-      const f10 = i / 18, p = point5(d.anchor, d.yaw, 0, 3.5 + (preset.radius + 1.5) * f10), y = terrain.height(p.x, p.z);
+      const f12 = i / 18, p = point5(d.anchor, d.yaw, 0, 3.5 + (preset.radius + 1.5) * f12), y = terrain.height(p.x, p.z);
       if (!Number.isFinite(y) || y < 1.5 || terrain.slope(p.x, p.z) > 0.45 || terrain.waterAt?.(p.x, p.z, y)) return false;
     }
     for (const p of poly) {
@@ -51708,7 +54249,7 @@ function createSmallLandmarkContent({ world: world2, kit: base, createGuard, bat
   }
   const reservations = Object.freeze(descriptors2.flatMap((d) => d.reservations));
   const exclusions = Object.freeze(descriptors2.map((d) => Object.freeze({ id: d.id, type: "small-landmark-reservation", name: d.name, x: d.anchor.x, z: d.anchor.z, clear: 0, reservations: d.reservations })));
-  const builder5 = { kinds: rawBuilder.kinds, canBuild: rawBuilder.canBuild, canFit: rawBuilder.canFit, inspectFit: rawBuilder.inspectFit, async build(d, options) {
+  const builder6 = { kinds: rawBuilder.kinds, canBuild: rawBuilder.canBuild, canFit: rawBuilder.canFit, inspectFit: rawBuilder.inspectFit, async build(d, options) {
     const a = await rawBuilder.build(d, options);
     for (const o of a.interactions) if (o.action === "enter-cave") {
       o.caveSeed = d.caveSeed;
@@ -51732,7 +54273,7 @@ function createSmallLandmarkContent({ world: world2, kit: base, createGuard, bat
     descriptors: Object.freeze(descriptors2),
     reservations,
     exclusions,
-    builder: builder5,
+    builder: builder6,
     kit,
     catalog: Object.freeze(catalog2),
     wrapPlanner(basePlanner) {
@@ -51746,10 +54287,10 @@ function createSmallLandmarkContent({ world: world2, kit: base, createGuard, bat
         return queryBounds(cx * 64, cz * 64, (cx + 1) * 64, (cz + 1) * 64);
       }, get: (id2) => byId.get(id2) || basePlanner.get(id2), reservations: (...b) => queryBounds(...b).reservations, routes: (...b) => queryBounds(...b).routes, isReserved(layer, x, z, r = 0) {
         return basePlanner.isReserved(layer, x, z, r) || reservations.some((v) => v.layers.includes(layer) && intersectsReservation(v, x, z, r));
-      }, stats: () => ({ ...basePlanner.stats(), smallLandmarkSites: descriptors2.length, smallLandmarkKinds: builder5.kinds.slice() }) });
+      }, stats: () => ({ ...basePlanner.stats(), smallLandmarkSites: descriptors2.length, smallLandmarkKinds: builder6.kinds.slice() }) });
     },
     statistics() {
-      return { sites: descriptors2.length, kinds: builder5.kinds.length, kit: kit.statistics(), distant: distant.statistics(), placement: fitMetrics, catalog: catalog2 };
+      return { sites: descriptors2.length, kinds: builder6.kinds.length, kit: kit.statistics(), distant: distant.statistics(), placement: fitMetrics, catalog: catalog2 };
     },
     dispose() {
       if (disposed) return;
@@ -51766,7 +54307,7 @@ function createSmallLandmarkContent({ world: world2, kit: base, createGuard, bat
 // stone-bridge.js
 var GRID5 = 4 / 3;
 var EPS6 = 1e-9;
-var clamp41 = (v, a, b) => Math.max(a, Math.min(b, v));
+var clamp43 = (v, a, b) => Math.max(a, Math.min(b, v));
 function hashString(s) {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) {
@@ -51775,7 +54316,7 @@ function hashString(s) {
   }
   return h >>> 0;
 }
-function random3(seed, n) {
+function random5(seed, n) {
   let h = (seed ^ Math.imul(n + 1, 2654435761)) >>> 0;
   h = Math.imul(h ^ h >>> 16, 2246822507);
   h = Math.imul(h ^ h >>> 13, 3266489909);
@@ -51803,8 +54344,8 @@ function octagon(x0, x1, z0, z1, cut = 0.045) {
 function bufferBuilder(THREE, stoneSeed = null) {
   let textureVariant = null, faceSerial = 0;
   const stoneVariant = (n) => {
-    const angle = random3(stoneSeed, n * 3) * Math.PI * 2;
-    return { c: Math.cos(angle), s: Math.sin(angle), u: random3(stoneSeed, n * 3 + 1) * 8, v: random3(stoneSeed, n * 3 + 2) * 8 };
+    const angle = random5(stoneSeed, n * 3) * Math.PI * 2;
+    return { c: Math.cos(angle), s: Math.sin(angle), u: random5(stoneSeed, n * 3 + 1) * 8, v: random5(stoneSeed, n * 3 + 2) * 8 };
   };
   function beginStone(n) {
     if (stoneSeed !== null) textureVariant = stoneVariant(n + 1e5);
@@ -51904,7 +54445,7 @@ function createStoneBridge(THREE, world2, descriptor) {
   const wall = bufferBuilder(THREE), stone = bufferBuilder(THREE, seed), road = bufferBuilder(THREE), colliders = [], supportGroup = ownerId + "/deck", foundation = [], under = [], archProfiles = [];
   let serial3 = 0, stones = 0;
   const tint4 = (i, base = 1) => {
-    const v = base + random3(seed, i) * 0.13 - 0.065;
+    const v = base + random5(seed, i) * 0.13 - 0.065;
     return [v, v * 0.991, v * 0.967];
   };
   const perimeter = (x0, x1, z0, z1, y) => [[x0, y(z0), z0], [x1, y(z0), z0], [x1, y(z1), z1], [x0, y(z1), z1]];
@@ -51917,25 +54458,25 @@ function createStoneBridge(THREE, world2, descriptor) {
     colliders.push(r);
     return r;
   }
-  function prism(builder5, poly, bottom, top, color3, bevel = 0) {
-    builder5.beginStone(stones);
+  function prism(builder6, poly, bottom, top, color3, bevel = 0) {
+    builder6.beginStone(stones);
     const cx = poly.reduce((s, p) => s + p[0], 0) / poly.length, cz = poly.reduce((s, p) => s + p[1], 0) / poly.length;
     const outer = poly.map(([x, z]) => [x, top(x, z) - (bevel ? 0.018 : 0), z]), inner = bevel ? poly.map(([x, z]) => {
       const dx = cx - x, dz = cz - z, len3 = Math.hypot(dx, dz);
       return [x + dx / len3 * bevel, top(x, z), z + dz / len3 * bevel];
     }) : outer;
-    const tops = builder5.face(inner, color3, [0, 1, 0]);
+    const tops = builder6.face(inner, color3, [0, 1, 0]);
     if (bevel) for (let i = 0; i < poly.length; i++) {
       const j = (i + 1) % poly.length;
-      tops.push(...builder5.face([outer[i], outer[j], inner[j], inner[i]], color3, [0, 1, 0]));
+      tops.push(...builder6.face([outer[i], outer[j], inner[j], inner[i]], color3, [0, 1, 0]));
     }
     for (let i = 0; i < poly.length; i++) {
       const j = (i + 1) % poly.length, lo = [poly[i][0], bottom(poly[i][0], poly[i][1]), poly[i][1]], lj = [poly[j][0], bottom(poly[j][0], poly[j][1]), poly[j][1]];
-      builder5.face([lo, lj, outer[j], outer[i]], color3, [poly[i][0] + poly[j][0] - 2 * cx, 0, poly[i][1] + poly[j][1] - 2 * cz]);
+      builder6.face([lo, lj, outer[j], outer[i]], color3, [poly[i][0] + poly[j][0] - 2 * cx, 0, poly[i][1] + poly[j][1] - 2 * cz]);
     }
-    builder5.face(poly.map(([x, z]) => [x, bottom(x, z), z]), color3, [0, -1, 0]);
+    builder6.face(poly.map(([x, z]) => [x, bottom(x, z), z]), color3, [0, -1, 0]);
     stones++;
-    builder5.endStone();
+    builder6.endStone();
     return tops;
   }
   function profileSegment(z0, z1, y0, y1, top = () => deckBase, color3 = tint4(serial3++, 0.84)) {
@@ -51996,7 +54537,7 @@ function createStoneBridge(THREE, world2, descriptor) {
     }
     archProfiles.push({ centre, radius, spring, points: profile });
     for (let j = 0; j < segments; j++) for (const side2 of [-1, 1]) {
-      const t0 = -Math.PI / 2 + Math.PI * (j + 0.035) / segments, t1 = -Math.PI / 2 + Math.PI * (j + 0.965) / segments, r1 = radius + 0.48 + random3(seed, serial3) * 0.055, x = side2 * (halfWidth + 15e-4), p = (r, t) => [x, spring + r * Math.cos(t), centre + r * Math.sin(t)], shade3 = tint4(serial3++, 0.99);
+      const t0 = -Math.PI / 2 + Math.PI * (j + 0.035) / segments, t1 = -Math.PI / 2 + Math.PI * (j + 0.965) / segments, r1 = radius + 0.48 + random5(seed, serial3) * 0.055, x = side2 * (halfWidth + 15e-4), p = (r, t) => [x, spring + r * Math.cos(t), centre + r * Math.sin(t)], shade3 = tint4(serial3++, 0.99);
       stone.face([p(radius + 0.012, t0), p(radius + 0.012, t1), p(r1, t1), p(r1, t0)], shade3, [side2, 0, 0]);
       stones++;
     }
@@ -52011,7 +54552,7 @@ function createStoneBridge(THREE, world2, descriptor) {
       for (let col = -1; col < 4; col++) {
         const x0 = Math.max(-1.5, -1.5 + col + offset), x1 = Math.min(1.5, -0.5 + col + offset);
         if (x1 - x0 < 0.08) continue;
-        const gap = 9e-3 + random3(seed, serial3) * 9e-3, poly = octagon(x0 + gap, x1 - gap, lo + gap, hi - gap, 0.05 + random3(seed, serial3 + 1) * 0.025), wear2 = 4e-3 * random3(seed, serial3 + 2) + 4e-3 * (1 - Math.min(1, Math.abs((x0 + x1) * 0.5)));
+        const gap = 9e-3 + random5(seed, serial3) * 9e-3, poly = octagon(x0 + gap, x1 - gap, lo + gap, hi - gap, 0.05 + random5(seed, serial3 + 1) * 0.025), wear2 = 4e-3 * random5(seed, serial3 + 2) + 4e-3 * (1 - Math.min(1, Math.abs((x0 + x1) * 0.5)));
         tops.push(...prism(stone, poly, () => y((lo + hi) * 0.5) - 0.065, (x, z) => y(z) - wear2, tint4(serial3++, 0.99), 0.026));
       }
       deckRecord(tag + "/row-" + row2, perimeter(-1.5, 1.5, lo, hi, y), { solid: false, ceiling: false, supportGroup, supportTriangles: tops.map(worldTri) });
@@ -52025,13 +54566,13 @@ function createStoneBridge(THREE, world2, descriptor) {
       deckRecord(tag + "/rail-body-" + side2, poly.map(([x, z]) => [x, y(z) + 0.72, z]), { thickness: 0.755 });
       const n = Math.ceil((z1 - z0) / 1.18), len3 = (z1 - z0) / n;
       for (let j = 0; j < n; j++) {
-        const aa = z0 + j * len3 + 8e-3, bb = z0 + (j + 1) * len3 - 8e-3, p = octagon(cx - 0.235, cx + 0.235, aa, bb, 0.045 + random3(seed, serial3) * 0.02), top = (x, z) => y(z) + 0.91;
+        const aa = z0 + j * len3 + 8e-3, bb = z0 + (j + 1) * len3 - 8e-3, p = octagon(cx - 0.235, cx + 0.235, aa, bb, 0.045 + random5(seed, serial3) * 0.02), top = (x, z) => y(z) + 0.91;
         const tops = prism(stone, p, (x, z) => y(z) + 0.69, top, tint4(serial3++, 0.97));
         deckRecord(tag + "/cap-" + side2 + "-" + j, p.map(([x, z]) => [x, top(x, z), z]), { thickness: 0.22, supportTriangles: tops.map(worldTri) });
       }
       const posts = Math.max(1, Math.round((z1 - z0) / 3.625));
       for (let j = 0; j <= posts; j++) {
-        const zz = clamp41(z0 + j * (z1 - z0) / posts, z0 + 0.28, z1 - 0.28), p = octagon(cx - 0.24, cx + 0.24, zz - 0.25, zz + 0.25, 0.065), top = (x, z) => y(z) + 1.11;
+        const zz = clamp43(z0 + j * (z1 - z0) / posts, z0 + 0.28, z1 - 0.28), p = octagon(cx - 0.24, cx + 0.24, zz - 0.25, zz + 0.25, 0.065), top = (x, z) => y(z) + 1.11;
         const tops = prism(stone, p, (x, z) => y(z) + 0.7, top, tint4(serial3++, 0.96));
         deckRecord(tag + "/post-" + side2 + "-" + j, p.map(([x, z]) => [x, top(x, z), z]), { thickness: 0.41, supportTriangles: tops.map(worldTri) });
       }
@@ -52070,11 +54611,11 @@ function createStoneBridge(THREE, world2, descriptor) {
           let clipped = poly;
           for (let j = 0; j < 3 && clipped.length; j++) clipped = clip4(clipped, t[j], t[(j + 1) % 3]);
           if (clipped.length < 3) continue;
-          const local = clipped.map((v) => localPoint2({ x: v[0], y: height2(v[0], v[2]) + 0.012, z: v[2] })), attrs = (lp) => {
+          const local2 = clipped.map((v) => localPoint2({ x: v[0], y: height2(v[0], v[2]) + 0.012, z: v[2] })), attrs = (lp) => {
             const v = worldPoint(lp), across2 = ((v[0] - p.x) * nx + (v[2] - p.z) * nz) / w;
             return [across2, ((v[0] - roadPoints[0].x) ** 2 + (v[2] - roadPoints[0].z) ** 2) ** 0.5];
           };
-          const ts = road.face(local, [0.97, 0.95, 0.9], [0, 1, 0], 0.7, attrs);
+          const ts = road.face(local2, [0.97, 0.95, 0.9], [0, 1, 0], 0.7, attrs);
           roadSupport.push(...ts.map(worldTri));
         }
       }
@@ -52113,10 +54654,10 @@ function createStoneBridge(THREE, world2, descriptor) {
   group.rotation.y = yaw2;
   group.userData.worldContentOwner = ownerId;
   const geometries = [], materials = [masonry, dressed, roadMaterial];
-  for (const [builder5, material2, name] of [[wall, masonry, "bridge-structure"], [stone, dressed, "bridge-authored-stones"], [road, roadMaterial, "bridge-road-branch"]]) if (builder5.out.triangles) {
-    const g = builder5.geometry(), mesh2 = new THREE.Mesh(g, material2);
+  for (const [builder6, material2, name] of [[wall, masonry, "bridge-structure"], [stone, dressed, "bridge-authored-stones"], [road, roadMaterial, "bridge-road-branch"]]) if (builder6.out.triangles) {
+    const g = builder6.geometry(), mesh2 = new THREE.Mesh(g, material2);
     mesh2.name = name;
-    mesh2.castShadow = builder5 !== road;
+    mesh2.castShadow = builder6 !== road;
     mesh2.receiveShadow = true;
     group.add(mesh2);
     geometries.push(g);
@@ -52482,10 +55023,10 @@ function createBridgeRuntime(THREE, world2, { seed = 728194, builtKinds = [], as
 }
 
 // guard-navigation.js
-var clamp42 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp44 = (x, a, b) => Math.max(a, Math.min(b, x));
 var EPS7 = 1e-8;
 function distanceSegment3(x, z, a, b) {
-  const dx = b.x - a.x, dz = b.z - a.z, t = clamp42(((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz || 1), 0, 1);
+  const dx = b.x - a.x, dz = b.z - a.z, t = clamp44(((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz || 1), 0, 1);
   return { distance: Math.hypot(x - a.x - dx * t, z - a.z - dz * t), t };
 }
 function visible(mesh2) {
@@ -52895,14 +55436,14 @@ function hull2(points) {
   const a = points.map((p) => ({ x: p[0], z: p[2] })).sort((a2, b) => a2.x - b.x || a2.z - b.z), u = [];
   for (const p of a) if (!u.length || Math.abs(p.x - u.at(-1).x) + Math.abs(p.z - u.at(-1).z) > 1e-10) u.push(p);
   if (u.length < 3) return u;
-  const cross9 = (a2, b, c2) => (b.x - a2.x) * (c2.z - a2.z) - (b.z - a2.z) * (c2.x - a2.x), lo = [], hi = [];
+  const cross10 = (a2, b, c2) => (b.x - a2.x) * (c2.z - a2.z) - (b.z - a2.z) * (c2.x - a2.x), lo = [], hi = [];
   for (const p of u) {
-    while (lo.length > 1 && cross9(lo.at(-2), lo.at(-1), p) <= 0) lo.pop();
+    while (lo.length > 1 && cross10(lo.at(-2), lo.at(-1), p) <= 0) lo.pop();
     lo.push(p);
   }
   for (let i = u.length - 1; i >= 0; i--) {
     const p = u[i];
-    while (hi.length > 1 && cross9(hi.at(-2), hi.at(-1), p) <= 0) hi.pop();
+    while (hi.length > 1 && cross10(hi.at(-2), hi.at(-1), p) <= 0) hi.pop();
     hi.push(p);
   }
   lo.pop();
@@ -52955,34 +55496,34 @@ function createTreeFootprintResolver({ seed, families = null }) {
     resolve(tree, species, { worldHeight = 2.5, includeCrown = false } = {}) {
       if (!["pine", "broadleaf"].includes(species) || !(worldHeight >= 0) || !(tree.h > 0) || !(tree.width > 0)) throw Error("Valid tree, species and clearance height required.");
       const index2 = treeFamilyIndex(seed, tree, species), key3 = species + ":" + index2;
-      let f10 = table?.[key3] || runtime.get(key3);
-      if (!f10) {
+      let f12 = table?.[key3] || runtime.get(key3);
+      if (!f12) {
         const family = families?.get(key3);
         if (!family) throw Error("Missing generated tree family " + key3);
-        f10 = runtimeMetadata(family);
-        runtime.set(key3, f10);
+        f12 = runtimeMetadata(family);
+        runtime.set(key3, f12);
       }
-      const scale5 = tree.h / f10.height, sx = scale5 * tree.width, rz = tree.lean * 0.45, ry = tree.r * Math.PI * 2, cz = Math.cos(rz), sz = Math.sin(rz), cy = Math.cos(ry), sy = Math.sin(ry), burial = species === "broadleaf" ? 0.35 : 0.22;
+      const scale5 = tree.h / f12.height, sx = scale5 * tree.width, rz = tree.lean * 0.45, ry = tree.r * Math.PI * 2, cz = Math.cos(rz), sz = Math.sin(rz), cy = Math.cos(ry), sy = Math.sin(ry), burial = species === "broadleaf" ? 0.35 : 0.22;
       const transform3 = (p) => {
         const x = p[0] * sx, y = p[1] * scale5, z = p[2] * sx, qx = x * cz - y * sz;
         return [tree.x + qx * cy + z * sy, tree.y - burial + x * sz + y * cz, tree.z - qx * sy + z * cy];
       };
-      const requiredNative = cz > 0 ? (worldHeight + burial + sx * f10.woodXAbs * Math.abs(sz)) / (scale5 * cz) : Infinity;
+      const requiredNative = cz > 0 ? (worldHeight + burial + sx * f12.woodXAbs * Math.abs(sz)) / (scale5 * cz) : Infinity;
       let band = DATA.bands.findIndex((v) => v >= requiredNative);
       if (band < 0) band = DATA.bands.length - 1;
-      const margin = DATA.roundingSafetyNative * Math.max(scale5, sx), low = footprint2(f10.lowBands[band].map(transform3), margin), whole = bounds4(corners2(f10.bounds).map(transform3));
+      const margin = DATA.roundingSafetyNative * Math.max(scale5, sx), low = footprint2(f12.lowBands[band].map(transform3), margin), whole = bounds4(corners2(f12.bounds).map(transform3));
       const result = { species, familyIndex: index2, seedKey: seed + ":" + species + ":" + index2, bounds: whole, lowBody: { ...low, requestedWorldHeight: worldHeight, nativeBandTop: DATA.bands[band] }, collisionRadius: species === "broadleaf" ? Math.max(0.7, sx * 0.95) : Math.max(0.42, sx * 0.32), metadataGeneratorSha256: DATA.generatorSha256 };
-      if (includeCrown) result.crown = { ...footprint2(f10.crown.map(transform3), margin), windMargin: sx * (species === "pine" ? 0.22 : 0.035) };
+      if (includeCrown) result.crown = { ...footprint2(f12.crown.map(transform3), margin), windMargin: sx * (species === "pine" ? 0.22 : 0.035) };
       return result;
     }
   };
 }
 
 // colossal-behavior.js
-var TAU31 = Math.PI * 2;
-var clamp43 = (x, a, b) => Math.max(a, Math.min(b, x));
-var mix15 = (a, b, t) => a + (b - a) * t;
-function random4(seed, salt, index2 = 0) {
+var TAU33 = Math.PI * 2;
+var clamp45 = (x, a, b) => Math.max(a, Math.min(b, x));
+var mix16 = (a, b, t) => a + (b - a) * t;
+function random6(seed, salt, index2 = 0) {
   let h = (seed ^ Math.imul(salt, 2654435761) ^ Math.imul(index2, 73244475)) >>> 0;
   h = Math.imul(h ^ h >>> 16, 2146121005);
   h = Math.imul(h ^ h >>> 15, 2221713035);
@@ -53036,15 +55577,15 @@ function createColossalPlan({ terrain, seed = 728194, blocked = () => false, isL
     const gladeRadius = Math.max(rx2, rz2) + routeHalfWidth + 0.3;
     if (blocked(x, z, gladeRadius)) return null;
     for (let i = 0; i < 16; i++) {
-      const a = i / 16 * TAU31, u = Math.cos(a) * rx2, v = Math.sin(a) * rz2, px = x + u * c2 - v * s, pz = z + u * s + v * c2, y = h(px, pz);
+      const a = i / 16 * TAU33, u = Math.cos(a) * rx2, v = Math.sin(a) * rz2, px = x + u * c2 - v * s, pz = z + u * s + v * c2, y = h(px, pz);
       if (!safe(px, pz, y, routeHalfWidth)) return null;
     }
     for (let i = 0; i <= steps; i++) {
-      const a = i / steps * TAU31, u = Math.cos(a) * rx2, v = Math.sin(a) * rz2, px = x + u * c2 - v * s, pz = z + u * s + v * c2, y = h(px, pz);
+      const a = i / steps * TAU33, u = Math.cos(a) * rx2, v = Math.sin(a) * rz2, px = x + u * c2 - v * s, pz = z + u * s + v * c2, y = h(px, pz);
       if (!safe(px, pz, y, routeHalfWidth)) return null;
       let low = y, high = y;
       for (let j = 0; j < 8; j++) {
-        const q = j / 8 * TAU31, fx = px + Math.cos(q) * footprint3, fz = pz + Math.sin(q) * footprint3, fy = h(fx, fz);
+        const q = j / 8 * TAU33, fx = px + Math.cos(q) * footprint3, fz = pz + Math.sin(q) * footprint3, fy = h(fx, fz);
         if (!safe(fx, fz, fy, 0) || Math.abs(fy - y) > 1.32) return null;
         low = Math.min(low, fy);
         high = Math.max(high, fy);
@@ -53055,36 +55596,36 @@ function createColossalPlan({ terrain, seed = 728194, blocked = () => false, isL
     for (let i = 1; i < points2.length; i++) if (Math.abs(points2[i].y - points2[i - 1].y) / Math.hypot(points2[i].x - points2[i - 1].x, points2[i].z - points2[i - 1].z) > 0.42) return null;
     const length = addRouteDistances(points2), gladePoints = [];
     const rr = gladeRadius / Math.cos(Math.PI / 32);
-    for (let j = 0; j < 32; j++) gladePoints.push({ x: x + Math.cos(j / 32 * TAU31) * rr, z: z + Math.sin(j / 32 * TAU31) * rr });
+    for (let j = 0; j < 32; j++) gladePoints.push({ x: x + Math.cos(j / 32 * TAU33) * rr, z: z + Math.sin(j / 32 * TAU33) * rr });
     const reservation = { id: id2 + ":glade", ownerId: id2, shape: "polygon", points: gladePoints, layers: ["trees", "rocks", "decor"], bounds: bounds5(gladePoints) };
     return { points: points2, length, reservation };
   }
   for (let slot = 0; slot < GIANT_SITES.length; slot++) {
     const site = GIANT_SITES[slot], id2 = `island-megafauna-v1:${seed}:colossus:${site.key}`;
-    const siteAngle = random4(seed, 320 + slot) * TAU31, siteDistance = site.distance * (0.88 + random4(seed, 330 + slot) * 0.24);
+    const siteAngle = random6(seed, 320 + slot) * TAU33, siteDistance = site.distance * (0.88 + random6(seed, 330 + slot) * 0.24);
     const siteX = -4 + Math.cos(siteAngle) * siteDistance, siteZ = 20 + Math.sin(siteAngle) * siteDistance;
     for (let i = 0; i < 128; i++) {
       metrics.candidateProbes++;
-      const a = i * 2.399963229728653 + random4(seed, 40 + slot) * TAU31, r = i ? site.radius * Math.sqrt(i / 127) : 0, x = siteX + Math.cos(a) * r, z = siteZ + Math.sin(a) * r, y = h(x, z);
+      const a = i * 2.399963229728653 + random6(seed, 40 + slot) * TAU33, r = i ? site.radius * Math.sqrt(i / 127) : 0, x = siteX + Math.cos(a) * r, z = siteZ + Math.sin(a) * r, y = h(x, z);
       if (site.nearSpawn && (Math.hypot(x + 4, z - 20) < 82 || Math.hypot(x + 4, z - 20) > 148)) continue;
       if (!safe(x, z, y, routeHalfWidth) || giants.some((g) => Math.hypot(g.homeX - x, g.homeZ - z) < 160)) continue;
-      const rx2 = 8 + random4(seed, 80 + slot, i) * 3, rz2 = 6 + random4(seed, 90 + slot, i) * 2, yaw2 = random4(seed, 100 + slot, i) * TAU31, route = fit(x, z, rx2, rz2, yaw2, id2);
+      const rx2 = 8 + random6(seed, 80 + slot, i) * 3, rz2 = 6 + random6(seed, 90 + slot, i) * 2, yaw2 = random6(seed, 100 + slot, i) * TAU33, route = fit(x, z, rx2, rz2, yaw2, id2);
       if (!route) {
         metrics.fitRejected++;
         continue;
       }
-      const phase2 = random4(seed, 110 + slot) * route.length;
-      giants.push({ id: id2, type: "forest-colossus", name: "古森の巨獣", homeX: x, homeZ: z, bodyHeight: 16 + random4(seed, 120 + slot) * 1.8, bodyRadius: footprint3, hp: 720, maxHp: 720, speed: 1.05 + random4(seed, 130 + slot) * 0.28, phase: phase2, points: route.points, length: route.length, bounds: route.reservation.bounds });
+      const phase2 = random6(seed, 110 + slot) * route.length;
+      giants.push({ id: id2, type: "forest-colossus", name: "古森の巨獣", homeX: x, homeZ: z, bodyHeight: 16 + random6(seed, 120 + slot) * 1.8, bodyRadius: footprint3, hp: 720, maxHp: 720, speed: 1.05 + random6(seed, 130 + slot) * 0.28, phase: phase2, points: route.points, length: route.length, bounds: route.reservation.bounds });
       reservations.push(route.reservation);
       break;
     }
   }
-  const dx = -25 + (random4(seed, 201) - 0.5) * 55, dz = -95 + (random4(seed, 202) - 0.5) * 65, rx = 430, rz = 340, n = 384, points = [], raw = [];
+  const dx = -25 + (random6(seed, 201) - 0.5) * 55, dz = -95 + (random6(seed, 202) - 0.5) * 65, rx = 430, rz = 340, n = 384, points = [], raw = [];
   for (let i = 0; i < n; i++) {
-    const a = i / n * TAU31, x = dx + Math.cos(a) * rx, z = dz + Math.sin(a) * rz;
+    const a = i / n * TAU33, x = dx + Math.cos(a) * rx, z = dz + Math.sin(a) * rz;
     let ground = -Infinity;
     for (let j = 0; j < 9; j++) {
-      const q = j / 8 * TAU31, r = j ? 32 : 0, g = terrain.height(x + Math.cos(q) * r, z + Math.sin(q) * r);
+      const q = j / 8 * TAU33, r = j ? 32 : 0, g = terrain.height(x + Math.cos(q) * r, z + Math.sin(q) * r);
       metrics.dragonGroundSamples++;
       if (Number.isFinite(g)) ground = Math.max(ground, g);
     }
@@ -53094,7 +55635,7 @@ function createColossalPlan({ terrain, seed = 728194, blocked = () => false, isL
   for (let i = 0; i < n; i++) {
     let safeHeight = raw[i];
     for (let j = -22; j <= 22; j++) safeHeight = Math.max(safeHeight, raw[(i + j + n) % n] - Math.abs(j) * 1.35);
-    points[i].y = safeHeight + 6 + 4 * Math.sin(i / n * TAU31 * 2 + 0.3);
+    points[i].y = safeHeight + 6 + 4 * Math.sin(i / n * TAU33 * 2 + 0.3);
   }
   points.push({ ...points[0] });
   const dragon = { id: `island-megafauna-v1:${seed}:dragon:skywarden`, type: "sky-dragon", name: "蒼穹の竜", homeX: dx, homeZ: dz, bodyHeight: 9, bodyRadius: 9, wingspan: 46, hp: 1600, maxHp: 1600, speed: 23, phase: 0.64 * addRouteDistances(points), points, length: points.at(-1).distance, bounds: bounds5(points, 32) };
@@ -53111,12 +55652,12 @@ function sampleRoute(s) {
   s.travel = (s.travel % d.length + d.length) % d.length;
   if (s.travel < points[s.segment].distance) s.segment = 0;
   while (s.segment < n - 1 && points[s.segment + 1].distance < s.travel) s.segment++;
-  const a = points[s.segment], b = points[s.segment + 1], f10 = (s.travel - a.distance) / (b.distance - a.distance);
-  s.x = mix15(a.x, b.x, f10);
-  s.y = mix15(a.y, b.y, f10);
-  s.z = mix15(a.z, b.z, f10);
+  const a = points[s.segment], b = points[s.segment + 1], f12 = (s.travel - a.distance) / (b.distance - a.distance);
+  s.x = mix16(a.x, b.x, f12);
+  s.y = mix16(a.y, b.y, f12);
+  s.z = mix16(a.z, b.z, f12);
   const yaw2 = Math.atan2(b.x - a.x, b.z - a.z), next = points[(s.segment + 2) % n], nextYaw = Math.atan2(next.x - b.x, next.z - b.z);
-  s.routeYaw = yaw2 + angleDelta(nextYaw, yaw2) * f10;
+  s.routeYaw = yaw2 + angleDelta(nextYaw, yaw2) * f12;
   s.pitch = -Math.atan2(b.y - a.y, b.distance - a.distance);
 }
 function advanceCreatureMotion(s, dt, player, { active: active2 = true, groundHeight: groundHeight2 = null, provoked = false } = {}) {
@@ -53164,7 +55705,7 @@ function advanceCreatureMotion(s, dt, player, { active: active2 = true, groundHe
   if (s.speed > 0) {
     const step = s.speed * dt;
     s.travel += step;
-    s.gait += step / (flying ? 50 : 8) * TAU31;
+    s.gait += step / (flying ? 50 : 8) * TAU33;
     s.stepTravel += step;
     sampleRoute(s);
     if (!flying && s.stepTravel >= 4) {
@@ -53191,18 +55732,18 @@ function advanceCreatureMotion(s, dt, player, { active: active2 = true, groundHe
   }
   const desired = !flying && s.windup > 0 ? Math.atan2(dx, dz) : s.routeYaw;
   s.yaw += angleDelta(desired, s.yaw) * (1 - Math.exp(-dt * (flying ? 2.4 : 1.65)));
-  s.bank = flying ? Math.sin(s.age * 0.13 + s.descriptor.phase) * 0.085 + clamp43(angleDelta(s.routeYaw, s.yaw) * 1.5, -0.22, 0.22) : 0;
+  s.bank = flying ? Math.sin(s.age * 0.13 + s.descriptor.phase) * 0.085 + clamp45(angleDelta(s.routeYaw, s.yaw) * 1.5, -0.22, 0.22) : 0;
   return s;
 }
 
 // forest-colossus.js
-var TAU32 = Math.PI * 2;
-var clamp44 = (v, a, b) => Math.max(a, Math.min(b, v));
+var TAU34 = Math.PI * 2;
+var clamp46 = (v, a, b) => Math.max(a, Math.min(b, v));
 var noise6 = (x, seed = 1) => {
   const n = Math.sin(x * 127.13 + seed * 311.71) * 43758.5453123;
   return n - Math.floor(n);
 };
-var smooth32 = (t) => t * t * (3 - 2 * t);
+var smooth33 = (t) => t * t * (3 - 2 * t);
 function bucket() {
   return { positions: [], colors: [], uvs: [], indices: [], seams: [] };
 }
@@ -53214,9 +55755,9 @@ function vertex2(b, x, y, z, u, v, color3) {
   return i;
 }
 function spline2(path, t, out2) {
-  const u = clamp44(t, 0, 1) * (path.length - 1), k = Math.min(path.length - 2, Math.floor(u)), f10 = u - k;
+  const u = clamp46(t, 0, 1) * (path.length - 1), k = Math.min(path.length - 2, Math.floor(u)), f12 = u - k;
   const a = path[Math.max(0, k - 1)], b = path[k], c2 = path[k + 1], d = path[Math.min(path.length - 1, k + 2)];
-  for (let j = 0; j < 5; j++) out2[j] = 0.5 * (2 * b[j] + (-a[j] + c2[j]) * f10 + (2 * a[j] - 5 * b[j] + 4 * c2[j] - d[j]) * f10 * f10 + (-a[j] + 3 * b[j] - 3 * c2[j] + d[j]) * f10 * f10 * f10);
+  for (let j = 0; j < 5; j++) out2[j] = 0.5 * (2 * b[j] + (-a[j] + c2[j]) * f12 + (2 * a[j] - 5 * b[j] + 4 * c2[j] - d[j]) * f12 * f12 + (-a[j] + 3 * b[j] - 3 * c2[j] + d[j]) * f12 * f12 * f12);
 }
 function sweep(b, path, { sides = 12, steps = 22, seed = 1, color: color3 = [0.7, 0.66, 0.55], grooves = 0.075, uvScale = 1, sculpt = 0 } = {}) {
   const p = [], a = [], c2 = [], start2 = b.positions.length / 3;
@@ -53233,8 +55774,8 @@ function sweep(b, path, { sides = 12, steps = 22, seed = 1, color: color3 = [0.7
     tz /= len3;
     const refX = Math.abs(tx) < 0.82 ? 1 : 0, refZ = refX ? 0 : 1;
     const fx = sculpt && k ? frameX : refX, fy = sculpt && k ? frameY : 0, fz = sculpt && k ? frameZ : refZ;
-    const dot4 = tx * fx + ty * fy + tz * fz;
-    let nx = fx - tx * dot4, ny = fy - ty * dot4, nz = fz - tz * dot4;
+    const dot5 = tx * fx + ty * fy + tz * fz;
+    let nx = fx - tx * dot5, ny = fy - ty * dot5, nz = fz - tz * dot5;
     len3 = Math.hypot(nx, ny, nz) || 1;
     nx /= len3;
     ny /= len3;
@@ -53248,7 +55789,7 @@ function sweep(b, path, { sides = 12, steps = 22, seed = 1, color: color3 = [0.7
     lastY = p[1];
     lastZ = p[2];
     for (let j = 0; j <= sides; j++) {
-      const angle = j / sides * TAU32;
+      const angle = j / sides * TAU34;
       const furrow = Math.pow(0.5 + 0.5 * Math.sin(angle * 7 + seed * 0.031 + 0.52 * Math.sin(t * 4.1 + seed)), 5);
       const ridge = sculpt ? 1 + grooves * 0.45 * Math.sin(angle * 3 + seed + t * 1.8) + sculpt * 0.3 * Math.cos(angle * 2 - t * 1.5 + seed) - sculpt * furrow * (0.85 + 0.15 * Math.cos(t * 13 + angle * 3)) : 1 + grooves * Math.sin(angle * 5 + seed + t * 2.3) + grooves * 0.42 * Math.cos(angle * 9 - t * 3.1 + seed);
       const rx = Math.max(5e-3, p[3]) * Math.cos(angle) * ridge, rz = Math.max(5e-3, p[4]) * Math.sin(angle) * ridge;
@@ -53293,7 +55834,7 @@ function plate(b, { x = 0, y = 0, z = 0, rx = 1, ry = 1, depth = 0.22, normal: n
   for (let ring2 = 0; ring2 <= 3; ring2++) {
     const r = ring2 === 0 ? 0.055 : ring2 / 3;
     for (let j = 0; j <= sides; j++) {
-      const theta = j / sides * TAU32, edge2 = 1 + 0.13 * Math.sin(theta * 3 + seed) + 0.075 * Math.cos(theta * 7 + seed * 2);
+      const theta = j / sides * TAU34, edge2 = 1 + 0.13 * Math.sin(theta * 3 + seed) + 0.075 * Math.cos(theta * 7 + seed * 2);
       const px = Math.cos(theta) * rx * r * edge2, py = Math.sin(theta) * ry * r * edge2;
       const pz = depth * (Math.pow(1 - r, 0.6) + 0.08 * Math.sin(theta * 5 + seed) * r);
       const shade3 = 0.9 + 0.1 * noise6(j % sides + ring2 * 0.42, seed);
@@ -53385,7 +55926,7 @@ function createForestColossus(THREE, { bark, stone, moss, seed = 728194 } = {}) 
   const b = bucket();
   sweep(b, [[0, -0.55, -0.08, 0.83, 0.65], [0.04, -0.12, -0.04, 1.28, 0.82], [0, 0.3, -0.04, 1.49, 0.87], [-0.06, 0.68, -0.07, 1.35, 0.8], [0, 1.04, -0.1, 1.11, 0.7]], { seed, sides: 32, steps: 18, sculpt: 0.15, color: [0.75, 0.7, 0.6] });
   for (let i = 0; i < 7; i++) {
-    const a = i / 7 * TAU32;
+    const a = i / 7 * TAU34;
     sweep(b, [[Math.sin(a) * 0.92, 0.8, Math.cos(a) * 0.6, 0.21, 0.15], [Math.sin(a + 0.18) * 1.35, -0.12, Math.cos(a + 0.18) * 0.76, 0.22, 0.15], [Math.sin(a + 0.3) * 1.17, -0.96 - 0.33 * noise6(i, seed), Math.cos(a + 0.3) * 0.7, 0.025, 0.025]], { seed: seed + i, sides: 9, steps: 12, sculpt: 0.06, color: [0.68, 0.63, 0.52] });
   }
   mesh(THREE, hips, b, barkMat, "rooted-pelvis-bark", owned);
@@ -53436,7 +55977,7 @@ function createForestColossus(THREE, { bark, stone, moss, seed = 728194 } = {}) 
     const upper = bucket(), lower = bucket(), armor = bucket();
     sweep(upper, [[-s * 0.2, 0.42, -0.05, 0.48, 0.5], [s * 0.06, 0.02, -0.05, 0.77, 0.72], [s * 0.25, -0.7, -0.05, 0.66, 0.62], [s * 0.3, -1.42, 0.03, 0.5, 0.49], [s * 0.23, -2.2, 0.06, 0.38, 0.37], [s * 0.27, -2.8, 0.04, 0.45, 0.42]], { sides: 32, steps: 24, seed: seed + s, sculpt: 0.16, color: [0.78, 0.73, 0.64] });
     for (let i = 0; i < 3; i++) {
-      const a = i / 3 * TAU32 + 0.25;
+      const a = i / 3 * TAU34 + 0.25;
       sweep(upper, [[-s * 0.12 + Math.cos(a) * 0.47, 0.26, Math.sin(a) * 0.44, 0.1, 0.08], [s * 0.25 + Math.cos(a + 0.28) * 0.61, -0.8, Math.sin(a + 0.28) * 0.57, 0.13, 0.09], [s * 0.3 + Math.cos(a + 0.65) * 0.45, -1.65, Math.sin(a + 0.65) * 0.45, 0.095, 0.08], [s * 0.27 + Math.cos(a + 0.9) * 0.35, -2.6, Math.sin(a + 0.9) * 0.35, 0.025, 0.025]], { sides: 8, steps: 15, seed: i + seed, sculpt: 0.05, color: [0.71, 0.65, 0.54] });
     }
     sweep(lower, [[0, 0.2, 0, 0.46, 0.43], [s * 0.09, -0.42, 0.1, 0.59, 0.51], [s * 0.19, -0.95, 0.15, 0.63, 0.51], [s * 0.17, -1.69, 0.23, 0.43, 0.39], [s * 0.1, -2.15, 0.3, 0.4, 0.31], [s * 0.03, -2.62, 0.4, 0.52, 0.29], [0, -2.91, 0.52, 0.41, 0.18]], { sides: 32, steps: 24, seed: seed + 50 + s, sculpt: 0.14, color: [0.79, 0.74, 0.64] });
@@ -53457,7 +55998,7 @@ function createForestColossus(THREE, { bark, stone, moss, seed = 728194 } = {}) 
     sweep(thighWood, [[-s * 0.12, 0.43, -0.02, 0.76, 0.73], [s * 0.1, -0.19, 0.02, 0.94, 0.82], [s * 0.11, -0.91, 0.03, 0.79, 0.72], [-s * 0.02, -1.82, 0.08, 0.53, 0.53], [0, -2.3, 0.06, 0.52, 0.53], [0, -2.7, 0, 0.57, 0.56]], { sides: 32, steps: 25, seed: seed + 130 + s, sculpt: 0.16, color: [0.78, 0.73, 0.63] });
     sweep(shinWood, [[0, 0.2, 0, 0.59, 0.59], [-s * 0.08, -0.4, -0.03, 0.66, 0.61], [-s * 0.02, -1.12, -0.12, 0.55, 0.52], [s * 0.05, -1.86, -0.15, 0.48, 0.49], [0, -2.6, 0, 0.74, 0.71]], { sides: 32, steps: 23, seed: seed + 143 + s, sculpt: 0.17, color: [0.75, 0.7, 0.59] });
     for (let i = 0; i < 3; i++) {
-      const a = i / 3 * TAU32;
+      const a = i / 3 * TAU34;
       sweep(shinWood, [[Math.sin(a) * 0.48, -0.2, Math.cos(a) * 0.49, 0.16, 0.15], [Math.sin(a + 0.45) * 0.53, -1.2, Math.cos(a + 0.45) * 0.53, 0.17, 0.14], [Math.sin(a + 0.75) * 0.75, -2.8, Math.cos(a + 0.75) * 0.7, 0.09, 0.1]], { sides: 8, steps: 17, seed: i + seed });
     }
     for (let i = 0; i < 3; i++) plate(shinStone, { x: s * (0.08 + 0.06 * Math.sin(i * 2)), y: -0.26 - i * 0.59, z: 0.51 - i * 0.045, rx: 0.32 - i * 0.045, ry: 0.46 - i * 0.05, depth: 0.1, normal: [-s * 0.14, 0.05, 1], seed: seed + 150 + i, color: [0.79, 0.8, 0.67], sides: 15 });
@@ -53483,37 +56024,37 @@ function createForestColossus(THREE, { bark, stone, moss, seed = 728194 } = {}) 
 function animateForestColossus(root, { time = 0, dt = 1 / 60, speed = 0, attack: attack2 = 0, dead = false, groundLeft = 0, groundRight = 0, groundPitchLeft = 0, groundPitchRight = 0, groundRollLeft = 0, groundRollRight = 0 } = {}) {
   const data = root?.userData?.forestColossus;
   if (!data || data.owned.disposed) return;
-  const r = data.rig, delta = clamp44(Number.isFinite(dt) ? dt : 0, 0, 0.15), targetSpeed = clamp44(Math.abs(speed) / 0.2, 0, 1);
+  const r = data.rig, delta = clamp46(Number.isFinite(dt) ? dt : 0, 0, 0.15), targetSpeed = clamp46(Math.abs(speed) / 0.2, 0, 1);
   r.walk += (targetSpeed - r.walk) * (1 - Math.exp(-delta * 3.5));
   r.dead += ((dead ? 1 : 0) - r.dead) * (1 - Math.exp(-delta * 1.9));
   const alive = 1 - r.dead;
-  r.phase += Math.abs(speed) * delta * TAU32 / (1.8 * r.modelScale / 0.63);
-  const phase2 = r.phase, gait = r.walk * alive, breathe = Math.sin(time * 0.68), attackPhase = clamp44(attack2, 0, 1);
+  r.phase += Math.abs(speed) * delta * TAU34 / (1.8 * r.modelScale / 0.63);
+  const phase2 = r.phase, gait = r.walk * alive, breathe = Math.sin(time * 0.68), attackPhase = clamp46(attack2, 0, 1);
   const windup = attackPhase > 0 && attackPhase < 0.52 ? Math.sin(attackPhase / 0.52 * Math.PI * 0.5) : attackPhase >= 0.52 ? Math.max(0, 1 - (attackPhase - 0.52) / 0.15) : 0;
-  const strike = attackPhase > 0.52 ? Math.sin(clamp44((attackPhase - 0.52) / 0.48, 0, 1) * Math.PI) : 0;
-  const leftGround = clamp44(groundLeft / r.modelScale, -0.75, 0.75), rightGround = clamp44(groundRight / r.modelScale, -0.75, 0.75);
+  const strike = attackPhase > 0.52 ? Math.sin(clamp46((attackPhase - 0.52) / 0.48, 0, 1) * Math.PI) : 0;
+  const leftGround = clamp46(groundLeft / r.modelScale, -0.75, 0.75), rightGround = clamp46(groundRight / r.modelScale, -0.75, 0.75);
   r.hips.position.y = 5.72 + Math.min(0, leftGround, rightGround) * 0.95 + Math.cos(phase2 * 2) * 0.05 * gait + breathe * 0.024 * alive - r.dead * 3.65;
   r.hips.rotation.set(0, 0, r.dead * 0.03);
   r.body.rotation.set(0.035 + 0.05 * gait + strike * 0.24 - windup * 0.16 + r.dead * 1.18, Math.sin(phase2) * 0.035 * gait, Math.sin(phase2) * -0.035 * gait);
   r.head.rotation.set(-0.07 + breathe * 0.016 - windup * 0.12 + strike * 0.13 + r.dead * 0.43, Math.sin(time * 0.17) * 0.08 * alive, Math.sin(time * 0.26) * 0.025 * alive);
   for (let i = 0; i < 2; i++) {
-    const leg = r.legs[i], p = ((phase2 / TAU32 + i * 0.5) % 1 + 1) % 1;
+    const leg = r.legs[i], p = ((phase2 / TAU34 + i * 0.5) % 1 + 1) % 1;
     let z, lift;
     if (p < 0.63) {
       z = 0.9 - p / 0.63 * 1.8;
       lift = 0;
     } else {
       const u = (p - 0.63) / 0.37;
-      z = -0.9 + smooth32(u) * 1.8;
+      z = -0.9 + smooth33(u) * 1.8;
       lift = Math.sin(u * Math.PI) * 0.43;
     }
     const ground = i === 0 ? leftGround : rightGround;
     const dy = 0.442 + lift * gait + ground - (r.hips.position.y - 0.2), dz = z * gait;
-    const L1 = 2.7, L22 = 2.6, d = clamp44(Math.hypot(dy, dz), 1, L1 + L22 - 0.015);
-    const a = Math.atan2(-dz, -dy), b = Math.acos(clamp44((L1 * L1 + d * d - L22 * L22) / (2 * L1 * d), -1, 1));
+    const L1 = 2.7, L22 = 2.6, d = clamp46(Math.hypot(dy, dz), 1, L1 + L22 - 0.015);
+    const a = Math.atan2(-dz, -dy), b = Math.acos(clamp46((L1 * L1 + d * d - L22 * L22) / (2 * L1 * d), -1, 1));
     leg.thigh.rotation.x = a - b;
-    leg.knee.rotation.x = Math.PI - Math.acos(clamp44((L1 * L1 + L22 * L22 - d * d) / (2 * L1 * L22), -1, 1));
-    const footPitch = clamp44(i === 0 ? groundPitchLeft : groundPitchRight, -0.45, 0.45), footRoll = clamp44(i === 0 ? groundRollLeft : groundRollRight, -0.45, 0.45);
+    leg.knee.rotation.x = Math.PI - Math.acos(clamp46((L1 * L1 + L22 * L22 - d * d) / (2 * L1 * L22), -1, 1));
+    const footPitch = clamp46(i === 0 ? groundPitchLeft : groundPitchRight, -0.45, 0.45), footRoll = clamp46(i === 0 ? groundRollLeft : groundRollRight, -0.45, 0.45);
     leg.foot.rotation.x = -leg.thigh.rotation.x - leg.knee.rotation.x + footPitch;
     leg.foot.rotation.z = footRoll;
     const arm = r.arms[i];
@@ -53531,34 +56072,34 @@ function disposeForestColossus(root) {
 }
 
 // sky-dragon.js
-var TAU33 = Math.PI * 2;
-var clamp45 = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
-var mix16 = (a, b, t) => a + (b - a) * t;
+var TAU35 = Math.PI * 2;
+var clamp47 = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+var mix17 = (a, b, t) => a + (b - a) * t;
 var cat = (a, b, c2, d, t) => 0.5 * (2 * b + (-a + c2) * t + (2 * a - 5 * b + 4 * c2 - d) * t * t + (-a + 3 * b - 3 * c2 + d) * t * t * t);
 function makeGeometryTools(T) {
   function sweep2(points, segments = 28, sides = 14, textureScale = 1) {
     const positions = [], uvs = [], indices = [];
     const curve = new T.CatmullRomCurve3(points.map((p) => new T.Vector3(...p.slice(0, 3))), false, "catmullrom", 0.35);
-    const center2 = new T.Vector3(), tangent = new T.Vector3(), cross9 = new T.Vector3(), up7 = new T.Vector3(0, 1, 0), normal4 = new T.Vector3();
+    const center2 = new T.Vector3(), tangent = new T.Vector3(), cross10 = new T.Vector3(), up7 = new T.Vector3(0, 1, 0), normal4 = new T.Vector3();
     let length = 0, last2 = null;
     for (let j = 0; j <= segments; j++) {
       const t = j / segments;
       curve.getPoint(t, center2);
       curve.getTangent(t, tangent).normalize();
-      cross9.crossVectors(up7, tangent);
-      if (cross9.lengthSq() < 1e-4) cross9.set(1, 0, 0);
-      else cross9.normalize();
-      normal4.crossVectors(tangent, cross9).normalize();
-      const f10 = t * (points.length - 1), k = Math.min(points.length - 2, Math.floor(f10)), q = Math.min(1, f10 - k);
-      const at = (n, axis2) => points[clamp45(n, 0, points.length - 1)][axis2];
+      cross10.crossVectors(up7, tangent);
+      if (cross10.lengthSq() < 1e-4) cross10.set(1, 0, 0);
+      else cross10.normalize();
+      normal4.crossVectors(tangent, cross10).normalize();
+      const f12 = t * (points.length - 1), k = Math.min(points.length - 2, Math.floor(f12)), q = Math.min(1, f12 - k);
+      const at = (n, axis2) => points[clamp47(n, 0, points.length - 1)][axis2];
       const rx = Math.max(2e-3, cat(at(k - 1, 3), at(k, 3), at(k + 1, 3), at(k + 2, 3), q));
       const ry = Math.max(2e-3, cat(at(k - 1, 4), at(k, 4), at(k + 1, 4), at(k + 2, 4), q));
       if (last2) length += center2.distanceTo(last2);
       else last2 = new T.Vector3();
       last2.copy(center2);
       for (let i = 0; i <= sides; i++) {
-        const angle = i / sides * TAU33, a = Math.cos(angle) * rx, b = Math.sin(angle) * ry;
-        positions.push(center2.x + cross9.x * a + normal4.x * b, center2.y + cross9.y * a + normal4.y * b, center2.z + cross9.z * a + normal4.z * b);
+        const angle = i / sides * TAU35, a = Math.cos(angle) * rx, b = Math.sin(angle) * ry;
+        positions.push(center2.x + cross10.x * a + normal4.x * b, center2.y + cross10.y * a + normal4.y * b, center2.z + cross10.z * a + normal4.z * b);
         uvs.push(i / sides * Math.max(0.4, textureScale), length * 0.45);
         if (j < segments && i < sides) {
           const n = j * (sides + 1) + i;
@@ -53600,7 +56141,7 @@ function makeGeometryTools(T) {
     g.setIndex(ix);
     return g;
   }
-  function ellipsoid(x, y, z, rx, ry, rz) {
+  function ellipsoid2(x, y, z, rx, ry, rz) {
     const g = new T.SphereGeometry(1, 14, 10);
     g.scale(rx, ry, rz);
     g.translate(x, y, z);
@@ -53609,7 +56150,7 @@ function makeGeometryTools(T) {
   function horn(points, radius = 0.16, segments = 12) {
     return sweep2(points.map((p, i) => [...p, radius * (1 - i / (points.length - 1)) + 3e-3, radius * (1 - i / (points.length - 1)) + 3e-3]), segments, 9, 0.35);
   }
-  return { sweep: sweep2, merge, ellipsoid, horn };
+  return { sweep: sweep2, merge, ellipsoid: ellipsoid2, horn };
 }
 function scaleTextures(T, seed) {
   const size = 256, color3 = new Uint8Array(size * size * 4), normal4 = new Uint8Array(size * size * 4), heights = new Float32Array(size * size);
@@ -53619,9 +56160,9 @@ function scaleTextures(T, seed) {
   };
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const row2 = Math.floor(y / 32), fx = ((x / 32 + row2 % 2 * 0.5) % 1 - 0.5) * 2, fy = y % 32 / 32;
-    const width = Math.sqrt(Math.max(0, 1 - Math.pow((fy - 0.38) / 0.76, 2))), edge2 = clamp45((width - Math.abs(fx)) * 7, 0, 1);
+    const width = Math.sqrt(Math.max(0, 1 - Math.pow((fy - 0.38) / 0.76, 2))), edge2 = clamp47((width - Math.abs(fx)) * 7, 0, 1);
     const ridge = Math.pow(Math.max(0, 1 - Math.abs(fx)), 3) * Math.sin(Math.PI * fy);
-    const seam = clamp45(fy * 10, 0, 1) * clamp45((1 - fy) * 7, 0, 1);
+    const seam = clamp47(fy * 10, 0, 1) * clamp47((1 - fy) * 7, 0, 1);
     const h2 = edge2 * seam * (0.42 + 0.32 * ridge) + 0.035 * hash12(x, y);
     heights[y * size + x] = h2;
     const tone = 0.6 + 0.24 * edge2 * seam + 0.095 * ridge + 0.07 * hash12(Math.floor(x / 32 + row2 % 2 * 0.5), row2) + 0.018 * hash12(x, y), i = (y * size + x) * 4;
@@ -53654,10 +56195,10 @@ function membraneTextures(T, seed) {
   const size = 256, pixels = new Uint8Array(size * size * 4), normals = new Uint8Array(size * size * 4), heights = new Float32Array(size * size);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const u = x / size, v = y / size;
-    const wander = 0.024 * Math.sin(v * TAU33) + 0.013 * Math.sin(v * TAU33 * 3 + 1.1);
-    const vein = Math.exp(-Math.pow(Math.sin((u * 4 + wander) * TAU33) / 0.047, 2));
-    const branch = Math.exp(-Math.pow(Math.sin((u * 7 + v + 0.045 * Math.sin(v * TAU33)) * TAU33) / 0.03, 2));
-    const broad = 0.024 * Math.sin(u * TAU33 * 2 + 0.8 * Math.sin(v * TAU33)) + 0.016 * Math.sin(v * TAU33 * 3 + 1.4 * Math.sin(u * TAU33));
+    const wander = 0.024 * Math.sin(v * TAU35) + 0.013 * Math.sin(v * TAU35 * 3 + 1.1);
+    const vein = Math.exp(-Math.pow(Math.sin((u * 4 + wander) * TAU35) / 0.047, 2));
+    const branch = Math.exp(-Math.pow(Math.sin((u * 7 + v + 0.045 * Math.sin(v * TAU35)) * TAU35) / 0.03, 2));
+    const broad = 0.024 * Math.sin(u * TAU35 * 2 + 0.8 * Math.sin(v * TAU35)) + 0.016 * Math.sin(v * TAU35 * 3 + 1.4 * Math.sin(u * TAU35));
     const hash12 = Math.sin(x * 127.1 + y * 311.7 + seed * 0.19) * 43758.5453, grain = (hash12 - Math.floor(hash12) - 0.5) * 0.014;
     const tone = 0.91 + broad + grain - vein * 0.065 - branch * 0.016, i = (y * size + x) * 4;
     pixels[i] = Math.round(199 * tone);
@@ -53844,15 +56385,15 @@ function createSkyDragon(THREE, options = {}) {
   const tailSkeleton = new T.Skeleton(tailBones);
   skeletons.push(tailSkeleton);
   const tailWeight = (x, y, z) => {
-    const f10 = clamp45(-z / 2, 0, 3.999), a = Math.floor(f10);
-    return [a, a + 1, f10 - a];
+    const f12 = clamp47(-z / 2, 0, 3.999), a = Math.floor(f12);
+    return [a, a + 1, f12 - a];
   };
   const tailGeometry = G2.sweep([[0, 0, 0, 0.55, 0.52], [0, -0.12, -1.4, 0.45, 0.42], [0, -0.29, -3, 0.28, 0.3], [0, -0.22, -4.6, 0.17, 0.2], [0, 0.1, -6.2, 0.095, 0.125], [0, 0.42, -8.1, 0.012, 0.018]], 52, 15, 2);
   bindSkin(T, tailGeometry, tailWeight);
   skinMesh(tail, "dragon-long-tapered-tail", tailGeometry, materials.skin, tailSkeleton);
   const tailSpikes = [];
   for (let i = 0; i < 12; i++) {
-    const z = -0.3 - i * 0.56, r = mix16(0.46, 0.08, i / 11), y = mix16(0.02, -0.15, i / 11);
+    const z = -0.3 - i * 0.56, r = mix17(0.46, 0.08, i / 11), y = mix17(0.02, -0.15, i / 11);
     tailSpikes.push(G2.horn([[0, y + r, z], [0, y + r + 0.25 * (1 - i / 17), z - 0.15], [0, y + r + 0.29 * (1 - i / 17), z - 0.36]], 0.105 * (1 - i / 17), 8));
   }
   const spikeGeo = G2.merge(tailSpikes);
@@ -53877,14 +56418,14 @@ function createSkyDragon(THREE, options = {}) {
     skeletons.push(skeleton);
     const weight = (x, y, z) => {
       const a = Math.abs(x);
-      return a < 2.75 ? [0, 1, clamp45((a - 1.15) / 1.6, 0, 1)] : [1, 2, clamp45((a - 2.75) / 2.4, 0, 1)];
+      return a < 2.75 ? [0, 1, clamp47((a - 1.15) / 1.6, 0, 1)] : [1, 2, clamp47((a - 2.75) / 2.4, 0, 1)];
     };
     const wrist = [5.8, 0.42, 1.37];
     const tips = [[12.2, 0.02, -1.05], [10.85, -0.17, -4.5], [8.1, -0.25, -6], [4.7, -0.19, -5.52], [0.28, -0.02, -3.23]];
     const arm = [G2.sweep([[0, 0, 0, 0.44, 0.46], [side2 * 1.15, 0.23, -0.15, 0.36, 0.38], [side2 * 2.75, 0.18, -0.55, 0.25, 0.26], [side2 * 3.7, 0.24, 0.1, 0.21, 0.2], [side2 * 5.05, 0.39, 1.02, 0.15, 0.14], [side2 * 5.8, 0.42, 1.37, 0.17, 0.16]], 34, 14, 2)];
-    for (let f10 = 0; f10 < tips.length; f10++) {
-      const t = tips[f10], mid = [mix16(wrist[0], t[0], 0.51), mix16(wrist[1], t[1], 0.51) + 0.13, mix16(wrist[2], t[2], 0.51) + 0.23];
-      arm.push(G2.sweep([[side2 * wrist[0], wrist[1], wrist[2], 0.115, 0.105], [side2 * mid[0], mid[1], mid[2], f10 === 0 ? 0.093 : 0.071, f10 === 0 ? 0.078 : 0.063], [side2 * t[0], t[1], t[2], 0.017, 0.022]], 24, 10, 1));
+    for (let f12 = 0; f12 < tips.length; f12++) {
+      const t = tips[f12], mid = [mix17(wrist[0], t[0], 0.51), mix17(wrist[1], t[1], 0.51) + 0.13, mix17(wrist[2], t[2], 0.51) + 0.23];
+      arm.push(G2.sweep([[side2 * wrist[0], wrist[1], wrist[2], 0.115, 0.105], [side2 * mid[0], mid[1], mid[2], f12 === 0 ? 0.093 : 0.071, f12 === 0 ? 0.078 : 0.063], [side2 * t[0], t[1], t[2], 0.017, 0.022]], 24, 10, 1));
     }
     const armGeometry = G2.merge(arm);
     bindSkin(T, armGeometry, weight);
@@ -53894,9 +56435,9 @@ function createSkyDragon(THREE, options = {}) {
       const a = tips[panel], b = tips[panel + 1], offset = p.length / 3;
       for (let r = 0; r <= radial; r++) for (let q = 0; q <= (r === 0 ? 0 : across2); q++) {
         const v = r / radial, u = q / across2, scallop = (panel === 3 ? 0.2 : 0.13) * Math.sin(Math.PI * u), span = v * (1 - scallop * Math.pow(v, 3));
-        const tx = mix16(a[0], b[0], u), ty = mix16(a[1], b[1], u), tz = mix16(a[2], b[2], u);
+        const tx = mix17(a[0], b[0], u), ty = mix17(a[1], b[1], u), tz = mix17(a[2], b[2], u);
         const billow = Math.sin(Math.PI * u) * Math.sin(Math.PI * v) * (0.23 + panel * 0.035);
-        p.push(side2 * mix16(wrist[0], tx, span), mix16(wrist[1], ty, span) - billow + 0.12 * Math.sin(Math.PI * v), mix16(wrist[2], tz, span) + 0.23 * Math.sin(Math.PI * v));
+        p.push(side2 * mix17(wrist[0], tx, span), mix17(wrist[1], ty, span) - billow + 0.12 * Math.sin(Math.PI * v), mix17(wrist[2], tz, span) + 0.23 * Math.sin(Math.PI * v));
         uv.push((panel + u) * 0.65, v * 2.2);
         if (r === 1 && q < across2) {
           const n2 = offset + 1 + q;
@@ -53936,7 +56477,7 @@ function createSkyDragon(THREE, options = {}) {
       triangles2 += object2.geometry.index ? object2.geometry.index.count / 3 : object2.geometry.attributes.position.count / 3;
     }
   });
-  const rig = { neck, head: head2, jaw, wings: wings2, tailBones, limbs, phase: seed % 997 / 997 * TAU33 };
+  const rig = { neck, head: head2, jaw, wings: wings2, tailBones, limbs, phase: seed % 997 / 997 * TAU35 };
   root.userData.skyDragon = rig;
   root.userData.dragonMetrics = { triangles: triangles2, drawCalls, wingspan: 26.44, length: 19.3, textureBytes: 256 * 256 * 4 * 4, ownsAllResources: true, flightBounds: { min: [-15, -10, -13], max: [15, 11, 9], horizontalRadius: 20 } };
   root.userData.dispose = () => {
@@ -53954,10 +56495,10 @@ function createSkyDragon(THREE, options = {}) {
 function animateSkyDragon(group, { time = 0, dt = 0, speed = 16, bank = 0, flap = 1, attack: attack2 = 0, dead = false } = {}) {
   const rig = group.userData.skyDragon;
   if (!rig) return;
-  const effort = dead ? 0 : clamp45(flap, 0, 1), forward = clamp45(speed / 25, 0, 1), phase2 = time * (1.35 + forward * 0.33) + rig.phase;
+  const effort = dead ? 0 : clamp47(flap, 0, 1), forward = clamp47(speed / 25, 0, 1), phase2 = time * (1.35 + forward * 0.33) + rig.phase;
   const wave = Math.sin(phase2), stroke = 0.08 + wave * 0.38 * effort, fold2 = Math.max(0, wave) * 0.15 * effort;
   for (let i = 0; i < 2; i++) {
-    const w = rig.wings[i], turn = clamp45(bank, -0.65, 0.65) * w.side;
+    const w = rig.wings[i], turn = clamp47(bank, -0.65, 0.65) * w.side;
     w.group.rotation.z = w.side * (stroke + turn * 0.1 + (dead ? -0.72 : 0));
     w.group.rotation.x = 0.025 + Math.cos(phase2) * 0.07 * effort;
     w.bones[1].rotation.z = w.side * (0.045 + fold2);
@@ -53969,7 +56510,7 @@ function animateSkyDragon(group, { time = 0, dt = 0, speed = 16, bank = 0, flap 
   rig.neck.rotation.x = -0.025 + Math.cos(phase2 - 0.25) * 0.018 * effort - attack2 * 0.045;
   rig.head.rotation.y = -rig.neck.rotation.y * 0.52;
   rig.head.rotation.x = 0.016 + Math.sin(time * 0.49) * 0.018;
-  rig.jaw.rotation.x = dead ? 0.16 : clamp45(attack2, 0, 1) * 0.34 + 0.018;
+  rig.jaw.rotation.x = dead ? 0.16 : clamp47(attack2, 0, 1) * 0.34 + 0.018;
   for (let i = 0; i < rig.tailBones.length; i++) {
     const b = rig.tailBones[i];
     b.rotation.y = bank * (0.07 + i * 0.014) + Math.sin(time * 0.67 - i * 0.63 + rig.phase) * (0.019 + i * 0.014);
@@ -54413,7 +56954,7 @@ async function initializeGeneratedContent(THREE, world2, { discovered, remember,
 }
 
 // content-save-restore.js
-var clamp46 = (v, a, b) => Math.max(a, Math.min(b, v));
+var clamp48 = (v, a, b) => Math.max(a, Math.min(b, v));
 function check(signal) {
   if (signal?.aborted) throw new DOMException("Saved-position preparation cancelled", "AbortError");
 }
@@ -54444,7 +56985,7 @@ function readSavedCave(cave) {
 function readSavedPosition(saved2) {
   const p = saved2?.version >= 1 && saved2?.version <= 4 ? saved2.position : null;
   if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.z)) return null;
-  return Object.freeze({ mode: p.inDungeon === true ? "dungeon" : "outdoor", x: clamp46(p.x, -1e6, 1e6), z: clamp46(p.z, -1e6, 1e6), savedY: Number.isFinite(p.y) ? p.y : null, dungeon: readSavedCave(p.dungeon) });
+  return Object.freeze({ mode: p.inDungeon === true ? "dungeon" : "outdoor", x: clamp48(p.x, -1e6, 1e6), z: clamp48(p.z, -1e6, 1e6), savedY: Number.isFinite(p.y) ? p.y : null, dungeon: readSavedCave(p.dungeon) });
 }
 function stageSavedOutdoorPosition(world2, position3, savedPosition, terrainHeight) {
   if (savedPosition?.mode === "dungeon" && savedPosition.dungeon?.returnPose) {
@@ -54495,7 +57036,7 @@ function restoreContentMarkers(value) {
 }
 
 // poi-guards.js
-var clamp47 = (v, a, b) => Math.max(a, Math.min(b, v));
+var clamp49 = (v, a, b) => Math.max(a, Math.min(b, v));
 function stableSide(id2) {
   let h = 0;
   for (const c2 of id2) h = Math.imul(h, 31) + c2.charCodeAt(0) | 0;
@@ -54504,7 +57045,7 @@ function stableSide(id2) {
 function advanceContentGuard(e, { player, dt, collision, terrainHeight, navigation = null, waterAt = null }) {
   const movement = navigation ?? collision;
   navigation?.begin(e);
-  dt = clamp47(dt, 0, 0.05);
+  dt = clamp49(dt, 0, 0.05);
   const radius = 0.42, bodyHeight = e.mesh.userData?.combatHeight ?? 2.62, range = 3.5, speed = 2.1, homeDistance = Math.hypot(e.x - e.homeX, e.z - e.homeZ), playerHome = Math.hypot(player.x - e.homeX, player.z - e.homeZ), distance4 = Math.hypot(player.x - e.x, player.z - e.z), leash = e.leashRadius ?? 22;
   e.contentReturn = e.contentReturn ? homeDistance > 1.2 : homeDistance > leash || playerHome > leash + 4;
   const chase = !e.contentReturn && playerHome <= leash + 4 && (distance4 < 19 || (e.aggressive || 0) > 0);
@@ -55092,6 +57633,16 @@ var SOUND_BANK = {
   // v91.4: a body falling to the ground, looking a body over.
   bodyFall: { files: ["./audio/sv-bodyfall-1.mp3", "./audio/sv-bodyfall-2.mp3"], gain: 0.85 },
   search: { files: ["./audio/sv-search-1.mp3", "./audio/sv-search-2.mp3"], gain: 0.7 },
+  // v95: no room in the pack (a muffled bump of the full bag), a soft "can't"
+  // (two felt-mallet notes of a wooden bar) and a sealed lid catching on its
+  // hasp - in place of the old interface buzzer.
+  full: { files: ["./audio/sv-full-1.mp3", "./audio/sv-full-2.mp3"], gain: 0.75 },
+  deny: { files: ["./audio/sv-deny-1.mp3", "./audio/sv-deny-2.mp3"], gain: 0.6 },
+  locked: { files: ["./audio/sv-locked-1.mp3", "./audio/sv-locked-2.mp3"], gain: 0.7 },
+  // v96: small birds flushed from the ground, a squirrel's alarm, claws on bark (forest-life.js).
+  birdflush: { files: ["./audio/sv-birdflush-1.mp3", "./audio/sv-birdflush-2.mp3", "./audio/sv-birdflush-3.mp3"], gain: 0.55 },
+  squirrel: { files: ["./audio/sv-squirrel-1.mp3", "./audio/sv-squirrel-2.mp3"], gain: 0.5 },
+  scrabble: { files: ["./audio/sv-scrabble-1.mp3", "./audio/sv-scrabble-2.mp3"], gain: 0.42 },
   chop: { files: ["./audio/sv-chop-1.mp3", "./audio/sv-chop-2.mp3", "./audio/sv-chop-3.mp3"], gain: 0.72 },
   "crystal": {
     "files": [
@@ -55153,12 +57704,6 @@ var SOUND_BANK = {
       "./audio/ui_select.mp3"
     ],
     "gain": 0.3
-  },
-  "error": {
-    "files": [
-      "./audio/ui_error.mp3"
-    ],
-    "gain": 0.5
   },
   "discover": {
     "files": [
@@ -55476,18 +58021,18 @@ var FEATURE_BEDS = Object.freeze({
 });
 
 // soundscape.js
-var clamp48 = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n));
+var clamp50 = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n));
 var distance3 = (a, b) => Math.hypot(a.x - b.x, (a.y || 0) - (b.y || 0), a.z - b.z);
 var Soundscape = class {
-  constructor(audio2, random7 = Math.random) {
+  constructor(audio2, random9 = Math.random) {
     this.audio = audio2;
-    this.random = random7;
+    this.random = random9;
     this.loops = /* @__PURE__ */ new Map();
     this.clocks = /* @__PURE__ */ new Map();
     this.clock = 0;
     this.nextEvent = 0;
     this.quietUntil = 0;
-    this.nextQuiet = 90 + random7() * 80;
+    this.nextQuiet = 90 + random9() * 80;
     this.phase = "day";
     this.profile = "forest";
     this.stats = { events: 0, culled: 0, quietWindows: 0 };
@@ -55507,7 +58052,7 @@ var Soundscape = class {
       if (this.loops.size || this.clocks.size) this.stop();
       return;
     }
-    const dt = clamp48(env.dt || 0, 0, 0.25);
+    const dt = clamp50(env.dt || 0, 0, 0.25);
     this.clock += dt;
     if (this.scene !== void 0 && this.scene !== !!env.dungeon) {
       this.audio.stopCategory("ambienceEvent");
@@ -55518,7 +58063,7 @@ var Soundscape = class {
     this.phase = dayPhase(env.minuteOfDay);
     this.profile = env.dungeon ? "cave" : PROFILES2[env.location] ? env.location : BIOME_PROFILES[env.biome] || "forest";
     const phase2 = DAY_PHASES[this.phase], profile = PROFILES2[this.profile], weather = env.weather?.kind || "clear";
-    const rain = clamp48(env.weather?.rain ?? (weather === "rain" || weather === "storm" ? env.weather?.intensity ?? 1 : 0)), snow = clamp48(env.weather?.snow || 0), wind = clamp48(env.weather?.wind || 0), blizzard = clamp48(env.weather?.blizzard || 0);
+    const rain = clamp50(env.weather?.rain ?? (weather === "rain" || weather === "storm" ? env.weather?.intensity ?? 1 : 0)), snow = clamp50(env.weather?.snow || 0), wind = clamp50(env.weather?.wind || 0), blizzard = clamp50(env.weather?.blizzard || 0);
     const exposed = env.dungeon ? 0 : env.underwater ? 0.08 : env.weather?.sheltered ? 0.22 : 1;
     const minute = ((env.minuteOfDay ?? 720) % 1440 + 1440) % 1440, lateNight = minute < 270;
     if (lateNight && this.clock > this.nextQuiet) {
@@ -55537,12 +58082,12 @@ var Soundscape = class {
     }
     if (exposed && rain > 0.01) {
       const def = BEDS.rain;
-      desired.set("bed:rain", { ...def, level: def.gain * rain * (1 + 1.15 * clamp48(env.weather?.storm || 0)) * exposed, category: "bed" });
+      desired.set("bed:rain", { ...def, level: def.gain * rain * (1 + 1.15 * clamp50(env.weather?.storm || 0)) * exposed, category: "bed" });
     }
-    const nearby = (env.features || []).filter((f10) => FEATURE_BEDS[f10.kind] && distance3(env, f10) < (f10.range || FEATURE_BEDS[f10.kind].range)).sort((a, b) => distance3(env, a) - distance3(env, b)).slice(0, SOUNDSCAPE_LIMITS.features);
-    for (const f10 of nearby) {
-      const def = FEATURE_BEDS[f10.kind], range = f10.range || def.range, d = distance3(env, f10);
-      desired.set("feature:" + f10.id, { ...def, position: f10, range, level: def.gain * (f10.gain ?? 1) * clamp48((range - d) / Math.min(10, range * 0.4)), category: "feature" });
+    const nearby = (env.features || []).filter((f12) => FEATURE_BEDS[f12.kind] && distance3(env, f12) < (f12.range || FEATURE_BEDS[f12.kind].range)).sort((a, b) => distance3(env, a) - distance3(env, b)).slice(0, SOUNDSCAPE_LIMITS.features);
+    for (const f12 of nearby) {
+      const def = FEATURE_BEDS[f12.kind], range = f12.range || def.range, d = distance3(env, f12);
+      desired.set("feature:" + f12.id, { ...def, position: f12, range, level: def.gain * (f12.gain ?? 1) * clamp50((range - d) / Math.min(10, range * 0.4)), category: "feature" });
     }
     for (const [key3, voice] of this.loops) {
       const def = desired.get(key3);
@@ -55565,7 +58110,7 @@ var Soundscape = class {
     }
     const thunder = env.weather?.thunder;
     if (!env.dungeon && !env.underwater && thunder) for (let i = 0; i < Math.min(3, thunder.length); i++) {
-      const event = thunder[i], voice = this.audio.playSample("thunderDistant", { fallback: "thunder", bus: "ambience", category: "ambienceEvent", gain: clamp48(event.gain ?? 0.45, 0, 1.5) * (env.weather?.sheltered ? 0.2 : 1), rate: clamp48(event.rate ?? 1, 0.7, 1.2), position: event, range: clamp48(event.range ?? 2400, 100, 6e3), refDistance: clamp48(event.refDistance ?? 180, 12, 500), wet: 0.12 });
+      const event = thunder[i], voice = this.audio.playSample("thunderDistant", { fallback: "thunder", bus: "ambience", category: "ambienceEvent", gain: clamp50(event.gain ?? 0.45, 0, 1.5) * (env.weather?.sheltered ? 0.2 : 1), rate: clamp50(event.rate ?? 1, 0.7, 1.2), position: event, range: clamp50(event.range ?? 2400, 100, 6e3), refDistance: clamp50(event.refDistance ?? 180, 12, 500), wet: 0.12 });
       if (voice) this.stats.events++;
     }
     const weights = { ...profile.events, creak: 1, ruin: 1, enemy: 1, thunder: env.weather?.externalWeather ? 0 : 1 };
@@ -55574,7 +58119,7 @@ var Soundscape = class {
       const def = EVENTS[id2];
       let activity = weight * (def.day?.[this.phase] ?? 1) * (def.weather?.[weather] ?? (def.weather ? 0 : 1)) * phase2.events;
       if (!env.dungeon && ["birds", "corvid", "insects", "owl", "rustle"].includes(id2)) activity *= Math.max(0.02, 1 - 0.72 * rain - 0.88 * snow - 0.55 * blizzard);
-      if (def.feature && !env.features?.some((f10) => f10.kind === def.feature)) activity = 0;
+      if (def.feature && !env.features?.some((f12) => f12.kind === def.feature)) activity = 0;
       if (env.dungeon && ["creak", "ruin", "thunder"].includes(id2)) activity = 0;
       if (quiet && !["drip", "thunder"].includes(id2)) activity = 0;
       if (activity <= 0) {
@@ -55590,7 +58135,7 @@ var Soundscape = class {
       if (this.clock < this.nextEvent || this.audio.countCategory("ambienceEvent") >= SOUNDSCAPE_LIMITS.events) continue;
       let position3, range = def.distance[1] + 15;
       if (def.feature) {
-        const candidates = env.features.filter((f10) => f10.kind === def.feature && distance3(env, f10) >= def.distance[0] && distance3(env, f10) <= Math.min(f10.range || range, def.distance[1]));
+        const candidates = env.features.filter((f12) => f12.kind === def.feature && distance3(env, f12) >= def.distance[0] && distance3(env, f12) <= Math.min(f12.range || range, def.distance[1]));
         if (!candidates.length) {
           this.stats.culled++;
           continue;
@@ -55691,7 +58236,7 @@ function makeFallback(context, kind, variant = 0, loop2 = false) {
         v = (Math.sin(t * (240 + Math.sin(t * 2) * 45) * 2 * Math.PI) + Math.sin(t * 491) * 0.12) * 0.15 * Math.sin(u * Math.PI) ** 2;
         break;
       case "chime":
-        v = [293.66, 440, 587.33].reduce((s, f10, j) => s + Math.sin(2 * Math.PI * f10 * t) * Math.exp(-t * (4 + j)) / (j + 1), 0) * 0.12 * attack2;
+        v = [293.66, 440, 587.33].reduce((s, f12, j) => s + Math.sin(2 * Math.PI * f12 * t) * Math.exp(-t * (4 + j)) / (j + 1), 0) * 0.12 * attack2;
         break;
       case "heartbeat":
         v = Math.sin(2 * Math.PI * 53 * t) * 0.28 * (Math.exp(-t * 24) + (t > 0.19 ? Math.exp(-(t - 0.19) * 32) * 0.65 : 0)) * attack2;
@@ -55724,7 +58269,7 @@ function makeFallback(context, kind, variant = 0, loop2 = false) {
 }
 
 // audio.js
-var clamp49 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+var clamp51 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 var hidden2 = () => typeof document !== "undefined" && document.hidden;
 var set = (param, value, time) => param.setValueAtTime(value, time);
 var hold = (param, time) => {
@@ -55842,10 +58387,10 @@ var GameAudio = class {
     this.settings = settings2;
     if (!this.context) return;
     const t = this.context.currentTime;
-    this.master.gain.setTargetAtTime(clamp49(Number(settings2.volume) || 0), t, 0.035);
+    this.master.gain.setTargetAtTime(clamp51(Number(settings2.volume) || 0), t, 0.035);
     for (const [name, g] of Object.entries(this.buses)) {
       const value = name === "ui" ? settings2.effects : settings2[name];
-      g.gain.setTargetAtTime(clamp49(value ?? 0.8), t, 0.08);
+      g.gain.setTargetAtTime(clamp51(value ?? 0.8), t, 0.08);
     }
     if (!this.isAudible("ambience")) this.soundscape.stop();
     if (!this.isAudible("effects")) this.stopCategory("effects");
@@ -55879,7 +58424,7 @@ var GameAudio = class {
   bufferFor(name, fallback, variant, loop2) {
     const def = SOUNDSCAPE_ASSETS[name] || SOUND_BANK[name], files = def?.files || [];
     let buffer = files.length ? this.buffers.get(files[(variant ?? Math.floor(Math.random() * files.length)) % files.length]) : null;
-    if (!buffer && files.length) buffer = files.map((f10) => this.buffers.get(f10)).find(Boolean);
+    if (!buffer && files.length) buffer = files.map((f12) => this.buffers.get(f12)).find(Boolean);
     if (buffer) return { buffer, gain: def.gain ?? 0.55, recorded: true };
     const kind = fallback || (/Water/.test(name) ? "water" : /step/.test(name) ? "step" : /discover|level|heal|rest|shrine|chest|craft|skill|respawn|victory/.test(name) ? "chime" : name === "heartbeat" ? "heartbeat" : /^ui|error/.test(name) ? "ui" : "hit"), key3 = kind + ":" + (variant % 3 || 0) + ":" + !!loop2;
     if (!this.fallbacks.has(key3)) this.fallbacks.set(key3, makeFallback(this.context, kind, variant % 3 || 0, loop2));
@@ -55930,7 +58475,7 @@ var GameAudio = class {
     const sample2 = this.bufferFor(name, fallback, variant, loop2), source2 = c2.createBufferSource(), now = c2.currentTime, target = gain * sample2.gain;
     source2.buffer = sample2.buffer;
     source2.loop = loop2;
-    source2.playbackRate.value = clamp49(rate, 0.4, 2);
+    source2.playbackRate.value = clamp51(rate, 0.4, 2);
     source2.connect(graph.filter);
     graph.filter.connect(graph.gain);
     let out2 = graph.gain;
@@ -56079,7 +58624,7 @@ var GameAudio = class {
     const now = this.context.currentTime;
     if (now - (this.lastSwimStroke ?? -10) < 0.42) return;
     this.lastSwimStroke = now;
-    this.emit("swimStroke", { gain: (0.22 + 0.44 * clamp49(effort)) * (underwater ? 0.45 : 1), rate: underwater ? 0.82 : 0.95, jitter: 0.04, reverbSend: 0.08, variant: (this.swimStrokes = (this.swimStrokes || 0) + 1) % 2 });
+    this.emit("swimStroke", { gain: (0.22 + 0.44 * clamp51(effort)) * (underwater ? 0.45 : 1), rate: underwater ? 0.82 : 0.95, jitter: 0.04, reverbSend: 0.08, variant: (this.swimStrokes = (this.swimStrokes || 0) + 1) % 2 });
   }
   // Contacts come from actual grounded travel. Alternate two small recording
   // pools for the left/right foot, with subtle pitch and level variation.
@@ -56106,8 +58651,8 @@ var GameAudio = class {
     this.lastPlayerLand = now;
     this.lastPlayerStep = now;
     this.lastStepGear = now;
-    this.emit("land" + surface4, { gain: 0.7 + clamp49(impact) * 0.45, rate: 0.88, jitter: 0.018, reverbSend: 0.55, force: true });
-    this.emit("armor", { gain: 0.1 + clamp49(impact) * 0.12, rate: 0.96, jitter: 0.025, reverbSend: 0.35 });
+    this.emit("land" + surface4, { gain: 0.7 + clamp51(impact) * 0.45, rate: 0.88, jitter: 0.018, reverbSend: 0.55, force: true });
+    this.emit("armor", { gain: 0.1 + clamp51(impact) * 0.12, rate: 0.96, jitter: 0.025, reverbSend: 0.35 });
     return true;
   }
   diagnostics() {
@@ -56190,6 +58735,11 @@ function moonlightScale(illumination) {
   const k = Math.max(0, Math.min(1, (illumination - MOON.safeIllumination) / (0.995 - MOON.safeIllumination)));
   return 0.1 + 0.9 * k * k * (3 - 2 * k);
 }
+function daySecondsAt(minute) {
+  const m = wrap5(Math.floor(Number(minute) || 0), 1440), [day, dusk, night] = SURVIVAL_DAY.phases;
+  const s = m >= day.from && m < dusk.from ? (m - day.from) / day.minutes * day.seconds : m >= dusk.from && m < night.from ? day.seconds + (m - dusk.from) / dusk.minutes * dusk.seconds : day.seconds + dusk.seconds + wrap5(m - night.from, 1440) / night.minutes * night.seconds;
+  return Math.min(SURVIVAL_DAY.seconds - 1e-3, s);
+}
 function nextMorning(t) {
   const time = Number.isFinite(t) ? Math.max(0, t) : 0;
   return (Math.floor(time / SURVIVAL_DAY.seconds) + 1) * SURVIVAL_DAY.seconds + 5;
@@ -56217,9 +58767,9 @@ var SANITY = Object.freeze({
   hostile: -0.1
 });
 var DARKNESS = Object.freeze({ warn: 0.6, strike: 2.2, interval: 2.8, damage: 25, recover: 2.5 });
-var clamp50 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp52 = (x, a, b) => Math.max(a, Math.min(b, x));
 function createVitals(saved2 = null) {
-  const value = (key3) => Number.isFinite(saved2?.[key3]) ? clamp50(saved2[key3], 0, VITALS.max) : VITALS.max;
+  const value = (key3) => Number.isFinite(saved2?.[key3]) ? clamp52(saved2[key3], 0, VITALS.max) : VITALS.max;
   return { health: value("health"), hunger: value("hunger"), sanity: value("sanity") };
 }
 function advanceVitals(v, dt, env = {}) {
@@ -56230,13 +58780,13 @@ function advanceVitals(v, dt, env = {}) {
   let healthRate = 0;
   if (v.hunger <= 0) healthRate -= VITALS.starve;
   if (v.sanity <= 0) healthRate -= VITALS.madness;
-  v.hunger = clamp50(v.hunger + hungerRate * dt, 0, VITALS.max);
-  v.sanity = clamp50(v.sanity + sanityRate * dt, 0, VITALS.max);
-  v.health = clamp50(v.health + healthRate * dt, 0, VITALS.max);
+  v.hunger = clamp52(v.hunger + hungerRate * dt, 0, VITALS.max);
+  v.sanity = clamp52(v.sanity + sanityRate * dt, 0, VITALS.max);
+  v.health = clamp52(v.health + healthRate * dt, 0, VITALS.max);
   return { health: healthRate, hunger: hungerRate, sanity: sanityRate };
 }
 function applyEffect(v, effect = {}) {
-  for (const key3 of ["health", "hunger", "sanity"]) if (Number.isFinite(effect[key3])) v[key3] = clamp50(v[key3] + effect[key3], 0, VITALS.max);
+  for (const key3 of ["health", "hunger", "sanity"]) if (Number.isFinite(effect[key3])) v[key3] = clamp52(v[key3] + effect[key3], 0, VITALS.max);
   return v;
 }
 function isDark({ phase: phase2, inCave = false, fullMoon = false, lit = false }) {
@@ -56270,7 +58820,7 @@ function advanceDarkness(d, dt, dark) {
   return null;
 }
 function darknessShade(d) {
-  const t = clamp50(d.time / DARKNESS.strike, 0, 1);
+  const t = clamp52(d.time / DARKNESS.strike, 0, 1);
   return t * t * (3 - 2 * t);
 }
 
@@ -56371,16 +58921,16 @@ var FIRES = Object.freeze({
   firepit: Object.freeze({ name: "石のかまど", startFuel: 180, maxFuel: 360, lasting: true })
 });
 function foodEffect(def, freshness2 = 1) {
-  const f10 = def.food;
-  if (!f10) return null;
-  if (freshness2 >= 0.5) return { ...f10 };
-  if (freshness2 >= 0.2) return { hunger: f10.hunger * 0.67, health: f10.health > 0 ? f10.health * 0.33 : f10.health, sanity: f10.sanity > 0 ? 0 : f10.sanity };
-  return { hunger: f10.hunger * 0.5, health: Math.min(0, f10.health) - 1, sanity: Math.min(0, f10.sanity) - 5 };
+  const f12 = def.food;
+  if (!f12) return null;
+  if (freshness2 >= 0.5) return { ...f12 };
+  if (freshness2 >= 0.2) return { hunger: f12.hunger * 0.67, health: f12.health > 0 ? f12.health * 0.33 : f12.health, sanity: f12.sanity > 0 ? 0 : f12.sanity };
+  return { hunger: f12.hunger * 0.5, health: Math.min(0, f12.health) - 1, sanity: Math.min(0, f12.sanity) - 5 };
 }
 
 // survival-inventory.js
 var SLOT_COUNT = 15;
-var clamp51 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp53 = (x, a, b) => Math.max(a, Math.min(b, x));
 function createInventory(size = SLOT_COUNT) {
   return { slots: Array.from({ length: size }, () => null), selected: 0 };
 }
@@ -56391,13 +58941,13 @@ function spoilSpan(id2) {
 function freshness(slot, now) {
   const span = spoilSpan(slot?.id);
   if (!span || !Number.isFinite(slot.spoilAt)) return null;
-  return clamp51((slot.spoilAt - now) / span, 0, 1);
+  return clamp53((slot.spoilAt - now) / span, 0, 1);
 }
 function wear(slot) {
   const tool = ITEMS[slot?.id]?.tool;
   if (!tool) return null;
-  if (tool.burn) return clamp51((slot.burn ?? tool.burn) / tool.burn, 0, 1);
-  if (tool.uses) return clamp51((slot.uses ?? tool.uses) / tool.uses, 0, 1);
+  if (tool.burn) return clamp53((slot.burn ?? tool.burn) / tool.burn, 0, 1);
+  if (tool.uses) return clamp53((slot.uses ?? tool.uses) / tool.uses, 0, 1);
   return null;
 }
 function newSlot(id2, count, now, extra = {}) {
@@ -56521,8 +59071,8 @@ function restoreInventory(data, size = SLOT_COUNT) {
     const s = data.slots[i], def = ITEMS[s?.id];
     if (!def || !Number.isFinite(s.count) || s.count < 1) continue;
     const slot = { id: s.id, count: Math.min(def.stack, Math.floor(s.count)) };
-    if (def.tool?.uses) slot.uses = clamp51(Number.isFinite(s.uses) ? s.uses : def.tool.uses, 1, def.tool.uses);
-    if (def.tool?.burn) slot.burn = clamp51(Number.isFinite(s.burn) ? s.burn : def.tool.burn, 0.5, def.tool.burn);
+    if (def.tool?.uses) slot.uses = clamp53(Number.isFinite(s.uses) ? s.uses : def.tool.uses, 1, def.tool.uses);
+    if (def.tool?.burn) slot.burn = clamp53(Number.isFinite(s.burn) ? s.burn : def.tool.burn, 0.5, def.tool.burn);
     if (def.spoilDays && Number.isFinite(s.spoilAt)) slot.spoilAt = s.spoilAt;
     else if (def.spoilDays) slot.spoilAt = spoilSpan(s.id);
     inv.slots[i] = slot;
@@ -56532,15 +59082,15 @@ function restoreInventory(data, size = SLOT_COUNT) {
 }
 
 // survival-pickable-meshes.js
-var TAU34 = Math.PI * 2;
+var TAU36 = Math.PI * 2;
 var BERRY_RADIUS = 6e-3;
-var clamp52 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
-var smooth33 = (a, b, x) => {
-  const t = clamp52((x - a) / (b - a));
+var clamp54 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+var smooth34 = (a, b, x) => {
+  const t = clamp54((x - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
-var mix17 = (a, b, t) => a + (b - a) * t;
-function random5(seed) {
+var mix18 = (a, b, t) => a + (b - a) * t;
+function random7(seed) {
   let s = seed >>> 0;
   return () => {
     s = s + 1831565813 >>> 0;
@@ -56553,7 +59103,7 @@ function random5(seed) {
 var hexRgb2 = (h) => [(h >> 16 & 255) / 255, (h >> 8 & 255) / 255, (h & 255) / 255].map((c2) => c2 <= 0.04045 ? c2 / 12.92 : ((c2 + 0.055) / 1.055) ** 2.4);
 function regionUv(region, u, v) {
   const [x, y, w, h] = ATLAS[region], inset = 1.5;
-  return [(x + inset + clamp52(u) * (w - 2 * inset)) / ATLAS_SIZE, 1 - (y + inset + clamp52(v) * (h - 2 * inset)) / ATLAS_SIZE];
+  return [(x + inset + clamp54(u) * (w - 2 * inset)) / ATLAS_SIZE, 1 - (y + inset + clamp54(v) * (h - 2 * inset)) / ATLAS_SIZE];
 }
 var fold = (v) => {
   const m = (v % 2 + 2) % 2;
@@ -56600,8 +59150,8 @@ var Builder2 = class {
     for (let i = 0; i < I.length; i += 3) {
       const a = I[i] * 3, b = I[i + 1] * 3, c2 = I[i + 2] * 3;
       const e1 = [P[b] - P[a], P[b + 1] - P[a + 1], P[b + 2] - P[a + 2]], e2 = [P[c2] - P[a], P[c2 + 1] - P[a + 1], P[c2 + 2] - P[a + 2]];
-      const f10 = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
-      const d = f10[0] * (N[a] + N[b] + N[c2]) + f10[1] * (N[a + 1] + N[b + 1] + N[c2 + 1]) + f10[2] * (N[a + 2] + N[b + 2] + N[c2 + 2]);
+      const f12 = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+      const d = f12[0] * (N[a] + N[b] + N[c2]) + f12[1] * (N[a + 1] + N[b + 1] + N[c2 + 1]) + f12[2] * (N[a + 2] + N[b + 2] + N[c2 + 2]);
       if (d < 0) {
         const t = I[i + 1];
         I[i + 1] = I[i + 2];
@@ -56628,52 +59178,52 @@ var Builder2 = class {
     return this.index.length / 3;
   }
 };
-var add2 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-var sub2 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+var add3 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+var sub3 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 var scale4 = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
-var dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-var cross8 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+var dot4 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+var cross9 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 var len2 = (a) => Math.hypot(a[0], a[1], a[2]);
 var norm2 = (a) => {
   const l = len2(a) || 1;
   return [a[0] / l, a[1] / l, a[2] / l];
 };
-var lerpV = (a, b, t) => [mix17(a[0], b[0], t), mix17(a[1], b[1], t), mix17(a[2], b[2], t)];
+var lerpV = (a, b, t) => [mix18(a[0], b[0], t), mix18(a[1], b[1], t), mix18(a[2], b[2], t)];
 var rotY = (p, a) => [p[0] * Math.cos(a) + p[2] * Math.sin(a), p[1], -p[0] * Math.sin(a) + p[2] * Math.cos(a)];
 function spline3(points, n) {
   const out2 = [];
   for (let i = 0; i < n; i++) {
-    const f10 = i / (n - 1) * (points.length - 1), k = Math.min(points.length - 2, Math.floor(f10)), t = f10 - k;
+    const f12 = i / (n - 1) * (points.length - 1), k = Math.min(points.length - 2, Math.floor(f12)), t = f12 - k;
     const p0 = points[Math.max(0, k - 1)], p1 = points[k], p2 = points[k + 1], p3 = points[Math.min(points.length - 1, k + 2)];
     out2.push([0, 1, 2].map((j) => 0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t * t + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t * t * t)));
   }
   return out2;
 }
-function frames2(path) {
-  const tangents = path.map((p, i) => norm2(sub2(path[Math.min(path.length - 1, i + 1)], path[Math.max(0, i - 1)])));
+function frames3(path) {
+  const tangents = path.map((p, i) => norm2(sub3(path[Math.min(path.length - 1, i + 1)], path[Math.max(0, i - 1)])));
   let normal4 = Math.abs(tangents[0][1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
-  normal4 = norm2(cross8(cross8(tangents[0], normal4), tangents[0]));
+  normal4 = norm2(cross9(cross9(tangents[0], normal4), tangents[0]));
   const out2 = [];
   for (let i = 0; i < path.length; i++) {
     if (i) {
-      const t0 = tangents[i - 1], t1 = tangents[i], axis2 = cross8(t0, t1), s = len2(axis2);
+      const t0 = tangents[i - 1], t1 = tangents[i], axis2 = cross9(t0, t1), s = len2(axis2);
       if (s > 1e-6) {
-        const a = Math.atan2(s, dot3(t0, t1)), k = norm2(axis2);
-        normal4 = add2(add2(scale4(normal4, Math.cos(a)), scale4(cross8(k, normal4), Math.sin(a))), scale4(k, dot3(k, normal4) * (1 - Math.cos(a))));
+        const a = Math.atan2(s, dot4(t0, t1)), k = norm2(axis2);
+        normal4 = add3(add3(scale4(normal4, Math.cos(a)), scale4(cross9(k, normal4), Math.sin(a))), scale4(k, dot4(k, normal4) * (1 - Math.cos(a))));
       }
     }
-    out2.push({ t: tangents[i], n: normal4, b: cross8(tangents[i], normal4) });
+    out2.push({ t: tangents[i], n: normal4, b: cross9(tangents[i], normal4) });
   }
   return out2;
 }
 function tube4(b, path, radius, { sides = 6, region = "bark", vPerMetre = 2, colour, pk, start: start2 = null, end = null, jitter = 0, seed = 1 }) {
-  const f10 = frames2(path), rand2 = random5(seed), lengths2 = [0];
-  for (let i = 1; i < path.length; i++) lengths2.push(lengths2[i - 1] + len2(sub2(path[i], path[i - 1])));
+  const f12 = frames3(path), rand2 = random7(seed), lengths2 = [0];
+  for (let i = 1; i < path.length; i++) lengths2.push(lengths2[i - 1] + len2(sub3(path[i], path[i - 1])));
   const total = lengths2.at(-1) || 1, rings2 = [];
   for (let i = 0; i < path.length; i++) {
     const t = lengths2[i] / total, r = radius(t), ring2 = [], wob = jitter ? 1 + (rand2() - 0.5) * jitter : 1;
     for (let j = 0; j <= sides; j++) {
-      const a = j / sides * TAU34, dir = add2(scale4(f10[i].n, Math.cos(a)), scale4(f10[i].b, Math.sin(a))), p = add2(path[i], scale4(dir, r * wob));
+      const a = j / sides * TAU36, dir = add3(scale4(f12[i].n, Math.cos(a)), scale4(f12[i].b, Math.sin(a))), p = add3(path[i], scale4(dir, r * wob));
       ring2.push(b.vertex(p, dir, regionUv(region, j / sides, fold(lengths2[i] * vPerMetre)), colour(t, a), pk(t, p)));
     }
     rings2.push(ring2);
@@ -56681,16 +59231,16 @@ function tube4(b, path, radius, { sides = 6, region = "bark", vPerMetre = 2, col
   for (let i = 0; i < rings2.length - 1; i++) for (let j = 0; j < sides; j++) b.quad(rings2[i][j], rings2[i + 1][j], rings2[i + 1][j + 1], rings2[i][j + 1]);
   for (const [which, kind] of [[0, start2], [path.length - 1, end]]) {
     if (!kind) continue;
-    const t = which ? 1 : 0, r = radius(t), dir = which ? f10[which].t : scale4(f10[which].t, -1), c2 = path[which];
+    const t = which ? 1 : 0, r = radius(t), dir = which ? f12[which].t : scale4(f12[which].t, -1), c2 = path[which];
     if (kind === "point") {
-      const tip = b.vertex(add2(c2, scale4(dir, r * 2.5)), dir, regionUv(region, 0.5, fold(total * vPerMetre)), colour(t, 0), pk(t, c2));
+      const tip = b.vertex(add3(c2, scale4(dir, r * 2.5)), dir, regionUv(region, 0.5, fold(total * vPerMetre)), colour(t, 0), pk(t, c2));
       for (let j = 0; j < sides; j++) which ? b.tri(rings2[which][j], tip, rings2[which][j + 1]) : b.tri(rings2[which][j + 1], tip, rings2[which][j]);
       continue;
     }
-    const centre = b.vertex(add2(c2, scale4(dir, r * 0.25)), dir, regionUv("wood", 0.5, 0.5), kind === "wood" ? [1, 1, 1] : colour(t, 0), pk(t, c2)), cap = [];
+    const centre = b.vertex(add3(c2, scale4(dir, r * 0.25)), dir, regionUv("wood", 0.5, 0.5), kind === "wood" ? [1, 1, 1] : colour(t, 0), pk(t, c2)), cap = [];
     for (let j = 0; j <= sides; j++) {
-      const a = j / sides * TAU34, d = add2(scale4(f10[which].n, Math.cos(a)), scale4(f10[which].b, Math.sin(a))), jag = kind === "wood" ? 1 + 0.25 * Math.sin(a * 3 + seed) : 1;
-      cap.push(b.vertex(add2(add2(c2, scale4(d, r)), scale4(dir, r * 0.35 * (jag - 1))), norm2(add2(dir, scale4(d, 0.3))), regionUv("wood", 0.5 + Math.cos(a) * 0.48, 0.5 + Math.sin(a) * 0.48), kind === "wood" ? [1, 1, 1] : colour(t, a), pk(t, c2)));
+      const a = j / sides * TAU36, d = add3(scale4(f12[which].n, Math.cos(a)), scale4(f12[which].b, Math.sin(a))), jag = kind === "wood" ? 1 + 0.25 * Math.sin(a * 3 + seed) : 1;
+      cap.push(b.vertex(add3(add3(c2, scale4(d, r)), scale4(dir, r * 0.35 * (jag - 1))), norm2(add3(dir, scale4(d, 0.3))), regionUv("wood", 0.5 + Math.cos(a) * 0.48, 0.5 + Math.sin(a) * 0.48), kind === "wood" ? [1, 1, 1] : colour(t, a), pk(t, c2)));
     }
     for (let j = 0; j < sides; j++) which ? b.tri(centre, cap[j], cap[j + 1]) : b.tri(centre, cap[j + 1], cap[j]);
   }
@@ -56702,17 +59252,17 @@ function lathe3(b, profile, { segments = 16, region, colour, pk, at = [0, 0, 0],
     let [x, y, z] = p;
     [y, z] = [y * cosX - z * sinX, y * sinX + z * cosX];
     [x, y] = [x * cosZ - y * sinZ, x * sinZ + y * cosZ];
-    return add2(at, [x, y, z]);
+    return add3(at, [x, y, z]);
   };
   for (let i = 0; i < profile.length; i++) {
     const [r, y, v] = profile[i], prev = profile[Math.max(0, i - 1)], next = profile[Math.min(profile.length - 1, i + 1)];
     const dr = next[0] - prev[0], dy = next[1] - prev[1], nl = Math.hypot(dr, dy) || 1, row2 = [];
     for (let j = 0; j <= segments; j++) {
-      const a = j / segments * TAU34, w = wobble ? wobble(a, i / (profile.length - 1)) : 1, ca = Math.cos(a), sa = Math.sin(a);
+      const a = j / segments * TAU36, w = wobble ? wobble(a, i / (profile.length - 1)) : 1, ca = Math.cos(a), sa = Math.sin(a);
       let n = [dy / nl * ca, -dr / nl, dy / nl * sa];
       if (flip) n = scale4(n, -1);
-      const local = [ca * r * w, y, sa * r * w];
-      row2.push(b.vertex(place(local), norm2(place(add2(n, [0, 0, 0])).map((k, q) => k - at[q])), regionUv(region, j / segments, v), colour(i / (profile.length - 1), a, local), pk(i / (profile.length - 1), local)));
+      const local2 = [ca * r * w, y, sa * r * w];
+      row2.push(b.vertex(place(local2), norm2(place(add3(n, [0, 0, 0])).map((k, q) => k - at[q])), regionUv(region, j / segments, v), colour(i / (profile.length - 1), a, local2), pk(i / (profile.length - 1), local2)));
     }
     rows.push(row2);
   }
@@ -56721,8 +59271,8 @@ function lathe3(b, profile, { segments = 16, region, colour, pk, at = [0, 0, 0],
 }
 function card(b, surface4, { cols = 2, rows = 4, region, uvAt, colour, pk, bend = null, bendBy = 0, up: up7 = false }) {
   const grid = [], normalAt = (s, t) => {
-    const e = 0.02, ds = sub2(surface4(Math.min(1, s + e), t), surface4(Math.max(-1, s - e), t)), dt = sub2(surface4(s, Math.min(1, t + e)), surface4(s, Math.max(0, t - e)));
-    return norm2(cross8(ds, dt));
+    const e = 0.02, ds = sub3(surface4(Math.min(1, s + e), t), surface4(Math.max(-1, s - e), t)), dt = sub3(surface4(s, Math.min(1, t + e)), surface4(s, Math.max(0, t - e)));
+    return norm2(cross9(ds, dt));
   };
   const sign = up7 && normalAt(0, 0.5)[1] < 0 ? -1 : 1;
   for (let i = 0; i <= rows; i++) {
@@ -56757,12 +59307,12 @@ function blob2(THREE, b, { at, radii, detail = 2, displace = null, colour, pk, r
   });
   const normals = moved.map(() => [0, 0, 0]);
   for (let i = 0; i < faces.length; i += 3) {
-    const [a, c2, d] = [faces[i], faces[i + 1], faces[i + 2]], n = cross8(sub2(moved[c2], moved[a]), sub2(moved[d], moved[a]));
-    for (const k of [a, c2, d]) normals[k] = add2(normals[k], n);
+    const [a, c2, d] = [faces[i], faces[i + 1], faces[i + 2]], n = cross9(sub3(moved[c2], moved[a]), sub3(moved[d], moved[a]));
+    for (const k of [a, c2, d]) normals[k] = add3(normals[k], n);
   }
   const ids2 = moved.map((p, i) => {
-    const n = norm2(normals[i]), u = verts[i], uv = region === "berry" ? regionUv(region, 0.5 + Math.atan2(u[2], u[0]) / TAU34 * 0.98, 0.5 - u[1] * 0.48) : regionUv(region, 0.5 + u[0] * 0.45, 0.5 + u[2] * 0.45);
-    return b.vertex(add2(at, p), n, uv, colour(u, p, n), pk(u, p));
+    const n = norm2(normals[i]), u = verts[i], uv = region === "berry" ? regionUv(region, 0.5 + Math.atan2(u[2], u[0]) / TAU36 * 0.98, 0.5 - u[1] * 0.48) : regionUv(region, 0.5 + u[0] * 0.45, 0.5 + u[2] * 0.45);
+    return b.vertex(add3(at, p), n, uv, colour(u, p, n), pk(u, p));
   });
   for (let i = 0; i < faces.length; i += 3) b.tri(ids2[faces[i]], ids2[faces[i + 1]], ids2[faces[i + 2]]);
   return { verts, moved, ids: ids2 };
@@ -56777,46 +59327,46 @@ function vnoise3(x, y, z, seed = 0) {
   const l = (a, b2, t) => a + (b2 - a) * t;
   return l(l(l(h(xi, yi, zi), h(xi + 1, yi, zi), u), l(h(xi, yi + 1, zi), h(xi + 1, yi + 1, zi), u), v), l(l(h(xi, yi, zi + 1), h(xi + 1, yi, zi + 1), u), l(h(xi, yi + 1, zi + 1), h(xi + 1, yi + 1, zi + 1), u), v), w);
 }
-var groundShade = (y, reach = 0.12, floor = 0.5) => mix17(floor, 1, smooth33(0, reach, y));
+var groundShade = (y, reach = 0.12, floor = 0.5) => mix18(floor, 1, smooth34(0, reach, y));
 var tint3 = (rgb, k) => rgb.map((v) => v * k);
 function fallenBranch(THREE) {
-  const b = new Builder2(), rand2 = random5(31), barkTint = [[1, 0.96, 0.92], [0.86, 0.84, 0.8], [1.05, 0.98, 0.9]];
+  const b = new Builder2(), rand2 = random7(31), barkTint2 = [[1, 0.96, 0.92], [0.86, 0.84, 0.8], [1.05, 0.98, 0.9]];
   const still = () => [0.9, 0.3, 0, 0.25];
-  const L3 = 0.98, main = spline3([[-L3 / 2, 0.028, 0.02], [-L3 * 0.2, 0.036, -0.03], [L3 * 0.12, 0.04, 0.02], [L3 * 0.38, 0.03, -0.015], [L3 / 2, 0.02, 0.01]], 9);
-  const mainR = (t) => mix17(0.028, 0.012, t) * (1 + 0.12 * Math.sin(t * 17));
-  tube4(b, main, mainR, { sides: 7, vPerMetre: 1.6, colour: (t, a) => tint3(barkTint[0], groundShade(main[0][1] + Math.sin(a) * 0.02, 0.04, 0.62)), pk: still, start: "wood", end: "point", seed: 3 });
+  const L4 = 0.98, main = spline3([[-L4 / 2, 0.028, 0.02], [-L4 * 0.2, 0.036, -0.03], [L4 * 0.12, 0.04, 0.02], [L4 * 0.38, 0.03, -0.015], [L4 / 2, 0.02, 0.01]], 9);
+  const mainR = (t) => mix18(0.028, 0.012, t) * (1 + 0.12 * Math.sin(t * 17));
+  tube4(b, main, mainR, { sides: 7, vPerMetre: 1.6, colour: (t, a) => tint3(barkTint2[0], groundShade(main[0][1] + Math.sin(a) * 0.02, 0.04, 0.62)), pk: still, start: "wood", end: "point", seed: 3 });
   const at = (t) => main[Math.round(t * (main.length - 1))];
   for (const [t, ang, length, lift] of [[0.28, 0.9, 0.32, 0.02], [0.5, -1.1, 0.26, 0.05], [0.72, 0.7, 0.2, 0.015], [0.86, -0.6, 0.1, 0.01]]) {
-    const o = at(t), dir = [Math.cos(ang) * 0.55, 0, Math.sin(ang)], path = spline3([o, add2(o, add2(scale4(dir, length * 0.5), [0, lift, 0])), add2(o, add2(scale4(dir, length), [0, lift * 0.6, 0]))], 5);
-    tube4(b, path, (s) => mix17(0.011, 4e-3, s), { sides: 5, vPerMetre: 1.6, colour: () => tint3(barkTint[1], 0.95), pk: still, end: length < 0.12 ? "wood" : "point", seed: 5 });
+    const o = at(t), dir = [Math.cos(ang) * 0.55, 0, Math.sin(ang)], path = spline3([o, add3(o, add3(scale4(dir, length * 0.5), [0, lift, 0])), add3(o, add3(scale4(dir, length), [0, lift * 0.6, 0]))], 5);
+    tube4(b, path, (s) => mix18(0.011, 4e-3, s), { sides: 5, vPerMetre: 1.6, colour: () => tint3(barkTint2[1], 0.95), pk: still, end: length < 0.12 ? "wood" : "point", seed: 5 });
     if (length > 0.3) {
-      const f10 = path[3], fork = spline3([f10, add2(f10, [0.05, 0.02, 0.08]), add2(f10, [0.12, 0.015, 0.14])], 4);
-      tube4(b, fork, (s) => mix17(4e-3, 2e-3, s), { sides: 4, vPerMetre: 1.6, colour: () => barkTint[1], pk: still, end: "point" });
+      const f12 = path[3], fork = spline3([f12, add3(f12, [0.05, 0.02, 0.08]), add3(f12, [0.12, 0.015, 0.14])], 4);
+      tube4(b, fork, (s) => mix18(4e-3, 2e-3, s), { sides: 4, vPerMetre: 1.6, colour: () => barkTint2[1], pk: still, end: "point" });
     }
   }
   for (const [x, z, ang, length, r] of [[0.05, 0.2, -0.35, 0.44, 0.015], [-0.16, -0.18, 0.5, 0.32, 0.012]]) {
-    const dir = [Math.cos(ang), 0, Math.sin(ang)], o = [x, r, z], path = spline3([add2(o, scale4(dir, -length / 2)), add2(add2(o, [0, 4e-3, 0]), scale4(dir, length * 0.05)), add2(o, scale4(dir, length / 2))], 5);
-    tube4(b, path, (s) => r * (1 - 0.3 * s), { sides: 6, vPerMetre: 1.6, colour: () => barkTint[2], pk: still, start: "wood", end: "wood", seed: 7 });
+    const dir = [Math.cos(ang), 0, Math.sin(ang)], o = [x, r, z], path = spline3([add3(o, scale4(dir, -length / 2)), add3(add3(o, [0, 4e-3, 0]), scale4(dir, length * 0.05)), add3(o, scale4(dir, length / 2))], 5);
+    tube4(b, path, (s) => r * (1 - 0.3 * s), { sides: 6, vPerMetre: 1.6, colour: () => barkTint2[2], pk: still, start: "wood", end: "wood", seed: 7 });
   }
   card(b, (s, t) => [s * 0.42, 0.01 + 4e-3 * Math.sin(s * 3 + t * 4), (t - 0.5) * 0.84], { cols: 3, rows: 3, region: "litter", uvAt: (s, t) => [(s + 1) / 2, t], colour: () => [1.05, 1.05, 1.05], pk: () => [0.95, 0.2, 0, 0], up: true });
   return b;
 }
 function grassTuft(THREE) {
-  const b = new Builder2(), rand2 = random5(202), H = 1;
+  const b = new Builder2(), rand2 = random7(202), H = 1;
   const base = hexRgb2(4867622), straw2 = hexRgb2(13217130), pale = hexRgb2(15128230), green2 = hexRgb2(7043642);
-  const sway = (p) => 0.1 * H * smooth33(0, H, p[1]) ** 2;
+  const sway = (p) => 0.1 * H * smooth34(0, H, p[1]) ** 2;
   for (let i = 0; i < 74; i++) {
-    const a = rand2() * TAU34, r = Math.sqrt(rand2()) * 0.07, h = 0.45 + rand2() * 0.55, lean = 0.2 + rand2() * 0.7, w = 0.011 + rand2() * 0.01, twist = (rand2() - 0.5) * 0.8;
-    const fresh = rand2() < 0.28, tipC = fresh ? straw2.map((c2, k) => mix17(c2, green2[k], 0.5)) : rand2() < 0.4 ? pale : straw2, root = [Math.cos(a) * r, 0, Math.sin(a) * r];
+    const a = rand2() * TAU36, r = Math.sqrt(rand2()) * 0.07, h = 0.45 + rand2() * 0.55, lean = 0.2 + rand2() * 0.7, w = 0.011 + rand2() * 0.01, twist = (rand2() - 0.5) * 0.8;
+    const fresh = rand2() < 0.28, tipC = fresh ? straw2.map((c2, k) => mix18(c2, green2[k], 0.5)) : rand2() < 0.4 ? pale : straw2, root = [Math.cos(a) * r, 0, Math.sin(a) * r];
     const outward = [Math.cos(a), 0, Math.sin(a)], side2 = [-Math.sin(a + twist), 0, Math.cos(a + twist)];
-    const spine = (t) => add2(root, add2(scale4(outward, lean * h * t * t * 0.85), [0, h * t * (1 - 0.3 * lean * t * t), 0]));
-    card(b, (s, t) => add2(spine(t), add2(scale4(side2, s * w * (1 - t * 0.9)), [0, Math.abs(s) * w * 0.25, 0])), {
+    const spine = (t) => add3(root, add3(scale4(outward, lean * h * t * t * 0.85), [0, h * t * (1 - 0.3 * lean * t * t), 0]));
+    card(b, (s, t) => add3(spine(t), add3(scale4(side2, s * w * (1 - t * 0.9)), [0, Math.abs(s) * w * 0.25, 0])), {
       cols: 2,
       rows: 6,
       region: "blade",
       uvAt: (s, t) => [(s + 1) / 2, 1 - t],
       colour: (s, t) => {
-        const c2 = t < 0.3 ? base.map((k, q) => mix17(k, straw2[q], t / 0.3)) : straw2.map((k, q) => mix17(k, tipC[q], (t - 0.3) / 0.7));
+        const c2 = t < 0.3 ? base.map((k, q) => mix18(k, straw2[q], t / 0.3)) : straw2.map((k, q) => mix18(k, tipC[q], (t - 0.3) / 0.7));
         return tint3(c2, groundShade(t * h, 0.2, 0.45));
       },
       pk: (s, t, p) => [0.72, 0.55, sway(p), 0],
@@ -56825,20 +59375,20 @@ function grassTuft(THREE) {
     });
   }
   for (let i = 0; i < 10; i++) {
-    const a = rand2() * TAU34, lean = 0.1 + rand2() * 0.3, h = 0.95 + rand2() * 0.35, root = [Math.cos(a) * 0.03, 0, Math.sin(a) * 0.03], outward = [Math.cos(a), 0, Math.sin(a)];
-    const path = spline3([root, add2(root, add2(scale4(outward, lean * 0.3), [0, h * 0.5, 0])), add2(root, add2(scale4(outward, lean), [0, h * 0.97, 0]))], 7);
-    tube4(b, path, (t) => mix17(3e-3, 16e-4, t), { sides: 4, region: "blade", vPerMetre: 1, colour: (t) => tint3(straw2, groundShade(t * h, 0.2, 0.5)), pk: (t, p) => [0.75, 0.3, sway(p), 0] });
-    const top = path.at(-1), up7 = norm2(sub2(path.at(-1), path.at(-3))), plumeLen = 0.22 + rand2() * 0.07;
+    const a = rand2() * TAU36, lean = 0.1 + rand2() * 0.3, h = 0.95 + rand2() * 0.35, root = [Math.cos(a) * 0.03, 0, Math.sin(a) * 0.03], outward = [Math.cos(a), 0, Math.sin(a)];
+    const path = spline3([root, add3(root, add3(scale4(outward, lean * 0.3), [0, h * 0.5, 0])), add3(root, add3(scale4(outward, lean), [0, h * 0.97, 0]))], 7);
+    tube4(b, path, (t) => mix18(3e-3, 16e-4, t), { sides: 4, region: "blade", vPerMetre: 1, colour: (t) => tint3(straw2, groundShade(t * h, 0.2, 0.5)), pk: (t, p) => [0.75, 0.3, sway(p), 0] });
+    const top = path.at(-1), up7 = norm2(sub3(path.at(-1), path.at(-3))), plumeLen = 0.22 + rand2() * 0.07;
     for (const turn of [0, Math.PI / 2]) {
-      const across2 = rotY(norm2(cross8(up7, [0, 0, 1])), turn + a);
-      card(b, (s, t) => add2(add2(top, scale4(up7, (t - 0.88) * plumeLen)), scale4(across2, s * 0.036 * Math.sin(Math.PI * Math.min(1, t * 1.1)))), {
+      const across2 = rotY(norm2(cross9(up7, [0, 0, 1])), turn + a);
+      card(b, (s, t) => add3(add3(top, scale4(up7, (t - 0.88) * plumeLen)), scale4(across2, s * 0.036 * Math.sin(Math.PI * Math.min(1, t * 1.1)))), {
         cols: 2,
         rows: 4,
         region: "plume",
         uvAt: (s, t) => [(s + 1) / 2, 1 - t],
         colour: () => [1, 1, 1],
         pk: (s, t, p) => [0.85, 0.8, sway(p), 0],
-        bend: (p) => norm2(sub2(p, add2(top, [0, -0.1, 0]))),
+        bend: (p) => norm2(sub3(p, add3(top, [0, -0.1, 0]))),
         bendBy: 0.4
       });
     }
@@ -56846,13 +59396,13 @@ function grassTuft(THREE) {
   return b;
 }
 function berries(THREE, anchors, size) {
-  const b = new Builder2(), rand2 = random5(505);
+  const b = new Builder2(), rand2 = random7(505);
   for (const anchor of anchors) {
     const count = 2 + Math.floor(rand2() * 3);
     for (let k = 0; k < count; k++) {
-      const hang = [(rand2() - 0.5) * size * 3, -size * (1.2 + rand2() * 1.6), (rand2() - 0.5) * size * 3], at = add2(anchor.p, hang), r = size * (0.85 + rand2() * 0.35);
+      const hang = [(rand2() - 0.5) * size * 3, -size * (1.2 + rand2() * 1.6), (rand2() - 0.5) * size * 3], at = add3(anchor.p, hang), r = size * (0.85 + rand2() * 0.35);
       const ripe = rand2(), tone = ripe < 0.15 ? [0.55, 0.35, 0.3] : ripe < 0.3 ? [0.75, 0.45, 0.3] : [1, 1, 1];
-      tube4(b, [anchor.p, lerpV(anchor.p, at, 0.6), add2(at, [0, r * 0.8, 0])], () => size * 0.12, { sides: 3, region: "white", colour: () => hexRgb2(5990958), pk: () => [0.7, 0.3, 4e-3, 0] });
+      tube4(b, [anchor.p, lerpV(anchor.p, at, 0.6), add3(at, [0, r * 0.8, 0])], () => size * 0.12, { sides: 3, region: "white", colour: () => hexRgb2(5990958), pk: () => [0.7, 0.3, 4e-3, 0] });
       blob2(THREE, b, {
         at,
         radii: [r, r * 1.12, r],
@@ -56867,28 +59417,28 @@ function berries(THREE, anchors, size) {
   return b;
 }
 function carrot(THREE) {
-  const b = new Builder2(), rand2 = random5(606), orange = hexRgb2(14181406), orangeDark = hexRgb2(10305298), stalk = hexRgb2(7313990), stalkBase = hexRgb2(12042378);
+  const b = new Builder2(), rand2 = random7(606), orange = hexRgb2(14181406), orangeDark = hexRgb2(10305298), stalk = hexRgb2(7313990), stalkBase = hexRgb2(12042378);
   lathe3(b, [[0, -0.05, 1], [0.012, -0.048, 0.9], [0.019, -0.03, 0.7], [0.022, -5e-3, 0.5], [0.021, 6e-3, 0.3], [0.016, 0.014, 0.15], [6e-3, 0.018, 0]], {
     segments: 14,
     region: "white",
     colour: (t, a, p) => {
       const groove = 0.5 + 0.5 * Math.sin(p[1] * 900);
-      return orange.map((c2, k) => mix17(c2, orangeDark[k], groove * 0.35 + smooth33(6e-3, 0.02, p[1]) * 0.3));
+      return orange.map((c2, k) => mix18(c2, orangeDark[k], groove * 0.35 + smooth34(6e-3, 0.02, p[1]) * 0.3));
     },
     pk: () => [0.6, 0, 0, 0.3]
   });
   for (let i = 0; i < 8; i++) {
-    const a = i / 8 * TAU34 + rand2() * 0.4, h = 0.2 + rand2() * 0.14, reach = 0.1 + rand2() * 0.1, out2 = [Math.cos(a), 0, Math.sin(a)];
-    const root = [Math.cos(a) * 6e-3, 0.016, Math.sin(a) * 6e-3], path = spline3([root, add2(root, add2(scale4(out2, reach * 0.25), [0, h * 0.55, 0])), add2(root, add2(scale4(out2, reach * 0.75), [0, h * 0.92, 0])), add2(root, add2(scale4(out2, reach * 1.15), [0, h * 0.8, 0]))], 8);
-    const swayAt = (p) => 0.07 * smooth33(0, 0.35, p[1]) ** 2 * 0.35;
-    tube4(b, path, (t) => mix17(28e-4, 12e-4, t), { sides: 4, region: "white", colour: (t) => stalkBase.map((c2, k) => mix17(c2, stalk[k], smooth33(0, 0.4, t))), pk: (t, p) => [0.6, 0.3, swayAt(p), 0.1] });
+    const a = i / 8 * TAU36 + rand2() * 0.4, h = 0.2 + rand2() * 0.14, reach = 0.1 + rand2() * 0.1, out2 = [Math.cos(a), 0, Math.sin(a)];
+    const root = [Math.cos(a) * 6e-3, 0.016, Math.sin(a) * 6e-3], path = spline3([root, add3(root, add3(scale4(out2, reach * 0.25), [0, h * 0.55, 0])), add3(root, add3(scale4(out2, reach * 0.75), [0, h * 0.92, 0])), add3(root, add3(scale4(out2, reach * 1.15), [0, h * 0.8, 0]))], 8);
+    const swayAt = (p) => 0.07 * smooth34(0, 0.35, p[1]) ** 2 * 0.35;
+    tube4(b, path, (t) => mix18(28e-4, 12e-4, t), { sides: 4, region: "white", colour: (t) => stalkBase.map((c2, k) => mix18(c2, stalk[k], smooth34(0, 0.4, t))), pk: (t, p) => [0.6, 0.3, swayAt(p), 0.1] });
     const along = (t) => {
-      const f10 = (0.32 + t * 0.68) * (path.length - 1), k = Math.min(path.length - 2, Math.floor(f10));
-      return lerpV(path[k], path[k + 1], f10 - k);
+      const f12 = (0.32 + t * 0.68) * (path.length - 1), k = Math.min(path.length - 2, Math.floor(f12));
+      return lerpV(path[k], path[k + 1], f12 - k);
     };
-    const side2 = norm2(cross8(norm2(sub2(path.at(-1), path[0])), [0, 1, 0]));
+    const side2 = norm2(cross9(norm2(sub3(path.at(-1), path[0])), [0, 1, 0]));
     const width = 0.045 + rand2() * 0.02;
-    card(b, (s, t) => add2(along(t), add2(scale4(side2, s * width * (1 - 0.25 * t)), [0, -Math.abs(s) * width * 0.35, 0])), {
+    card(b, (s, t) => add3(along(t), add3(scale4(side2, s * width * (1 - 0.25 * t)), [0, -Math.abs(s) * width * 0.35, 0])), {
       cols: 2,
       rows: 6,
       region: "frond",
@@ -56918,20 +59468,20 @@ function mushroom2(b, { at = [0, 0, 0], tilt = [0, 0], height: height2, stemR, c
   const top = [], under = [], capBase = height2 - capH * 0.35;
   for (let i = 0; i <= 9; i++) {
     const t = i / 9, r = capR * t;
-    const y = capBase + capH * (Math.pow(Math.max(0, 1 - Math.pow(t, 2 + bell * 2)), dome) + umbo * Math.exp(-t * t * 40) * 0.25) - capH * 0.12 * smooth33(0.85, 1, t);
+    const y = capBase + capH * (Math.pow(Math.max(0, 1 - Math.pow(t, 2 + bell * 2)), dome) + umbo * Math.exp(-t * t * 40) * 0.25) - capH * 0.12 * smooth34(0.85, 1, t);
     top.push([Math.max(r, 1e-4), y, t]);
   }
-  lathe3(b, top, { segments: segs, region, at, tilt, wobble: wob, colour: (t, a) => capColour.map((c2) => c2 * mix17(1, 0.9, smooth33(0.8, 1, t))), pk: (t) => [capRough, glowPk(mix17(0.35, 1, t)), 0, 0.06] });
+  lathe3(b, top, { segments: segs, region, at, tilt, wobble: wob, colour: (t, a) => capColour.map((c2) => c2 * mix18(1, 0.9, smooth34(0.8, 1, t))), pk: (t) => [capRough, glowPk(mix18(0.35, 1, t)), 0, 0.06] });
   const rimY = top.at(-1)[1];
   under.push([capR, rimY, 1], [capR * 0.97, rimY - capH * 0.06, 0.97]);
   for (let i = 0; i <= 6; i++) {
     const t = i / 6;
-    under.push([mix17(capR * 0.94, stemR * 1.1, t), rimY - capH * 0.06 + capH * 0.18 * t * (1 - t * 0.3), mix17(0.94, 0.08, t)]);
+    under.push([mix18(capR * 0.94, stemR * 1.1, t), rimY - capH * 0.06 + capH * 0.18 * t * (1 - t * 0.3), mix18(0.94, 0.08, t)]);
   }
   lathe3(b, under, { segments: segs, region: "gills", at, tilt, wobble: wob, flip: false, colour: () => gillColour, pk: () => [0.85, glowPk(1), 0, 0.04] });
 }
 function mushrooms(THREE, kind) {
-  const b = new Builder2(), rand2 = random5(kind === "red" ? 11 : kind === "green" ? 12 : 13);
+  const b = new Builder2(), rand2 = random7(kind === "red" ? 11 : kind === "green" ? 12 : 13);
   if (kind === "red") {
     const stem = hexRgb2(15854558), gill = hexRgb2(16052194);
     mushroom2(b, { at: [0, 0, 0], tilt: [0.06, -0.08], height: 0.15, stemR: 0.012, capR: 0.075, capH: 0.03, dome: 0.45, region: "capRed", ring: 0.74, bulb: 0.012, stemColour: stem, capColour: [1, 1, 1], gillColour: gill, capRough: 0.42, seed: 2 });
@@ -56953,12 +59503,12 @@ function mushrooms(THREE, kind) {
   return b;
 }
 function flowerParts(THREE) {
-  const plant = new Builder2(), petals = new Builder2(), rand2 = random5(707);
+  const plant = new Builder2(), petals = new Builder2(), rand2 = random7(707);
   const green2 = hexRgb2(5143090), greenDark = hexRgb2(3496484);
-  const sway = (p) => 0.06 * smooth33(0, 0.45, p[1]) ** 2 * 0.45;
+  const sway = (p) => 0.06 * smooth34(0, 0.45, p[1]) ** 2 * 0.45;
   for (let i = 0; i < 9; i++) {
-    const a = i / 9 * TAU34 + rand2() * 0.5, length = 0.12 + rand2() * 0.06, w = 0.036 + rand2() * 0.014, out2 = [Math.cos(a), 0, Math.sin(a)], side2 = [-Math.sin(a), 0, Math.cos(a)];
-    card(plant, (s, t) => add2(add2(scale4(out2, t * length), [0, 0.012 + Math.sin(t * Math.PI * 0.8) * 0.03 - t * t * 0.02, 0]), add2(scale4(side2, s * w * 0.5), [0, -Math.abs(s) * w * 0.15, 0])), {
+    const a = i / 9 * TAU36 + rand2() * 0.5, length = 0.12 + rand2() * 0.06, w = 0.036 + rand2() * 0.014, out2 = [Math.cos(a), 0, Math.sin(a)], side2 = [-Math.sin(a), 0, Math.cos(a)];
+    card(plant, (s, t) => add3(add3(scale4(out2, t * length), [0, 0.012 + Math.sin(t * Math.PI * 0.8) * 0.03 - t * t * 0.02, 0]), add3(scale4(side2, s * w * 0.5), [0, -Math.abs(s) * w * 0.15, 0])), {
       cols: 2,
       rows: 4,
       region: "leaf",
@@ -56971,33 +59521,33 @@ function flowerParts(THREE) {
   }
   for (let i = 0; i < 6; i++) {
     const a = i * 2.39 + 0.3, r = 0.02 + rand2() * 0.05, h = 0.22 + rand2() * 0.16, lean = 0.03 + rand2() * 0.06, root = [Math.cos(a) * r, 0, Math.sin(a) * r], out2 = [Math.cos(a), 0, Math.sin(a)];
-    const path = spline3([root, add2(root, add2(scale4(out2, lean * 0.3), [0, h * 0.5, 0])), add2(root, add2(scale4(out2, lean), [0, h, 0]))], 7);
-    tube4(plant, path, (t) => mix17(26e-4, 18e-4, t), { sides: 5, region: "white", colour: (t) => greenDark.map((c2, k) => mix17(c2, green2[k], t)), pk: (t, p) => [0.6, 0.3, sway(p), 0.1] });
+    const path = spline3([root, add3(root, add3(scale4(out2, lean * 0.3), [0, h * 0.5, 0])), add3(root, add3(scale4(out2, lean), [0, h, 0]))], 7);
+    tube4(plant, path, (t) => mix18(26e-4, 18e-4, t), { sides: 5, region: "white", colour: (t) => greenDark.map((c2, k) => mix18(c2, green2[k], t)), pk: (t, p) => [0.6, 0.3, sway(p), 0.1] });
     const mid = path[3], la = a + 1.4;
-    card(plant, (s, t) => add2(add2(mid, scale4([Math.cos(la), 0, Math.sin(la)], t * 0.055)), add2(scale4([-Math.sin(la), 0, Math.cos(la)], s * 9e-3), [0, Math.sin(t * 2) * 0.012, 0])), { cols: 2, rows: 3, region: "leaf", uvAt: (s, t) => [(s + 1) / 2, 1 - t], colour: () => [0.95, 1, 0.95], pk: (s, t, p) => [0.62, 0.55, sway(p), 0] });
-    const top = path.at(-1), up7 = norm2(add2([0, 1, 0], scale4(out2, 0.45 + rand2() * 0.3))), x = norm2(cross8(up7, [0, 0, 1])), z = cross8(x, up7);
+    card(plant, (s, t) => add3(add3(mid, scale4([Math.cos(la), 0, Math.sin(la)], t * 0.055)), add3(scale4([-Math.sin(la), 0, Math.cos(la)], s * 9e-3), [0, Math.sin(t * 2) * 0.012, 0])), { cols: 2, rows: 3, region: "leaf", uvAt: (s, t) => [(s + 1) / 2, 1 - t], colour: () => [0.95, 1, 0.95], pk: (s, t, p) => [0.62, 0.55, sway(p), 0] });
+    const top = path.at(-1), up7 = norm2(add3([0, 1, 0], scale4(out2, 0.45 + rand2() * 0.3))), x = norm2(cross9(up7, [0, 0, 1])), z = cross9(x, up7);
     const headPk = (p) => [0.5, 0.65, sway(p), 0];
     const petalsN = 6, petalLen = 0.04 + rand2() * 8e-3;
     for (let k = 0; k < petalsN; k++) {
-      const pa = k / petalsN * TAU34 + rand2() * 0.2, dir = add2(scale4(x, Math.cos(pa)), scale4(z, Math.sin(pa))), across2 = cross8(up7, dir);
+      const pa = k / petalsN * TAU36 + rand2() * 0.2, dir = add3(scale4(x, Math.cos(pa)), scale4(z, Math.sin(pa))), across2 = cross9(up7, dir);
       card(
         petals,
-        (s, t) => add2(add2(top, scale4(dir, 4e-3 + t * petalLen)), add2(scale4(across2, s * petalLen * 0.33 * (0.35 + 0.65 * Math.sin(Math.PI * Math.min(1, t * 0.75 + 0.2)))), scale4(up7, Math.sin(t * Math.PI * 0.6) * 0.012 - t * t * 8e-3 + s * s * 3e-3))),
+        (s, t) => add3(add3(top, scale4(dir, 4e-3 + t * petalLen)), add3(scale4(across2, s * petalLen * 0.33 * (0.35 + 0.65 * Math.sin(Math.PI * Math.min(1, t * 0.75 + 0.2)))), scale4(up7, Math.sin(t * Math.PI * 0.6) * 0.012 - t * t * 8e-3 + s * s * 3e-3))),
         { cols: 2, rows: 3, region: "petal", uvAt: (s, t) => [(s + 1) / 2, 1 - t], colour: () => [1, 1, 1], pk: (s, t, p) => [0.5, 0.75, sway(p), 0], bend: () => up7, bendBy: 0.4, up: true }
       );
     }
     for (let k = 0; k < 5; k++) {
-      const pa = k / 5 * TAU34 + 0.3, dir = add2(scale4(x, Math.cos(pa)), scale4(z, Math.sin(pa)));
-      card(plant, (s, t) => add2(add2(top, scale4(dir, t * 0.012)), add2(scale4(cross8(up7, dir), s * 3e-3), scale4(up7, -2e-3 - t * 4e-3))), { cols: 2, rows: 1, region: "white", uvAt: () => [0.5, 0.5], colour: () => green2, pk: (s, t, p) => [0.6, 0.4, sway(p), 0] });
+      const pa = k / 5 * TAU36 + 0.3, dir = add3(scale4(x, Math.cos(pa)), scale4(z, Math.sin(pa)));
+      card(plant, (s, t) => add3(add3(top, scale4(dir, t * 0.012)), add3(scale4(cross9(up7, dir), s * 3e-3), scale4(up7, -2e-3 - t * 4e-3))), { cols: 2, rows: 1, region: "white", uvAt: () => [0.5, 0.5], colour: () => green2, pk: (s, t, p) => [0.6, 0.4, sway(p), 0] });
     }
     const discRows = [[1e-4, 55e-4, 0], [5e-3, 5e-3, 0.35], [9e-3, 34e-4, 0.7], [0.011, 6e-4, 0.95]];
-    const discAt = (p) => add2(top, add2(add2(scale4(x, p[0]), scale4(up7, p[1])), scale4(z, p[2])));
+    const discAt = (p) => add3(top, add3(add3(scale4(x, p[0]), scale4(up7, p[1])), scale4(z, p[2])));
     const rows = [];
     for (const [r2, y, v] of discRows) {
       const row2 = [];
       for (let j = 0; j <= 12; j++) {
-        const pa = j / 12 * TAU34, local = [Math.cos(pa) * r2, y, Math.sin(pa) * r2], p = discAt(local);
-        row2.push(plant.vertex(p, norm2(add2(up7, add2(scale4(x, Math.cos(pa) * v * 0.6), scale4(z, Math.sin(pa) * v * 0.6)))), regionUv("disc", 0.5 + Math.cos(pa) * v * 0.48, 0.5 + Math.sin(pa) * v * 0.48), [1, 1, 1], [0.6, 0.2, sway(p), 0]));
+        const pa = j / 12 * TAU36, local2 = [Math.cos(pa) * r2, y, Math.sin(pa) * r2], p = discAt(local2);
+        row2.push(plant.vertex(p, norm2(add3(up7, add3(scale4(x, Math.cos(pa) * v * 0.6), scale4(z, Math.sin(pa) * v * 0.6)))), regionUv("disc", 0.5 + Math.cos(pa) * v * 0.48, 0.5 + Math.sin(pa) * v * 0.48), [1, 1, 1], [0.6, 0.2, sway(p), 0]));
       }
       rows.push(row2);
     }
@@ -57006,16 +59556,16 @@ function flowerParts(THREE) {
   return { plant, petals };
 }
 function bundle(THREE) {
-  const b = new Builder2(), rand2 = random5(909), segs = 30;
+  const b = new Builder2(), rand2 = random7(909), segs = 30;
   const profile = [[0, 0], [4e-3, 0.07], [0.02, 0.115], [0.06, 0.135], [0.1, 0.13], [0.14, 0.105], [0.175, 0.062], [0.195, 0.034], [0.205, 0.03], [0.215, 0.036], [0.235, 0.055], [0.25, 0.066]];
-  const lumps = Array.from({ length: 4 }, () => [rand2() * TAU34, 0.03 + rand2() * 0.1, 0.05 + rand2() * 0.05]);
+  const lumps = Array.from({ length: 4 }, () => [rand2() * TAU36, 0.03 + rand2() * 0.1, 0.05 + rand2() * 0.05]);
   const neck = 0.2, rows = [];
   for (let i = 0; i < profile.length; i++) {
-    const [y0, r0] = profile[i], gather = smooth33(0.11, 0.19, y0) * (1 - smooth33(0.22, 0.25, y0) * 0.4), ruffle = smooth33(0.205, 0.25, y0), row2 = [];
+    const [y0, r0] = profile[i], gather = smooth34(0.11, 0.19, y0) * (1 - smooth34(0.22, 0.25, y0) * 0.4), ruffle = smooth34(0.205, 0.25, y0), row2 = [];
     for (let j = 0; j <= segs; j++) {
-      const a = j / segs * TAU34;
+      const a = j / segs * TAU36;
       let r = r0 * (1 + 0.2 * gather * Math.sin(a * 11 + Math.sin(a * 3) * 1.5) + 0.05 * (vnoise3(a * 2, y0 * 30, 0, 5) - 0.5));
-      for (const [la, ly, amount] of lumps) r += amount * Math.exp(-(((a - la + Math.PI) % TAU34 - Math.PI) ** 2) * 3 - ((y0 - ly) / 0.05) ** 2) * (1 - gather) * 0.35;
+      for (const [la, ly, amount] of lumps) r += amount * Math.exp(-(((a - la + Math.PI) % TAU36 - Math.PI) ** 2) * 3 - ((y0 - ly) / 0.05) ** 2) * (1 - gather) * 0.35;
       const y = y0 + ruffle * 0.012 * Math.sin(a * 7 + 1.3) + ruffle * 5e-3 * Math.sin(a * 13);
       row2.push([Math.cos(a) * r, y, Math.sin(a) * r]);
     }
@@ -57023,14 +59573,14 @@ function bundle(THREE) {
   }
   const ids2 = rows.map((row2, i) => row2.map((p, j) => {
     const prev = rows[Math.max(0, i - 1)][j], next = rows[Math.min(rows.length - 1, i + 1)][j], left = row2[(j + segs - 1) % segs], right = row2[(j + 1) % segs];
-    let n = norm2(cross8(sub2(next, prev), sub2(right, left)));
+    let n = norm2(cross9(sub3(next, prev), sub3(right, left)));
     if (!Number.isFinite(n[0]) || len2(n) < 0.5) n = [0, -1, 0];
-    const crease = 1 - 0.25 * smooth33(0.11, 0.19, p[1]) * (0.5 - 0.5 * Math.sin(j / segs * TAU34 * 11));
+    const crease = 1 - 0.25 * smooth34(0.11, 0.19, p[1]) * (0.5 - 0.5 * Math.sin(j / segs * TAU36 * 11));
     return b.vertex(p, n, regionUv("cloth", fold(j / segs * 4), fold(i / (rows.length - 1) * 4)), [1, 1, 1].map((c2) => c2 * groundShade(p[1], 0.04, 0.6) * crease), [0.95, 0, 0, 0.12]);
   }));
   for (let i = 0; i < rows.length - 1; i++) for (let j = 0; j < segs; j++) b.quad(ids2[i][j], ids2[i + 1][j], ids2[i + 1][j + 1], ids2[i][j + 1]);
   const cord = hexRgb2(9073744), ring2 = Array.from({ length: 25 }, (_, k) => {
-    const a = k / 24 * TAU34;
+    const a = k / 24 * TAU36;
     return [Math.cos(a) * 0.036, neck + 4e-3 * Math.sin(a * 3), Math.sin(a) * 0.036];
   });
   tube4(b, ring2, () => 42e-4, { sides: 5, region: "white", colour: () => cord, pk: () => [0.9, 0, 0, 0.5] });
@@ -57044,15 +59594,15 @@ float pkNoise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
  return mix(mix(mix(pkHash(i),pkHash(i+vec3(1,0,0)),f.x),mix(pkHash(i+vec3(0,1,0)),pkHash(i+vec3(1,1,0)),f.x),f.y),mix(mix(pkHash(i+vec3(0,0,1)),pkHash(i+vec3(1,0,1)),f.x),mix(pkHash(i+vec3(0,1,1)),pkHash(i+vec3(1,1,1)),f.x),f.y),f.z);}`;
 var ARROW_LENGTH2 = 0.7;
 function arrowShape() {
-  const b = new Builder2(), L3 = ARROW_LENGTH2, shaft = hexRgb2(12756858), cord = hexRgb2(10257504), stone = hexRgb2(5063998), edge2 = hexRgb2(9864819);
+  const b = new Builder2(), L4 = ARROW_LENGTH2, shaft = hexRgb2(12756858), cord = hexRgb2(10257504), stone = hexRgb2(5063998), edge2 = hexRgb2(9864819);
   const wood = () => [0.62, 0, 0, 0.25], none = () => [0.8, 0, 0, 0];
-  tube4(b, spline3([[-0.036, 0, 0], [-L3, 0, 0]], 5), () => 37e-4, { sides: 6, region: "white", vPerMetre: 1, colour: (t) => shaft.map((c2) => c2 * (0.92 + 0.08 * Math.sin(t * 40))), pk: wood, end: "wood" });
+  tube4(b, spline3([[-0.036, 0, 0], [-L4, 0, 0]], 5), () => 37e-4, { sides: 6, region: "white", vPerMetre: 1, colour: (t) => shaft.map((c2) => c2 * (0.92 + 0.08 * Math.sin(t * 40))), pk: wood, end: "wood" });
   const head2 = [];
   for (let i = 0; i <= 8; i++) {
-    const a = i / 8 * TAU34, y = Math.cos(a) * 92e-4, z = Math.sin(a) * 26e-4, n = norm2([0.35, Math.cos(a), Math.sin(a) * 2.5]);
+    const a = i / 8 * TAU36, y = Math.cos(a) * 92e-4, z = Math.sin(a) * 26e-4, n = norm2([0.35, Math.cos(a), Math.sin(a) * 2.5]);
     head2.push(
-      b.vertex([-0.042, y, z], norm2([-0.2, Math.cos(a), Math.sin(a) * 2.5]), regionUv("white", 0.5, 0.5), stone.map((c2, k) => mix17(c2, edge2[k], Math.abs(Math.cos(a)) ** 4 * 0.6)), [0.38, 0, 0, 0]),
-      b.vertex([-0.012, y * 1.12, z * 1.1], n, regionUv("white", 0.5, 0.5), stone.map((c2, k) => mix17(c2, edge2[k], Math.abs(Math.cos(a)) ** 4 * 0.7)), [0.36, 0, 0, 0])
+      b.vertex([-0.042, y, z], norm2([-0.2, Math.cos(a), Math.sin(a) * 2.5]), regionUv("white", 0.5, 0.5), stone.map((c2, k) => mix18(c2, edge2[k], Math.abs(Math.cos(a)) ** 4 * 0.6)), [0.38, 0, 0, 0]),
+      b.vertex([-0.012, y * 1.12, z * 1.1], n, regionUv("white", 0.5, 0.5), stone.map((c2, k) => mix18(c2, edge2[k], Math.abs(Math.cos(a)) ** 4 * 0.7)), [0.36, 0, 0, 0])
     );
   }
   const tip = b.vertex([0, 0, 0], [1, 0, 0], regionUv("white", 0.5, 0.5), edge2, [0.35, 0, 0, 0]);
@@ -57061,20 +59611,20 @@ function arrowShape() {
     b.quad(a0, a1, b1, b0);
     b.tri(a1, tip, b1);
   }
-  for (const [x, w] of [[-0.044, 0.011], [-L3 + 0.02, 0.012]]) {
+  for (const [x, w] of [[-0.044, 0.011], [-L4 + 0.02, 0.012]]) {
     const path = [];
     for (let i = 0; i <= 12; i++) {
-      const t = i / 12, a = t * 3 * TAU34;
+      const t = i / 12, a = t * 3 * TAU36;
       path.push([x - t * w, Math.cos(a) * 46e-4, Math.sin(a) * 46e-4]);
     }
     tube4(b, path, () => 12e-4, { sides: 4, region: "white", colour: () => cord, pk: none });
   }
   for (let i = 0; i < 3; i++) {
-    const a = i / 3 * TAU34 + 0.5, out2 = [0, Math.cos(a), Math.sin(a)];
+    const a = i / 3 * TAU36 + 0.5, out2 = [0, Math.cos(a), Math.sin(a)];
     card(
       b,
       (s2, t) => {
-        const x = -L3 + 0.03 + t * 0.09, h = 36e-4 + (s2 * 0.5 + 0.5) * 85e-4 * Math.sin(Math.PI * Math.pow(t, 0.65)) * (1 - 0.25 * t);
+        const x = -L4 + 0.03 + t * 0.09, h = 36e-4 + (s2 * 0.5 + 0.5) * 85e-4 * Math.sin(Math.PI * Math.pow(t, 0.65)) * (1 - 0.25 * t);
         return [x, out2[1] * h, out2[2] * h];
       },
       { cols: 1, rows: 3, region: "blade", uvAt: (s2, t) => [s2 * 0.5 + 0.5, 1 - t], colour: () => [0.95, 0.92, 0.78], pk: () => [0.8, 0.45, 0, 0] }
@@ -57139,25 +59689,25 @@ function woodyAnchors(record2, height2, count = 20) {
   for (const branch of record2.branches) if (branch.id.includes("/shoot/")) candidates.push({ p: branch.points.at(-1), w: 1.4 });
   for (const leaf of record2.leaves) if (leaf.root[1] > height2 * 0.35) candidates.push({ p: leaf.root, w: Math.hypot(leaf.root[0], leaf.root[2]) });
   if (!candidates.length) return [];
-  const chosen = [candidates.reduce((a, c2) => c2.p[1] > a.p[1] ? c2 : a)], dist2 = candidates.map((c2) => len2(sub2(c2.p, chosen[0].p)));
+  const chosen = [candidates.reduce((a, c2) => c2.p[1] > a.p[1] ? c2 : a)], dist2 = candidates.map((c2) => len2(sub3(c2.p, chosen[0].p)));
   while (chosen.length < Math.min(count, candidates.length)) {
     let best = 0;
     for (let i = 1; i < candidates.length; i++) if (dist2[i] * (0.6 + 0.4 * candidates[i].w) > dist2[best] * (0.6 + 0.4 * candidates[best].w)) best = i;
     chosen.push(candidates[best]);
-    for (let i = 0; i < candidates.length; i++) dist2[i] = Math.min(dist2[i], len2(sub2(candidates[i].p, candidates[best].p)));
+    for (let i = 0; i < candidates.length; i++) dist2[i] = Math.min(dist2[i], len2(sub3(candidates[i].p, candidates[best].p)));
   }
   return chosen;
 }
 function createPickableShapes(THREE, { world: world2 = null, wind = true } = {}) {
   let meadow = null;
-  const windReady = wind && typeof document !== "undefined" ? import("./chunk-3UK7FGXZ.js").then((m) => {
+  const windReady = wind && typeof document !== "undefined" ? import("./chunk-N7FLFAOG.js").then((m) => {
     meadow = m;
   }, () => {
   }) : Promise.resolve();
   let material2 = null;
   const glow = { value: 0 }, atlas = atlasTexture(THREE, () => material2);
   material2 = natureMaterial(THREE, atlas.texture, glow, () => meadow);
-  const geometry3 = (builder5, name) => builder5.geometry(THREE, name);
+  const geometry3 = (builder6, name) => builder6.geometry(THREE, name);
   const flowers = flowerParts(THREE);
   const berrybush = [];
   for (let age = 0; age < 3; age++) for (let family = 0; family < 2; family++) {
@@ -57241,7 +59791,7 @@ var MOVE_REBUILD = 6;
 var FLOWER_COLORS = [16052714, 15913546, 11897560, 15634352, 9417968];
 var REACH = 2.1;
 var CHUNK6 = 64;
-var TAU35 = Math.PI * 2;
+var TAU37 = Math.PI * 2;
 function hashSeed(...values) {
   let h = 2166136261 >>> 0;
   for (const v of values) {
@@ -57250,7 +59800,7 @@ function hashSeed(...values) {
   }
   return h >>> 0;
 }
-function random6(seed) {
+function random8(seed) {
   let s = seed >>> 0;
   return () => {
     s = s + 1831565813 >>> 0;
@@ -57303,9 +59853,9 @@ function createSurvivalPickables(THREE, world2, { height: height2, slope: slope2
   const day = SURVIVAL_DAY.seconds;
   function startCandidates() {
     if (!camp) return [];
-    const rand2 = random6(hashSeed(seed, 9917)), list2 = [];
+    const rand2 = random8(hashSeed(seed, 9917)), list2 = [];
     for (const [type, n] of Object.entries(START_SET)) for (let i = 0; i < n; i++) {
-      const a = rand2() * TAU35, r = 4.5 + rand2() * 12;
+      const a = rand2() * TAU37, r = 4.5 + rand2() * 12;
       list2.push({ id: `start:${type}:${i}`, type, x: camp.x + Math.cos(a) * r, z: camp.z + Math.sin(a) * r, rand: rand2() });
     }
     return list2;
@@ -57324,7 +59874,7 @@ function createSurvivalPickables(THREE, world2, { height: height2, slope: slope2
   function addItem2(key3, c2, id2, type, x, z, rand2) {
     const y = height2(x, z);
     if (!clearOf(c2, x, z, y)) return;
-    const item = { id: id2, type, def: PICKABLES[type], x, y, z, chunk: key3, yaw: rand2() * TAU35, scale: 0.85 + rand2() * 0.35, color: FLOWER_COLORS[Math.floor(rand2() * FLOWER_COLORS.length)], variant: variantOf(type, id2) };
+    const item = { id: id2, type, def: PICKABLES[type], x, y, z, chunk: key3, yaw: rand2() * TAU37, scale: 0.85 + rand2() * 0.35, color: FLOWER_COLORS[Math.floor(rand2() * FLOWER_COLORS.length)], variant: variantOf(type, id2) };
     if (shapes[type]?.[0]?.ground) item.tilt = groundTilt(x, z);
     items.set(id2, item);
     byChunk.get(key3).push(id2);
@@ -57333,7 +59883,7 @@ function createSurvivalPickables(THREE, world2, { height: height2, slope: slope2
     const [cx, cz] = key3.split(",").map(Number), x0 = cx * CHUNK6, z0 = cz * CHUNK6;
     byChunk.set(key3, []);
     for (const [type, density] of Object.entries(PICKABLE_DENSITY)) {
-      const attempts = Math.max(...density), rand2 = random6(hashSeed(seed, cx, cz, type.length * 131 + type.charCodeAt(0) * 7 + type.charCodeAt(type.length - 1)));
+      const attempts = Math.max(...density), rand2 = random8(hashSeed(seed, cx, cz, type.length * 131 + type.charCodeAt(0) * 7 + type.charCodeAt(type.length - 1)));
       for (let i = 0; i < attempts; i++) {
         const x = x0 + rand2() * CHUNK6, z = z0 + rand2() * CHUNK6, accept = rand2(), y = height2(x, z);
         if (!Number.isFinite(y) || y < 1.2) continue;
@@ -57342,13 +59892,13 @@ function createSurvivalPickables(THREE, world2, { height: height2, slope: slope2
         if (PATCHY.has(type)) {
           const extra = 1 + Math.floor(rand2() * 2.6);
           for (let j = 0; j < extra; j++) {
-            const a = rand2() * TAU35, r = 0.8 + rand2() * 2.2;
+            const a = rand2() * TAU37, r = 0.8 + rand2() * 2.2;
             addItem2(key3, c2, `p:${key3}:${type}:${i}.${j}`, type, x + Math.cos(a) * r, z + Math.sin(a) * r, rand2);
           }
         }
       }
     }
-    for (const s of starts) if (Math.floor(s.x / CHUNK6) === cx && Math.floor(s.z / CHUNK6) === cz) addItem2(key3, c2, s.id, s.type, s.x, s.z, random6(hashSeed(seed, s.x * 100, s.z * 100)));
+    for (const s of starts) if (Math.floor(s.x / CHUNK6) === cx && Math.floor(s.z / CHUNK6) === cz) addItem2(key3, c2, s.id, s.type, s.x, s.z, random8(hashSeed(seed, s.x * 100, s.z * 100)));
     dirty = true;
   }
   function dropChunk(key3) {
@@ -57577,9 +60127,9 @@ function createSurvivalPickables(THREE, world2, { height: height2, slope: slope2
   }
   function drop(item, count, x, z, extra = {}, pose = null) {
     if (!ITEMS[item] || !(count > 0)) return null;
-    const id2 = "drop:" + ++dropSerial, rand2 = random6(hashSeed(seed, dropSerial, 77));
+    const id2 = "drop:" + ++dropSerial, rand2 = random8(hashSeed(seed, dropSerial, 77));
     const posed = pose && Array.isArray(pose.q) && pose.q.length === 4 && pose.q.every(Number.isFinite) && Number.isFinite(pose.y);
-    drops.set(id2, { id: id2, item, count, extra, x, y: posed ? pose.y : height2(x, z), z, yaw: rand2() * TAU35, scale: 1, tilt: groundTilt(x, z), q: posed ? pose.q.slice() : null });
+    drops.set(id2, { id: id2, item, count, extra, x, y: posed ? pose.y : height2(x, z), z, yaw: rand2() * TAU37, scale: 1, tilt: groundTilt(x, z), q: posed ? pose.q.slice() : null });
     dirty = true;
     return id2;
   }
@@ -57621,9 +60171,9 @@ function createSurvivalPickables(THREE, world2, { height: height2, slope: slope2
 
 // survival-fires.js
 var FIRE_LIGHT = Object.freeze({ min: 2.5, max: 9, fullAt: 0.5, reach: 2.3, intensity: 1.15 });
-var clamp53 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp55 = (x, a, b) => Math.max(a, Math.min(b, x));
 function fireLevel(fuel, maxFuel) {
-  return clamp53(fuel / (maxFuel * FIRE_LIGHT.fullAt), 0, 1);
+  return clamp55(fuel / (maxFuel * FIRE_LIGHT.fullAt), 0, 1);
 }
 function fireRadius(level) {
   return level > 0 ? FIRE_LIGHT.min + (FIRE_LIGHT.max - FIRE_LIGHT.min) * Math.pow(level, 0.6) : 0;
@@ -57677,7 +60227,7 @@ function createSurvivalFires(THREE, world2, { height: height2, onOut = () => {
     group.userData.ownedGeometries = owned;
     world2.localLights?.add(light);
     world2.scene.add(group);
-    return adopt({ id: id2, kind, def, x, y, z, fuel: clamp53(fuel ?? def.startFuel, 0, def.maxFuel), group, visual, light, phase: serial3 * 1.7 });
+    return adopt({ id: id2, kind, def, x, y, z, fuel: clamp55(fuel ?? def.startFuel, 0, def.maxFuel), group, visual, light, phase: serial3 * 1.7 });
   }
   function remove(fire) {
     const index2 = fires.indexOf(fire);
@@ -57695,7 +60245,7 @@ function createSurvivalFires(THREE, world2, { height: height2, onOut = () => {
     if (!Number.isFinite(y) || y < 1.1 || world2.hydrology?.waterAt?.(x, z, y)) return { ok: false, reason: "水の上には置けない。" };
     const slope2 = Math.hypot(height2(x + 0.6, z) - height2(x - 0.6, z), height2(x, z + 0.6) - height2(x, z - 0.6)) / 1.2;
     if (slope2 > 0.45) return { ok: false, reason: "地面が傾きすぎている。" };
-    for (const f10 of fires) if (Math.hypot(f10.x - x, f10.z - z) < 2.4) return { ok: false, reason: "火が近すぎる。" };
+    for (const f12 of fires) if (Math.hypot(f12.x - x, f12.z - z) < 2.4) return { ok: false, reason: "火が近すぎる。" };
     const cx = Math.floor(x / 64), cz = Math.floor(z / 64);
     for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
       const c2 = world2.chunks?.get?.(`${cx + i},${cz + j}`);
@@ -57718,7 +60268,7 @@ function createSurvivalFires(THREE, world2, { height: height2, onOut = () => {
   }
   function addFuel(fire, seconds) {
     const before = fire.fuel;
-    fire.fuel = clamp53(fire.fuel + seconds, 0, fire.def.maxFuel);
+    fire.fuel = clamp55(fire.fuel + seconds, 0, fire.def.maxFuel);
     return fire.fuel - before;
   }
   function burning(fire) {
@@ -57777,13 +60327,13 @@ function createSurvivalFires(THREE, world2, { height: height2, onOut = () => {
     return best;
   }
   function serialize() {
-    return { camp: Math.round(fires.find((f10) => f10.landmark)?.fuel ?? 0), fires: fires.filter((f10) => !f10.landmark).map((f10) => ({ kind: f10.kind, x: +f10.x.toFixed(2), z: +f10.z.toFixed(2), fuel: Math.round(f10.fuel) })) };
+    return { camp: Math.round(fires.find((f12) => f12.landmark)?.fuel ?? 0), fires: fires.filter((f12) => !f12.landmark).map((f12) => ({ kind: f12.kind, x: +f12.x.toFixed(2), z: +f12.z.toFixed(2), fuel: Math.round(f12.fuel) })) };
   }
   function restore(data) {
     for (const fire of [...fires]) remove(fire);
-    const camp2 = fires.find((f10) => f10.landmark);
-    if (camp2 && Number.isFinite(data?.camp)) camp2.fuel = clamp53(data.camp, 0, camp2.def.maxFuel);
-    for (const f10 of Array.isArray(data?.fires) ? data.fires : []) if (FIRES[f10?.kind] && Number.isFinite(f10.x) && Number.isFinite(f10.z)) build(f10.kind, f10.x, f10.z, Number.isFinite(f10.fuel) ? f10.fuel : 0);
+    const camp2 = fires.find((f12) => f12.landmark);
+    if (camp2 && Number.isFinite(data?.camp)) camp2.fuel = clamp55(data.camp, 0, camp2.def.maxFuel);
+    for (const f12 of Array.isArray(data?.fires) ? data.fires : []) if (FIRES[f12?.kind] && Number.isFinite(f12.x) && Number.isFinite(f12.z)) build(f12.kind, f12.x, f12.z, Number.isFinite(f12.fuel) ? f12.fuel : 0);
   }
   function elapse(seconds) {
     for (const fire of [...fires]) {
@@ -57819,7 +60369,7 @@ function createSurvivalFires(THREE, world2, { height: height2, onOut = () => {
     restore,
     elapse,
     dispose,
-    diagnostics: () => fires.map((f10) => ({ id: f10.id, kind: f10.kind, x: +f10.x.toFixed(1), z: +f10.z.toFixed(1), fuel: +f10.fuel.toFixed(1), radius: +(f10.radius ?? 0).toFixed(2) }))
+    diagnostics: () => fires.map((f12) => ({ id: f12.id, kind: f12.kind, x: +f12.x.toFixed(1), z: +f12.z.toFixed(1), fuel: +f12.fuel.toFixed(1), radius: +(f12.radius ?? 0).toFixed(2) }))
   };
 }
 
@@ -57827,7 +60377,7 @@ function createSurvivalFires(THREE, world2, { height: height2, onOut = () => {
 var PHASE_RATE = Object.freeze(Object.fromEntries(SURVIVAL_DAY.phases.map((p) => [p.name, p.minutes / p.seconds / (1440 / 3600)])));
 var HAND_DAMAGE = 6;
 var RECORD_KEY = "kumarim-survival-record";
-var clamp54 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp56 = (x, a, b) => Math.max(a, Math.min(b, x));
 var signed = (n) => (n > 0 ? "+" : "−") + Math.abs(Math.round(n));
 function effectText(effect = {}) {
   return [["hunger", "空腹"], ["health", "体力"], ["sanity", "正気"]].filter(([key3]) => Math.round(effect[key3] || 0)).map(([key3, label]) => `${label} ${signed(effect[key3])}`).join(" · ");
@@ -57877,7 +60427,8 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
   }
   let lastPhase = clock.phase, spoilTimer = 1, rates = {}, light = { lit: false }, dark = false, torchLit = false, placing = null, lastHand = null;
   const warned = {};
-  world2.dayNight?.setDrive?.({ minute: () => clock.minute, rate: () => PHASE_RATE[clock.phase], moonPhase: () => clock.moonPhase, moonlight: () => moonlightScale(clock.moonIllumination) });
+  let timeFlow = 1;
+  world2.dayNight?.setDrive?.({ minute: () => clock.minute, rate: () => PHASE_RATE[clock.phase] * timeFlow, moonPhase: () => clock.moonPhase, moonlight: () => moonlightScale(clock.moonIllumination) });
   const inventory = () => state2.inventory;
   const held = () => selectedSlot(state2.inventory);
   const heldDef = () => ITEMS[held()?.id] || null;
@@ -57935,7 +60486,7 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
       syncHeld();
       return;
     }
-    state2.clock += dt;
+    state2.clock += dt * timeFlow;
     survivalClock(state2.clock, clock);
     const p = player(), inCave = !!p.inDungeon, slot = held();
     torchLit = slot?.id === "torch" && !p.swimming && !p.underwater;
@@ -58000,7 +60551,7 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
     const info = pickables.preview(t.id);
     if (!info) return false;
     for (const [id2, n] of Object.entries(info.gives)) if (roomFor(state2.inventory, id2) < n) {
-      sound2("error");
+      sound2("full");
       toast2("持ち物がいっぱいだ。Q で手に持った物を置ける。", "持ち物");
       return false;
     }
@@ -58017,7 +60568,7 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
     const index2 = state2.inventory.selected, slot = held(), def = heldDef();
     if (def?.cooked) {
       if (!fires.burning(fire)) {
-        sound2("error");
+        sound2("deny");
         toast2("火が消えている。先に燃料をくべよう。", fire.def.name);
         return false;
       }
@@ -58031,7 +60582,7 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
     }
     const fuelId = def?.fuel ? slot.id : ["grass", "twigs"].find((id2) => countItem(state2.inventory, id2) > 0);
     if (!fuelId) {
-      sound2("error");
+      sound2("deny");
       toast2("燃料がない。草・小枝・木材を手に持って E でくべられる。", fire.def.name);
       return false;
     }
@@ -58056,7 +60607,7 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
     const info = remains2?.preview(t.id);
     if (!info) return false;
     for (const [id2, n] of Object.entries(info.gives)) if (roomFor(state2.inventory, id2) < n) {
-      sound2("error");
+      sound2("full");
       toast2("持ち物がいっぱいだ。Q で手に持った物を置ける。", "持ち物");
       return false;
     }
@@ -58126,6 +60677,14 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
     syncHeld();
     return true;
   }
+  function setMinuteOfDay(minute) {
+    state2.clock = (clock.day - 1) * SURVIVAL_DAY.seconds + daySecondsAt(minute);
+    survivalClock(state2.clock, clock);
+    lastPhase = clock.phase;
+    state2.darkness = createDarkness();
+    pickables.update(0, state2.clock, clock.phase);
+    return clock.minute;
+  }
   function use() {
     const index2 = state2.inventory.selected, slot = held(), def = heldDef();
     if (!slot) {
@@ -58180,7 +60739,7 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
     const recipe = RECIPES.find((r) => r.id === id2);
     if (!recipe) return false;
     if (!hasAll(state2.inventory, recipe.needs)) {
-      sound2("error");
+      sound2("deny");
       toast2("材料が足りない。", recipe.name);
       return false;
     }
@@ -58197,7 +60756,7 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
     return "made";
   }
   function updatePlacing() {
-    const p = player(), reach = clamp54(p.pitch > 0.12 ? 1.62 / Math.tan(p.pitch) : 3.4, 1.7, 3.6);
+    const p = player(), reach = clamp56(p.pitch > 0.12 ? 1.62 / Math.tan(p.pitch) : 3.4, 1.7, 3.6);
     placing.x = p.x - Math.sin(p.yaw) * reach;
     placing.z = p.z - Math.cos(p.yaw) * reach;
     const check2 = fires.canPlace(placing.x, placing.z);
@@ -58209,14 +60768,14 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
     if (!placing) return false;
     updatePlacing();
     if (!placing.ok) {
-      sound2("error");
+      sound2("deny");
       toast2(placing.reason || "ここには置けない。", "置き場所");
       return false;
     }
     const recipe = placing.recipe;
     if (!takeAll(state2.inventory, recipe.needs)) {
       cancelPlacing();
-      sound2("error");
+      sound2("deny");
       toast2("材料が足りない。", recipe.name);
       return false;
     }
@@ -58298,7 +60857,7 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
       held: heldInfo(),
       note: note(),
       shade: darknessShade(state2.darkness),
-      mind: clamp54((VITALS.lowSanity - state2.vitals.sanity) / VITALS.lowSanity, 0, 1),
+      mind: clamp56((VITALS.lowSanity - state2.vitals.sanity) / VITALS.lowSanity, 0, 1),
       dark,
       torchLit,
       lit: light.lit
@@ -58337,6 +60896,13 @@ function createSurvivalGame({ THREE, world: world2, saved: saved2 = null, terrai
     },
     setFrozen: (value) => {
       frozen = !!value;
+    },
+    setMinuteOfDay,
+    get timeFlow() {
+      return timeFlow;
+    },
+    setTimeFlow: (on) => {
+      timeFlow = on ? 1 : 0;
     },
     weaponDamage,
     wearHeld,
@@ -58466,8 +61032,8 @@ function createSurvivalHud(root, { onSelect = () => {
   }
   function slotKey(slot, now) {
     if (!slot) return "";
-    const f10 = freshness(slot, now), w = wear(slot);
-    return `${slot.id}|${slot.count}|${f10 === null ? "" : Math.round(f10 * 20)}|${w === null ? "" : Math.round(w * 20)}`;
+    const f12 = freshness(slot, now), w = wear(slot);
+    return `${slot.id}|${slot.count}|${f12 === null ? "" : Math.round(f12 * 20)}|${w === null ? "" : Math.round(w * 20)}`;
   }
   function updateSlots(inv, now) {
     for (let i = 0; i < slots2.length; i++) {
@@ -58489,13 +61055,13 @@ function createSurvivalHud(root, { onSelect = () => {
         part2.img.dataset.id = slot.id;
       }
       part2.count.textContent = slot.count > 1 ? slot.count : "";
-      const f10 = freshness(slot, now), w = wear(slot), value = f10 ?? w;
+      const f12 = freshness(slot, now), w = wear(slot), value = f12 ?? w;
       part2.meter.hidden = value === null;
       if (value !== null) {
         part2.meterFill.style.width = `${Math.round(value * 100)}%`;
-        part2.meterFill.style.background = f10 !== null ? f10 >= 0.5 ? "#8fc46a" : f10 >= 0.2 ? "#d8b44a" : "#cf5b42" : w > 0.3 ? "#d9d2bd" : "#d98a4a";
+        part2.meterFill.style.background = f12 !== null ? f12 >= 0.5 ? "#8fc46a" : f12 >= 0.2 ? "#d8b44a" : "#cf5b42" : w > 0.3 ? "#d9d2bd" : "#d98a4a";
       }
-      part2.node.title = def.name + (f10 !== null ? f10 >= 0.5 ? "（新鮮）" : f10 >= 0.2 ? "（古くなってきた）" : "（腐りかけ）" : "");
+      part2.node.title = def.name + (f12 !== null ? f12 >= 0.5 ? "（新鮮）" : f12 >= 0.2 ? "（古くなってきた）" : "（腐りかけ）" : "");
     }
   }
   function update(view) {
@@ -58572,9 +61138,9 @@ function appendWeatherStrengthOptions(container, { strengths, onChanged = () => 
     }
     Object.assign(range.style, { width: "125px", maxWidth: "40vw" });
     Object.assign(number.style, { width: "68px", padding: "6px", font: "inherit", color: "inherit", background: "var(--ink)", border: "1px solid var(--line)" });
-    const unit = element2("span", "%");
-    unit.setAttribute("aria-hidden", "true");
-    group.append(range, number, unit);
+    const unit2 = element2("span", "%");
+    unit2.setAttribute("aria-hidden", "true");
+    group.append(range, number, unit2);
     row2.append(label, group);
     details.append(row2);
     controls.set(mode, [range, number]);
@@ -58684,10 +61250,71 @@ function appendSkyQualityOptions(container, { quality, onChanged }) {
     currentQuality = nextQuality;
     onChanged(nextQuality);
   };
+  row2.setQuality = (value) => {
+    currentQuality = normalizeSkyQuality(value, currentQuality);
+    select2.value = currentQuality;
+  };
   const graphicsRow = container.querySelector("#quality")?.closest(".settings-row");
   if (graphicsRow) graphicsRow.after(row2);
   else container.prepend(row2);
   return row2;
+}
+
+// graphics-presets.js
+var GRAPHICS_DETAIL_KEYS = Object.freeze(["skyQuality", "terrainShade", "eyeAdapt", "lightShafts", "bloom", "crownLight"]);
+var ALL_ON = { terrainShade: "on", eyeAdapt: "on", lightShafts: "on", bloom: "on", crownLight: "on" };
+var GRAPHICS_PRESETS = Object.freeze({
+  ultra: Object.freeze({ skyQuality: "high", ...ALL_ON }),
+  high: Object.freeze({ skyQuality: "high", ...ALL_ON }),
+  balanced: Object.freeze({ skyQuality: "medium", ...ALL_ON }),
+  // Light shafts and bloom are not drawn at this quality anyway.
+  low: Object.freeze({ skyQuality: "low", ...ALL_ON, lightShafts: "off", bloom: "off" })
+});
+function graphicsPreset(quality) {
+  return GRAPHICS_PRESETS[quality] || GRAPHICS_PRESETS.high;
+}
+function graphicsPresetMatches(settings2) {
+  const preset = graphicsPreset(settings2?.quality);
+  return GRAPHICS_DETAIL_KEYS.every((key3) => settings2?.[key3] === preset[key3]);
+}
+
+// time-options.js
+var TIME_PRESETS = Object.freeze([["朝", 390], ["昼", 720], ["夕方", 1080], ["夜", 1320]]);
+function clockText(minute) {
+  const value = (Math.floor(minute) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
+}
+function appendTimeOptions(container, { getMinute, setMinute, flowing = true, onFlow = () => {
+} }) {
+  const section = document.createElement("section");
+  section.className = "craft-block time-options";
+  section.innerHTML = `<h3>時刻</h3><form class="settings-row"><label for="worldTime">時刻<small>今日のうちで時刻を変えます。昼 06:00〜17:00、夕方 17:00〜19:30、夜 19:30〜06:00。</small></label><span class="time-input"><input id="worldTime" type="time" step="60" required><button class="outline-button" type="submit">変更</button></span></form><div class="craft-actions time-presets" role="group" aria-label="時間帯を選ぶ">${TIME_PRESETS.map(([label, minute]) => `<button class="outline-button" type="button" data-minute="${minute}">${label} ${clockText(minute)}</button>`).join("")}</div><div class="settings-row"><label for="timeFlow">時間の流れ<small>止めると、時刻と空がそのままになります（食べ物の傷みと植物の生え戻りも止まります）。再読み込みすると流れ始めます。</small></label><select id="timeFlow"><option value="on">流れる（1日16分）</option><option value="off">止める</option></select></div><p class="panel-copy" role="status" aria-live="polite"></p>`;
+  const input = section.querySelector("#worldTime"), flow = section.querySelector("#timeFlow"), status = section.querySelector('[role="status"]');
+  const show = () => {
+    input.value = clockText(getMinute());
+  };
+  show();
+  flow.value = flowing ? "on" : "off";
+  function apply(minute) {
+    const now = setMinute(minute);
+    input.value = clockText(Number.isFinite(now) ? now : minute);
+    status.textContent = `${input.value} にしました。`;
+  }
+  section.querySelector("form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const match = /^(\d{1,2}):(\d{2})/.exec(input.value);
+    if (!match || +match[1] > 23 || +match[2] > 59) return;
+    apply(+match[1] * 60 + +match[2]);
+  });
+  for (const button of section.querySelectorAll("[data-minute]")) button.addEventListener("click", () => apply(+button.dataset.minute));
+  flow.addEventListener("change", () => {
+    const on = flow.value !== "off";
+    onFlow(on);
+    show();
+    status.textContent = on ? "時間が流れ始めます（パネルを閉じると進みます）。" : `時間を止めました（${input.value} のまま）。`;
+  });
+  container.append(section);
+  return section;
 }
 
 // world-sound-context.js
@@ -58726,43 +61353,43 @@ function createWorldSoundContext({ height: height2, biome: biome2, riverX: river
     }
     waterSources.sort((a, b) => dist(p, a) - dist(p, b));
     out2.push(...waterSources.slice(0, 48));
-    function addWater(f10) {
-      const kind = f10.kind === "lake" ? "pond" : f10.kind;
-      if (!finite15(f10.x) || !finite15(f10.y) || !finite15(f10.z) || !["pond", "stream", "waterfall", "river"].includes(kind)) return;
-      const range = f10.range ?? { pond: 16, stream: 24, waterfall: 55, river: 34 }[kind];
-      if (dist(p, f10) <= range + 6) waterSources.push({ ...f10, kind, range });
+    function addWater(f12) {
+      const kind = f12.kind === "lake" ? "pond" : f12.kind;
+      if (!finite15(f12.x) || !finite15(f12.y) || !finite15(f12.z) || !["pond", "stream", "waterfall", "river"].includes(kind)) return;
+      const range = f12.range ?? { pond: 16, stream: 24, waterfall: 55, river: 34 }[kind];
+      if (dist(p, f12) <= range + 6) waterSources.push({ ...f12, kind, range });
     }
-    const add3 = (f10) => {
-      if (out2.length >= 80 || !f10 || !finite15(f10.x) || !finite15(f10.z)) return;
-      const range = f10.range ?? 40;
-      if (dist(p, f10) <= range + 6) out2.push({ ...f10, y: finite15(f10.y) ? f10.y : height2(f10.x, f10.z), range });
+    const add4 = (f12) => {
+      if (out2.length >= 80 || !f12 || !finite15(f12.x) || !finite15(f12.z)) return;
+      const range = f12.range ?? 40;
+      if (dist(p, f12) <= range + 6) out2.push({ ...f12, y: finite15(f12.y) ? f12.y : height2(f12.x, f12.z), range });
     };
     if (world2.inDungeon) {
-      for (const f10 of indoorAnchors(world2)) add3(f10);
+      for (const f12 of indoorAnchors(world2)) add4(f12);
       let index2 = 0;
       for (const torch of world2.caveTorches || []) {
         if (index2 >= 12) break;
         const p2 = torch.light?.position;
-        if (p2) add3({ id: "cave:torch:" + index2, kind: "fire", x: p2.x, y: p2.y, z: p2.z, range: 14, gain: 0.36 });
+        if (p2) add4({ id: "cave:torch:" + index2, kind: "fire", x: p2.x, y: p2.y, z: p2.z, range: 14, gain: 0.36 });
         index2++;
       }
     } else {
       for (const fire of world2.survivalFireList || []) {
         if (fire.landmark || !(fire.fuel > 0)) continue;
-        add3({ id: "survival:" + fire.id, kind: "fire", x: fire.x, y: fire.y + 0.35, z: fire.z, range: 22, gain: 0.55 + 0.75 * (fire.level ?? 1) });
+        add4({ id: "survival:" + fire.id, kind: "fire", x: fire.x, y: fire.y + 0.35, z: fire.z, range: 22, gain: 0.55 + 0.75 * (fire.level ?? 1) });
       }
       let inspected2 = 0;
       for (const landmark of world2.landmarks || []) {
         if (++inspected2 > 64) break;
         if (landmark.gone || landmark.mesh?.visible === false) continue;
-        if (landmark.fire && !(landmark.fireLevel <= 0)) add3({ id: landmark.id + ":fire", kind: "fire", x: landmark.x, y: landmark.y + 0.35, z: landmark.z, range: 22, gain: 0.55 + 0.75 * (landmark.fireLevel ?? 1) });
-        else if (["boss", "shrine"].includes(landmark.type)) add3({ id: landmark.id, kind: "ruin", x: landmark.x, y: landmark.y + 1, z: landmark.z, range: 34 });
+        if (landmark.fire && !(landmark.fireLevel <= 0)) add4({ id: landmark.id + ":fire", kind: "fire", x: landmark.x, y: landmark.y + 0.35, z: landmark.z, range: 22, gain: 0.55 + 0.75 * (landmark.fireLevel ?? 1) });
+        else if (["boss", "shrine"].includes(landmark.type)) add4({ id: landmark.id, kind: "ruin", x: landmark.x, y: landmark.y + 1, z: landmark.z, range: 34 });
       }
       if (!world2.hydrology?.network) {
         const segment2 = Math.round(p.z / 16);
         for (let i = segment2 - 2; i <= segment2 + 2; i++) {
           const z = i * 16, x = riverX2(z), waterY = world2.water?.position?.y ?? 0.6;
-          if (height2(x, z) < waterY + 0.1 && !(world2.islandTerrain && world2.islandTerrain.normalizedRadius(x, z) > 0.68 && world2.hydrology?.waterAt(x, z)?.kind === "ocean")) add3({ id: "river:" + i, kind: "river", x, y: waterY, z, range: 34, gain: 0.65 });
+          if (height2(x, z) < waterY + 0.1 && !(world2.islandTerrain && world2.islandTerrain.normalizedRadius(x, z) > 0.68 && world2.hydrology?.waterAt(x, z)?.kind === "ocean")) add4({ id: "river:" + i, kind: "river", x, y: waterY, z, range: 34, gain: 0.65 });
         }
       }
       const island = world2.islandTerrain;
@@ -58777,7 +61404,7 @@ function createWorldSoundContext({ height: height2, biome: biome2, riverX: river
               if (!finite15(s.shoreX) || !finite15(s.shoreZ) || Math.hypot(p.x - s.shoreX, p.z - s.shoreZ) > 71 || anchors.some((anchor) => Math.hypot(anchor.x - s.shoreX, anchor.z - s.shoreZ) < 14)) continue;
               const source2 = { id: "ocean:shore:" + s.shoreFeature + ":" + ix + ":" + iz, kind: "ocean", x: s.shoreX, y: config.seaLevel, z: s.shoreZ, range: 65 };
               anchors.push(source2);
-              add3(source2);
+              add4(source2);
               if (anchors.length === 3) break;
             }
           }
@@ -58785,7 +61412,7 @@ function createWorldSoundContext({ height: height2, biome: biome2, riverX: river
           const a = Math.atan2((p.z - config.centerZ) / config.radiusZ, (p.x - config.centerX) / config.radiusX), step = 0.018, sector = Math.round(a / step);
           for (let i = sector - 1; i <= sector + 1; i++) {
             const angle = i * step, probeX = config.centerX + Math.cos(angle) * config.radiusX, probeZ = config.centerZ + Math.sin(angle) * config.radiusZ, r = island.sample(probeX, probeZ).shoreRadius, x = config.centerX + Math.cos(angle) * config.radiusX * r, z = config.centerZ + Math.sin(angle) * config.radiusZ * r;
-            add3({ id: "ocean:shore:" + i, kind: "ocean", x, y: config.seaLevel, z, range: 65 });
+            add4({ id: "ocean:shore:" + i, kind: "ocean", x, y: config.seaLevel, z, range: 65 });
           }
         }
       }
@@ -58794,9 +61421,9 @@ function createWorldSoundContext({ height: height2, biome: biome2, riverX: river
         const socket = (name) => d.sockets?.find((s) => s.name === name) || d.anchor;
         if (d.soundscape?.location && d.anchor) locations.push({ name: d.soundscape.location, ...d.anchor, range: d.soundscape.radius ?? 12 });
         if (d.kind === "ruins" && d.anchor) locations.push({ name: "ruin", ...d.anchor, range: 12 });
-        if (d.kind === "ruins" || d.kind === "graves") add3({ id: d.id + ":stone", kind: "ruin", ...socket("altar"), range: 32 });
-        if (d.kind === "roadside-cart" || d.kind === "forest-camp") add3({ id: d.id + ":timber", ...socket(d.kind === "forest-camp" ? "tent" : "cart"), kind: "building", range: 24 });
-        for (const source2 of (d.soundscape?.sources || []).slice(0, 8)) if (source2.active !== false) add3({ ...source2, id: d.id + ":sound:" + source2.id });
+        if (d.kind === "ruins" || d.kind === "graves") add4({ id: d.id + ":stone", kind: "ruin", ...socket("altar"), range: 32 });
+        if (d.kind === "roadside-cart" || d.kind === "forest-camp") add4({ id: d.id + ":timber", ...socket(d.kind === "forest-camp" ? "tent" : "cart"), kind: "building", range: 24 });
+        for (const source2 of (d.soundscape?.sources || []).slice(0, 8)) if (source2.active !== false) add4({ ...source2, id: d.id + ":sound:" + source2.id });
       }
     }
     const living = world2.inDungeon ? world2.dungeonEntities : world2.entities;
@@ -58805,9 +61432,9 @@ function createWorldSoundContext({ height: height2, biome: biome2, riverX: river
       if (++inspected > 96) break;
       if (enemy.hp <= 0 || enemy.type === "deer" || enemy.customCreature) continue;
       const pos2 = enemy.mesh?.position || enemy;
-      add3({ id: "enemy:" + enemy.id, kind: "enemy", x: enemy.x, y: (pos2.y || 0) + 1, z: enemy.z, range: 72 });
+      add4({ id: "enemy:" + enemy.id, kind: "enemy", x: enemy.x, y: (pos2.y || 0) + 1, z: enemy.z, range: 72 });
     }
-    for (const f10 of (world2.soundscapeSources || []).slice(0, 24)) if (f10.active !== false && !!f10.dungeon === !!world2.inDungeon) add3(f10);
+    for (const f12 of (world2.soundscapeSources || []).slice(0, 24)) if (f12.active !== false && !!f12.dungeon === !!world2.inDungeon) add4(f12);
     features = out2.sort((a, b) => dist(p, a) - dist(p, b)).slice(0, 24);
   }
   function sample2(world2, frame3) {
@@ -58823,16 +61450,16 @@ function createWorldSoundContext({ height: height2, biome: biome2, riverX: river
       lastZ = frame3.z;
       lastHydrologyRevision = revision;
     }
-    const raw = world2.weather, state2 = raw?.state || raw, numeric = !!state2 && finite15(state2.rain), unit = (value) => Math.max(0, Math.min(1, finite15(value) ? value : 0));
+    const raw = world2.weather, state2 = raw?.state || raw, numeric = !!state2 && finite15(state2.rain), unit2 = (value) => Math.max(0, Math.min(1, finite15(value) ? value : 0));
     let kind = typeof state2 === "string" ? state2 : state2?.kind || state2?.type || "clear";
     if (kind === "thunderstorm") kind = "storm";
     if (!["rain", "storm", "clear"].includes(kind)) kind = "clear";
-    const intensity = kind === "clear" ? 0 : unit(state2?.intensity ?? 1);
-    weather.rain = numeric ? unit(state2.rain) : intensity;
-    weather.snow = numeric ? unit(state2.snow) : 0;
-    weather.wind = numeric ? unit(state2.wind) : 0;
-    weather.storm = numeric ? unit(state2.storm) : kind === "storm" ? intensity : 0;
-    weather.blizzard = numeric ? unit(state2.blizzard ?? weather.snow * weather.wind) : 0;
+    const intensity = kind === "clear" ? 0 : unit2(state2?.intensity ?? 1);
+    weather.rain = numeric ? unit2(state2.rain) : intensity;
+    weather.snow = numeric ? unit2(state2.snow) : 0;
+    weather.wind = numeric ? unit2(state2.wind) : 0;
+    weather.storm = numeric ? unit2(state2.storm) : kind === "storm" ? intensity : 0;
+    weather.blizzard = numeric ? unit2(state2.blizzard ?? weather.snow * weather.wind) : 0;
     weather.kind = weather.storm > 0.1 ? "storm" : weather.rain > 0.01 ? "rain" : weather.snow > 0.01 ? "snow" : "clear";
     weather.intensity = Math.max(weather.rain, weather.snow);
     weather.externalWeather = numeric;
@@ -59049,13 +61676,13 @@ function createRagdoll(THREE, model, spec, { height: height2, push: push2 = null
       for (const c2 of sticks) {
         const a = P[c2.i], b = P[c2.j], dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z, d = Math.hypot(dx, dy, dz) || 1e-6;
         if (c2.minOnly && d >= c2.rest) continue;
-        const f10 = (d - c2.rest) / d * 0.5 * c2.stiffness;
-        a.x += dx * f10;
-        a.y += dy * f10;
-        a.z += dz * f10;
-        b.x -= dx * f10;
-        b.y -= dy * f10;
-        b.z -= dz * f10;
+        const f12 = (d - c2.rest) / d * 0.5 * c2.stiffness;
+        a.x += dx * f12;
+        a.y += dy * f12;
+        a.z += dz * f12;
+        b.x -= dx * f12;
+        b.y -= dy * f12;
+        b.z -= dz * f12;
       }
       for (let i = 0; i < P.length; i++) {
         const p = P[i], floor = height2(p.x, p.z) + radius[i];
@@ -59140,7 +61767,7 @@ function createCreatureRemains(THREE, world2, { sound: sound2 = () => {
 } } = {}) {
   const list = [], at = new THREE.Vector3();
   let serial3 = 0;
-  function add3(entity, { loot: loot3 = {}, push: push2 = null, height: height2, kind = entity.type } = {}) {
+  function add4(entity, { loot: loot3 = {}, push: push2 = null, height: height2, kind = entity.type } = {}) {
     const mesh2 = entity.mesh, fauna = mesh2?.userData?.fauna, guardian = mesh2?.userData?.guardian;
     if (!mesh2) return null;
     fauna?.mixer?.stopAllAction();
@@ -59277,7 +61904,7 @@ function createCreatureRemains(THREE, world2, { sound: sound2 = () => {
   function clear() {
     for (const r of [...list]) remove(r);
   }
-  return { add: add3, update, nearest: nearest2, preview, loot: loot2, serialize, clear, get count() {
+  return { add: add4, update, nearest: nearest2, preview, loot: loot2, serialize, clear, get count() {
     return list.length;
   }, list: () => list.map((r) => ({ id: r.id, kind: r.kind, looted: r.looted, x: r.x, y: r.y, z: r.z, settled: r.ragdoll?.settled ?? true, ragdoll: r.ragdoll?.stats() ?? null })) };
 }
@@ -59361,7 +61988,7 @@ function createSurvivalArrows(THREE, world2, { height: height2, pickables, targe
   const matrix6 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), big = new THREE.Vector3(), xAxis = new THREE.Vector3(1, 0, 0);
   const a = new THREE.Vector3(), b = new THREE.Vector3(), dir = new THREE.Vector3(), tmp = new THREE.Vector3();
   let rand2 = 1;
-  const random7 = () => {
+  const random9 = () => {
     rand2 = rand2 * 16807 % 2147483647;
     return rand2 / 2147483647;
   };
@@ -59383,7 +62010,7 @@ function createSurvivalArrows(THREE, world2, { height: height2, pickables, targe
     }
     return list;
   };
-  function sweep2(f10) {
+  function sweep2(f12) {
     let best = null;
     const consider = (t, kind, extra) => {
       if (t >= 0 && t <= 1 && (!best || t < best.t)) best = { t, kind, ...extra };
@@ -59430,16 +62057,16 @@ function createSurvivalArrows(THREE, world2, { height: height2, pickables, targe
     if (water && Number.isFinite(water.level) && b.y < water.level && water.level > ground + 0.03) consider(0.99, "water", { level: water.level });
     return best;
   }
-  function land(f10, info) {
+  function land(f12, info) {
     const point5 = a.clone().lerp(b, info.t);
-    dir.copy(f10.v).normalize();
+    dir.copy(f12.v).normalize();
     const puff = PUFF[info.kind];
     if (puff && world2.burst) world2.burst(tmp.set(point5.x, point5.y - 0.95, point5.z), puff[0], puff[1]);
-    const speed = f10.v.length(), power = Math.min(1, speed / Math.max(1, f10.speed0));
+    const speed = f12.v.length(), power = Math.min(1, speed / Math.max(1, f12.speed0));
     if (info.kind === "creature") {
-      hit(info.target, Math.round(f10.damage * (0.45 + 0.55 * power)), point5);
+      hit(info.target, Math.round(f12.damage * (0.45 + 0.55 * power)), point5);
       sound2("arrowHitFlesh", { position: point5 });
-      if (random7() < 0.6) lie(point5.x + (random7() - 0.5) * 0.6, point5.z + (random7() - 0.5) * 0.6, dir);
+      if (random9() < 0.6) lie(point5.x + (random9() - 0.5) * 0.6, point5.z + (random9() - 0.5) * 0.6, dir);
       return;
     }
     if (info.kind === "water") {
@@ -59449,7 +62076,7 @@ function createSurvivalArrows(THREE, world2, { height: height2, pickables, targe
     }
     if (info.kind === "rock") {
       sound2("arrowHitStone", { position: point5 });
-      if (random7() < 0.3) return;
+      if (random9() < 0.3) return;
       tmp.copy(dir).multiplyScalar(-0.4);
       lie(point5.x + tmp.x, point5.z + tmp.z, dir);
       return;
@@ -59466,22 +62093,22 @@ function createSurvivalArrows(THREE, world2, { height: height2, pickables, targe
     sound2(info.kind === "ground" ? "arrowHitGround" : "arrowHitWood", { position: point5 });
   }
   function lie(x, z, along) {
-    const yaw2 = Math.atan2(-along.z, along.x) + (random7() - 0.5) * 0.9, y = height2(x, z) + 6e-3;
-    q.setFromAxisAngle(tmp.set(0, 1, 0), yaw2).multiply(new THREE.Quaternion().setFromAxisAngle(xAxis, (random7() - 0.5) * 1.2));
+    const yaw2 = Math.atan2(-along.z, along.x) + (random9() - 0.5) * 0.9, y = height2(x, z) + 6e-3;
+    q.setFromAxisAngle(tmp.set(0, 1, 0), yaw2).multiply(new THREE.Quaternion().setFromAxisAngle(xAxis, (random9() - 0.5) * 1.2));
     pickables.drop("arrow", 1, x, z, {}, { y, q: q.toArray() });
   }
   function draw() {
     let n = 0;
-    for (const f10 of flying) {
-      dir.copy(f10.v).normalize();
+    for (const f12 of flying) {
+      dir.copy(f12.v).normalize();
       q.setFromUnitVectors(xAxis, dir);
-      const [g0, g1] = ARROW_FLIGHT.grow, g = Math.min(1, Math.max(0, (f10.travelled - g0) / (g1 - g0))), size = 1 + (ARROW_FLIGHT.scale - 1) * g * g * (3 - 2 * g);
-      tmp.copy(dir).multiplyScalar(0.35 * (size - 1)).add(f10.p);
+      const [g0, g1] = ARROW_FLIGHT.grow, g = Math.min(1, Math.max(0, (f12.travelled - g0) / (g1 - g0))), size = 1 + (ARROW_FLIGHT.scale - 1) * g * g * (3 - 2 * g);
+      tmp.copy(dir).multiplyScalar(0.35 * (size - 1)).add(f12.p);
       matrix6.compose(tmp, q, big.setScalar(size));
       for (const mesh2 of meshes) mesh2.setMatrixAt(n, matrix6);
-      const speed = f10.v.length(), back = 0.7 * size - 0.35 * (size - 1) - 0.12, window2 = ARROW_FLIGHT.streak.seconds;
-      const length = Math.min(ARROW_FLIGHT.streak.metres, speed * window2, f10.travelled) - back;
-      heads.setXYZW(n, f10.p.x - dir.x * back, f10.p.y - dir.y * back, f10.p.z - dir.z * back, Math.min(1, f10.age / window2));
+      const speed = f12.v.length(), back = 0.7 * size - 0.35 * (size - 1) - 0.12, window2 = ARROW_FLIGHT.streak.seconds;
+      const length = Math.min(ARROW_FLIGHT.streak.metres, speed * window2, f12.travelled) - back;
+      heads.setXYZW(n, f12.p.x - dir.x * back, f12.p.y - dir.y * back, f12.p.z - dir.z * back, Math.min(1, f12.age / window2));
       axes.setXYZW(n, dir.x, dir.y, dir.z, Math.max(0, length));
       n++;
     }
@@ -59498,26 +62125,26 @@ function createSurvivalArrows(THREE, world2, { height: height2, pickables, targe
   function update(dt) {
     if (!flying.length) return;
     for (let i = flying.length - 1; i >= 0; i--) {
-      const f10 = flying[i];
+      const f12 = flying[i];
       let left = Math.min(dt, 0.1), done = false;
       while (left > 1e-6 && !done) {
         const h = Math.min(STEP3, left);
         left -= h;
-        f10.age += h;
-        a.copy(f10.p);
-        const speed = f10.v.length();
-        f10.v.multiplyScalar(Math.max(0, 1 - DRAG * speed * h));
-        f10.v.y -= GRAVITY2 * h;
-        b.copy(a).addScaledVector(f10.v, h);
-        const info = sweep2(f10);
+        f12.age += h;
+        a.copy(f12.p);
+        const speed = f12.v.length();
+        f12.v.multiplyScalar(Math.max(0, 1 - DRAG * speed * h));
+        f12.v.y -= GRAVITY2 * h;
+        b.copy(a).addScaledVector(f12.v, h);
+        const info = sweep2(f12);
         if (info) {
-          land(f10, info);
+          land(f12, info);
           done = true;
         } else {
-          f10.travelled += a.distanceTo(b);
-          f10.p.copy(b);
+          f12.travelled += a.distanceTo(b);
+          f12.p.copy(b);
         }
-        if (!done && (f10.age > MAX_TIME || f10.p.y < -60)) done = true;
+        if (!done && (f12.age > MAX_TIME || f12.p.y < -60)) done = true;
       }
       if (done) flying.splice(i, 1);
     }
@@ -59569,8 +62196,8 @@ function measureFrames(ms = 4e3) {
     requestAnimationFrame(step);
   });
 }
-function measureFlicker(canvas2, setHook, { frames: frames3 = 90, width = 320, grid = 16, overlayMs = 2e4, step = null, region = null, probe = null, flipAt = 0 } = {}) {
-  const count = Math.min(600, Math.max(3, Math.floor(frames3) || 90));
+function measureFlicker(canvas2, setHook, { frames: frames4 = 90, width = 320, grid = 16, overlayMs = 2e4, step = null, region = null, probe = null, flipAt = 0 } = {}) {
+  const count = Math.min(600, Math.max(3, Math.floor(frames4) || 90));
   const w = Math.min(640, Math.max(64, Math.floor(width) || 320)), h = Math.max(1, Math.round(w * canvas2.height / canvas2.width));
   const work4 = document.createElement("canvas");
   work4.width = w;
@@ -59755,7 +62382,7 @@ async function uploadCanvas(canvas2, quality = 0.85) {
 
 // game.js
 var $ = (s) => document.querySelector(s);
-var clamp55 = three_module_exports.MathUtils.clamp;
+var clamp57 = three_module_exports.MathUtils.clamp;
 var STORE = "kumarim-survival-v1";
 var PREFS = "kumarim-settings-v1";
 var touchDevice = matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
@@ -59783,6 +62410,28 @@ settings.eyeAdapt = settings.eyeAdapt === "off" ? "off" : "on";
 settings.lightShafts = settings.lightShafts === "off" ? "off" : "on";
 settings.bloom = settings.bloom === "off" ? "off" : "on";
 settings.crownLight = settings.crownLight === "off" ? "off" : "on";
+var settingsOpen = { graphics: false, debug: false };
+function applyGraphicsPreset(skyRow) {
+  const p = graphicsPreset(settings.quality);
+  if (settings.skyQuality !== p.skyQuality) {
+    settings.skyQuality = p.skyQuality;
+    world?.setSkyQuality(p.skyQuality);
+  }
+  skyRow?.setQuality?.(p.skyQuality);
+  settings.terrainShade = p.terrainShade;
+  setTerrainSkyView(p.terrainShade === "on");
+  settings.eyeAdapt = p.eyeAdapt;
+  if (world?.atmosphere?.eye) world.atmosphere.eye.enabled = p.eyeAdapt === "on";
+  settings.lightShafts = p.lightShafts;
+  settings.bloom = p.bloom;
+  settings.crownLight = p.crownLight;
+  applyLightSettings();
+  for (const id2 of ["terrainShade", "eyeAdapt", "lightShafts", "bloom", "crownLight"]) {
+    const el2 = document.getElementById(id2);
+    if (el2) el2.value = settings[id2];
+  }
+  if (world) world.needsFrame = true;
+}
 function applyLightSettings() {
   if (world) world.crownLightEnabled = settings.crownLight === "on";
   const a = world?.atmosphere;
@@ -60014,7 +62663,7 @@ function updateVerticalMotion(dt) {
     }
   }
   if (nextY <= floor) {
-    landingImpact = clamp55(-verticalVelocity / 9, 0, 1);
+    landingImpact = clamp57(-verticalVelocity / 9, 0, 1);
     landingTime = 0.22;
     landSerial++;
     swimming.reset();
@@ -60028,7 +62677,7 @@ function updateVerticalMotion(dt) {
 }
 if (saved?.view) {
   if (Number.isFinite(saved.view.yaw)) yaw = saved.view.yaw;
-  if (Number.isFinite(saved.view.pitch)) pitch = clamp55(saved.view.pitch, -1.25, 1.25);
+  if (Number.isFinite(saved.view.pitch)) pitch = clamp57(saved.view.pitch, -1.25, 1.25);
 }
 function toast(message, label = "旅の記録") {
   const el2 = document.createElement("div");
@@ -60379,7 +63028,7 @@ function interact() {
   } else if (o.type === "chest") {
     const remaining = entityList().some((e) => e.hp > 0);
     if (remaining) {
-      sound("error", { bus: "ui" });
+      sound("locked");
       toast("遺跡の番人をすべて倒すと封印が解ける。", "封じられた宝箱");
       return;
     }
@@ -60471,8 +63120,8 @@ function slept() {
   save();
 }
 function movementVector() {
-  const f10 = (keys.has("KeyW") || keys.has("ArrowUp") ? 1 : 0) - (keys.has("KeyS") || keys.has("ArrowDown") ? 1 : 0) - joystick.y, r = (keys.has("KeyD") || keys.has("ArrowRight") ? 1 : 0) - (keys.has("KeyA") || keys.has("ArrowLeft") ? 1 : 0) + joystick.x;
-  return new three_module_exports.Vector3(r * Math.cos(yaw) - f10 * Math.sin(yaw), 0, -r * Math.sin(yaw) - f10 * Math.cos(yaw));
+  const f12 = (keys.has("KeyW") || keys.has("ArrowUp") ? 1 : 0) - (keys.has("KeyS") || keys.has("ArrowDown") ? 1 : 0) - joystick.y, r = (keys.has("KeyD") || keys.has("ArrowRight") ? 1 : 0) - (keys.has("KeyA") || keys.has("ArrowLeft") ? 1 : 0) + joystick.x;
+  return new three_module_exports.Vector3(r * Math.cos(yaw) - f12 * Math.sin(yaw), 0, -r * Math.sin(yaw) - f12 * Math.cos(yaw));
 }
 var arrows = null;
 var mouseAttackHeld = false;
@@ -60495,7 +63144,7 @@ function updateBow(dt) {
       sound("bowDraw", { gain: 0.8 });
     } else if (!bow.warned) {
       bow.warned = true;
-      sound("error");
+      sound("deny");
       toast("矢がない。小枝・蒼輝石・草で作れる（クラフト）。", "弓");
     }
   }
@@ -60635,7 +63284,7 @@ function playerWaterRipples(verticalBefore) {
   if (world.inDungeon || !water?.splash) return;
   const depth = feetWaterDepth(world, pos.x, pos.z, pos.y, height(pos.x, pos.z));
   if (depth > 0.04 && lastFeetDepth <= 0.02) {
-    const impact = clamp55(-verticalBefore / 7, 0, 1);
+    const impact = clamp57(-verticalBefore / 7, 0, 1);
     water.splash(pos.x, pos.z, 0.55 + 0.65 * impact, -0.08 - 0.32 * impact);
   }
   lastFeetDepth = depth;
@@ -60652,7 +63301,7 @@ function strokeRipple(effort) {
   const water = world.realisticWater;
   if (world.inDungeon || !water?.splash || swimming.state.underwater) return;
   const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
-  water.splash(pos.x + fx * 0.6, pos.z + fz * 0.6, 0.5, -0.06 - 0.07 * clamp55(effort || 0, 0, 1));
+  water.splash(pos.x + fx * 0.6, pos.z + fz * 0.6, 0.5, -0.06 - 0.07 * clamp57(effort || 0, 0, 1));
 }
 function surface3() {
   if (world.inDungeon) return "Stone";
@@ -60714,17 +63363,17 @@ function updateAI(dt) {
       continue;
     }
     if (e.contentOwner && !world.inDungeon) {
-      const local = advanceContentGuard(e, { player: pos, dt, collision: world.contentCollision, terrainHeight: height, navigation: world.guardNavigation, waterAt: (x, z, ground) => worldWaterAt(world, x, z, ground) });
+      const local2 = advanceContentGuard(e, { player: pos, dt, collision: world.contentCollision, terrainHeight: height, navigation: world.guardNavigation, waterAt: (x, z, ground) => worldWaterAt(world, x, z, ground) });
       const d2 = Math.hypot(e.x - pos.x, e.z - pos.z);
       e.mesh.visible = d2 < 85;
-      combatActive ||= local.combat;
-      if (local.alert) sound("bossWindup", { position: e.mesh.position, gain: 0.5 });
-      if (local.attack) {
-        damagePlayer(local.damage, "遺跡の守り手に倒された");
+      combatActive ||= local2.combat;
+      if (local2.alert) sound("bossWindup", { position: e.mesh.position, gain: 0.5 });
+      if (local2.attack) {
+        damagePlayer(local2.damage, "遺跡の守り手に倒された");
         sound("boss", { position: e.mesh.position, gain: 0.45 });
       }
       if (e.windup > 0 && e.mesh.userData.arms?.[1]) e.mesh.userData.arms[1].rotation.x = -2.3;
-      world.animateEntity(e, dt, local.speed);
+      world.animateEntity(e, dt, local2.speed);
       continue;
     }
     const d = Math.hypot(e.x - pos.x, e.z - pos.z);
@@ -60985,17 +63634,33 @@ function openPanel(type) {
   } else if (type === "map") {
     mountedMap = mountWorldMap(content, { world, island: islandTerrain, heightAt: mapHeight, biomeAt: biome, islandBiomes, state, contentMarkers, position: pos, yaw, onTravel: travel, onJournal: () => openPanel("journal") });
   } else if (type === "settings") {
-    content.innerHTML = `<div class="settings-row"><label for="quality">グラフィック<small>高画質ほど、光と影が精細になります</small></label><select id="quality"><option value="ultra">最高画質</option><option value="high">高画質</option><option value="balanced">標準（スマホ推奨）</option><option value="low">軽量</option></select></div><div class="settings-row"><label for="terrainShade">谷や崖の陰影<small>谷・沢・崖の足元・入り江の奥を、空の光が届きにくい分だけ暗くします</small></label><select id="terrainShade"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="eyeAdapt">明るさに目が慣れる<small>暗い所では少しずつ明るく見え、明るい所に出るとまぶしさがゆっくり引きます（夜と洞窟の暗さは保ちます）</small></label><select id="eyeAdapt"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="lightShafts">光の筋（木漏れ日）<small>森の中で、葉の隙間から差す日の光が、空気の中に筋になって見えます（画質「低」では出ません）</small></label><select id="lightShafts"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="bloom">ブルーム（光のにじみ）<small>空・水のきらめき・火・水晶など、明るい所の光がやわらかくにじみます（画質「低」では出ません）</small></label><select id="bloom"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="crownLight">木の日なたと日陰<small>木の茂みの日の当たる側を明るく、内側と反対側を暗くし、遠くの地面にも木の影の模様を落とします（木の形ごとに読み込み中に計算したものを使います）</small></label><select id="crownLight"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="renderResolution">描画解像度<small>3D映像の精細さと描画負荷</small></label><select id="renderResolution">${RESOLUTION_PRESETS.map((p) => `<option value="${p.value}">${p.label}</option>`).join("")}</select></div><p class="panel-copy resolution-note"><span id="renderResolutionValue" aria-live="polite"></span><br>画面の縦横比を保って描画します。文字や操作パネルの大きさは変わりません。</p><div class="settings-row"><label for="frameRate">フレームレート上限<small>滑らかさとCPU・GPUの負荷を調整</small></label><select id="frameRate">${FRAME_RATE_PRESETS.map((p) => `<option value="${p.value}">${p.label}</option>`).join("")}</select></div><p class="panel-copy">設定値は上限です。実際のFPSは画面のリフレッシュレートと処理性能に応じて変わります。</p><div class="settings-row"><label for="performanceDisplay">パフォーマンス表示<small>プレイ中のFPSや描画負荷を表示</small></label><select id="performanceDisplay"><option value="off">非表示</option><option value="basic">FPSのみ</option><option value="detail">詳細</option></select></div><p class="panel-copy">詳細ではCPU・GPUの処理時間、描画回数、三角形数などを表示します。GPU使用率ではありません。GPU計測に対応しない環境では「非対応」と表示されます。</p>${treeTierOptionsHtml(settings.quality, settings.treeTiers)}<div class="settings-row"><label for="volume">全体の音量</label><input id="volume" type="range" min="0" max="1" step=".05" value="${settings.volume}"></div>${[["effects", "効果音"], ["ambience", "自然・環境音"]].map(([key3, label]) => `<div class="settings-row"><label for="${key3}">${label}</label><input id="${key3}" type="range" min="0" max="1" step=".05" value="${settings[key3]}"></div>`).join("")}<div class="settings-row"><label for="fov">視野の広さ<small>主観視点の見える範囲</small></label><input id="fov" type="range" min="55" max="85" step="1" value="${settings.fov}"></div><div class="settings-row"><label for="sensitivity">視点の感度</label><input id="sensitivity" type="range" min=".2" max="1.6" step=".1" value="${settings.sensitivity}"></div><p class="panel-copy">島の記録は、このブラウザに自動で保存されます。閉じたあとも「つづきから」で再開できます。倒れると、その島の記録は消えます。</p><div class="craft-actions"><button class="outline-button" id="saveButton">記録する</button><button class="outline-button" id="fullscreenButton">全画面表示</button><button class="outline-button" id="guideButton">操作ガイド</button></div><details class="asset-credits"><summary>素材クレジット</summary><p>地面・針葉樹・樹皮・環境光: <a href="https://polyhaven.com" target="_blank" rel="noreferrer">Poly Haven</a> (CC0)<br>鹿: CDmir / TinyWorlds (CC0)<br>描画: Three.js (MIT)<br>守護者: Čestmír Dammer (CC0)。広葉樹・松・下草・倒木・岩・石造遺跡・宝箱の出典は<a href="./ATTRIBUTION-environment.txt" target="_blank" rel="noreferrer">環境素材のクレジット</a>をご覧ください。</p><p>効果音: Kenney / qubodup (CC0)。風: Jonathan Shaw (InspectorJ) / AntumDeluge (CC BY 3.0)。川: Antoine Goumain (CC BY 4.0)。水場の足音: Blender Foundation (CC BY 3.0)、泳ぐ音: Peludo (CC0)。<a href="./audio/ATTRIBUTION.txt" target="_blank" rel="noreferrer">音素材の出典・ライセンス</a>。<a href="./audio/SOUNDSCAPE-ATTRIBUTION.txt" target="_blank" rel="noreferrer">追加した自然音の出典・ライセンス</a>。素材は音量・ループ・形式を調整。風・草葉・水・焚き火の音響補完とジャンプ・被弾の追加モーションは本作向けに制作。</p></details>`;
-    appendSkyQualityOptions(content, { quality: settings.skyQuality, onChanged: (quality) => {
+    content.innerHTML = `<section class="settings-group"><h3>グラフィック</h3><div class="settings-row"><label for="quality">全体のグラフィック<small id="qualityNote"></small></label><select id="quality"><option value="ultra">最高画質</option><option value="high">高画質</option><option value="balanced">標準</option><option value="low">軽量</option></select></div><details class="settings-details" id="graphicsDetails"${settingsOpen.graphics ? " open" : ""}><summary>詳細設定</summary><div data-slot="sky-quality"></div><div class="settings-row"><label for="terrainShade">谷や崖の陰影<small>谷・沢・崖の足元・入り江の奥を、空の光が届きにくい分だけ暗くします</small></label><select id="terrainShade"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="eyeAdapt">明るさに目が慣れる<small>暗い所では少しずつ明るく見え、明るい所に出るとまぶしさがゆっくり引きます（夜と洞窟の暗さは保ちます）</small></label><select id="eyeAdapt"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="lightShafts">光の筋（木漏れ日）<small>森の中で、葉の隙間から差す日の光が、空気の中に筋になって見えます（全体のグラフィックが「軽量」では出ません）</small></label><select id="lightShafts"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="bloom">ブルーム（光のにじみ）<small>空・水のきらめき・火・水晶など、明るい所の光がやわらかくにじみます（全体のグラフィックが「軽量」では出ません）</small></label><select id="bloom"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="crownLight">木の日なたと日陰<small>木の茂みの日の当たる側を明るく、内側と反対側を暗くし、遠くの地面にも木の影の模様を落とします（木の形ごとに読み込み中に計算したものを使います）</small></label><select id="crownLight"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="renderResolution">描画解像度<small>3D映像の精細さと描画負荷</small></label><select id="renderResolution">${RESOLUTION_PRESETS.map((p) => `<option value="${p.value}">${p.label}</option>`).join("")}</select></div><p class="panel-copy resolution-note"><span id="renderResolutionValue" aria-live="polite"></span><br>画面の縦横比を保って描画します。文字や操作パネルの大きさは変わりません。</p><div class="settings-row"><label for="frameRate">フレームレート上限<small>滑らかさとCPU・GPUの負荷を調整</small></label><select id="frameRate">${FRAME_RATE_PRESETS.map((p) => `<option value="${p.value}">${p.label}</option>`).join("")}</select></div><p class="panel-copy">設定値は上限です。実際のFPSは画面のリフレッシュレートと処理性能に応じて変わります。</p><div class="craft-actions"><button class="outline-button" type="button" id="graphicsPresetReset">全体のグラフィックのおすすめに戻す</button></div></details></section><section class="settings-group"><h3>音</h3><div class="settings-row"><label for="volume">全体の音量</label><input id="volume" type="range" min="0" max="1" step=".05" value="${settings.volume}"></div>${[["effects", "効果音"], ["ambience", "自然・環境音"]].map(([key3, label]) => `<div class="settings-row"><label for="${key3}">${label}</label><input id="${key3}" type="range" min="0" max="1" step=".05" value="${settings[key3]}"></div>`).join("")}</section><section class="settings-group"><h3>操作</h3><div class="settings-row"><label for="fov">視野の広さ<small>主観視点の見える範囲</small></label><input id="fov" type="range" min="55" max="85" step="1" value="${settings.fov}"></div><div class="settings-row"><label for="sensitivity">視点の感度</label><input id="sensitivity" type="range" min=".2" max="1.6" step=".1" value="${settings.sensitivity}"></div></section><section class="settings-group"><h3>記録</h3><p class="panel-copy">島の記録は、このブラウザに自動で保存されます。閉じたあとも「つづきから」で再開できます。倒れると、その島の記録は消えます。</p><div class="craft-actions"><button class="outline-button" id="saveButton">記録する</button><button class="outline-button" id="fullscreenButton">全画面表示</button><button class="outline-button" id="guideButton">操作ガイド</button></div></section><div data-slot="world-reset"></div><details class="settings-details debug-settings" id="debugSettings"${settingsOpen.debug ? " open" : ""}><summary>デバッグ（確認用）</summary><p class="panel-copy">開発中に見た目や動きを確かめるための設定です。</p><div data-slot="time"></div><div data-slot="weather"></div><div data-slot="water"></div>${treeTierOptionsHtml(settings.quality, settings.treeTiers)}<section class="craft-block"><h3>パフォーマンス</h3><div class="settings-row"><label for="performanceDisplay">パフォーマンス表示<small>プレイ中のFPSや描画負荷を表示</small></label><select id="performanceDisplay"><option value="off">非表示</option><option value="basic">FPSのみ</option><option value="detail">詳細</option></select></div><p class="panel-copy">詳細ではCPU・GPUの処理時間、描画回数、三角形数などを表示します。GPU使用率ではありません。GPU計測に対応しない環境では「非対応」と表示されます。</p><div data-slot="diagnostics"></div></section></details><details class="asset-credits"><summary>素材クレジット</summary><p>地面・針葉樹・樹皮・環境光: <a href="https://polyhaven.com" target="_blank" rel="noreferrer">Poly Haven</a> (CC0)<br>鹿: CDmir / TinyWorlds (CC0)<br>描画: Three.js (MIT)<br>守護者: Čestmír Dammer (CC0)。広葉樹・松・下草・倒木・岩・石造遺跡・宝箱の出典は<a href="./ATTRIBUTION-environment.txt" target="_blank" rel="noreferrer">環境素材のクレジット</a>をご覧ください。</p><p>効果音: Kenney / qubodup (CC0)。風: Jonathan Shaw (InspectorJ) / AntumDeluge (CC BY 3.0)。川: Antoine Goumain (CC BY 4.0)。水場の足音: Blender Foundation (CC BY 3.0)、泳ぐ音: Peludo (CC0)。<a href="./audio/ATTRIBUTION.txt" target="_blank" rel="noreferrer">音素材の出典・ライセンス</a>。<a href="./audio/SOUNDSCAPE-ATTRIBUTION.txt" target="_blank" rel="noreferrer">追加した自然音の出典・ライセンス</a>。素材は音量・ループ・形式を調整。風・草葉・水・焚き火の音響補完とジャンプ・被弾の追加モーションは本作向けに制作。</p></details>`;
+    const slot = (name) => content.querySelector(`[data-slot="${name}"]`);
+    const skyRow = appendSkyQualityOptions(slot("sky-quality"), { quality: settings.skyQuality, onChanged: (quality) => {
       world.setSkyQuality(quality);
       settings.skyQuality = quality;
       saveSettings();
     } });
+    for (const [key3, id2] of [["graphics", "#graphicsDetails"], ["debug", "#debugSettings"]]) $(id2).addEventListener("toggle", (e) => {
+      settingsOpen[key3] = e.target.open;
+    });
+    const qualityNote = () => {
+      $("#qualityNote").textContent = graphicsPresetMatches(settings) ? "画質をまとめて切り替えます。切り替えると、詳細設定もその画質のおすすめに揃います" : "詳細設定を個別に変えています。全体を選び直すか、詳細設定の下のボタンで、おすすめに戻せます";
+    };
+    qualityNote();
+    $("#graphicsDetails").addEventListener("change", qualityNote);
+    $("#graphicsPresetReset").onclick = () => {
+      applyGraphicsPreset(skyRow);
+      saveSettings();
+      qualityNote();
+    };
     $("#quality").value = settings.quality;
     $("#quality").onchange = (e) => {
       settings.quality = e.target.value;
       world.setQuality(settings.quality);
       treeTierUi.setQuality(settings.quality);
+      applyGraphicsPreset(skyRow);
+      qualityNote();
       saveSettings();
       if (!state.started && initialContentReady) refreshPreparedRestore().catch((error) => {
         if (error.name === "AbortError") return;
@@ -61060,7 +63725,7 @@ function openPanel(type) {
       applyPerformanceDisplay();
       saveSettings();
       content.querySelector(".render-diagnostics")?.remove();
-      world.renderDiagnostics.appendSettings(content);
+      world.renderDiagnostics.appendSettings(slot("diagnostics"));
     };
     const treeTierUi = bindTreeTierOptions(content, { quality: settings.quality, tiers: settings.treeTiers, onChange: (tiers) => {
       settings.treeTiers = world ? applyTreeTiers(world, tiers) : normalizeTreeTiers(tiers);
@@ -61101,8 +63766,22 @@ function openPanel(type) {
       }
     };
     $("#guideButton").onclick = () => openPanel("help");
-    world.renderDiagnostics?.appendSettings(content);
-    appendWeatherOptions(content, { world, mode: settings.weather, strengths: settings.weatherStrengths, onStrengthsChanged: (value) => {
+    world.renderDiagnostics?.appendSettings(slot("diagnostics"));
+    if (survival) appendTimeOptions(slot("time"), { getMinute: () => survival.clock.minute, setMinute: (minute) => {
+      const m = survival.setMinuteOfDay(minute);
+      world.dayNight.update?.(playTime);
+      world.dayNight.jump?.();
+      world.needsFrame = true;
+      updateHUD();
+      save();
+      sound("uiSelect", { bus: "ui" });
+      return m;
+    }, flowing: survival.timeFlow !== 0, onFlow: (on) => {
+      survival.setTimeFlow(on);
+      updateHUD();
+      sound("uiSelect", { bus: "ui" });
+    } });
+    appendWeatherOptions(slot("weather"), { world, mode: settings.weather, strengths: settings.weatherStrengths, onStrengthsChanged: (value) => {
       settings.weatherStrengths = world.setWeatherStrengths(value);
       saveSettings();
     }, onChanged: (mode) => {
@@ -61112,11 +63791,11 @@ function openPanel(type) {
       updateHUD();
       sound("uiSelect", { bus: "ui" });
     } });
-    appendWaterLookOptions(content, { settings: settings.waterLook, onChanged: (value) => {
+    appendWaterLookOptions(slot("water"), { settings: settings.waterLook, onChanged: (value) => {
       settings.waterLook = world.setWaterLookSettings(value);
       saveSettings();
     } });
-    appendWorldResetOptions(content);
+    appendWorldResetOptions(slot("world-reset"));
     updateResolutionReadout();
   } else if (type === "help") {
     const controls = [["移動", "W A S D / 矢印"], ["見回す", "マウス / ドラッグ"], ["ダッシュ", "SHIFT"], ["ジャンプ・泳いで浮上", "SPACE"], ["泳いで潜る", "CTRL / C"], ["道具を振る・殴る", "左クリック"], ["食べる・使う・眠る", "右クリック / F"], ["拾う・火にくべる・焼く", "E"], ["持ち替え", "1〜0 / マウスホイール"], ["手に持った物を置く", "Q（SHIFT+Q でまとめて）"], ["つくる", "TAB / I"], ["地図", "M"], ["一時停止", "ESC"]];
@@ -61159,10 +63838,6 @@ $("#startButton").onclick = start;
 $("#settingsButton").onclick = () => openPanel("settings");
 $("#helpButton").onclick = () => openPanel("help");
 $("#closePanel").onclick = closePanel;
-$("#brandButton").onclick = (e) => {
-  e.preventDefault();
-  openPanel("journal");
-};
 document.querySelectorAll("[data-panel]").forEach((b) => b.onclick = () => openPanel(b.dataset.panel));
 $("#panel").addEventListener("cancel", (e) => {
   e.preventDefault();
@@ -61179,7 +63854,7 @@ window.addEventListener("keydown", (e) => {
   if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Tab"].includes(e.code) && state.started && !$("#panel").open) e.preventDefault();
   if (e.repeat) return;
   if ($("#panel").open) {
-    if (["KeyI", "KeyM", "Escape", "Tab"].includes(e.code)) {
+    if (["KeyI", "KeyM", "KeyJ", "Escape", "Tab"].includes(e.code)) {
       e.preventDefault();
       closePanel(e);
     }
@@ -61201,6 +63876,10 @@ window.addEventListener("keydown", (e) => {
   }
   if (e.code === "KeyM") {
     openPanel("map");
+    return;
+  }
+  if (e.code === "KeyJ") {
+    openPanel("journal");
     return;
   }
   if (e.code === "Slash") {
@@ -61363,7 +64042,7 @@ function devTeleport({ x, z, yaw: a, pitch: p, lift = 0, instant = false } = {})
   velocity.set(0, 0, 0);
   pos.set(x, height(x, z), z);
   if (Number.isFinite(a)) yaw = a;
-  if (Number.isFinite(p)) pitch = clamp55(p, -1.25, 1.25);
+  if (Number.isFinite(p)) pitch = clamp57(p, -1.25, 1.25);
   world.stream(x, z, !!instant);
   devHoverY = null;
   resetVerticalMotion();
@@ -61381,7 +64060,7 @@ function devCommands() {
     render: () => world.renderDiagnostics.snapshot(),
     water: () => {
       const s = world.realisticWater?.snapshot();
-      return s ? { bodies: s.bodies, bodyLimit: s.bodyLimit, owned: s.ownedFeatureIds, active: [...world.hydrologyWater?.activeFeatures?.values() || []].map((f10) => f10.id), issues: (s.issues || []).slice(0, 12), failures: s.constructionFailures } : null;
+      return s ? { bodies: s.bodies, bodyLimit: s.bodyLimit, owned: s.ownedFeatureIds, active: [...world.hydrologyWater?.activeFeatures?.values() || []].map((f12) => f12.id), issues: (s.issues || []).slice(0, 12), failures: s.constructionFailures } : null;
     },
     weather: ({ mode }) => {
       settings.weather = normalizeWeatherMode(mode);
@@ -61594,7 +64273,7 @@ function devCommands() {
     },
     look: ({ yaw: a, pitch: p }) => {
       if (Number.isFinite(a)) yaw = a;
-      if (Number.isFinite(p)) pitch = clamp55(p, -1.25, 1.25);
+      if (Number.isFinite(p)) pitch = clamp57(p, -1.25, 1.25);
       return { yaw, pitch };
     },
     time: ({ minute }) => {
@@ -61637,7 +64316,7 @@ function devCommands() {
       if (place) {
         survival.fires.build(place.kind || "campfire", Number.isFinite(place.x) ? place.x : pos.x - Math.sin(yaw) * 2.6, Number.isFinite(place.z) ? place.z : pos.z - Math.cos(yaw) * 2.6, place.fuel);
       }
-      if (remove === "fires") for (const f10 of [...survival.fires.list]) survival.fires.remove(f10);
+      if (remove === "fires") for (const f12 of [...survival.fires.list]) survival.fires.remove(f12);
       if (dark === false) survival.state.darkness.time = 0;
       updateHUD();
       return survival.diagnostics();
@@ -61750,7 +64429,7 @@ function openGpuDebug() {
   const pending = (async () => {
     await Promise.allSettled([previousClose, previousLoad]);
     if (!gpuDebugWanted || epoch !== gpuDebugEpoch) return null;
-    const { createGpuDebugRuntime } = await import("./chunk-DHVG7NH6.js");
+    const { createGpuDebugRuntime } = await import("./chunk-QH64SANJ.js");
     if (!gpuDebugWanted || epoch !== gpuDebugEpoch) return null;
     const runtime = await createGpuDebugRuntime({ world, host: gpuDebugHost(), onClose: () => closeGpuDebug({ resume: true }) });
     if (!gpuDebugWanted || epoch !== gpuDebugEpoch) {
@@ -61874,7 +64553,7 @@ canvas.addEventListener("pointermove", (e) => {
   const dx = e.clientX - lastPointer.x, dy = e.clientY - lastPointer.y;
   camMoved += Math.abs(dx) + Math.abs(dy);
   yaw -= dx * 6e-3 * settings.sensitivity;
-  pitch = clamp55(pitch + dy * 35e-4 * settings.sensitivity, -1.25, 1.25);
+  pitch = clamp57(pitch + dy * 35e-4 * settings.sensitivity, -1.25, 1.25);
   lastPointer = { x: e.clientX, y: e.clientY };
 });
 canvas.addEventListener("mousemove", (e) => {
@@ -61902,16 +64581,16 @@ canvas.addEventListener("mousemove", (e) => {
   mouseInside = true;
   if (cameraDragging) camMoved += Math.abs(dx) + Math.abs(dy);
   yaw -= dx * 32e-4 * settings.sensitivity;
-  pitch = clamp55(pitch + dy * 27e-4 * settings.sensitivity, -1.25, 1.25);
+  pitch = clamp57(pitch + dy * 27e-4 * settings.sensitivity, -1.25, 1.25);
 });
 window.addEventListener("pointerup", (e) => {
   if (e.button === 0) mouseAttackHeld = false;
 });
 window.addEventListener("mousemove", (e) => {
   if (!hoverLook || document.pointerLockElement === canvas || cameraDragging || e.sourceCapabilities?.firesTouchEvents || !active() || gpuDebugBlocksInput()) return;
-  const dx = clamp55(e.movementX || 0, -90, 90), dy = clamp55(e.movementY || 0, -90, 90);
+  const dx = clamp57(e.movementX || 0, -90, 90), dy = clamp57(e.movementY || 0, -90, 90);
   yaw -= dx * 32e-4 * settings.sensitivity;
-  pitch = clamp55(pitch + dy * 27e-4 * settings.sensitivity, -1.25, 1.25);
+  pitch = clamp57(pitch + dy * 27e-4 * settings.sensitivity, -1.25, 1.25);
 });
 canvas.addEventListener("pointerup", (e) => {
   if (!cameraDragging || e.pointerId !== pointerId) return;
@@ -62282,6 +64961,7 @@ try {
   startupProgress.begin("distant", { detail: "開始地点から見える遠方の森を準備しています" });
   await prepareInitialDistantForest(world, (progress) => startupProgress.report("distant", { completed: progress.completed, total: progress.total }));
   startupProgress.end("distant", "遠景の森を準備しました");
+  world.forestLife?.setEvents({ sound });
   world.colossalCreatures?.setEvents({
     sound,
     damage: damagePlayer,
@@ -62312,7 +64992,7 @@ try {
   });
   initialContentReady = true;
   await refreshPreparedRestore();
-  world.fieldOfView = clamp55(settings.fov || 68, 55, 85);
+  world.fieldOfView = clamp57(settings.fov || 68, 55, 85);
   resetVerticalMotion();
   world.player.rotation.y = -2.9;
   world.camera.position.set(pos.x + Math.sin(yaw) * 10, pos.y + 4.5, pos.z + 10);

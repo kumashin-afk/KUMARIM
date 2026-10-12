@@ -2,7 +2,7 @@ import {
   buildHandMeshes,
   paintHandToolTextures,
   paintPickableAtlas
-} from "./chunk-5NZIC2GL.js";
+} from "./chunk-7PWMME35.js";
 import "./chunk-MLKGABMK.js";
 
 // texture-paint-worker.js

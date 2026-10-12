@@ -614,7 +614,11 @@ var FINGERS = [
 var THUMB = { cmc: [0.0185, 0.017, 75e-4], length: [0.042, 0.031, 0.0255], radius: [0.0127, 0.0112, 0.0108, 0.01, 98e-4, 77e-4] };
 var POSES = {
   open: { fingers: [[9, 12, 6, 0.55], [10, 13, 6, 0.55], [11, 14, 7, 0.55], [13, 15, 8, 0.55]], thumb: [-5, 12, 25, 6, 10] },
-  relaxed: { fingers: [[58, 86, 48, 0.2], [64, 90, 50, 0.2], [70, 92, 50, 0.2], [74, 90, 48, 0.2]], thumb: null },
+  // v95: the empty hand rests a little open, its fingers gently curled (more
+  // towards the little finger), the thumb loose beside the index.
+  relaxed: { fingers: [[26, 38, 16, 0.35], [30, 44, 18, 0.35], [35, 48, 20, 0.35], [40, 50, 20, 0.35]], thumb: [6, 20, 34, 14, 18] },
+  // A loose fist: a punch, drawing a bowstring, taking hold of a thing.
+  fist: { fingers: [[58, 86, 48, 0.2], [64, 90, 50, 0.2], [70, 92, 50, 0.2], [74, 90, 48, 0.2]], thumb: null },
   grip: { fingers: null, thumb: null }
 };
 var HAFT = { radius: 0.0215, angle: 24 * DEG, centre: [0, 0.0705, 0.038] };
@@ -707,7 +711,7 @@ var smin = (a, b, k) => {
 function poseSkeleton(pose) {
   const def = POSES[pose];
   if (!def) throw new Error("Unknown hand pose " + pose);
-  const cup = pose === "open" ? 0 : 1;
+  const cup = pose === "open" ? 0 : pose === "relaxed" ? 0.5 : 1;
   const fingers = FINGERS.map((finger, i) => {
     const mcp = add(finger.mcp, [0, -cup * [0, 0, 15e-4, 3e-3][i], cup * [0, 8e-4, 3e-3, 65e-4][i]]);
     return { ...finger, mcp };
@@ -1165,17 +1169,18 @@ function mirrorHand(data) {
   return { ...data, position, normal, nail, index };
 }
 var BARE_HAND = Object.freeze({ haft: HAFT, poses: Object.keys(POSES) });
+var HAND_MESH_POSES = Object.freeze(["grip", "relaxed", "fist", "open"]);
 function buildHandMeshes(voxel = 24e-4) {
   const out = {}, buffers = [];
-  for (const pose of ["grip", "relaxed", "open"]) {
+  for (const pose of HAND_MESH_POSES) {
     const mesh = buildBareHand(pose, { voxel });
     out[pose] = mesh;
     buffers.push(mesh.position.buffer, mesh.normal.buffer, mesh.color.buffer, mesh.ao.buffer, mesh.nail.buffer, mesh.index.buffer);
   }
   out.stats = {
     voxel,
-    milliseconds: out.grip.stats.milliseconds + out.relaxed.stats.milliseconds + out.open.stats.milliseconds,
-    triangles: { grip: out.grip.stats.triangles, relaxed: out.relaxed.stats.triangles, open: out.open.stats.triangles }
+    milliseconds: HAND_MESH_POSES.reduce((sum, pose) => sum + out[pose].stats.milliseconds, 0),
+    triangles: Object.fromEntries(HAND_MESH_POSES.map((pose) => [pose, out[pose].stats.triangles]))
   };
   return { meshes: out, buffers };
 }

@@ -2,7 +2,7 @@ import {
   bakeCrownLight,
   generateTreeFamily,
   treeRadiusAt
-} from "./chunk-FSJQKUMD.js";
+} from "./chunk-J6NREPVJ.js";
 import "./chunk-MLKGABMK.js";
 
 // tree-worker.js

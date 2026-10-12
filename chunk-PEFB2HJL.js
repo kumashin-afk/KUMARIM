@@ -1,9 +1,9 @@
 import {
   GLTFLoader
-} from "./chunk-RLLM4NEF.js";
+} from "./chunk-OXYAMCCO.js";
 import {
   LoaderUtils
-} from "./chunk-7DPYFN6K.js";
+} from "./chunk-2ABRGHYR.js";
 import "./chunk-MLKGABMK.js";
 
 // model-pack.js

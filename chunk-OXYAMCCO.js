@@ -65,7 +65,7 @@ import {
   Vector2,
   Vector3,
   VectorKeyframeTrack
-} from "./chunk-7DPYFN6K.js";
+} from "./chunk-2ABRGHYR.js";
 
 // vendor/BufferGeometryUtils.js
 function mergeGeometries(geometries, useGroups = false) {

@@ -9,7 +9,7 @@ import {
   Matrix4,
   Vector3,
   three_module_exports
-} from "./chunk-7DPYFN6K.js";
+} from "./chunk-2ABRGHYR.js";
 import "./chunk-MLKGABMK.js";
 
 // rock-shatter-worker.js
