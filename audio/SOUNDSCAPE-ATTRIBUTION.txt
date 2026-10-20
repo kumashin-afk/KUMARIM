@@ -88,3 +88,9 @@ Recorded splashes converted to mono MP3, filtered and normalized for swimming st
 sc-frog-1.mp3 / sc-frog-2.mp3 / sc-frog-3.mp3 / sc-frog-4.mp3
 Synthesised for this game (v92) by scripts/synth-marsh-sfx.py: no recordings.
 Marsh frogs: buzzy pulses through vocal-sac formants, fixed seeds; mono MP3.
+
+sc-surf-sand.mp3 / sc-surf-pebble.mp3 / sc-surf-rock.mp3 / sc-insects-night.mp3 /
+sc-leaves.mp3 / sc-grass.mp3 / sc-stream.mp3 / sc-waterfall.mp3
+Synthesised for this game (v96.3) by scripts/synth-ambience-sfx.py: no recordings.
+The sea's surf on sand, shingle and rocks; the insects' night chorus; wind in
+leaves and in grass; a brook; a waterfall. Fixed seeds, seamless loops; mono MP3.
