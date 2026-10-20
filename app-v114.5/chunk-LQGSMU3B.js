@@ -6163,12 +6163,12 @@ function createDragonKit(THREE2, options = {}) {
       let nAir = 0;
       for (const n of LEGS2) {
         const f15 = this.feet[n];
-        const held = this.landHold && this.landHold[n];
-        const ov = held ? this._lhOv[n] : this.footOverride && this.footOverride.name === n ? this.footOverride : this.footOverride2 && this.footOverride2.name === n ? this.footOverride2 : null;
+        const held2 = this.landHold && this.landHold[n];
+        const ov = held2 ? this._lhOv[n] : this.footOverride && this.footOverride.name === n ? this.footOverride : this.footOverride2 && this.footOverride2.name === n ? this.footOverride2 : null;
         this.rig.pose.footFree[n] = !ov;
         f15.ov = ov;
         f15.s = 0;
-        f15.landHold = !!held;
+        f15.landHold = !!held2;
         if (ov) {
           f15.cur.copy(ov.pos);
           f15.pos.copy(ov.pos);
@@ -14592,9 +14592,9 @@ function createTreePools(THREE2, world2, families) {
     mesh2.matrixAutoUpdate = false;
     mesh2.renderOrder = pool.lod === "near" ? RENDER_ORDER.leafDepthNear : RENDER_ORDER.leafDepth;
     mesh2.userData.leafDepthFirst = true;
-    let held = 0;
+    let held2 = 0;
     mesh2.onBeforeRender = (renderer, scene, camera) => {
-      held = mesh2.count;
+      held2 = mesh2.count;
       pool.leafDepthCamera = null;
       const colour = pool.mesh, mode = world2.leafDepthFirst ?? "equal", gate = world2.shaderGate;
       const sameView = camera === colorCamera && colorView.equals(camera.matrixWorldInverse) && colorProjection.equals(camera.projectionMatrix);
@@ -14606,7 +14606,7 @@ function createTreePools(THREE2, world2, families) {
       }
     };
     mesh2.onAfterRender = () => {
-      mesh2.count = held;
+      mesh2.count = held2;
     };
     group.add(mesh2);
     return mesh2;
@@ -14622,13 +14622,13 @@ function createTreePools(THREE2, world2, families) {
     mesh2.frustumCulled = true;
     mesh2.boundingSphere = new THREE2.Sphere(new THREE2.Vector3(), 0.05);
     mesh2.instanceColor = new THREE2.InstancedBufferAttribute(new Float32Array(3), 3);
-    let held = 0;
+    let held2 = 0;
     mesh2.onBeforeRender = () => {
-      held = mesh2.count;
+      held2 = mesh2.count;
       mesh2.count = 0;
     };
     mesh2.onAfterRender = () => {
-      mesh2.count = held;
+      mesh2.count = held2;
     };
     mesh2.instanceMatrix.setUsage(THREE2.DynamicDrawUsage);
     if (pool.part.customDepthMaterial) mesh2.customDepthMaterial = poolDepthMaterials.get(pool.part.customDepthMaterial) || pool.part.customDepthMaterial;
@@ -15867,7 +15867,7 @@ function createShadowTargetSnapper({ resetDistance = SHADOW_SNAP_RESET_DISTANCE,
 }
 var SUN_DIRECTION_HOLD = 2e-3;
 function createSunDirectionHold({ angle = SUN_DIRECTION_HOLD } = {}) {
-  const held = new Vector3(), current = new Vector3();
+  const held2 = new Vector3(), current = new Vector3();
   let ready = false, limit = angle;
   return {
     get angle() {
@@ -15888,12 +15888,12 @@ function createSunDirectionHold({ angle = SUN_DIRECTION_HOLD } = {}) {
       const distance4 = current.length();
       if (!(distance4 > 0)) return false;
       current.divideScalar(distance4);
-      if (!ready || held.dot(current) < Math.cos(limit)) {
-        held.copy(current);
+      if (!ready || held2.dot(current) < Math.cos(limit)) {
+        held2.copy(current);
         ready = true;
         return true;
       }
-      light.position.copy(light.target.position).addScaledVector(held, distance4);
+      light.position.copy(light.target.position).addScaledVector(held2, distance4);
       light.updateMatrixWorld();
       return false;
     }
@@ -34926,7 +34926,7 @@ function prepareGrassAmbientAccessibility(profiles) {
 var MAX_TRIANGLES = 75e4;
 var MAX_DISTANCE = 8;
 var NEAR_GRASS_THIN = Object.freeze({ from: 4.5, keep: 0.55 });
-var NEAR_GRASS_FADE = Object.freeze({ thin: 0.4, band: 1.25, far: 4, lead: 0.35, maxLead: 3, slack: 0.35 });
+var NEAR_GRASS_FADE = Object.freeze({ thin: 0.4, band: 1.25, lead: 0.35, maxLead: 3, slack: 0.35 });
 function grassThinOf(b) {
   const v = b * 7.31 + 0.37;
   return v - Math.floor(v);
@@ -35026,8 +35026,12 @@ function decorateShader(material2, pool, far, cardFade = null) {
  transformed.z+=sin(uTime*.87+phase*1.7)*.025*position.y;
  transformed.xz+=grassWindShear*position.y;
  // v114.3: thinned clumps grow down into the ground, kept ones widened - from where the player is now (NEAR_GRASS_FADE).
+ // v114.4 (the user: a clump shrank away and grew again in the same place): the keep falls with the distance only - the
+ // far cards keep the near's thinning beyond the change (v114.3 brought them back to all past it: a clump in the later
+ // places stood as a card far off, sank between 8 and 12 m and grew again as a clump inside 8 m). Coming nearer, a clump
+ // only grows; going away, it only sinks.
  float grassKeepHere=1.;
- ${far ? `if(grassRadius>0.){grassKeepHere=grassDistance<grassRadius?grassKeepAt(grassDistance):mix(grassKeepAt(grassRadius),${(1 + NEAR_GRASS_FADE.thin / 2).toFixed(3)},smoothstep(grassRadius,grassRadius+${NEAR_GRASS_FADE.far.toFixed(2)},grassDistance));}` : "grassKeepHere=grassKeepAt(grassDistance);"}
+ ${far ? "if(grassRadius>0.)grassKeepHere=grassKeepAt(grassDistance);" : "grassKeepHere=grassKeepAt(grassDistance);"}
  float grassGrow=clamp((grassKeepHere-fract(instanceColor.b*7.31+.37))/${NEAR_GRASS_FADE.thin.toFixed(3)}+.5,0.,1.);
  // (None drawn where the other side has it whole: the cards inside the change, the clumps beyond it.)
  ${far ? `if(grassRadius>0.&&grassDistance<grassRadius-${NEAR_GRASS_FADE.band.toFixed(2)}-.05)grassGrow=0.;` : "if(grassDistance>grassRadius+.05)grassGrow=0.;"}
@@ -49980,6 +49984,77 @@ function walkOnlyMoving(group) {
     state2.skipped = skipped;
   };
   return state2;
+}
+var held = /* @__PURE__ */ new WeakMap();
+var holds = (o) => !(o.isLight || o.isCamera || o.isBone || o.isSkinnedMesh);
+function freezeParts(root2, state2) {
+  root2.traverse((o) => {
+    if (o.matrixAutoUpdate && holds(o)) {
+      o.updateMatrix();
+      o.matrixAutoUpdate = false;
+      state2.frozen++;
+    }
+  });
+}
+var placementOf = (o, out2) => {
+  const p2 = o.position, q = o.quaternion, s = o.scale;
+  out2[0] = p2.x;
+  out2[1] = p2.y;
+  out2[2] = p2.z;
+  out2[3] = q.x;
+  out2[4] = q.y;
+  out2[5] = q.z;
+  out2[6] = q.w;
+  out2[7] = s.x;
+  out2[8] = s.y;
+  out2[9] = s.z;
+  return out2;
+};
+var placementMoved = (o, at) => {
+  const p2 = o.position, q = o.quaternion, s = o.scale;
+  return p2.x !== at[0] || p2.y !== at[1] || p2.z !== at[2] || q.x !== at[3] || q.y !== at[4] || q.z !== at[5] || q.w !== at[6] || s.x !== at[7] || s.y !== at[8] || s.z !== at[9];
+};
+function holdStill(root2) {
+  if (!root2 || held.has(root2)) return held.get(root2) || null;
+  const state2 = { walks: 0, whole: 0, joined: 0, frozen: 0, moved: 0 };
+  held.set(root2, state2);
+  freezeParts(root2, state2);
+  const at = placementOf(root2, new Float64Array(10));
+  root2.matrixWorldNeedsUpdate = true;
+  root2.updateMatrixWorld = function(force) {
+    if (placementMoved(this, at)) {
+      this.updateMatrix();
+      placementOf(this, at);
+      this.matrixWorldNeedsUpdate = true;
+      state2.moved++;
+    }
+    if (force === true || this.matrixWorldNeedsUpdate) {
+      plainWalk.call(this, true);
+      state2.whole++;
+      return;
+    }
+    const children = this.children;
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      if (!holds(child)) {
+        child.updateMatrixWorld(false);
+        continue;
+      }
+      if (child.matrixAutoUpdate || child.matrixWorldNeedsUpdate) {
+        child.updateMatrixWorld(true);
+        freezeParts(child, state2);
+        state2.joined++;
+      }
+    }
+    state2.walks++;
+  };
+  return state2;
+}
+var STILL_SUBTREES = Object.freeze(["underworld-ways-in", "world-natural-details", "marsh-flora", "riparian-details", "forest-understory", "woody-understorey-pools", "environment-story-surfaces", "original-mineral-resource"]);
+var STILL_PREFIXES = Object.freeze(["environment-story:"]);
+function isStillSubtree(o) {
+  const n = o?.name || "";
+  return STILL_SUBTREES.includes(n) || STILL_PREFIXES.some((p2) => n.startsWith(p2));
 }
 
 // river-bank-resource.js
@@ -66254,13 +66329,13 @@ function createRockPools(world2, library, { ring: useRing = true } = {}) {
     mesh2.instanceMatrix.setUsage(DynamicDrawUsage);
     mesh2.customDepthMaterial = depth;
     mesh2.userData.shadowTwin = true;
-    let held = 0;
+    let held2 = 0;
     mesh2.onBeforeRender = () => {
-      held = mesh2.count;
+      held2 = mesh2.count;
       mesh2.count = 0;
     };
     mesh2.onAfterRender = () => {
-      mesh2.count = held;
+      mesh2.count = held2;
     };
     group.add(mesh2);
     return mesh2;
@@ -69625,8 +69700,8 @@ function attachShadowBodyTools(world2) {
   return avatar?.tools ?? null;
 }
 function attachTools(world2, avatar) {
-  const held = world2.firstPerson?.held;
-  if (!held?.tools) {
+  const held2 = world2.firstPerson?.held;
+  if (!held2?.tools) {
     avatar.tools = null;
     return;
   }
@@ -69636,7 +69711,7 @@ function attachTools(world2, avatar) {
   mount.matrixAutoUpdate = false;
   mount.matrix.makeBasis(x, y, z).setPosition(0, -0.02, 0.02);
   const tools = {}, inverse2 = new Matrix4(), materials = /* @__PURE__ */ new Map();
-  for (const [id2, source2] of Object.entries(held.tools)) {
+  for (const [id2, source2] of Object.entries(held2.tools)) {
     if (!source2?.isObject3D || !/^HandTool_/.test(source2.name || "")) continue;
     source2.updateWorldMatrix(true, true);
     inverse2.copy(source2.matrixWorld).invert();
@@ -75224,9 +75299,9 @@ async function loadFirstPerson(world2) {
   const ambient = new HemisphereLight(12703206, 7169620, 0.7), sun = new DirectionalLight(16770236, 3.2), fill = new DirectionalLight(12703452, 0.25);
   fill.position.set(1, 0, 2);
   scene.add(ambient, sun, fill, sun.target);
-  const held = createHandTools(three_module_exports, meshes, { quality: world2.quality });
-  rig.add(held.root);
-  held.root.traverse((o) => {
+  const held2 = createHandTools(three_module_exports, meshes, { quality: world2.quality });
+  rig.add(held2.root);
+  held2.root.traverse((o) => {
     if (o.isMesh) {
       o.frustumCulled = false;
       o.castShadow = false;
@@ -75234,12 +75309,12 @@ async function loadFirstPerson(world2) {
       for (const material2 of Array.isArray(o.material) ? o.material : [o.material]) material2.fog = false;
     }
   });
-  scene.add(held.viewLight);
-  world2.firstPerson = { scene, camera, rig, model: held.root, held, cycleWeapon: held.cycleWeapon, actions: {}, current: "idle", serial: -1, ambient, sun, fill, lastYaw: null, lastPitch: null, sway: new Vector2(), lookTarget: new Vector2(), lightingDirection: new Vector3(), inverseView: new Quaternion(), environmentView: new Quaternion(), environmentEuler: new Euler(), basePosition: new Vector3(), baseRotation: new Euler(), baseScale: 1 };
+  scene.add(held2.viewLight);
+  world2.firstPerson = { scene, camera, rig, model: held2.root, held: held2, cycleWeapon: held2.cycleWeapon, actions: {}, current: "idle", serial: -1, ambient, sun, fill, lastYaw: null, lastPitch: null, sway: new Vector2(), lookTarget: new Vector2(), lightingDirection: new Vector3(), inverseView: new Quaternion(), environmentView: new Quaternion(), environmentEuler: new Euler(), basePosition: new Vector3(), baseRotation: new Euler(), baseScale: 1 };
   const dispose = (event) => {
     if (event.persisted) return;
     window.removeEventListener("pagehide", dispose);
-    held.dispose();
+    held2.dispose();
     disposeFirstPersonCaveLighting(world2);
   };
   window.addEventListener("pagehide", dispose);
@@ -77804,6 +77879,11 @@ function freezeStaticChunk(group) {
     child.matrixAutoUpdate = false;
     frozen++;
   }
+  for (const child of group.children) if (child.matrixAutoUpdate && !child.children.length && !child.isMesh && /^resource:/.test(child.name)) {
+    child.updateMatrix();
+    child.matrixAutoUpdate = false;
+    frozen++;
+  }
   walkOnlyMoving(group);
   group.userData.staticFrozen = frozen;
   return frozen;
@@ -79009,6 +79089,11 @@ var World = class {
     else this.localLights.update(this.camera, this.scene);
     const matrixWalk = !this.inDungeon && this.sceneMatrixWalk !== false;
     if (matrixWalk) {
+      const seen = this.stillSeen || (this.stillSeen = /* @__PURE__ */ new WeakSet());
+      for (const child of this.scene.children) if (!seen.has(child)) {
+        seen.add(child);
+        if (isStillSubtree(child)) holdStill(child);
+      }
       this.scene.updateMatrixWorld();
       this.scene.matrixWorldAutoUpdate = false;
       this.sceneMatricesFresh = true;
@@ -95173,13 +95258,13 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
   let timeFlow = 1;
   world2.dayNight?.setDrive?.({ minute: () => clock2.minute, rate: () => PHASE_RATE[clock2.phase] * timeFlow, moonPhase: () => clock2.moonPhase, moonlight: () => moonlightScale(clock2.moonIllumination) });
   const inventory = () => state2.inventory;
-  const held = () => selectedSlot(state2.inventory);
-  const heldDef = () => ITEMS[held()?.id] || null;
+  const held2 = () => selectedSlot(state2.inventory);
+  const heldDef = () => ITEMS[held2()?.id] || null;
   function heldHand() {
     return heldDef()?.tool?.hand || "hand";
   }
   function syncHeld() {
-    const hand = heldHand(), item = hand === "hand" ? held()?.id ?? null : null, metal = heldDef()?.tool?.metal || null, key3 = hand + "/" + item + "/" + metal;
+    const hand = heldHand(), item = hand === "hand" ? held2()?.id ?? null : null, metal = heldDef()?.tool?.metal || null, key3 = hand + "/" + item + "/" + metal;
     if (key3 !== lastHand) {
       lastHand = key3;
       onHeldChange(hand, item, metal);
@@ -95234,7 +95319,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     if (resting) dt *= TENT_REST.rate;
     state2.clock += dt * timeFlow;
     survivalClock(state2.clock, clock2);
-    const p2 = player(), inCave = !!p2.inDungeon, slot = held();
+    const p2 = player(), inCave = !!p2.inDungeon, slot = held2();
     torchLit = slot?.id === "lantern" || (slot?.id === "torch" || !!p2.debugTorch) && !p2.swimming && !p2.underwater;
     if (resting) torchLit = false;
     if (torchLit && slot?.id === "torch" && !p2.debugTorch && burnTorch(state2.inventory, state2.inventory.selected, dt)) {
@@ -95361,7 +95446,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     return true;
   }
   function tend(fire) {
-    const index2 = state2.inventory.selected, slot = held(), def = heldDef();
+    const index2 = state2.inventory.selected, slot = held2(), def = heldDef();
     if (def?.smelt) return smelt(fire, index2, slot, def);
     if (def?.cooked) {
       if (!fires.burning(fire)) {
@@ -95520,7 +95605,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     return clock2.minute;
   }
   function use() {
-    const index2 = state2.inventory.selected, slot = held(), def = heldDef();
+    const index2 = state2.inventory.selected, slot = held2(), def = heldDef();
     if (!slot) {
       toast2("手に何も持っていない。1〜0 キーかホイールで持ち物を選ぶ。");
       return false;
@@ -95570,7 +95655,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     return false;
   }
   function drop(all = false) {
-    const index2 = state2.inventory.selected, slot = held();
+    const index2 = state2.inventory.selected, slot = held2();
     if (!slot) return false;
     const taken = takeAt(state2.inventory, index2, all ? slot.count : 1), p2 = player(), extra = {};
     for (const key3 of ["uses", "burn", "spoilAt"]) if (Number.isFinite(taken[key3])) extra[key3] = taken[key3];
@@ -95758,7 +95843,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     return true;
   }
   function heldInfo() {
-    const slot = held(), def = heldDef();
+    const slot = held2(), def = heldDef();
     if (!slot) return { name: "素手", hint: "左クリック: 殴る · E: 拾う・調べる" };
     if (def.tool?.burn) return { name: `${def.name}（残り ${Math.ceil(slot.burn ?? def.tool.burn)}秒）`, hint: "手に持つと燃えて闇を払う" };
     if (def.tool?.action === "shoot") {
@@ -95890,7 +95975,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     },
     // v110: one thrown net taken from the hand.
     throwOne() {
-      const slot = held(), def = heldDef();
+      const slot = held2(), def = heldDef();
       if (def?.kind !== "throw" || !slot) return false;
       takeAt(state2.inventory, state2.inventory.selected, 1);
       syncHeld();
@@ -95955,8 +96040,8 @@ function createSurvivalHud(root2, { onSelect = () => {
   const charmRow = el("div", "sv-charms", root2);
   let charmKey = "";
   const note = el("div", "sv-note", root2);
-  const held = el("div", "sv-held", root2, "<strong></strong><small></small>");
-  const heldName = held.querySelector("strong"), heldHint = held.querySelector("small");
+  const held2 = el("div", "sv-held", root2, "<strong></strong><small></small>");
+  const heldName = held2.querySelector("strong"), heldHint = held2.querySelector("small");
   const bar = el("div", "sv-bar", root2), slots2 = [];
   for (let i = 0; i < 15; i++) {
     const slot = el("button", "sv-slot", bar);
@@ -100160,9 +100245,9 @@ function fishWater(x, z) {
   return w && w.level > g + 0.2 ? { level: w.level } : null;
 }
 function rodTip() {
-  const held = world.firstPerson?.held, tip = held?.tools?.rodTip, fp = world.firstPerson?.camera;
-  if (tip && fp && held.state?.().weapon === "rod") {
-    held.root.updateWorldMatrix(true, true);
+  const held2 = world.firstPerson?.held, tip = held2?.tools?.rodTip, fp = world.firstPerson?.camera;
+  if (tip && fp && held2.state?.().weapon === "rod") {
+    held2.root.updateWorldMatrix(true, true);
     tip.getWorldPosition(rodTipAt);
     fp.updateMatrixWorld();
     rodTipAt.applyMatrix4(fp.matrixWorldInverse);
@@ -100719,10 +100804,10 @@ function keepAlive() {
 }
 var heldWanted = { hand: "hand", item: null };
 function applyHeld() {
-  const held = world?.firstPerson?.held;
-  if (!held?.setHeld) return;
-  if (debugModes.light === "torch") held.setHeld("torch", null);
-  else held.setHeld(heldWanted.hand, heldWanted.item, heldWanted.metal || null);
+  const held2 = world?.firstPerson?.held;
+  if (!held2?.setHeld) return;
+  if (debugModes.light === "torch") held2.setHeld("torch", null);
+  else held2.setHeld(heldWanted.hand, heldWanted.item, heldWanted.metal || null);
 }
 function setDebugLight(mode) {
   mode = normalizeDebugLight(mode);
@@ -102243,11 +102328,11 @@ function freezeGpuDebugCamera() {
   if (!grounded && !swimming.state.active) throw new Error("着地してから計測を開始してください。");
   if (attackTime > 0) throw new Error("道具を振り終えてから計測を開始してください。");
   if (gpuDebugFrozen) throw new Error("すでに視点を固定しています。");
-  const camera = world.camera, original = captureGpuDebugPhysics(), held = captureGpuDebugPhysics();
-  held.velocity.set(0, 0, 0);
-  held.verticalVelocity = 0;
-  held.moving = false;
-  const token2 = { world, viewportWidth: world.renderSize?.width ?? globalThis.innerWidth, viewportHeight: world.renderSize?.height ?? globalThis.innerHeight, poseGeneration: gpuDebugPoseGeneration, inDungeon: world.inDungeon, cave: world.currentCave, dead: state.dead, original, held, originalMove: movePlayer, camera: { position: camera.position.clone(), quaternion: camera.quaternion.clone(), up: camera.up.clone(), projection: camera.projectionMatrix.clone(), projectionInverse: camera.projectionMatrixInverse.clone(), fov: camera.fov, aspect: camera.aspect, near: camera.near, far: camera.far, zoom: camera.zoom, focus: camera.focus, filmGauge: camera.filmGauge, filmOffset: camera.filmOffset, view: camera.view ? { ...camera.view } : null }, eyeY: world.eyeY, wasAirborne: world.wasAirborne, playerPosition: world.player.position.clone(), playerQuaternion: world.player.quaternion.clone(), motion: world.player.userData.motion, restored: false };
+  const camera = world.camera, original = captureGpuDebugPhysics(), held2 = captureGpuDebugPhysics();
+  held2.velocity.set(0, 0, 0);
+  held2.verticalVelocity = 0;
+  held2.moving = false;
+  const token2 = { world, viewportWidth: world.renderSize?.width ?? globalThis.innerWidth, viewportHeight: world.renderSize?.height ?? globalThis.innerHeight, poseGeneration: gpuDebugPoseGeneration, inDungeon: world.inDungeon, cave: world.currentCave, dead: state.dead, original, held: held2, originalMove: movePlayer, camera: { position: camera.position.clone(), quaternion: camera.quaternion.clone(), up: camera.up.clone(), projection: camera.projectionMatrix.clone(), projectionInverse: camera.projectionMatrixInverse.clone(), fov: camera.fov, aspect: camera.aspect, near: camera.near, far: camera.far, zoom: camera.zoom, focus: camera.focus, filmGauge: camera.filmGauge, filmOffset: camera.filmOffset, view: camera.view ? { ...camera.view } : null }, eyeY: world.eyeY, wasAirborne: world.wasAirborne, playerPosition: world.player.position.clone(), playerQuaternion: world.player.quaternion.clone(), motion: world.player.userData.motion, restored: false };
   token2.wrappedMove = function() {
     if (!gpuDebugContextMatches(token2)) return token2.originalMove.apply(this, arguments);
     applyGpuDebugPhysics(token2.held);
@@ -102260,7 +102345,7 @@ function freezeGpuDebugCamera() {
   movePlayer = token2.wrappedMove;
   gpuDebugFrozen = token2;
   clearGpuDebugInput();
-  applyGpuDebugPhysics(held);
+  applyGpuDebugPhysics(held2);
   return token2;
 }
 function gpuDebugContextMatches(token2) {

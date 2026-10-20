@@ -41,7 +41,7 @@ var session = { get() {
 try {
   if (!document.hidden) await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
   if (globalThis.KUMARIM_MODEL_PACK) await import("./chunk-YLAF6CID.js");
-  await import("./chunk-4AJEZZIN.js");
+  await import("./chunk-LQGSMU3B.js");
   startup.status = "loaded";
   session.set(null);
 } catch (error) {
