@@ -10,6 +10,12 @@ var HITCH = Object.freeze({
   // A stop's record completes this long after it (the browser's account of
   // the long frame arrives a moment later) (ms).
   settleMs: 1500,
+  // v130 (the user: the menus' time out of the stop records): on a menu, the title or the fallen screen the game waits,
+  // drawing nothing (and a window hidden or covered draws nothing either). A long gap there whose own frames the page
+  // spent idle (scripts and blocking each under `idle` ms) is that waiting, not a stop: left out. One with the page's
+  // own work in it (a map being drawn, say) is kept. (Without the browser's account of long frames: kept, as before.)
+  idle: 50,
+  menu: /^(画面:|タイトル画面|倒れた画面)/,
   // Frame gaps counted by length (ms): how often play stutters at all.
   buckets: Object.freeze([50, 100, 150, 250, 500, 1e3])
 });
@@ -145,7 +151,22 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     for (const fn of perfListeners) safely(() => fn(entry));
   }
   function newAccumulator() {
-    return { phases: /* @__PURE__ */ new Map(), renders: [], tex: [0, 0, 0], buf: [0, 0, 0], shader: [0, 0], sync: [0, 0], links: 0, first: 0, firstNames: [], firstTarget: 0, firstTargetNames: [] };
+    return {
+      phases: /* @__PURE__ */ new Map(),
+      renders: [],
+      tex: [0, 0, 0],
+      buf: [0, 0, 0],
+      shader: [0, 0],
+      sync: [0, 0],
+      links: 0,
+      first: 0,
+      firstNames: [],
+      firstTarget: 0,
+      firstTargetNames: [],
+      /* v134 */
+      geo: [0, 0, 0],
+      geoNames: []
+    };
   }
   function programCount() {
     return renderer?.info?.programs?.length ?? 0;
@@ -170,6 +191,7 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     });
   }
   const gl = timing ? safely(() => renderer?.getContext?.()) : null;
+  const glTotals = { tex: [0, 0, 0], buf: [0, 0, 0], shader: [0, 0], sync: [0, 0] };
   if (gl) for (const [kind, names] of Object.entries(GL_TIMED)) for (const name of names) {
     const original = gl[name];
     if (typeof original !== "function") continue;
@@ -179,11 +201,20 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
       try {
         return original.apply(this, arguments);
       } finally {
-        const a = acc[kind];
+        const a = acc[kind], ms = now() - t0, g = glTotals[kind];
         a[0]++;
-        a[1] += now() - t0;
-        if (buffer) a[2] += bufferBytes(name, arguments);
-        else if (image) a[2] += texBytes(arguments);
+        a[1] += ms;
+        g[0]++;
+        g[1] += ms;
+        if (buffer) {
+          const b = bufferBytes(name, arguments);
+          a[2] += b;
+          g[2] += b;
+        } else if (image) {
+          const b = texBytes(arguments);
+          a[2] += b;
+          g[2] += b;
+        }
         if (counts) acc.links++;
       }
     }));
@@ -256,6 +287,28 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
   const layoutIds = /* @__PURE__ */ new WeakMap(), signatures = /* @__PURE__ */ new Map(), pairs = /* @__PURE__ */ new Set();
   const targetKinds = /* @__PURE__ */ new Map(), targetPairs = /* @__PURE__ */ new Set();
   const recentFirst = [];
+  const drawnGeometries = /* @__PURE__ */ new WeakSet();
+  const converted = (geometry) => {
+    for (const a of Object.values(geometry.attributes || {})) {
+      const array = a.isInterleavedBufferAttribute ? a.data.array : a.array;
+      if (a.itemSize === 3 && !(array instanceof Float32Array)) return true;
+    }
+    return false;
+  };
+  function noteGeometry(geometry, object, material) {
+    if (drawnGeometries.has(geometry)) return;
+    drawnGeometries.add(geometry);
+    const verts = (geometry.attributes?.position?.count || 0) * (object?.isInstancedMesh ? Math.max(1, object.count) : 1);
+    acc.geo[0]++;
+    acc.geo[1] += verts;
+    if (converted(geometry)) acc.geo[2] += verts;
+    const list = acc.geoNames;
+    if (list.length < 6 || verts > list[list.length - 1][1]) {
+      list.push([String(object?.name || material?.name || material?.type || "?").slice(0, 32), verts]);
+      list.sort((x, y) => y[1] - x[1]);
+      if (list.length > 6) list.length = 6;
+    }
+  }
   const noteFirst = (name) => {
     recentFirst.push({ at: now(), name });
     if (recentFirst.length > 48) recentFirst.shift();
@@ -312,6 +365,7 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
       try {
         const program = props.get(material)?.currentProgram;
         if (program && geometry && !(object?.isInstancedMesh && object.count === 0)) {
+          noteGeometry(geometry, object, material);
           const flags = (object?.isInstancedMesh ? 1 : 0) + (object?.instanceColor ? 2 : 0) + (object?.isSkinnedMesh ? 4 : 0);
           const key = (program.id * 8192 + layoutId(geometry)) * 8 + flags;
           if (!pairs.has(key)) {
@@ -344,7 +398,13 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
         for (const e of list.getEntries()) {
           const scripts = (e.scripts || []).filter((s) => s.duration >= 20).sort((a, b) => b.duration - a.duration).slice(0, 4).map((s) => ({ ms: Math.round(s.duration), invoker: String(s.invoker || s.invokerType || "").slice(0, 60), fn: String(s.sourceFunctionName || "").slice(0, 40), file: short(s.sourceURL), at: s.sourceCharPosition ?? -1 }));
           const end = e.startTime + e.duration, style = e.styleAndLayoutStart > 0 ? Math.round(end - e.styleAndLayoutStart) : 0, render = e.renderStart > 0 ? Math.round((e.styleAndLayoutStart > 0 ? e.styleAndLayoutStart : end) - e.renderStart) : 0;
-          frames.push({ start: e.startTime, end, ms: Math.round(e.duration), blocking: Math.round(e.blockingDuration || 0), scripts, style, render });
+          let scriptEnd = e.startTime, scriptMs = 0;
+          for (const s of e.scripts || []) {
+            scriptEnd = Math.max(scriptEnd, (s.startTime || 0) + (s.duration || 0));
+            scriptMs += s.duration || 0;
+          }
+          const wait = e.renderStart > 0 ? Math.max(0, Math.round(e.renderStart - scriptEnd)) : null;
+          frames.push({ start: e.startTime, end, ms: Math.round(e.duration), blocking: Math.round(e.blockingDuration || 0), scripts, style, render, wait, scriptMs: Math.round(scriptMs) });
           if (frames.length > HITCH.frames) frames.shift();
         }
       });
@@ -507,6 +567,10 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
       firstPrev: prev.first,
       firstNames,
       firstRecent,
+      // v134: the geometries first drawn in its frame and the one before ([count, vertices, converted vertices], the largest).
+      geo: a.geo.slice(),
+      geoPrev: prev.geo.slice(),
+      geoNames: [...a.geoNames, ...prev.geoNames].sort((x, y) => y[1] - x[1]).slice(0, 6),
       firstTarget: a.firstTarget,
       firstTargetPrev: prev.firstTarget,
       firstTargetNames: [...a.firstTargetNames, ...prev.firstTargetNames.filter((n) => !a.firstTargetNames.includes(n))].slice(0, 8),
@@ -531,9 +595,19 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
       h.scriptMs = matched.reduce((n, f) => n + f.scripts.reduce((m, s) => m + s.ms, 0), 0);
       h.laf = matched.length ? [matched.reduce((n, f) => n + f.ms, 0), matched.reduce((n, f) => n + f.blocking, 0), matched.length] : null;
       h.lafRender = matched.length ? [matched.reduce((n, f) => n + (f.style || 0), 0), matched.reduce((n, f) => n + (f.render || 0), 0)] : null;
+      h.lafFrames = matched.length ? matched.slice(0, 4).map((f) => [Math.round(f.start - h.begin), f.ms, f.blocking, f.scriptMs ?? null, f.wait ?? null, f.style || 0, f.render || 0]) : null;
       h.gpuFrames = typeof gpuFrames === "function" ? safely(() => (gpuFrames() || []).filter((g) => g.at >= h.begin - 250 && g.at <= h.at + 30).slice(-4).map((g) => [Math.round(g.at - h.begin), g.ms === null ? g.kind : Math.round(g.ms)])) : null;
       h.pageChanges = pageChanges.filter((c) => c.at >= h.begin - 2e3 && c.at <= h.at).slice(-8).map((c) => [Math.round(h.at - c.at), c.text + (c.more ? " (+" + c.more + ")" : "")]);
       h.settled = true;
+      const gpuBusy = !!h.gpu && (h.gpu.done === null || h.gpu.done > HITCH.idle);
+      if (observer && HITCH.menu.test(h.screen || "") && (h.laf ? h.laf[1] < HITCH.idle : true) && (h.scriptMs ?? 0) < HITCH.idle && !gpuBusy) {
+        const i = hitches.indexOf(h);
+        if (i >= 0) hitches.splice(i, 1);
+        stats.stops = Math.max(0, stats.stops - 1);
+        stats.menuWaits = (stats.menuWaits || 0) + 1;
+        h.dropped = true;
+        return;
+      }
       for (const fn of listeners) safely(() => fn(h));
     };
     if (safely(() => later(settle, HITCH.settleMs)) === null) settle();
@@ -599,6 +673,7 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     if (h.programNames?.length) lines.push("   シェーダー: " + h.programNames.join(", "));
     if (h.firstNames?.length) lines.push(`   初めての描画（${h.first} + 前のフレーム ${h.firstPrev}）: ` + h.firstNames.join(", "));
     if (h.firstTargetNames?.length) lines.push(`   初めての描き先（${h.firstTarget} + 前のフレーム ${h.firstTargetPrev}）: ` + h.firstTargetNames.join(", "));
+    if (h.geo?.[0] || h.geoPrev?.[0]) lines.push(`   初めて描いた形 ${h.geo?.[0] ?? 0} + 前のフレーム ${h.geoPrev?.[0] ?? 0}（頂点 ${(h.geo?.[1] ?? 0) + (h.geoPrev?.[1] ?? 0)}、うち変換 ${(h.geo?.[2] ?? 0) + (h.geoPrev?.[2] ?? 0)}）: ` + (h.geoNames || []).map(([n, v]) => `${n} ${v}`).join(", "));
     for (const s of h.scripts || []) lines.push(`   ${s[0]} ms ${s[1]} ${s[2]} ${s[3]}`);
     return lines;
   }
@@ -625,7 +700,7 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     return () => perfListeners.delete(fn);
   }
   function snapshotStats() {
-    return { frames: stats.frames, playSeconds: Math.round(stats.playMs / 1e3), stops: stats.stops, over: Object.fromEntries(HITCH.buckets.map((b, i) => [b, stats.over[i]])) };
+    return { frames: stats.frames, playSeconds: Math.round(stats.playMs / 1e3), stops: stats.stops, menuWaits: stats.menuWaits || 0, over: Object.fromEntries(HITCH.buckets.map((b, i) => [b, stats.over[i]])) };
   }
   function dispose() {
     if (disposed) return;
@@ -647,6 +722,7 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     listeners.clear();
     perfListeners.clear();
   }
+  const since = (at = now()) => round1((at - started) / 1e3);
   return {
     note,
     frame,
@@ -661,6 +737,9 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     onHitch,
     onPerf,
     dispose,
+    since,
+    /* v138 */
+    glTotals: () => ({ bufCalls: glTotals.buf[0], bufMs: glTotals.buf[1], bufKB: glTotals.buf[2] / 1024, texCalls: glTotals.tex[0], texMs: glTotals.tex[1], texKB: glTotals.tex[2] / 1024, shaderCalls: glTotals.shader[0], syncCalls: glTotals.sync[0], syncMs: glTotals.sync[1] }),
     hitches,
     frames,
     entries: () => hitches,

@@ -8,7 +8,7 @@ import {
   Matrix4,
   Vector3,
   three_module_exports
-} from "./chunk-UPROFF5E.js";
+} from "./chunk-PH5TGXXA.js";
 import "./chunk-HGFZA34L.js";
 import "./chunk-MLKGABMK.js";
 

@@ -233,6 +233,8 @@ function createOceanDomain(THREE, body, island) {
   const cameraPosition = new THREE.Vector3();
   let disposed = false, anchorX = NaN, anchorZ = NaN, ownedGeometry = null;
   let worker = null, serial = 0, inFlight = null, queued = null, completed = null, desired = null;
+  const built = /* @__PURE__ */ new Map(), keyOf = (t) => t.x + "," + t.z;
+  let movedX = 0, movedZ = 0, lastCameraX = NaN, lastCameraZ = NaN;
   let workerFailed = false, warnedWorker = false, warnedLag = false, vertexCapacity = 0, indexCapacity = 0;
   const state = {
     sourceReads: 1,
@@ -254,6 +256,8 @@ function createOceanDomain(THREE, body, island) {
     anchorLagLimitMeters: lagLimit,
     lagFallbacks: 0,
     staleReplies: 0,
+    prefetches: 0,
+    readyCommits: 0,
     geometry: null,
     worker: { supported: typeof globalThis.Worker === "function", ready: false, inFlight: false, queued: false, failures: 0, lastError: null, lastBuildMs: 0 }
   };
@@ -276,6 +280,7 @@ function createOceanDomain(THREE, body, island) {
     inFlight = null;
     queued = null;
     completed = null;
+    built.clear();
     state.worker.failures++;
     state.worker.lastError = String(message);
     state.worker.ready = false;
@@ -303,7 +308,7 @@ function createOceanDomain(THREE, body, island) {
       return;
     }
     try {
-      worker = new globalThis.Worker(new URL("./ocean-domain-worker-O66V2JVX.js", import.meta.url), { type: "module" });
+      worker = new globalThis.Worker(new URL("./ocean-domain-worker-327JTUGO.js", import.meta.url), { type: "module" });
       worker.onmessage = (event) => {
         if (disposed || workerFailed) return;
         const message = event.data;
@@ -331,12 +336,12 @@ function createOceanDomain(THREE, body, island) {
           return;
         }
         state.worker.lastBuildMs = message.buildMs;
-        if (sameAnchor(target, desired) && (target.x !== anchorX || target.z !== anchorZ)) completed = { target, result: message.result, buildMs: message.buildMs };
-        else state.staleReplies++;
+        built.set(keyOf(target), { target, result: message.result, buildMs: message.buildMs });
+        while (built.size > 4) built.delete(built.keys().next().value);
         const next = queued;
         queued = null;
         syncWorkerStats();
-        if (next && !sameAnchor(next, target)) dispatch(next);
+        if (next && !built.has(keyOf(next))) dispatch(next);
       };
       worker.onerror = (event) => {
         event.preventDefault?.();
@@ -414,27 +419,67 @@ function createOceanDomain(THREE, body, island) {
     if (![cameraPosition.x, cameraPosition.z].every(finite)) throw new TypeError("Finite camera world position required");
     desired = { x: Math.round(cameraPosition.x / snap) * snap, z: Math.round(cameraPosition.z / snap) * snap };
     validateAnchor(desired);
-    if (completed) {
-      if (sameAnchor(completed.target, desired)) commit(completed.result, completed.target, completed.buildMs);
-      else state.staleReplies++;
-      completed = null;
-    }
+    completed = null;
     if (!finite(anchorX)) buildSynchronously(desired);
     else if (desired.x !== anchorX || desired.z !== anchorZ) {
-      const lag = Math.hypot(anchorX - cameraPosition.x, anchorZ - cameraPosition.z);
-      if (!worker || workerFailed || lag > lagLimit) {
-        if (worker && lag > lagLimit) {
-          state.lagFallbacks++;
-          if (!warnedLag) {
-            warnedLag = true;
-            console.warn("[OceanDomain] Worker anchor lag exceeded the finest mesh region; applying a bounded synchronous correction.");
+      const ready = built.get(keyOf(desired));
+      if (ready) {
+        built.delete(keyOf(desired));
+        commit(ready.result, ready.target, ready.buildMs);
+        state.readyCommits++;
+        queued = null;
+      } else {
+        const lag = Math.hypot(anchorX - cameraPosition.x, anchorZ - cameraPosition.z);
+        let best = null, bestLag = lag;
+        if (lag > lagLimit) for (const entry of built.values()) {
+          const l = Math.hypot(entry.target.x - cameraPosition.x, entry.target.z - cameraPosition.z);
+          if (l <= lagLimit && l < bestLag) {
+            best = entry;
+            bestLag = l;
           }
         }
-        buildSynchronously(desired);
-        queued = null;
-      } else if (!inFlight) dispatch(desired);
-      else queued = sameAnchor(inFlight, desired) ? null : { ...desired };
+        if (best) {
+          built.delete(keyOf(best.target));
+          commit(best.result, best.target, best.buildMs);
+          state.readyCommits++;
+        }
+        if (!best && (!worker || workerFailed || lag > lagLimit)) {
+          if (worker && lag > lagLimit) {
+            state.lagFallbacks++;
+            if (!warnedLag) {
+              warnedLag = true;
+              console.warn("[OceanDomain] Worker anchor lag exceeded the finest mesh region; applying a bounded synchronous correction.");
+            }
+          }
+          buildSynchronously(desired);
+          queued = null;
+        } else if (desired.x !== anchorX || desired.z !== anchorZ) {
+          if (!inFlight) dispatch(desired);
+          else queued = sameAnchor(inFlight, desired) ? null : { ...desired };
+        }
+      }
     } else queued = null;
+    if (finite(lastCameraX)) {
+      movedX = cameraPosition.x - lastCameraX || movedX;
+      movedZ = cameraPosition.z - lastCameraZ || movedZ;
+    }
+    lastCameraX = cameraPosition.x;
+    lastCameraZ = cameraPosition.z;
+    if (worker && !workerFailed && !inFlight && !queued && finite(anchorX)) {
+      const dx = cameraPosition.x - anchorX, dz = cameraPosition.z - anchorZ, ahead = snap / 4;
+      const next = { x: anchorX + (dx > ahead && movedX > 0 ? snap : dx < -ahead && movedX < 0 ? -snap : 0), z: anchorZ + (dz > ahead && movedZ > 0 ? snap : dz < -ahead && movedZ < 0 ? -snap : 0) };
+      if ((next.x !== anchorX || next.z !== anchorZ) && !built.has(keyOf(next))) {
+        try {
+          dispatch(next);
+          state.prefetches++;
+        } catch {
+        }
+      }
+    }
+    for (const [key, entry] of built) if (Math.abs(entry.target.x - desired.x) > 2 * snap || Math.abs(entry.target.z - desired.z) > 2 * snap) {
+      built.delete(key);
+      state.staleReplies++;
+    }
     syncWorkerStats();
     group.position.set(anchorX - cameraPosition.x, 0, anchorZ - cameraPosition.z);
     group.updateMatrixWorld(true);
@@ -451,6 +496,7 @@ function createOceanDomain(THREE, body, island) {
     inFlight = null;
     queued = null;
     completed = null;
+    built.clear();
     syncWorkerStats();
     state.worker.ready = false;
     body.geometry = originalGeometry;

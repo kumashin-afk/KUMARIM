@@ -503,7 +503,7 @@ function shatterRockGeometry(THREE, geometry, { pieces = 8, seed = 1, ground = n
   }
   return { pieces: out, cuts, failures };
 }
-function createRockShatter(THREE, { workerUrl = new URL("./rock-shatter-worker-D667JCJT.js", import.meta.url), onBite = null } = {}) {
+function createRockShatter(THREE, { workerUrl = new URL("./rock-shatter-worker-NZ5YWLZL.js", import.meta.url), onBite = null } = {}) {
   let worker = null, sequence = 0, disposed = false, failed = false;
   const waiting = /* @__PURE__ */ new Map(), rocks = /* @__PURE__ */ new Map();
   const decode = (piece) => {

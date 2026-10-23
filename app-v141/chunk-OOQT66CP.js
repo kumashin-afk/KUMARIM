@@ -1,7 +1,7 @@
 import {
   WORLD_PHASES,
   createRenderDiagnostics
-} from "./chunk-4CSLR7WU.js";
+} from "./chunk-PQBXPXLA.js";
 import {
   Box3,
   Color,
@@ -11,7 +11,7 @@ import {
   Sphere,
   Vector3,
   Vector4
-} from "./chunk-UPROFF5E.js";
+} from "./chunk-PH5TGXXA.js";
 import "./chunk-MLKGABMK.js";
 
 // gpu-debug-metrics.js
@@ -61,6 +61,13 @@ function createGpuDebugMetrics({ renderer, now = () => performance.now(), getTag
   const originalRender = renderer.render, originalDirect = renderer.renderBufferDirect;
   let disposed = false, measuring = false, renderDepth = 0, renderStarted = 0, renderMs = 0, renderCalls = 0;
   let lastFrame = null, lastGpu = null;
+  let idleSince = 0, idleHandle = null;
+  const idle = (deadline) => {
+    if (disposed) return;
+    idleSince += Math.max(0, Math.min(50, deadline?.timeRemaining?.() ?? 0));
+    idleHandle = safely(() => page?.requestIdleCallback?.(idle)) ?? null;
+  };
+  idleHandle = safely(() => page?.requestIdleCallback?.(idle)) ?? null;
   function publish(type, sample, callback) {
     if (typeof callback === "function") safely(() => callback(sample));
     if (listeners.size) {
@@ -71,7 +78,16 @@ function createGpuDebugMetrics({ renderer, now = () => performance.now(), getTag
   function receiveFrame(sample) {
     if (disposed) return;
     const elapsed = Math.min(sample.cpuMs, Math.max(0, renderMs));
-    const result = { ...sample, renderMs: elapsed, updateMs: Math.max(0, sample.cpuMs - elapsed), renderCalls, meshes: typeof originalDirect === "function" ? meshes.size : null };
+    const result = {
+      ...sample,
+      renderMs: elapsed,
+      updateMs: Math.max(0, sample.cpuMs - elapsed),
+      renderCalls,
+      meshes: typeof originalDirect === "function" ? meshes.size : null,
+      /* v138 */
+      idleMs: idleHandle === null && !idleSince ? null : idleSince
+    };
+    idleSince = 0;
     lastFrame = result;
     frames.add(result);
     publish("frame", result, onFrame);
@@ -213,6 +229,8 @@ function createGpuDebugMetrics({ renderer, now = () => performance.now(), getTag
     measuring = false;
     disposed = true;
     disposeDiagnostics();
+    if (idleHandle !== null) safely(() => page?.cancelIdleCallback?.(idleHandle));
+    idleHandle = null;
     if (renderer.render === countedRender) renderer.render = originalRender;
     if (renderer.renderBufferDirect === countedDirect) renderer.renderBufferDirect = originalDirect;
     page?.removeEventListener("pagehide", onPageHide);
@@ -237,11 +255,16 @@ var DEFAULT_FLAGS = Object.freeze({
   rocks: true,
   grass: true,
   transparent: true,
+  // v138 (the F3 benchmark: what v131-v137 added, measured in the same run): the fish (island-fish.js: their update and
+  // their draws) and the first-person view (the hands and what they hold: its whole render).
+  fish: true,
+  hands: true,
   terrainDistance: 1,
   pixelRatio: "current"
 });
 var CATEGORIES = ["terrain", "waterSurface", "sky", "trees", "rocks", "grass", "transparent", "other"];
 var MAX_VISITED = 65536;
+var SCAN_EVERY = 12;
 var installed = /* @__PURE__ */ new WeakMap();
 var positive = (value, fallback) => Number.isFinite(value) && value > 0 ? value : fallback;
 var materialsOf = (object) => Array.isArray(object.material) ? object.material : object.material ? [object.material] : [];
@@ -310,6 +333,8 @@ function installGpuDebugScene({ world } = {}) {
     rocks: true,
     grass: true,
     transparent: true,
+    fish: !!world.islandFish,
+    hands: !!world.firstPerson,
     terrainDistance: true,
     pixelRatio: typeof world.resize === "function" && typeof renderer.setDrawingBufferSize === "function",
     individualPostPasses: false,
@@ -325,7 +350,7 @@ function installGpuDebugScene({ world } = {}) {
     "Terrain materials with intersecting local clipping, custom depth/distance materials, or sharing with nonterrain are skipped to preserve their semantics.",
     "Scene totals count unique Mesh objects before debug masks, excluding Points/Line/Sprite. Category totals overlap and include those renderables. Instances and draw calls are not mesh objects; frustum counts are unknown for instanced/skinned/unbounded objects.",
     "First use of fog, shadow, and clipping alternatives can compile shader variants; compare only after warmup.",
-    `Scene classification is bounded to ${MAX_VISITED} objects once per world frame, or per independent renderer call; counts can be truncated.`
+    `Scene classification is bounded to ${MAX_VISITED} objects, made again every world frame while anything is masked (and every ${SCAN_EVERY} frames otherwise, with the counts); counts can be truncated.`
   ]);
   function emptyCount() {
     return { meshes: 0, visible: 0, frustumIntersecting: 0, frustumUnknown: 0 };
@@ -370,29 +395,49 @@ function installGpuDebugScene({ world } = {}) {
     terrain.baseDistance = positive(extent, 1024);
     terrain.cutoffDistance = terrain.baseDistance;
   }
+  const classified = /* @__PURE__ */ new WeakMap(), ROOT = { descend: /* @__PURE__ */ new Set(), serial: 0 };
+  let classSerial = 0;
+  function classifiedOf(object, parent) {
+    const ref = references.get(object), material = object.material, see = material && !Array.isArray(material) ? material.transparent : null;
+    let c = classified.get(object);
+    if (c && c.parentSerial === parent.serial && c.ref === ref && c.name === object.name && c.geometry === object.geometry && c.material === material && c.see === see && c.nature === object.userData?.natureType) return c;
+    const categories = classify(object, parent.descend, references, world);
+    let entry = null;
+    if (renderable(object)) {
+      if (!categories.has("waterSurface") && !categories.has("sky") && materialsOf(object).some((m) => m.transparent)) categories.add("transparent");
+      if (!categories.size) categories.add("other");
+      entry = { object, categories };
+    }
+    const descend = new Set(categories);
+    descend.delete("transparent");
+    descend.delete("other");
+    const same = c && c.descend.size === descend.size && [...descend].every((k) => c.descend.has(k));
+    c = { parentSerial: parent.serial, ref, name: object.name, geometry: object.geometry, material, see, nature: object.userData?.natureType, entry, descend: same ? c.descend : descend, serial: same ? c.serial : ++classSerial };
+    classified.set(object, c);
+    return c;
+  }
   function scan(scene) {
     refreshReferences();
-    const entries = [], lights = [], stack = [[scene, /* @__PURE__ */ new Set()]], materialUsers = /* @__PURE__ */ new Map();
+    const entries = [], lights = [], stack = [scene], inherit = [ROOT], materialUsers = /* @__PURE__ */ new Map();
     let visited = 0;
     while (stack.length && visited < MAX_VISITED) {
-      const [object, inherited] = stack.pop();
+      const object = stack.pop(), from = inherit.pop();
       visited++;
-      const categories = classify(object, inherited, references, world);
+      const c = classifiedOf(object, from);
       if (object.isLight) lights.push(object);
-      if (renderable(object)) {
-        if (!categories.has("waterSurface") && !categories.has("sky") && materialsOf(object).some((material) => material.transparent)) categories.add("transparent");
-        if (!categories.size) categories.add("other");
-        entries.push({ object, categories });
+      if (c.entry) {
+        entries.push(c.entry);
+        const terrainUser = c.entry.categories.has("terrain");
         for (const material of materialsOf(object)) {
           let users = materialUsers.get(material);
           if (!users) materialUsers.set(material, users = { terrain: false, other: false });
-          users[categories.has("terrain") ? "terrain" : "other"] = true;
+          users[terrainUser ? "terrain" : "other"] = true;
         }
       }
-      const descend = new Set(categories);
-      descend.delete("transparent");
-      descend.delete("other");
-      for (let i = (object.children?.length || 0) - 1; i >= 0; i--) stack.push([object.children[i], descend]);
+      for (let i = (object.children?.length || 0) - 1; i >= 0; i--) {
+        stack.push(object.children[i]);
+        inherit.push(c);
+      }
     }
     stats.scans++;
     stats.visited = visited;
@@ -451,6 +496,7 @@ function installGpuDebugScene({ world } = {}) {
   function drawScope(original, receiver, args) {
     if (disposed) return original.apply(receiver, args);
     const [scene, camera] = args;
+    if (!flags.hands && scene && scene === world.firstPerson?.scene) return;
     if (!scene || !(scene === world.scene || scene === world.outdoor || scene === world.dungeon)) return original.apply(receiver, args);
     if (!updateDepth && !renderDepth) frame++;
     renderDepth++;
@@ -466,13 +512,19 @@ function installGpuDebugScene({ world } = {}) {
       object[key] = value;
     };
     try {
-      const cached = registry.get(scene), data = !cached || cached.frame !== frame || renderDepth > 1 ? scan(scene) : cached;
-      if (renderDepth === 1) updateCounts(data, scene, camera);
+      const masks = CATEGORIES.some((key) => currentFlags[key] === false) || currentFlags.terrainDistance !== 1;
+      const cached = registry.get(scene), stale = !cached || frame < cached.frame || (masks ? cached.frame !== frame || renderDepth > 1 : frame - cached.frame >= SCAN_EVERY);
+      const data = stale ? scan(scene) : cached;
+      if (renderDepth === 1 && stale) updateCounts(data, scene, camera);
       if (!currentFlags.shadows && renderer.shadowMap) {
         set(renderer.shadowMap, "enabled", false);
         for (const light of data.lights) set(light, "castShadow", false);
       }
       if (!currentFlags.fog) set(scene, "fog", null);
+      if (!currentFlags.fish) {
+        const fish = fishGroup();
+        if (fish) set(fish, "visible", false);
+      }
       if (!currentFlags.sky && scene !== world.dungeon && world.sky?.skyMesh && visibleInHierarchy(world.sky.skyMesh, scene)) set(scene, "background", flatBackground);
       const distance = terrain.baseDistance * currentFlags.terrainDistance;
       terrain.cutoffDistance = distance;
@@ -487,7 +539,7 @@ function installGpuDebugScene({ world } = {}) {
         clipping[2].constant = distance - center.z;
         clipping[3].constant = distance + center.z;
       }
-      for (const { object, categories } of data.entries) {
+      if (masks) for (const { object, categories } of data.entries) {
         for (const category of categories) {
           if (Object.hasOwn(currentFlags, category) && currentFlags[category] === false) {
             set(object, "visible", false);
@@ -589,6 +641,11 @@ function installGpuDebugScene({ world } = {}) {
       pixelRatio: { requested: flags.pixelRatio, actual: renderer.getPixelRatio?.() ?? world.renderSize?.pixelRatio ?? null }
     };
   }
+  let fishCache = null;
+  function fishGroup() {
+    if (!fishCache || !fishCache.parent) fishCache = world.scene?.getObjectByName?.("island-fish") || null;
+    return fishCache;
+  }
   function setFlags(patch) {
     if (disposed) throw new Error("GPU scene isolation is disposed");
     const previous = flags, next = validateFlags(flags, patch);
@@ -668,6 +725,10 @@ function installGpuDebugScene({ world } = {}) {
     wrapMethod(atmosphere, "render", (original) => function(...args) {
       return bypassPost(original, this, args);
     }, disposers);
+    if (world.islandFish) wrapMethod(world.islandFish, "update", (original) => function(...args) {
+      if (!disposed && !flags.fish) return;
+      return original.apply(this, args);
+    }, disposers);
   } catch (error) {
     disposed = true;
     for (let i = disposers.length - 1; i >= 0; i--) disposers[i]();
@@ -679,9 +740,24 @@ function installGpuDebugScene({ world } = {}) {
 }
 
 // gpu-debug-benchmark.js
-var GPU_DEBUG_BOOLEAN_KEYS = Object.freeze(["shadows", "waterReflection", "waterRefraction", "waterSurface", "sky", "post", "fog", "trees", "rocks", "grass", "transparent"]);
+var GPU_DEBUG_BOOLEAN_KEYS = Object.freeze([
+  "shadows",
+  "waterReflection",
+  "waterRefraction",
+  "waterSurface",
+  "sky",
+  "post",
+  "fog",
+  "trees",
+  "rocks",
+  "grass",
+  "transparent",
+  /* v138 */
+  "fish",
+  "hands"
+]);
 var GPU_DEBUG_DEFAULT_FLAGS = Object.freeze(Object.fromEntries([...GPU_DEBUG_BOOLEAN_KEYS.map((key) => [key, true]), ["terrainDistance", 1], ["pixelRatio", "current"]]));
-var GPU_DEBUG_LABELS = Object.freeze({ shadows: "影", waterReflection: "水の反射（SSR 含む）", waterRefraction: "水の屈折用キャプチャ", waterSurface: "水面メッシュ", sky: "空のシェーダー", post: "統合ポスト処理（AA・AO・光・色）", fog: "地形・物体の霧", trees: "木", rocks: "岩", grass: "草", transparent: "透明物・パーティクル", terrainDistance: "地形の表示距離", pixelRatio: "描画ピクセル比" });
+var GPU_DEBUG_LABELS = Object.freeze({ shadows: "影", waterReflection: "水の反射（SSR 含む）", waterRefraction: "水の屈折用キャプチャ", waterSurface: "水面メッシュ", sky: "空のシェーダー", post: "統合ポスト処理（AA・AO・光・色）", fog: "地形・物体の霧", trees: "木", rocks: "岩", grass: "草", transparent: "透明物・パーティクル", fish: "魚（v132）", hands: "手と持っている物（一人称の描画）", terrainDistance: "地形の表示距離", pixelRatio: "描画ピクセル比" });
 function normalizeGpuDebugFlags(value = {}) {
   const flags = { ...GPU_DEBUG_DEFAULT_FLAGS };
   for (const key of GPU_DEBUG_BOOLEAN_KEYS) if (typeof value?.[key] === "boolean") flags[key] = value[key];
@@ -690,9 +766,15 @@ function normalizeGpuDebugFlags(value = {}) {
   return flags;
 }
 var GPU_BENCHMARK_REBUILDS = Object.freeze(["shadows-off", "post-off", "fog-off", "terrain-half", "terrain-quarter", "waterReflection-off", "waterRefraction-off"]);
+var GPU_BENCHMARK_MOTION = Object.freeze({ turn: 0.22 });
 function benchmarkPlan(states) {
   const plan = states.filter((s) => !GPU_BENCHMARK_REBUILDS.includes(s.id)), base = plan.find((s) => s.id === "baseline");
-  return base ? [...plan, { ...base, id: "baseline-end", label: "基準（最後にもう一度）", notes: [...base.notes || [], "最初の基準と同じ状態です。最初の基準との差は、測っている間に起きた変化です。"] }] : plan;
+  return base ? [
+    ...plan,
+    { ...base, id: "baseline-end", label: "基準（最後にもう一度）", notes: [...base.notes || [], "最初の基準と同じ状態です。最初の基準との差は、測っている間に起きた変化です。"] },
+    { ...base, id: "walk", label: "歩きながら（すべて有効）", motion: "walk", notes: [...base.notes || [], "前へ歩き続け、ゆっくり向きを変えます（視点はプレイ中と同じく体に付いて動きます）。"] },
+    { ...base, id: "run", label: "走りながら（すべて有効）", motion: "run", notes: [...base.notes || [], "前へ走り続け、ゆっくり向きを変えます。"] }
+  ] : plan;
 }
 function makeGpuBenchmarkStates(capabilities = {}) {
   const baseline = { id: "baseline", label: "基準：すべて有効・現在の解像度", flags: { ...GPU_DEBUG_DEFAULT_FLAGS }, available: true, effective: true, notes: ["現在の画質で利用できる機能が基準です。画質設定は変更しません。"] };
@@ -703,6 +785,11 @@ function makeGpuBenchmarkStates(capabilities = {}) {
   return [baseline, ...GPU_DEBUG_BOOLEAN_KEYS.map((key) => make(`${key}-off`, key, false, `${GPU_DEBUG_LABELS[key]}：無効`)), make("terrain-half", "terrainDistance", 0.5, "地形の表示距離：50%"), make("terrain-quarter", "terrainDistance", 0.25, "地形の表示距離：25%"), make("pixels-1", "pixelRatio", 1, "描画ピクセル比：1"), make("pixels-1.5", "pixelRatio", 1.5, "描画ピクセル比：1.5"), make("pixels-device", "pixelRatio", "device", "描画ピクセル比：端末の値")];
 }
 var stat2 = () => ({ sum: 0, max: 0, count: 0 });
+function intervalShape(list) {
+  if (!list?.length) return { p50Ms: null, p90Ms: null, at120: null };
+  const s = [...list].sort((a, b) => a - b), q = (f) => s[Math.min(s.length - 1, Math.floor(f * s.length))];
+  return { p50Ms: q(0.5), p90Ms: q(0.9), at120: +(s.filter((v) => v < 9).length / s.length).toFixed(3) };
+}
 function add2(target, value) {
   if (Number.isFinite(value) && value >= 0) {
     target.sum += value;
@@ -717,7 +804,7 @@ function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState
 }, setTag = () => {
 }, onProgress = () => {
 }, onResults = () => {
-}, now = () => performance.now(), durationMs = 5e3, warmupMs = 1e3, tailMs = 2e3, metadata = {} } = {}) {
+}, now = () => performance.now(), durationMs = 5e3, warmupMs = 1e3, tailMs = 2e3, metadata = {}, counters = null } = {}) {
   if (typeof applyState !== "function") throw new TypeError("GPU benchmark requires applyState");
   const plan = states.map((s) => ({ ...s, flags: normalizeGpuDebugFlags(s.flags), notes: [...s.notes || []] }));
   if (!plan.length) throw new TypeError("GPU benchmark requires at least one state");
@@ -740,10 +827,34 @@ function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState
     }
   }
   function serializeRow(r) {
-    return { id: r.id, label: r.label, flags: { ...r.flags }, effectiveFlags: r.effectiveFlags ? { ...r.effectiveFlags } : null, available: r.available !== false, effective: r.effective !== false, notes: [...r.notes], metadata: r.metadata || null, startedAt: r.start, finishedAt: r.end, durationMs: r.start === null ? 0 : Math.max(0, (r.end ?? now()) - r.start), warmupMs: r.warmupElapsed, samples: r.samples, complete: r.finished, frame: { avgMs: mean2(r.frame), maxMs: maximum2(r.frame), samples: r.frame.count, fps: mean2(r.frame) > 0 ? 1e3 / mean2(r.frame) : null }, cpu: { updateMs: mean2(r.update), renderMs: mean2(r.render), totalMs: mean2(r.cpu) }, gpu: { elapsedMs: r.invalid ? null : mean2(r.gpu), maxMs: r.invalid ? null : maximum2(r.gpu), samples: r.invalid ? 0 : r.gpu.count, discardedSamples: r.invalid ? r.gpu.count : 0, status: r.invalid ? "disjoint" : r.gpu.count ? r.reasons.size ? "partial" : "measured" : [...r.reasons].at(-1) || "unavailable", unmeasuredFrames: Math.max(0, r.samples - (r.invalid ? 0 : r.gpu.count)), reasons: [...r.reasons] }, draws: { calls: mean2(r.calls), triangles: mean2(r.triangles) }, render: { calls: mean2(r.invokes), meshes: mean2(r.meshes) } };
+    return { id: r.id, label: r.label, flags: { ...r.flags }, effectiveFlags: r.effectiveFlags ? { ...r.effectiveFlags } : null, available: r.available !== false, effective: r.effective !== false, notes: [...r.notes], metadata: r.metadata || null, startedAt: r.start, finishedAt: r.end, durationMs: r.start === null ? 0 : Math.max(0, (r.end ?? now()) - r.start), warmupMs: r.warmupElapsed, samples: r.samples, complete: r.finished, motion: r.motion || null, main: mainOf(r), perFrame: perFrameOf(r), frame: { avgMs: mean2(r.frame), maxMs: maximum2(r.frame), samples: r.frame.count, fps: mean2(r.frame) > 0 ? 1e3 / mean2(r.frame) : null, ...intervalShape(r.intervals) }, cpu: { updateMs: mean2(r.update), renderMs: mean2(r.render), totalMs: mean2(r.cpu) }, gpu: { elapsedMs: r.invalid ? null : mean2(r.gpu), maxMs: r.invalid ? null : maximum2(r.gpu), samples: r.invalid ? 0 : r.gpu.count, discardedSamples: r.invalid ? r.gpu.count : 0, status: r.invalid ? "disjoint" : r.gpu.count ? r.reasons.size ? "partial" : "measured" : [...r.reasons].at(-1) || "unavailable", unmeasuredFrames: Math.max(0, r.samples - (r.invalid ? 0 : r.gpu.count)), reasons: [...r.reasons] }, draws: { calls: mean2(r.calls), triangles: mean2(r.triangles) }, render: { calls: mean2(r.invokes), meshes: mean2(r.meshes) } };
   }
   function results() {
     return report;
+  }
+  function readCounters() {
+    if (typeof counters !== "function") return null;
+    try {
+      const c = counters();
+      return c && typeof c === "object" ? { ...c } : null;
+    } catch {
+      return null;
+    }
+  }
+  function mainOf(r) {
+    const interval = mean2(r.frame), cpu = mean2(r.cpu), idle = mean2(r.idle);
+    if (interval === null || cpu === null) return null;
+    const gap = Math.max(0, interval - cpu);
+    return { gapMs: gap, idleMs: idle, otherMs: idle === null ? null : Math.max(0, gap - idle) };
+  }
+  function perFrameOf(r) {
+    if (!r.counterStart || !r.counterEnd || !(r.samples > 0)) return null;
+    const out = {};
+    for (const [k, v] of Object.entries(r.counterEnd)) {
+      const a = r.counterStart[k];
+      if (Number.isFinite(v) && Number.isFinite(a)) out[k] = (v - a) / r.samples;
+    }
+    return out;
   }
   async function finalize() {
     if (restoring || !active || !finishRequest) return;
@@ -763,7 +874,7 @@ function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState
       active = false;
       restoring = false;
       phase = finish.status === "complete" ? "complete" : finish.status === "cancelled" ? "cancelled" : "error";
-      report = { version: 1, status: phase, error: errorText, reason: finish.reason || null, startedAt, finishedAt: now(), durationMs: Math.max(0, now() - startedAt), measurementMs: duration, warmupMs: warmup, gpuTailMs: tail, metadata, conditions: "Camera and input held; simulation, time and weather continue. Frame cap and current quality are retained. GPU elapsed is not utilization.", rows: rows.map(serializeRow), retiredFrameAssociations: retiredFrames };
+      report = { version: 1, status: phase, error: errorText, reason: finish.reason || null, startedAt, finishedAt: now(), durationMs: Math.max(0, now() - startedAt), measurementMs: duration, warmupMs: warmup, gpuTailMs: tail, metadata, conditions: "Camera and input held (the walk and run rows: the game's own movement, the walk key held); simulation, time and weather continue. Frame cap and current quality are retained. GPU elapsed is not utilization.", rows: rows.map(serializeRow), retiredFrameAssociations: retiredFrames };
       pending.clear();
       earlyGpu.clear();
       try {
@@ -816,7 +927,7 @@ function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState
     const state = plan[index];
     const applied = await applyState({ ...state.flags }, state);
     if (finishRequest) return;
-    const row = { ...state, flags: { ...state.flags }, effectiveFlags: applied?.effectiveFlags || state.effectiveFlags || null, available: applied?.available ?? state.available, effective: applied?.effective ?? state.effective, notes: [...state.notes, ...applied?.notes || []], metadata: applied?.metadata || null, start: null, end: null, warmupElapsed: 0, samples: 0, finished: false, invalid: false, reasons: /* @__PURE__ */ new Set(), frame: stat2(), cpu: stat2(), update: stat2(), render: stat2(), calls: stat2(), triangles: stat2(), invokes: stat2(), meshes: stat2(), gpu: stat2() };
+    const row = { ...state, flags: { ...state.flags }, effectiveFlags: applied?.effectiveFlags || state.effectiveFlags || null, available: applied?.available ?? state.available, effective: applied?.effective ?? state.effective, notes: [...state.notes, ...applied?.notes || []], metadata: applied?.metadata || null, start: null, end: null, warmupElapsed: 0, intervals: [], samples: 0, finished: false, invalid: false, reasons: /* @__PURE__ */ new Set(), idle: stat2(), counterStart: null, counterEnd: null, frame: stat2(), cpu: stat2(), update: stat2(), render: stat2(), calls: stat2(), triangles: stat2(), invokes: stat2(), meshes: stat2(), gpu: stat2() };
     rows.push(row);
     phase = "warmup";
     phaseAt = now();
@@ -875,6 +986,7 @@ function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState
           const row2 = rows[index];
           row2.warmupElapsed = at - phaseAt;
           row2.start = at;
+          row2.counterStart = readCounters();
           phase = "measure";
           phaseAt = at;
           tag(`${runId}:${index}:measure`);
@@ -890,7 +1002,10 @@ function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState
       if (phase !== "measure" || sample?.tag !== currentTag) return;
       const row = rows[index];
       row.samples++;
-      if (row.samples > 1) add2(row.frame, sample.intervalMs);
+      if (row.samples > 1) {
+        add2(row.frame, sample.intervalMs);
+        if (Number.isFinite(sample.intervalMs) && row.intervals.length < 6e3) row.intervals.push(sample.intervalMs);
+      }
       add2(row.cpu, sample.cpuMs);
       add2(row.update, sample.updateMs);
       add2(row.render, sample.renderMs);
@@ -898,6 +1013,7 @@ function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState
       add2(row.meshes, sample.meshes);
       add2(row.calls, sample.draws?.calls);
       add2(row.triangles, sample.draws?.triangles);
+      if (row.samples > 1) add2(row.idle, sample.idleMs);
       if (sample.frameId !== void 0) {
         const key = keyFor(sample.frameId, sample.tag);
         pending.set(key, { row, at: Number.isFinite(sample.at) ? sample.at : at });
@@ -910,6 +1026,7 @@ function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState
       if (at - phaseAt >= duration) {
         row.end = at;
         row.finished = true;
+        row.counterEnd = readCounters();
         progress();
         if (finishRequest) return;
         if (index + 1 < plan.length) void schedule(() => enterState(index + 1));
@@ -971,12 +1088,26 @@ function formatGpuBenchmarkReport(report, format = "json") {
 // gpu-debug-ui.js
 var numeric = (value, digits = 2) => Number.isFinite(value) ? value.toLocaleString("ja-JP", { maximumFractionDigits: digits, minimumFractionDigits: digits }) : "未測定";
 var ms = (value) => Number.isFinite(value) ? `${numeric(value)} ms` : "未測定";
-var phaseLabel = { idle: "待機中", preparing: "視点を固定中", applying: "設定を適用中", warmup: "描画を準備中", measure: "計測中", drain: "遅れて届く GPU 計測を回収中", finishing: "元の状態へ復元中", cancelling: "中止して復元中", complete: "計測完了", cancelled: "計測を中止しました", error: "計測を中止しました（エラー）" };
+var phaseLabel = {
+  /* v135 */
+  travel: "計測の場所へ移動中",
+  idle: "待機中",
+  preparing: "視点を固定中",
+  applying: "設定を適用中",
+  warmup: "描画を準備中",
+  measure: "計測中",
+  drain: "遅れて届く GPU 計測を回収中",
+  finishing: "元の状態へ復元中",
+  cancelling: "中止して復元中",
+  complete: "計測完了",
+  cancelled: "計測を中止しました",
+  error: "計測を中止しました（エラー）"
+};
 function createGpuDebugUI({ onFlags = () => {
 }, onBenchmark = () => {
 }, onCancel = () => {
 }, onCopy = () => false, onClose = () => {
-}, onBreakdown = null } = {}) {
+}, onBreakdown = null, places = [] } = {}) {
   const panel = node("section");
   panel.className = "gpu-debug-panel";
   panel.dataset.gpuDebug = "panel";
@@ -1038,9 +1169,21 @@ function createGpuDebugUI({ onFlags = () => {
   distanceNote.style.color = "#adbdc4";
   controlsDetails.append(distanceNote);
   panel.append(controlsDetails);
+  const placeLine = node("label");
+  Object.assign(placeLine.style, { display: "flex", gap: "8px", alignItems: "center", justifyContent: "space-between", marginTop: "12px" });
+  const placeSelect = node("select");
+  placeSelect.dataset.gpuDebug = "place";
+  placeSelect.style.maxWidth = "290px";
+  placeLine.append(node("span", "計測する場所"), placeSelect);
+  panel.append(placeLine);
+  const placeNote = node("p", "計測の場所を選ぶと、その場所・向きへ移動し、時刻をその時の時刻に合わせて止め、まわりの準備が済むのを待ってから（8 秒〜最大 1 分）測ります。測り終えたら元の場所と時刻に戻ります。測った場所は次から「前回の計測の場所」に出ます。");
+  placeNote.style.color = "#adbdc4";
+  placeNote.style.margin = "4px 0 0";
+  panel.append(placeNote);
+  setPlaces(places);
   const actions = node("div");
   Object.assign(actions.style, { display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "12px" });
-  const start = button("計測を開始（各 5 秒）", () => invoke(onBenchmark));
+  const start = button("計測を開始（各 5 秒）", () => invoke(() => onBenchmark(placeSelect.value || "here")));
   start.dataset.gpuDebug = "start";
   const cancel = button("中止", () => invoke(onCancel));
   cancel.dataset.gpuDebug = "cancel";
@@ -1122,7 +1265,17 @@ function createGpuDebugUI({ onFlags = () => {
     if (event.key !== "F3" && event.key !== "F4") event.stopPropagation();
   });
   document.body.append(panel);
-  return { update, showCopyFallback, destroy, showBreakdown, setBreakdownBusy };
+  return { update, showCopyFallback, destroy, showBreakdown, setBreakdownBusy, setPlaces };
+  function setPlaces(list) {
+    if (destroyed) return;
+    const was = placeSelect.value, items = Array.isArray(list) && list.length ? list : [{ id: "here", label: "今いる場所" }];
+    placeSelect.replaceChildren(...items.map((p) => {
+      const o = node("option", p.label);
+      o.value = p.id;
+      return o;
+    }));
+    placeSelect.value = items.some((p) => p.id === was) && was !== "here" ? was : (items.find((p) => p.id !== "here") || items[0]).id;
+  }
   function showBreakdown(text) {
     if (destroyed) return;
     breakdownText.textContent = text || "";
@@ -1198,9 +1351,12 @@ function createGpuDebugUI({ onFlags = () => {
     }
     start.disabled = !!benchmark.active;
     cancel.disabled = !benchmark.active;
+    placeSelect.disabled = !!benchmark.active;
     if (split) split.disabled = !!benchmark.active || breakdownBusy;
     copy.disabled = !results;
-    status.textContent = `${phaseLabel[benchmark.phase] || "待機中"}${benchmark.active && benchmark.index >= 0 ? ` ${benchmark.index + 1}/${benchmark.total}：${benchmark.label || ""}` : ""}${benchmark.active && Number.isFinite(benchmark.remainingMs) && benchmark.remainingMs > 0 ? `（この段階はあと ${Math.ceil(benchmark.remainingMs / 1e3)} 秒）` : ""}${benchmark.error ? `：${benchmark.error}` : ""}`;
+    if (benchmark.phase === "travel") {
+      status.textContent = benchmark.label || phaseLabel.travel;
+    } else status.textContent = `${phaseLabel[benchmark.phase] || "待機中"}${benchmark.active && benchmark.index >= 0 ? ` ${benchmark.index + 1}/${benchmark.total}：${benchmark.label || ""}` : ""}${benchmark.active && Number.isFinite(benchmark.remainingMs) && benchmark.remainingMs > 0 ? `（この段階はあと ${Math.ceil(benchmark.remainingMs / 1e3)} 秒）` : ""}${benchmark.error ? `：${benchmark.error}` : ""}`;
     if (!results) {
       resultDetails.hidden = true;
       tableBody.replaceChildren();
@@ -1700,6 +1856,18 @@ function leafDepthSummary(report) {
     variants: report.variants.map((v) => ({ name: v.name, frames: v.frames, totalMs: v.totalMs, cpuMs: v.cpuMs, mainMs: v.passes.find((p) => p.pass === "main")?.ms ?? 0, leavesMs: sum(v, (l) => LEAF_LABELS.test(l)), depthFirstMs: sum(v, (l) => /^main:tree-(near|far):leaves-depth-first/.test(l)) }))
   };
 }
+var CARD_LABELS = /^main:(local-meadow|meadow|grass|grass_tall)(?::|$)/;
+function grassDepthSummary(report) {
+  if (!report?.variants) return null;
+  const sum = (v, test) => +v.segments.filter((s) => test(s.label)).reduce((a, s) => a + s.ms, 0).toFixed(3);
+  return {
+    status: report.status,
+    frames: report.usedFrames,
+    durationMs: report.durationMs,
+    variants: report.variants.map((v) => ({ name: v.name, frames: v.frames, totalMs: v.totalMs, cpuMs: v.cpuMs, mainMs: v.passes.find((p) => p.pass === "main")?.ms ?? 0, cardsMs: sum(v, (l) => CARD_LABELS.test(l)), depthFirstMs: sum(v, (l) => /^main:grass-card-depth-first/.test(l)) }))
+  };
+}
+var GRASS_DEPTH_NAMES = { equal: "先に描く（v115〜v116.1）", off: "先に描かない（今の設定・v114.6 までと v117 から）" };
 function formatGpuBreakdown(report, top = 14) {
   if (!report || report.status === "unsupported") return "この環境では GPU の時間を測れません（EXT_disjoint_timer_query_webgl2 がありません）。";
   const cpu = (v) => Number.isFinite(v) ? v.toFixed(2) : "-";
@@ -1717,6 +1885,13 @@ function formatGpuBreakdown(report, top = 14) {
     lines.push(`— 木の葉の奥行きを先に描く（${ab.variants.length} 通りを 1 フレームずつ交互に・GPU 合計 / 画面 / 近い木と中くらいの木の葉）—`);
     for (const v of ab.variants) lines.push(`${v.totalMs.toFixed(2).padStart(6)} / ${v.mainMs.toFixed(2).padStart(5)} / ${v.leavesMs.toFixed(2).padStart(5)} ms  ${LEAF_DEPTH_NAMES[v.name] || v.name}（${v.frames} フレーム）`);
   }
+  const gab = report.grassDepthAB;
+  if (gab?.variants?.length) {
+    lines.push(`— 草の板の奥行きを先に描く（${gab.variants.length} 通りを 1 フレームずつ交互に・GPU 合計 / 画面 / 草の板 / 先に描く分）—`);
+    for (const v of gab.variants) lines.push(`${v.totalMs.toFixed(2).padStart(6)} / ${v.mainMs.toFixed(2).padStart(5)} / ${v.cardsMs.toFixed(2).padStart(5)} / ${v.depthFirstMs.toFixed(2).padStart(5)} ms  ${GRASS_DEPTH_NAMES[v.name] || v.name}（${v.frames} フレーム）`);
+    const t = gab.twins;
+    if (t) lines.push(`（先に描く分：${t.twins} 区画のうち近く ${t.shown}・描いた ${t.drawn} / ${t.calls} 回、描かなかった理由 先に描かない ${t.off}・位置 ${t.moved}・上書き ${t.override}・草なし ${t.hidden}・層 ${t.layers}・シェーダー待ち ${t.gate}）`);
+  }
   return lines.join("\n");
 }
 
@@ -1729,6 +1904,27 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
   let metrics, scene, ui, benchmark, tag = null, flags = { ...GPU_DEBUG_DEFAULT_FLAGS }, cameraToken = null;
   let disposed = false, closing = false, closePromise = null, lastUI = -Infinity, held = false, lastError = null;
   let breakdownRun = null, lastBreakdown = null;
+  let trip = null, tripCancelled = false;
+  function places() {
+    try {
+      return host.benchPlaces?.() || [];
+    } catch {
+      return [];
+    }
+  }
+  function endTrip() {
+    if (trip) {
+      trip = null;
+      try {
+        host.leaveBenchPlace?.();
+      } catch {
+      }
+    }
+    try {
+      ui?.setPlaces?.(places());
+    } catch {
+    }
+  }
   async function breakdown({ auto = false } = {}) {
     if (disposed || closing || breakdownRun) return null;
     if (!auto && benchmark?.snapshot().active) return null;
@@ -1755,6 +1951,36 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
         const ab = await breakdownRun;
         const summary = leafDepthSummary(ab);
         if (summary) report.leafDepthAB = summary;
+      }
+      const grassModes = world.grassDepthFirstModes;
+      if (report?.status === "complete" && Array.isArray(grassModes) && grassModes.length > 1 && !disposed && !closing) {
+        const wasGrass = world.grassDepthFirst;
+        try {
+          const st = world.proceduralGrass?.depthStats, before = st ? { ...st } : null;
+          breakdownRun = run(world, { frames: 50 * grassModes.length, maxMs: 4500, drainMs: 2e3, variants: grassModes, setVariant: (v) => {
+            world.grassDepthFirst = v ?? wasGrass;
+          }, onBeginRender });
+          const gab = await breakdownRun;
+          const gsum = grassDepthSummary(gab);
+          if (gsum && st && before) gsum.twins = Object.fromEntries(Object.keys(st).map((k) => [k, k === "twins" || k === "shown" ? st[k] : st[k] - (before[k] || 0)]));
+          if (gsum) report.grassDepthAB = gsum;
+        } finally {
+          world.grassDepthFirst = wasGrass;
+        }
+      }
+      if (auto && report?.status === "complete" && typeof host.setBenchmarkMotion === "function" && !disposed && !closing) {
+        try {
+          host.setBenchmarkMotion("run", GPU_BENCHMARK_MOTION);
+          breakdownRun = run(world, { onBeginRender });
+          const moving = await breakdownRun;
+          if (moving?.status === "complete") report.moving = { totalMs: moving.totalMs, cpuFrameMs: moving.cpuFrameMs, frames: moving.usedFrames ?? moving.frames, passes: moving.passes, phases: (moving.phases || []).slice(0, 20), segments: [...moving.segments || []].sort((a, b) => b.ms - a.ms).slice(0, 30), cpuSegments: [...moving.segments || []].sort((a, b) => b.cpu - a.cpu).slice(0, 20) };
+        } catch {
+        } finally {
+          try {
+            host.setBenchmarkMotion(null);
+          } catch {
+          }
+        }
       }
       ui?.showBreakdown?.(formatGpuBreakdown(report));
       if (!auto && report?.status === "complete") try {
@@ -1794,6 +2020,7 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
     measured.scene = scene.snapshot().scene;
     const progress = benchmark.snapshot();
     if (lastError && !progress.error) progress.error = lastError;
+    if (trip && !trip.arrived) Object.assign(progress, { active: true, phase: "travel", index: -1, label: trip.text, remainingMs: 0 });
     ui.update({ metrics: measured, flags, capabilities: capabilities(), benchmark: progress, results: benchmark.results() });
   }
   function apply(next) {
@@ -1841,6 +2068,7 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
     removers.push(() => target?.removeEventListener(name, callback));
   }
   function cancel(reason = "user") {
+    if (trip && !trip.arrived) tripCancelled = true;
     return benchmark?.cancel(reason);
   }
   function releaseCamera(token) {
@@ -1862,7 +2090,14 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
       return createGpuDebugBenchmark({
         now,
         states: benchmarkPlan(makeGpuBenchmarkStates(capabilities())),
-        applyState: (next) => apply(next),
+        /* v130: a row's movement (the walk and run rows) told the game first. */
+        applyState: (next, state) => {
+          try {
+            host.setBenchmarkMotion?.(state?.motion || null, GPU_BENCHMARK_MOTION);
+          } catch {
+          }
+          return apply(next);
+        },
         setTag: (value) => {
           tag = value;
         },
@@ -1882,10 +2117,22 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
         },
         restore: async (token) => {
           try {
+            host.setBenchmarkMotion?.(null);
+          } catch {
+          }
+          try {
             if (token?.flags) apply(token.flags);
             if (benchmark?.snapshot().phase === "finishing" && !disposed && !closing) lastBreakdown = await breakdown({ auto: true }).catch(() => null);
           } finally {
             releaseCamera(token?.camera);
+          }
+        },
+        /* v138 */
+        counters: () => {
+          try {
+            return host.counters?.() || null;
+          } catch {
+            return null;
           }
         },
         onProgress: () => refresh(true),
@@ -1897,6 +2144,8 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
             host.onResults?.(report);
           } catch {
           }
+          endTrip();
+          refresh(true);
         },
         metadata: metadata()
       });
@@ -1948,13 +2197,56 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
     removers.push(() => {
       metrics.diagnostics.suspend = suspend;
     });
-    async function startBenchmark() {
+    async function startBenchmark(placeId = null) {
       if (disposed || closing) return false;
-      if (benchmark.snapshot().active) return false;
+      if (benchmark.snapshot().active || trip) return false;
       if (typeof host.isActive === "function" && !host.isActive()) {
         lastError = "ゲームが操作可能な状態で計測を開始してください";
         refresh(true);
         return false;
+      }
+      const place = placeId && placeId !== "here" ? places().find((p) => p.id === placeId) || null : null;
+      if (placeId && placeId !== "here" && !place) {
+        lastError = "計測の場所が見つかりませんでした";
+        refresh(true);
+        return false;
+      }
+      if (place && typeof host.goToBenchPlace === "function") {
+        trip = { place, text: "計測の場所へ移動しています", arrived: false };
+        tripCancelled = false;
+        lastError = null;
+        host.setBenchmarkActive?.(true);
+        refresh(true);
+        try {
+          trip.settled = await host.goToBenchPlace(place, { onProgress: (text) => {
+            if (trip && !trip.arrived) {
+              trip.text = text;
+              refresh();
+            }
+          }, cancelled: () => tripCancelled || disposed || closing });
+        } catch (error) {
+          lastError = String(error?.message || error);
+          endTrip();
+          try {
+            host.setBenchmarkActive?.(false);
+          } finally {
+            host.clearInput?.();
+          }
+          refresh(true);
+          return false;
+        }
+        trip.arrived = true;
+        if (disposed || closing || typeof host.isActive === "function" && !host.isActive()) {
+          lastError = "移動のあと、ゲームが操作できない状態になりました";
+          endTrip();
+          try {
+            host.setBenchmarkActive?.(false);
+          } finally {
+            host.clearInput?.();
+          }
+          refresh(true);
+          return false;
+        }
       }
       runQuality = world.quality;
       runDungeon = !!world.inDungeon;
@@ -1962,6 +2254,8 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
       return benchmark.start();
     }
     ui = makeUI({
+      /* v135 */
+      places: places(),
       onFlags: setFlags,
       onBenchmark: startBenchmark,
       onCancel: () => cancel("user"),

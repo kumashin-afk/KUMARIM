@@ -5,7 +5,7 @@ import {
   Vector2,
   Vector4,
   three_module_exports
-} from "./chunk-UPROFF5E.js";
+} from "./chunk-PH5TGXXA.js";
 import {
   WORKER_NAMES,
   reportWorker

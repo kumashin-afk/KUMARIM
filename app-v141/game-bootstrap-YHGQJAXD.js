@@ -40,8 +40,8 @@ var session = { get() {
 } };
 try {
   if (!document.hidden) await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
-  if (globalThis.KUMARIM_MODEL_PACK) await import("./chunk-YLAF6CID.js");
-  await import("./chunk-LQGSMU3B.js");
+  if (globalThis.KUMARIM_MODEL_PACK) await import("./chunk-G7NEXZIQ.js");
+  await import("./chunk-KCA2JTDT.js");
   startup.status = "loaded";
   session.set(null);
 } catch (error) {
