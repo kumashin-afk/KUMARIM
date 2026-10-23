@@ -66,6 +66,8 @@ var WORLD_PHASES = Object.freeze([
   ["forestLife.update", "小さな生き物"],
   ["birdFlocks.update", "鳥"],
   ["ambientParticles.update", "舞う粒"],
+  /* v143 */
+  ["shoreLife.update", "水辺の生き物"],
   ["stories.update", "物語"],
   ["content.updateEffects", "効果"],
   ["dayNight.update", "昼夜"],

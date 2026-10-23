@@ -1,7 +1,7 @@
 import {
   WORLD_PHASES,
   createRenderDiagnostics
-} from "./chunk-PQBXPXLA.js";
+} from "./chunk-H3XAN2VW.js";
 import {
   Box3,
   Color,
@@ -524,6 +524,8 @@ function installGpuDebugScene({ world } = {}) {
       if (!currentFlags.fish) {
         const fish = fishGroup();
         if (fish) set(fish, "visible", false);
+        const shore = shoreGroup();
+        if (shore) set(shore, "visible", false);
       }
       if (!currentFlags.sky && scene !== world.dungeon && world.sky?.skyMesh && visibleInHierarchy(world.sky.skyMesh, scene)) set(scene, "background", flatBackground);
       const distance = terrain.baseDistance * currentFlags.terrainDistance;
@@ -646,6 +648,11 @@ function installGpuDebugScene({ world } = {}) {
     if (!fishCache || !fishCache.parent) fishCache = world.scene?.getObjectByName?.("island-fish") || null;
     return fishCache;
   }
+  let shoreCache = null;
+  function shoreGroup() {
+    if (!shoreCache || !shoreCache.parent) shoreCache = world.scene?.getObjectByName?.("shore-life") || null;
+    return shoreCache;
+  }
   function setFlags(patch) {
     if (disposed) throw new Error("GPU scene isolation is disposed");
     const previous = flags, next = validateFlags(flags, patch);
@@ -726,6 +733,10 @@ function installGpuDebugScene({ world } = {}) {
       return bypassPost(original, this, args);
     }, disposers);
     if (world.islandFish) wrapMethod(world.islandFish, "update", (original) => function(...args) {
+      if (!disposed && !flags.fish) return;
+      return original.apply(this, args);
+    }, disposers);
+    if (world.shoreLife) wrapMethod(world.shoreLife, "update", (original) => function(...args) {
       if (!disposed && !flags.fish) return;
       return original.apply(this, args);
     }, disposers);

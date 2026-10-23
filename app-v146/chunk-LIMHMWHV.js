@@ -42,7 +42,7 @@ import {
 import {
   createHitchRecorder,
   createRenderDiagnostics
-} from "./chunk-PQBXPXLA.js";
+} from "./chunk-H3XAN2VW.js";
 import {
   RESOLUTION_PRESETS,
   calculateRenderResolution,
@@ -284,35 +284,35 @@ function invalidateNaturalCollisionBounds(chunk) {
 }
 function chunkBox(chunk) {
   const objects = chunk.objects;
-  let box4 = bounds.get(chunk);
-  if (!box4 || box4.objects !== objects || box4.length !== objects.length) {
-    box4 = { objects, length: objects.length, minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, unknown: false };
+  let box5 = bounds.get(chunk);
+  if (!box5 || box5.objects !== objects || box5.length !== objects.length) {
+    box5 = { objects, length: objects.length, minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, unknown: false };
     for (const object2 of objects) {
       if (object2.type !== "tree" && object2.type !== "rock") continue;
       const radius = object2.type === "rock" ? (object2.radius || 4) + 0.5 : (object2.collisionRadius || 0.5) + 0.2;
       if (!Number.isFinite(object2.x) || !Number.isFinite(object2.z) || !Number.isFinite(radius) || radius < 0) {
-        box4.unknown = true;
+        box5.unknown = true;
         continue;
       }
       const pad2 = Math.max(1e-6, 16 * Number.EPSILON * Math.max(1, Math.abs(object2.x), Math.abs(object2.z), radius));
-      box4.minX = Math.min(box4.minX, object2.x - radius - pad2);
-      box4.maxX = Math.max(box4.maxX, object2.x + radius + pad2);
-      box4.minZ = Math.min(box4.minZ, object2.z - radius - pad2);
-      box4.maxZ = Math.max(box4.maxZ, object2.z + radius + pad2);
+      box5.minX = Math.min(box5.minX, object2.x - radius - pad2);
+      box5.maxX = Math.max(box5.maxX, object2.x + radius + pad2);
+      box5.minZ = Math.min(box5.minZ, object2.z - radius - pad2);
+      box5.maxZ = Math.max(box5.maxZ, object2.z + radius + pad2);
     }
-    bounds.set(chunk, box4);
+    bounds.set(chunk, box5);
   }
-  return box4;
+  return box5;
 }
 function naturalChunkMayContain(chunk, x, z) {
   if (!Number.isFinite(x) || !Number.isFinite(z)) return true;
-  const box4 = chunkBox(chunk);
-  return box4.unknown || x >= box4.minX && x <= box4.maxX && z >= box4.minZ && z <= box4.maxZ;
+  const box5 = chunkBox(chunk);
+  return box5.unknown || x >= box5.minX && x <= box5.maxX && z >= box5.minZ && z <= box5.maxZ;
 }
 function naturalChunkMayReach(chunk, x, z, reach) {
   if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(reach)) return true;
-  const box4 = chunkBox(chunk);
-  return box4.unknown || x + reach >= box4.minX && x - reach <= box4.maxX && z + reach >= box4.minZ && z - reach <= box4.maxZ;
+  const box5 = chunkBox(chunk);
+  return box5.unknown || x + reach >= box5.minX && x - reach <= box5.maxX && z + reach >= box5.minZ && z - reach <= box5.maxZ;
 }
 
 // nan-guard.js
@@ -629,7 +629,7 @@ function installShaderGate(world2, { perFrame = SHADER_GATE.perFrame, firstPerFr
     notReady.set(program, frame3);
     return false;
   }
-  function keeps(p2, material2, object2, geometry3, scene, anyVersion = false, target = renderer.getRenderTarget()) {
+  function keeps2(p2, material2, object2, geometry3, scene, anyVersion = false, target = renderer.getRenderTarget()) {
     if (p2.currentProgram === void 0 || !anyVersion && material2.version !== p2.__version) return false;
     const colorSpace = target === null ? renderer.outputColorSpace : target.isXRRenderTarget === true ? target.texture.colorSpace : LinearSRGBColorSpace;
     if (p2.outputColorSpace !== colorSpace) return false;
@@ -694,7 +694,7 @@ function installShaderGate(world2, { perFrame = SHADER_GATE.perFrame, firstPerFr
     if (!shadow && scene !== world2.scene) keep(material2);
     const p2 = props.get(material2);
     let entry = null;
-    if (keeps(p2, material2, object2, geometry3, scene)) {
+    if (keeps2(p2, material2, object2, geometry3, scene)) {
       if (!ready(p2.currentProgram)) {
         stats3.waiting++;
         return;
@@ -734,7 +734,7 @@ function installShaderGate(world2, { perFrame = SHADER_GATE.perFrame, firstPerFr
         const kind = drawKind(object2, geometry3, material2.side, canvas2, fogIndex(scene.fog));
         entry = info.kinds.get(kind);
         if (entry === void 0) {
-          if (compiledAt.get(material2) === material2.version && keeps(p2, material2, object2, geometry3, scene, true)) {
+          if (compiledAt.get(material2) === material2.version && keeps2(p2, material2, object2, geometry3, scene, true)) {
             entry = { kind, kinds: info.kinds, program: p2.currentProgram, since: t, frame: frame3 };
             info.kinds.set(kind, entry);
             stats3.learned++;
@@ -811,7 +811,7 @@ function installShaderGate(world2, { perFrame = SHADER_GATE.perFrame, firstPerFr
     if (!enabled || disposed || !material2 || !object2 || !geometry3 || object2.isBatchedMesh || !gated(scene)) return true;
     const p2 = props.get(material2);
     const known = (program) => !program || readySet.has(program) || program.program === void 0;
-    if (keeps(p2, material2, object2, geometry3, scene, false, target)) {
+    if (keeps2(p2, material2, object2, geometry3, scene, false, target)) {
       if (!known(p2.currentProgram)) return false;
     } else {
       const info = infos.get(material2);
@@ -1185,9 +1185,9 @@ var safely = (fn) => {
   }
 };
 var pad = (n) => String(n).padStart(2, "0");
-function hitchSessionId(date = /* @__PURE__ */ new Date(), random10 = Math.random) {
+function hitchSessionId(date = /* @__PURE__ */ new Date(), random13 = Math.random) {
   const stamp = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
-  return stamp + "-" + Math.floor(random10() * 36 ** 4).toString(36).padStart(4, "0");
+  return stamp + "-" + Math.floor(random13() * 36 ** 4).toString(36).padStart(4, "0");
 }
 function compactHitch(h) {
   return {
@@ -1600,18 +1600,18 @@ function createTextureWarmup(world2, options = {}) {
 // dragon-kit.js
 function createDragonKit(THREE2, options = {}) {
   const KIT_OPTIONS = options || {};
-  const TAU50 = Math.PI * 2;
+  const TAU54 = Math.PI * 2;
   const V32 = THREE2.Vector3, QT = THREE2.Quaternion, M42 = THREE2.Matrix4;
-  const clamp76 = (x, a, b) => x < a ? a : x > b ? b : x;
+  const clamp77 = (x, a, b) => x < a ? a : x > b ? b : x;
   const lerp6 = (a, b, t) => a + (b - a) * t;
   const smoothstep6 = (e0, e1, x) => {
-    const t = clamp76((x - e0) / (e1 - e0), 0, 1);
+    const t = clamp77((x - e0) / (e1 - e0), 0, 1);
     return t * t * (3 - 2 * t);
   };
   const damp2 = (a, b, lambda, dt) => lerp6(a, b, 1 - Math.exp(-lambda * dt));
   const wrapAngle2 = (a) => {
-    a = (a + Math.PI) % TAU50;
-    if (a < 0) a += TAU50;
+    a = (a + Math.PI) % TAU54;
+    if (a < 0) a += TAU54;
     return a - Math.PI;
   };
   const dampAngle = (a, b, lambda, dt) => a + wrapAngle2(b - a) * (1 - Math.exp(-lambda * dt));
@@ -1906,7 +1906,7 @@ function createDragonKit(THREE2, options = {}) {
     const apx = px - ax, apy = py - ay, apz = pz - az;
     const ab2 = abx * abx + aby * aby + abz * abz;
     let t = ab2 > 1e-9 ? (apx * abx + apy * aby + apz * abz) / ab2 : 0;
-    t = clamp76(t, 0, 1);
+    t = clamp77(t, 0, 1);
     const cx = ax + abx * t, cy = ay + aby * t, cz = az + abz * t;
     if (out2) {
       out2.x = cx;
@@ -1934,7 +1934,7 @@ function createDragonKit(THREE2, options = {}) {
   const SUN_DIR = new V32(-0.62, 0.5, 0.6).normalize();
   const FOG_COLOR = new THREE2.Color().setRGB(0.5, 0.5, 0.5);
   const windUniform = { value: 0 };
-  const KIT_SCALE = clamp76(+KIT_OPTIONS.scale || 1, 0.3, 3);
+  const KIT_SCALE = clamp77(+KIT_OPTIONS.scale || 1, 0.3, 3);
   let HEIGHT_FN = () => 0;
   function terrainHeight(x, z) {
     return +HEIGHT_FN(x, z) || 0;
@@ -1996,13 +1996,13 @@ function createDragonKit(THREE2, options = {}) {
         const u = (x + 0.5) / Hh * 2 - 1, v = (y + 0.5) / Hh * 2 - 1, d = Math.sqrt(u * u + v * v);
         let a = 0;
         const n = nz[y * Hh + x], n2 = nz2[y * Hh + x];
-        if (q === 0) a = Math.pow(clamp76(1 - d, 0, 1), 1.4) * (0.45 + n * 0.9);
-        else if (q === 1) a = Math.pow(clamp76(1 - d * (0.8 + n2 * 0.45), 0, 1), 1.2) * (0.35 + n * 0.85);
+        if (q === 0) a = Math.pow(clamp77(1 - d, 0, 1), 1.4) * (0.45 + n * 0.9);
+        else if (q === 1) a = Math.pow(clamp77(1 - d * (0.8 + n2 * 0.45), 0, 1), 1.2) * (0.35 + n * 0.85);
         else if (q === 2) a = Math.exp(-d * d * 9) + Math.exp(-d * d * 30) * 0.6;
         else a = Math.exp(-d * d * 4.5);
         const i = ((oy + y) * S + ox + x) * 4;
         buf[i] = buf[i + 1] = buf[i + 2] = 255;
-        buf[i + 3] = clamp76(a, 0, 1) * 255;
+        buf[i + 3] = clamp77(a, 0, 1) * 255;
       }
     }
     return dataTex(buf, S, S, { repeat: false });
@@ -2019,7 +2019,7 @@ function createDragonKit(THREE2, options = {}) {
     x.fillRect(0, 0, S, S);
     const r = mulberry324(5);
     for (let k = 0; k < 120; k++) {
-      const a = r() * TAU50;
+      const a = r() * TAU54;
       x.strokeStyle = `rgba(${120 + r() * 80 | 0},${40 + r() * 40 | 0},0,0.35)`;
       x.lineWidth = 1;
       x.beginPath();
@@ -2029,7 +2029,7 @@ function createDragonKit(THREE2, options = {}) {
     }
     x.fillStyle = "#050100";
     x.beginPath();
-    x.ellipse(S / 2, S / 2, S * 0.07, S * 0.36, 0, 0, TAU50);
+    x.ellipse(S / 2, S / 2, S * 0.07, S * 0.36, 0, 0, TAU54);
     x.fill();
     return canvasTex(c2, { srgb: true });
   }
@@ -2086,13 +2086,13 @@ function createDragonKit(THREE2, options = {}) {
         const edge2 = f22 - f15;
         const idx = y * S + x;
         const ao = smoothstep6(0, 0.22, edge2);
-        const dome = smoothstep6(0, 0.45, edge2) * (0.75 + 0.25 * clamp76(1 - f15, 0, 1)) + clamp76(-bdy, -0.5, 0.5) * 0.18;
+        const dome = smoothstep6(0, 0.45, edge2) * (0.75 + 0.25 * clamp77(1 - f15, 0, 1)) + clamp77(-bdy, -0.5, 0.5) * 0.18;
         h[idx] = dome + micro[idx] * 0.05;
         const i4 = idx * 4;
-        buf[i4] = clamp76(cv[best] * 0.55 + blot[idx] * 0.45, 0, 1) * 255;
+        buf[i4] = clamp77(cv[best] * 0.55 + blot[idx] * 0.45, 0, 1) * 255;
         buf[i4 + 1] = ao * 255;
         buf[i4 + 2] = micro[idx] * 255;
-        buf[i4 + 3] = clamp76(h[idx], 0, 1) * 255;
+        buf[i4 + 3] = clamp77(h[idx], 0, 1) * 255;
       }
     }
     const nrm = heightToNormal(h, S, S, 7.5);
@@ -2113,10 +2113,10 @@ function createDragonKit(THREE2, options = {}) {
         const ao = smoothstep6(0, 0.12, t) * smoothstep6(1, 0.9, t);
         h[idx] = ridge * 0.8 + n[idx] * 0.1 - groove;
         const i4 = idx * 4;
-        buf[i4] = clamp76(tone[b] * 0.4 + n[idx] * 0.6, 0, 1) * 255;
+        buf[i4] = clamp77(tone[b] * 0.4 + n[idx] * 0.6, 0, 1) * 255;
         buf[i4 + 1] = ao * 255;
         buf[i4 + 2] = n[idx] * 255;
-        buf[i4 + 3] = clamp76(h[idx], 0, 1) * 255;
+        buf[i4 + 3] = clamp77(h[idx], 0, 1) * 255;
       }
     }
     return { albedo: dataTex(buf, S, S), normal: dataTex(heightToNormal(h, S, S, 5), S, S) };
@@ -2408,7 +2408,7 @@ function createDragonKit(THREE2, options = {}) {
       const w = chainWeights(owners, rg.k, rg.f);
       const along01 = totalLen > 0 ? along / totalLen : 0;
       for (let j = 0; j <= radial; j++) {
-        const theta = -Math.PI / 2 + j / radial * TAU50;
+        const theta = -Math.PI / 2 + j / radial * TAU54;
         const [x, y] = opts.section(theta, prof);
         Q2.copy(center2).addScaledVector(B2, x).addScaledVector(N, y);
         const col = opts.colorFn ? opts.colorFn(Q2, theta, along01, prof) : [1, 1, 1];
@@ -2523,7 +2523,7 @@ function createDragonKit(THREE2, options = {}) {
     return (Math.sqrt(x2 * a2 * il2) + y * rr0) * il2 - r1;
   }
   const smin = (a, b, k) => {
-    const h = clamp76(0.5 + 0.5 * (b - a) / k, 0, 1);
+    const h = clamp77(0.5 + 0.5 * (b - a) / k, 0, 1);
     return lerp6(b, a, h) - k * h * (1 - h);
   };
   const smax = (a, b, k) => -smin(-a, -b, k);
@@ -2622,7 +2622,7 @@ function createDragonKit(THREE2, options = {}) {
   }
   function sdJaw(x, y, z) {
     const ax = Math.abs(x);
-    const t = clamp76(z / 2.12, 0, 1);
+    const t = clamp77(z / 2.12, 0, 1);
     const w = lerp6(0.4, 0.14, t * t * (3 - 2 * t));
     const hj = lerp6(0.29, 0.12, t);
     const cyy = mouthY(z) - hj * 0.48;
@@ -2761,10 +2761,10 @@ function createDragonKit(THREE2, options = {}) {
       const t = i / segs;
       curve.getPointAt(t, P);
       let r = lerp6(r0, r1, Math.pow(t, 0.8));
-      if (ridges) r *= 1 + 0.07 * Math.max(0, Math.sin(t * ridges * TAU50)) * (1 - t);
+      if (ridges) r *= 1 + 0.07 * Math.max(0, Math.sin(t * ridges * TAU54)) * (1 - t);
       const nn = frames4.normals[i], bb = frames4.binormals[i];
       for (let j = 0; j <= radial; j++) {
-        const a = j / radial * TAU50;
+        const a = j / radial * TAU54;
         N.copy(nn).multiplyScalar(Math.cos(a)).addScaledVector(bb, Math.sin(a));
         pos2.push(P.x + N.x * r, P.y + N.y * r, P.z + N.z * r);
         nor.push(N.x, N.y, N.z);
@@ -3040,7 +3040,7 @@ function createDragonKit(THREE2, options = {}) {
         const fo = [a, a, b, b, b];
         const tipFrom = Tt.clone().addScaledVector(dirT, -0.2);
         const colorFn = (p2, th) => {
-          const c2 = skinColor(p2, th, 0, 0.12), k = clamp76(p2.clone().sub(tipFrom).dot(dirT) / (spike + 0.2), 0, 1) ** 1.3;
+          const c2 = skinColor(p2, th, 0, 0.12), k = clamp77(p2.clone().sub(tipFrom).dot(dirT) / (spike + 0.2), 0, 1) ** 1.3;
           return c2.map((v, i) => lerp6(v, SPIKE_PAL[2][i] * 0.9, k));
         };
         armLofts.push(loftChain(sg, fp, fo, { radial: 10, spacing: 0.16, uRep: 2, up: UP3, section: legSection, colorFn, capEnd: 0.02 }));
@@ -3069,14 +3069,14 @@ function createDragonKit(THREE2, options = {}) {
     const cg = new SkinGeo();
     for (const L4 of ["L", "R"]) {
       const s = L4 === "L" ? 1 : -1;
-      const ball = J["ball" + L4];
+      const ball2 = J["ball" + L4];
       for (const [ang, len3] of [[-0.52, 0.96], [0, 1.14], [0.52, 0.92]]) {
         const dir = new V32(Math.sin(ang) * s * 0.85, 0, Math.cos(ang)).normalize();
         const toe = hornTube([new V32(0, 0, 0), new V32(0, 0.05, len3 * 0.4), new V32(0, -0.02, len3 * 0.74), new V32(0, -0.1, len3)], 0.2, 0.1, 0, 10, 10);
         toe.deleteAttribute("color");
-        placeGeo(toe, ball, dir);
-        ag.addRigid(toe, bi("toes" + L4), skinColor(ball, Math.PI / 2, 0, 0.1));
-        const tipPos = ball.clone().addScaledVector(dir, len3 - 0.04).add(new V32(0, -0.1, 0));
+        placeGeo(toe, ball2, dir);
+        ag.addRigid(toe, bi("toes" + L4), skinColor(ball2, Math.PI / 2, 0, 0.1));
+        const tipPos = ball2.clone().addScaledVector(dir, len3 - 0.04).add(new V32(0, -0.1, 0));
         cg.addRigid(placeGeo(clawGeo(0.46, 0.08), tipPos, dir), bi("toes" + L4), [1, 1, 1]);
       }
       {
@@ -3257,7 +3257,7 @@ function createDragonKit(THREE2, options = {}) {
       const d = u * cum[cum.length - 1];
       let k = 0;
       while (k < pts.length - 2 && cum[k + 1] < d) k++;
-      const f15 = clamp76((d - cum[k]) / Math.max(1e-6, cum[k + 1] - cum[k]), 0, 1);
+      const f15 = clamp77((d - cum[k]) / Math.max(1e-6, cum[k + 1] - cum[k]), 0, 1);
       out2.copy(pts[k]).lerp(pts[k + 1], f15);
       return { k, f: f15 };
     };
@@ -3505,7 +3505,7 @@ function createDragonKit(THREE2, options = {}) {
         this._e.set(pitch2, yaw2, 0, "YXZ");
         B2["tail" + i].quaternion.setFromEuler(this._e);
       }
-      B2.jaw.quaternion.setFromAxisAngle(_ra.set(1, 0, 0), clamp76(P.jaw, 0, 1) * 0.6);
+      B2.jaw.quaternion.setFromAxisAngle(_ra.set(1, 0, 0), clamp77(P.jaw, 0, 1) * 0.6);
       this.group.updateMatrixWorld(true);
       this.solveNeck();
       for (const n of ["hindL", "hindR", "frontL", "frontR"]) this.solveLeg(n);
@@ -3647,8 +3647,8 @@ function createDragonKit(THREE2, options = {}) {
         const hx = leg.homeLocal.x, hz = leg.homeLocal.z, sx = Math.sign(hx);
         const minX = Math.abs(hx) * 0.5, maxX = Math.abs(hx) * 1.9;
         const ax = sx * loc.x;
-        if (ax < minX || ax > maxX) loc.x = sx * clamp76(ax, minX, maxX);
-        loc.z = clamp76(loc.z, hz - 2.1, hz + 2.1);
+        if (ax < minX || ax > maxX) loc.x = sx * clamp77(ax, minX, maxX);
+        loc.z = clamp77(loc.z, hz - 2.1, hz + 2.1);
         target.copy(loc).applyMatrix4(this.group.matrixWorld);
       }
       const air = P.legAir[name] || 0;
@@ -3729,12 +3729,12 @@ function createDragonKit(THREE2, options = {}) {
       const P = this.pose, B2 = this.B;
       for (const S of ["L", "R"]) {
         const W4 = this.wing[S], s = W4.s;
-        const fold2 = clamp76(S === "L" ? P.wingFoldL ?? P.wingFold : P.wingFoldR ?? P.wingFold, 0, 1);
+        const fold2 = clamp77(S === "L" ? P.wingFoldL ?? P.wingFold : P.wingFoldR ?? P.wingFold, 0, 1);
         const ph = P.flapPhase, A3 = P.flapAmp;
         const e = this._e;
         const prog = ([a, c2]) => smoothstep6(a, c2, fold2);
         const raise = P.wingRaise * (1 - 0.85 * prog(WING_FOLD.shoulder)) + (S === "L" ? P.wingLiftL : P.wingLiftR);
-        const tt = clamp76(S === "L" ? P.wingTightL ?? P.wingTight : P.wingTightR ?? P.wingTight, 0, 1);
+        const tt = clamp77(S === "L" ? P.wingTightL ?? P.wingTight : P.wingTightR ?? P.wingTight, 0, 1);
         const R = WING_FOLD.rest, Tg = WING_FOLD.tight, D2R = Math.PI / 180;
         const dr = P.wingDrape || 0;
         for (const n of W4.names) {
@@ -3804,7 +3804,7 @@ function createDragonKit(THREE2, options = {}) {
   const CLAW_ARC = [[3.1, 3.6, 4.2], [3.1, 2.6, 6], [2.6, 1.9, 7.8], [0.9, 1.6, 8.5], [-0.4, 1.7, 8.1], [-0.8, 1.9, 7.5]];
   const _clawQ = [0, 0, 0];
   function clawArc(u) {
-    const P = CLAW_ARC, n = P.length - 1, f15 = clamp76(u, 0, 1) * n, i = Math.min(n - 1, Math.floor(f15)), t = f15 - i;
+    const P = CLAW_ARC, n = P.length - 1, f15 = clamp77(u, 0, 1) * n, i = Math.min(n - 1, Math.floor(f15)), t = f15 - i;
     const a = P[Math.max(0, i - 1)], b = P[i], c2 = P[i + 1], d = P[Math.min(n, i + 2)], t2 = t * t, t3 = t2 * t;
     for (let k = 0; k < 3; k++) _clawQ[k] = 0.5 * (2 * b[k] + (c2[k] - a[k]) * t + (2 * a[k] - 5 * b[k] + 4 * c2[k] - d[k]) * t2 + (3 * b[k] - a[k] - 3 * c2[k] + d[k]) * t3);
     return _clawQ;
@@ -3822,9 +3822,9 @@ function createDragonKit(THREE2, options = {}) {
   function headToPolar(hl, out2, azMax = 1.2) {
     const nb = NECK_BASE, vx = hl.x - nb.x, vy = hl.y - nb.y, vz = hl.z - nb.z;
     return out2.set(
-      clamp76(Math.atan2(vx, vz), -azMax, azMax),
-      clamp76(Math.atan2(vy, Math.max(Math.hypot(vx, vz), 1e-4)), -0.75, 1.2),
-      clamp76(Math.hypot(vx, vy, vz), 3.4, 5.5)
+      clamp77(Math.atan2(vx, vz), -azMax, azMax),
+      clamp77(Math.atan2(vy, Math.max(Math.hypot(vx, vz), 1e-4)), -0.75, 1.2),
+      clamp77(Math.hypot(vx, vy, vz), 3.4, 5.5)
     );
   }
   function headToPolarRaw(hl, out2) {
@@ -4400,8 +4400,8 @@ function createDragonKit(THREE2, options = {}) {
           if (!this.d.final && hd > 4 && (hd > 10 || !toward)) {
             this.hover = false;
             const look2 = Math.min(hd, 14), k = look2 / Math.max(hd, 1e-3);
-            this.flyTarget = _v32.set(this.pos.x + dx * k, gy + clamp76((hd - look2) * 0.36, 6.5, 30), this.pos.z + dz * k).clone();
-            this.flySpeed = clamp76(hd * 0.6, 9, 20);
+            this.flyTarget = _v32.set(this.pos.x + dx * k, gy + clamp77((hd - look2) * 0.36, 6.5, 30), this.pos.z + dz * k).clone();
+            this.flySpeed = clamp77(hd * 0.6, 9, 20);
           } else {
             if (!this.d.final) this.d.arrYaw = this.yaw;
             this.d.final = true;
@@ -4544,7 +4544,7 @@ function createDragonKit(THREE2, options = {}) {
             this.headSpeed = 26;
             const u = (T2 - tw) / (ts - tw);
             const aim = this.worldToBody(this.d.aim, _v4);
-            const ad = Math.hypot(aim.x, aim.z - 4.2), reach = clamp76(ad - 2.3, 3.5, 7.4), a = Math.atan2(aim.x, aim.z - 4.2);
+            const ad = Math.hypot(aim.x, aim.z - 4.2), reach = clamp77(ad - 2.3, 3.5, 7.4), a = Math.atan2(aim.x, aim.z - 4.2);
             this.d.bite = this.d.bite || new V32();
             this.d.bite.set(Math.sin(a) * reach, 1.9, 4.2 + Math.cos(a) * reach);
             this.headLocal.set(this.d.bite.x + s * 1.3 * (1 - u), this.d.bite.y, this.d.bite.z);
@@ -4554,7 +4554,7 @@ function createDragonKit(THREE2, options = {}) {
             tg.spinePitch = -0.06;
             tg.shiftZ = 0.12;
             tg.spineYaw = -s * 0.06;
-            this.push.copy(this.fwd(_v5)).multiplyScalar(dt * 7 * clamp76((ad - 5) / 3, -0.5, 1));
+            this.push.copy(this.fwd(_v5)).multiplyScalar(dt * 7 * clamp77((ad - 5) / 3, -0.5, 1));
             if (!this.d.snd) {
               this.d.snd = true;
               ctx.audio.snap(this.mouthPos(_v5));
@@ -4569,7 +4569,7 @@ function createDragonKit(THREE2, options = {}) {
           } else if (T2 < tt) {
             this.headSpeed = 18;
             const u = (T2 - ts) / (tt - ts), b = this.d.bite || _v4.set(0, 1.9, 9.5);
-            const amp = (1 - 0.45 * u) * smoothstep6(0, 0.12, u) * (1 - smoothstep6(0.82, 1, u)), sh = Math.sin(u * TAU50 * 2.2 + (s > 0 ? Math.PI : 0)) * amp;
+            const amp = (1 - 0.45 * u) * smoothstep6(0, 0.12, u) * (1 - smoothstep6(0.82, 1, u)), sh = Math.sin(u * TAU54 * 2.2 + (s > 0 ? Math.PI : 0)) * amp;
             this.headLocal.set(b.x + sh * 1.15, lerp6(b.y, 2.9, u), b.z - 0.9 * u);
             this.headLook.copy(this.bodyToWorld(b.x + sh * 2.2, 0.3, b.z + 3, _v5));
             this.headRollT = sh * 0.5;
@@ -4624,12 +4624,12 @@ function createDragonKit(THREE2, options = {}) {
           if (T2 < tw || !this.d.lunge) {
             const c2 = this.chestPos(_v4), dx = pl.pos.x - c2.x, dz = pl.pos.z - c2.z, L4 = Math.hypot(dx, dz) || 1;
             const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw), ux = fx * 0.55 + dx / L4 * 0.45, uz = fz * 0.55 + dz / L4 * 0.45, U = Math.hypot(ux, uz) || 1;
-            this.d.lunge = { x: ux / U, z: uz / U, len: clamp76(L4 / DS - 4, 1, 2) * DS };
+            this.d.lunge = { x: ux / U, z: uz / U, len: clamp77(L4 / DS - 4, 1, 2) * DS };
           }
           const lu = this.d.lunge;
           const Dof = (t) => {
             if (t < tw) return -0.35 * smoothstep6(0, 1, t / tw);
-            const x = clamp76((t - tw) / (tc - tw), 0, 1);
+            const x = clamp77((t - tw) / (tc - tw), 0, 1);
             return -0.35 + (lu.len + 0.35) * 0.5 * (x * x * (3 - 2 * x) + E3(x));
           };
           const Dn = Dof(T2), dD = Dn - (this.d.D || 0);
@@ -4721,7 +4721,7 @@ function createDragonKit(THREE2, options = {}) {
               pl.hit(20, "claw", fp, 9);
             }
           } else {
-            const e = smoothstep6(tf, te - 0.05, T2), k = clamp76((T2 - tf) / (te - 0.08 - tf), 0, 1), e3 = smoothstep6(0, 1, k);
+            const e = smoothstep6(tf, te - 0.05, T2), k = clamp77((T2 - tf) / (te - 0.08 - tf), 0, 1), e3 = smoothstep6(0, 1, k);
             const q = clawArc(1);
             lx = s * (lerp6(q[0], 1.42, e3) + 0.8 * Math.sin(Math.PI * e3));
             ly = lerp6(q[1], 0, e3) + 0.3 * Math.sin(Math.PI * e3);
@@ -4816,7 +4816,7 @@ function createDragonKit(THREE2, options = {}) {
             }
             this.tailGaze(pl, dir, 13);
           } else {
-            const k = clamp76((T2 - ts) / (te - ts), 0, 1);
+            const k = clamp77((T2 - ts) / (te - ts), 0, 1);
             this.pivotTarget = lerp6(3.9, PIVOT_Z, smoothstep6(0, 0.6, k));
             tg.tailYaw = 0;
             tg.spineYaw = dir * 0.34 * (1 - smoothstep6(0, 0.7, k));
@@ -4904,7 +4904,7 @@ function createDragonKit(THREE2, options = {}) {
               this.impactV = (this.impactV || 0) - 4.5;
               this.nodV -= 4;
             }
-            const k = clamp76((T2 - ts) / (te - ts), 0, 1), up7 = smoothstep6(0.3, 1, k);
+            const k = clamp77((T2 - ts) / (te - ts), 0, 1), up7 = smoothstep6(0.3, 1, k);
             this.fastPose = k < 0.3;
             tg.spinePitch = lerp6(-0.3, 0, up7);
             tg.bodyY = lerp6(-0.8, 0, up7);
@@ -4956,9 +4956,9 @@ function createDragonKit(THREE2, options = {}) {
             if (L4 > sweep2) dv.multiplyScalar(sweep2 / L4);
             aim.add(dv);
             const al = this.worldToBody(aim, _v5);
-            const a = clamp76(Math.atan2(al.x, al.z - 4.2), -1, 1);
+            const a = clamp77(Math.atan2(al.x, al.z - 4.2), -1, 1);
             const dist2 = Math.hypot(al.x, al.z - 4.2);
-            const r = clamp76(dist2 - 3, 3.8, 6);
+            const r = clamp77(dist2 - 3, 3.8, 6);
             this.headLocal.set(Math.sin(a) * r, lerp6(4.6, 6.4, smoothstep6(6, 22, dist2)), 4.2 + Math.cos(a) * r);
             this.headLook.copy(aim).setY(terrainHeight(aim.x, aim.z) + 0.6);
             this.headSpeed = 7;
@@ -5279,7 +5279,7 @@ function createDragonKit(THREE2, options = {}) {
             this.d.passes = this.enraged ? 2 : 1;
             this.d.pass = 0;
             this.d.phase = "setup";
-            const a = Math.random() * TAU50;
+            const a = Math.random() * TAU54;
             this.d.dir = new V32(Math.cos(a), 0, Math.sin(a));
           }
           const center2 = pl.pos;
@@ -5337,7 +5337,7 @@ function createDragonKit(THREE2, options = {}) {
             const away = _v4.subVectors(this.pos, pl.pos).setY(0), ad = away.length(), H = this.home;
             if (ad < 1) away.set(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
             else away.multiplyScalar(1 / ad);
-            let dd = clamp76(ad, 18, 28);
+            let dd = clamp77(ad, 18, 28);
             for (let k = dd; k >= 15; k -= 1) if (Math.hypot(pl.pos.x + away.x * k - H.x, pl.pos.z + away.z * k - H.z) <= H.clear - 6) {
               dd = k;
               break;
@@ -5553,7 +5553,7 @@ function createDragonKit(THREE2, options = {}) {
           const L4 = d.length();
           if (L4 < 1e-4) continue;
           d.multiplyScalar(1 / L4);
-          const want = Math.asin(clamp76((gy - st.y) / L4, -1, 0.95)), cur = Math.asin(clamp76(d.y, -1, 1));
+          const want = Math.asin(clamp77((gy - st.y) / L4, -1, 0.95)), cur = Math.asin(clamp77(d.y, -1, 1));
           let da = want - cur;
           if (da < 0) da = Math.max(da, -sag) * dk;
           if (Math.abs(da) <= 1e-4) continue;
@@ -5574,8 +5574,8 @@ function createDragonKit(THREE2, options = {}) {
     // stays braced on bent legs, its weight down over the forelegs and the shoulder blades hunched; the wings open and beat
     // (each downstroke throws up dust). It all comes back down as the roar dies. (amt: how big)
     roarPose(T2, t0, t1, amt, pl) {
-      const tg = this.tg, A3 = clamp76(amt, 0, 1.3);
-      const g = smoothstep6(0, t0, T2), r = clamp76((T2 - t0) / (t1 - t0), 0, 1);
+      const tg = this.tg, A3 = clamp77(amt, 0, 1.3);
+      const g = smoothstep6(0, t0, T2), r = clamp77((T2 - t0) / (t1 - t0), 0, 1);
       const up7 = smoothstep6(0, 0.35, r), rel = smoothstep6(t1, t1 + 0.6, T2), on = up7 * (1 - rel);
       const ss = Math.sin((T2 - t0) * 5.2 - 0.5), sw = Math.sign(ss) * Math.pow(Math.abs(ss), 0.7) * smoothstep6(0, 0.2, r) * (1 - rel);
       const trem = r > 0 && r < 1 ? (Math.sin(T2 * 29) * 0.07 + Math.sin(T2 * 17.3) * 0.05) * (1 - rel) : 0;
@@ -5597,7 +5597,7 @@ function createDragonKit(THREE2, options = {}) {
       tg.pelvisYaw = -sw * 0.05 * A3;
       tg.jaw = r > 0 && rel < 0.5 ? 1 : 0.25 * g * (1 - rel);
       tg.raise = Math.max(0.45 * g, lerp6(0.3, 0.42 + 0.1 * A3, up7)) * (1 - rel) + 0.12 * rel;
-      tg.fold = lerp6(WING_REST, clamp76(0.5 - 0.38 * A3, 0.08, 0.86), smoothstep6(0.05, 0.4, r) * (1 - rel));
+      tg.fold = lerp6(WING_REST, clamp77(0.5 - 0.38 * A3, 0.08, 0.86), smoothstep6(0.05, 0.4, r) * (1 - rel));
       if (r > 0.12 && rel < 0.5) this.groundFlap = { f: 1.05 + 0.1 * A3, a: 0.3 + 0.42 * A3 };
       tg.cup = lerp6(0.25, 0.6, on);
       tg.tailYaw = (Math.sin(T2 * 6.5) * (0.2 + 0.15 * A3) - sw * (0.25 + 0.2 * A3)) * on;
@@ -5657,7 +5657,7 @@ function createDragonKit(THREE2, options = {}) {
       if (this.d.gs === void 0) this.d.gs = -dir;
       if (Math.abs(rel) < 2.75) this.d.gs = rel >= 0 ? 1 : -1;
       else rel = this.d.gs * Math.abs(rel);
-      const az = clamp76(rel, -1.8, 1.8), a = Math.abs(az), dist2 = Math.hypot(e.x - nb.x, e.z - nb.z);
+      const az = clamp77(rel, -1.8, 1.8), a = Math.abs(az), dist2 = Math.hypot(e.x - nb.x, e.z - nb.z);
       const r = lerp6(5.2, 4.2, smoothstep6(0.5, 1.6, a));
       const y = lerp6(lerp6(4.6, 5.6, smoothstep6(6, 22, dist2)), 4.5, smoothstep6(0.7, 1.6, a));
       const h = Math.sqrt(Math.max(0.5, r * r - (y - nb.y) * (y - nb.y)));
@@ -5748,7 +5748,7 @@ function createDragonKit(THREE2, options = {}) {
       const pr = dir.length();
       if (pr < 1) dir.set(1, 0, 0);
       else dir.multiplyScalar(1 / pr);
-      const r = clamp76(pr - 14, -0.5 * H.r, 0.7 * H.r);
+      const r = clamp77(pr - 14, -0.5 * H.r, 0.7 * H.r);
       const a = Math.atan2(dir.z, dir.x) + frand(-0.5, 0.5);
       return new V32(H.x + Math.cos(a) * r, 0, H.z + Math.sin(a) * r);
     }
@@ -5758,7 +5758,7 @@ function createDragonKit(THREE2, options = {}) {
     landingSpotAhead() {
       const H = this.home, pl = this.ctx.player.pos, R = H.clear - 2;
       const ax = this.pos.x - pl.x, az = this.pos.z - pl.z, ad = Math.hypot(ax, az);
-      const a0 = (ad > 1 ? Math.atan2(ax, az) : this.yaw + Math.PI) + frand(-0.25, 0.25), d = clamp76(ad, 14, 17);
+      const a0 = (ad > 1 ? Math.atan2(ax, az) : this.yaw + Math.PI) + frand(-0.25, 0.25), d = clamp77(ad, 14, 17);
       for (const da of [0, 0.45, -0.45, 0.9, -0.9, 1.35, -1.35]) {
         const x = pl.x + Math.sin(a0 + da) * d, z = pl.z + Math.cos(a0 + da) * d;
         if (Math.hypot(x - H.x, z - H.z) <= R) return new V32(x, 0, z);
@@ -5845,12 +5845,12 @@ function createDragonKit(THREE2, options = {}) {
       const wasAir = this.mode === "air", vy = this.vel.y + (wasAir ? this.heaveV : 0);
       this.mode = "ground";
       const gy0 = terrainHeight(this.pos.x, this.pos.z), crashing = this.crashFall;
-      const rest2 = clamp76(this.pos.y - gy0, -1, 1.5) / DS;
+      const rest2 = clamp77(this.pos.y - gy0, -1, 1.5) / DS;
       if (wasAir && crashing) this.impactY = (this.impactY || 0) + rest2;
       this.pos.y = gy0;
       this.vel.set(0, 0, 0);
       this.speed = 0;
-      this.turnVel = wasAir && !crashing ? clamp76(this.airYawVel || 0, -0.8, 0.8) : 0;
+      this.turnVel = wasAir && !crashing ? clamp77(this.airYawVel || 0, -0.8, 0.8) : 0;
       this.turnGoal = 0;
       this.yawRate = 0;
       this.pivVel.set(0, 0, 0);
@@ -5928,9 +5928,9 @@ function createDragonKit(THREE2, options = {}) {
       if (!wasAir || crash) this.impactV = -(Math.min(8, Math.abs(vy)) / DS * 0.7 + 1.2 + strength * 1.6) * (crash ? 1.3 * 0.45 : 1);
       if (wasAir) {
         this.landT = 0;
-        this.landDepth = clamp76(0.6 + Math.abs(vy) * 0.1 + strength * 0.35, 0.6, 1.25) * (crash ? 0.6 : this.landHind ? 0.72 : 1);
+        this.landDepth = clamp77(0.6 + Math.abs(vy) * 0.1 + strength * 0.35, 0.6, 1.25) * (crash ? 0.6 : this.landHind ? 0.72 : 1);
         this.landY = crash ? 0 : -rest2;
-        this.landV = crash ? 0 : clamp76(-vy, 0, 6) / DS;
+        this.landV = crash ? 0 : clamp77(-vy, 0, 6) / DS;
         this.nodV -= 3;
       }
     }
@@ -5946,7 +5946,7 @@ function createDragonKit(THREE2, options = {}) {
         return 0;
       }
       const down2 = smoothstep6(0.22, 0.6, lt), dip = smoothstep6(0.52, 0.66, lt) * (1 - smoothstep6(0.7, 1.2, lt));
-      return lp * (1 - down2) - 0.07 * dip * clamp76(lp / 0.2, 0, 1);
+      return lp * (1 - down2) - 0.07 * dip * clamp77(lp / 0.2, 0, 1);
     }
     /* ---------------- locomotion ---------------- */
     // rotate the body around its middle (between the shoulders and hips), not around the hips
@@ -5975,7 +5975,7 @@ function createDragonKit(THREE2, options = {}) {
       const accel = this.moveSpeed > this.speed ? this.state === "charge" ? 15 : 6 : this.skid ? 15 : 9;
       this.speed = approach(this.speed, this.moveSpeed, accel * dt);
       const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw);
-      const mv = this.speed * (1 - (this.state === "charge" ? 0 : 0.4) * lagK) * (1 + 0.1 * this.gallopK * Math.sin(TAU50 * (this.gPhase - 0.25)));
+      const mv = this.speed * (1 - (this.state === "charge" ? 0 : 0.4) * lagK) * (1 + 0.1 * this.gallopK * Math.sin(TAU54 * (this.gPhase - 0.25)));
       this.pos.x += fx * mv * dt + this.push.x;
       this.pos.z += fz * mv * dt + this.push.z;
       const H = this.home, hx = this.pos.x - H.x, hz = this.pos.z - H.z, r = Math.hypot(hx, hz), lim = H.r + 3;
@@ -6057,9 +6057,9 @@ function createDragonKit(THREE2, options = {}) {
     yawAhead(t0, t1, lim) {
       if (this.spinning) {
         const p2 = this.spinPlan, E32 = (x) => 1 - Math.pow(1 - x, 3) * (1 + 3 * x);
-        return p2.dir * p2.total * (E32(clamp76(p2.k + t1 * p2.rate, 0, 1)) - E32(clamp76(p2.k + t0 * p2.rate, 0, 1)));
+        return p2.dir * p2.total * (E32(clamp77(p2.k + t1 * p2.rate, 0, 1)) - E32(clamp77(p2.k + t0 * p2.rate, 0, 1)));
       }
-      return clamp76(this.yawRate * (t1 - t0), -lim, lim);
+      return clamp77(this.yawRate * (t1 - t0), -lim, lim);
     }
     // where foot n should touch down `rem` seconds from now: on its resting spot as it will be half a stance after landing
     // (so the foot passes under its hip/shoulder mid-stance), predicted from the measured turn and drift, kept within reach
@@ -6081,7 +6081,7 @@ function createDragonKit(THREE2, options = {}) {
       }
       const vlx = (this.pivVel.x * c0 - this.pivVel.z * s0) / DS, vlz = (this.pivVel.x * s0 + this.pivVel.z * c0) / DS;
       const aH = (this.accelLead(rem + half) - aL) / DS;
-      const dh = clamp76(this.yawAhead(rem, rem + half, 0.4), -0.6, 0.6), sh = Math.sin(dh), ch = Math.cos(dh);
+      const dh = clamp77(this.yawAhead(rem, rem + half, 0.4), -0.6, 0.6), sh = Math.sin(dh), ch = Math.cos(dh);
       const ox = hl.x, oz = hl.z - P;
       const loc = _vL.set(ox * ch + oz * sh + vlx * half, 0, -ox * sh + oz * ch + P + vlz * half + aH);
       this.limitLocal(n, loc, 0.72);
@@ -6108,7 +6108,7 @@ function createDragonKit(THREE2, options = {}) {
     // the charge is a bound: both hind feet drive together and throw the body forward into the air, the forefeet catch
     // it, and the hind feet swing on forward under it for the next drive (see the body's bound in poseCommon)
     gallop(dt, spd) {
-      const period = clamp76(0.95 - spd * 0.022, 0.58, 0.9);
+      const period = clamp77(0.95 - spd * 0.022, 0.58, 0.9);
       this.gPhase = (this.gPhase + dt / period) % 1;
       for (const n of LEGS2) {
         const f15 = this.feet[n];
@@ -6123,7 +6123,7 @@ function createDragonKit(THREE2, options = {}) {
     }
     walkGait(dt, spd, nAir, turning = false) {
       const trotK = turning ? 0 : smoothstep6(3.4, 4.4, spd), yr = Math.abs(this.yawRate);
-      const period = turning ? lerp6(1.4, 1.15, clamp76(yr / 0.75, 0, 1)) : lerp6(clamp76(2 - 0.2 * spd, 1.2, 1.85), clamp76(1.12 - 0.04 * spd, 0.84, 1), trotK);
+      const period = turning ? lerp6(1.4, 1.15, clamp77(yr / 0.75, 0, 1)) : lerp6(clamp77(2 - 0.2 * spd, 1.2, 1.85), clamp77(1.12 - 0.04 * spd, 0.84, 1), trotK);
       const duty = turning ? 0.56 : lerp6(0.65, 0.5, trotK), swing = (1 - duty) * period;
       const off = (n) => lerp6(WALK_OFF[n], TROT_OFF[n], trotK);
       if (!this.walkOn) {
@@ -6146,7 +6146,7 @@ function createDragonKit(THREE2, options = {}) {
         if (due && nAir < 2 || urgent && nAir < 3) {
           nAir++;
           let sw = (1 - p2) * period;
-          sw = due ? Math.max(sw, swing * 0.6) : clamp76(sw, swing * 0.6, swing * 1.35);
+          sw = due ? Math.max(sw, swing * 0.6) : clamp77(sw, swing * 0.6, swing * 1.35);
           this.startStep(n, sw * (0.95 + Math.random() * 0.1), duty * period, turning ? 0.42 * DS : (0.36 + 0.12 * (1 - trotK)) * DS + spd * 0.04);
         }
       }
@@ -6176,8 +6176,8 @@ function createDragonKit(THREE2, options = {}) {
       const spd = Math.abs(this.speed), yr = Math.abs(this.yawRate);
       const spdE = Math.max(spd, Math.abs(this.moveSpeed) * 0.85), yrE = Math.max(yr, Math.abs(this.turnGoal || 0) * 0.9);
       const scramble = this.scrambleNow = this.spinning || yr > 1.6;
-      const dur = scramble ? 0.16 : clamp76(0.42 - spdE * 0.028 - yrE * 0.17, 0.17, 0.42);
-      const thr = clamp76(0.28 + spd * 0.02, 0.28, 0.55) - (yrE > 0.25 ? 0.06 : 0);
+      const dur = scramble ? 0.16 : clamp77(0.42 - spdE * 0.028 - yrE * 0.17, 0.17, 0.42);
+      const thr = clamp77(0.28 + spd * 0.02, 0.28, 0.55) - (yrE > 0.25 ? 0.06 : 0);
       const maxAir = scramble ? 3 : 2;
       let nAir = 0;
       for (const n of LEGS2) {
@@ -6343,7 +6343,7 @@ function createDragonKit(THREE2, options = {}) {
         }
         terrainNormal(f15.cur.x, f15.cur.z, f15.normal);
       }
-      const lk = clamp76((maxS - 0.68) / 0.3, 0, 1);
+      const lk = clamp77((maxS - 0.68) / 0.3, 0, 1);
       this.lagK = Math.max(lk, damp2(this.lagK, lk, 5, dt));
       this.maxStretch = maxS;
     }
@@ -6355,7 +6355,7 @@ function createDragonKit(THREE2, options = {}) {
       if (d < 30) this.ctx.shake(0.06 * heavy * (1 - d / 30) * (1 + Math.abs(this.speed) * 0.08), true);
       if (Math.abs(this.speed) > 2 || Math.random() < 0.4) this.ctx.fx.dust(p2, 6 + Math.abs(this.speed) * 1.5 | 0, 1.4);
       if (this.mode === "ground") {
-        const w = clamp76(Math.abs(this.speed) / 4, 0.3, 1.2);
+        const w = clamp77(Math.abs(this.speed) / 4, 0.3, 1.2);
         this.impactV = (this.impactV || 0) - (heavy === 1 ? 2.2 : 1.8) * w;
         this.nodV -= (heavy === 1 ? 0.9 : 2.6) * w;
       }
@@ -6422,7 +6422,7 @@ function createDragonKit(THREE2, options = {}) {
         if (finalApproach) want.y = Math.max(want.y, -lerp6(1.4, this.hoverSink || 4, smoothstep6(0.8, 6, nearG)));
         const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw);
         {
-          const a = Math.max(want.x * fx + want.z * fz, -2.5), b = clamp76(want.x * fz - want.z * fx, -4.5, 4.5);
+          const a = Math.max(want.x * fx + want.z * fz, -2.5), b = clamp77(want.x * fz - want.z * fx, -4.5, 4.5);
           want.x = a * fx + b * fz;
           want.z = a * fz - b * fx;
         }
@@ -6435,10 +6435,10 @@ function createDragonKit(THREE2, options = {}) {
         if (finalApproach) {
           if (hv > 1.2 && vf > 0.3 * hv) {
             const vyaw = Math.atan2(this.vel.x, this.vel.z), lim = lerp6(0.3, Math.PI, smoothstep6(4.5, 1.2, hv));
-            ty = vyaw + clamp76(wrapAngle2(ty - vyaw), -lim, lim);
+            ty = vyaw + clamp77(wrapAngle2(ty - vyaw), -lim, lim);
           }
           const ay = this.d.arrYaw ?? this.yaw;
-          ty = ay + clamp76(wrapAngle2(ty - ay), -0.6, 0.6);
+          ty = ay + clamp77(wrapAngle2(ty - ay), -0.6, 0.6);
         }
         const turn = this.airTurn(wrapAngle2(ty - this.yaw), finalApproach ? 0.9 : 1.4, finalApproach ? 1.6 : 2.4, dt);
         this.yaw += turn;
@@ -6456,19 +6456,19 @@ function createDragonKit(THREE2, options = {}) {
         this.headingVel = approach(this.headingVel || 0, hw, 1.4 * dt);
         const ny = curYaw + this.headingVel * dt;
         const nh = damp2(hv, Math.hypot(desired.x, desired.z), 1.2, dt);
-        const vy = damp2(this.vel.y, clamp76(desired.y, this.state === "land" ? -6 : -9, 9), 1.5, dt);
+        const vy = damp2(this.vel.y, clamp77(desired.y, this.state === "land" ? -6 : -9, 9), 1.5, dt);
         const yawRate = this.headingVel;
         this.vel.set(Math.sin(ny) * nh, vy, Math.cos(ny) * nh);
         this.pos.addScaledVector(this.vel, dt);
         this.yaw += this.airTurn(wrapAngle2(ny - this.yaw), 1.3, 2.6, dt);
         this.turnRate = damp2(this.turnRate, yawRate, 4, dt);
         this.spring("pitchA", Math.atan2(this.vel.y, Math.max(4, nh)) * 0.8, 6.5, dt);
-        this.spring("bank", clamp76(-Math.atan(nh * yawRate / 9.8), -0.85, 0.85), 5.4, dt);
+        this.spring("bank", clamp77(-Math.atan(nh * yawRate / 9.8), -0.85, 0.85), 5.4, dt);
       }
       if (this.mode !== "air") return;
       {
         const A3 = this.sm.flap * (1 - this.sm.fold), c2 = -Math.cos(this.flapPhase), lift = c2 > 0 ? 4 * c2 * c2 : 0;
-        const G2 = this.crashFall ? 0 : this.hover ? 12.5 * clamp76(A3 / 0.85, 0, 1.4) : 10 * clamp76(A3 / 0.6, 0, 1.6);
+        const G2 = this.crashFall ? 0 : this.hover ? 12.5 * clamp77(A3 / 0.85, 0, 1.4) : 10 * clamp77(A3 / 0.6, 0, 1.6);
         this.heaveA = G2 * (lift - 1) - 2.5 * this.heaveV - 6 * this.heaveY;
         this.heaveV += this.heaveA * dt;
         const dy = this.heaveV * dt;
@@ -6500,7 +6500,7 @@ function createDragonKit(THREE2, options = {}) {
       this.group.updateMatrixWorld(true);
       const near = this.pos.y - gy;
       const hspd = Math.hypot(this.vel.x, this.vel.z);
-      const hang = this.crashFall ? 0.7 : clamp76(1 - (hspd - (this.hover ? 3 : 0)) / 10, 0, 1);
+      const hang = this.crashFall ? 0.7 : clamp77(1 - (hspd - (this.hover ? 3 : 0)) / 10, 0, 1);
       this.legHang = damp2(this.legHang ?? hang, hang, 2.5, dt);
       const landing = this.state === "land" && this.d && this.d.final;
       const reachK = landing ? smoothstep6(6.5, 1.6, near) : 0;
@@ -6603,7 +6603,7 @@ function createDragonKit(THREE2, options = {}) {
       F3.y -= 9.8;
       F3.multiplyScalar(0.65).sub(L4.a).addScaledVector(this._lsUp, -0.8 * this.heaveA);
       F3.applyQuaternion(this._lsQi).multiplyScalar(1 / DS);
-      const t = this.clock, k = clamp76(Math.hypot(this.vel.x, this.vel.z) / 16, 0.3, 1.3) * (hind ? 1 : 0.8), p2 = (hind ? 0 : 2.1) + (s > 0 ? 0 : 4.3);
+      const t = this.clock, k = clamp77(Math.hypot(this.vel.x, this.vel.z) / 16, 0.3, 1.3) * (hind ? 1 : 0.8), p2 = (hind ? 0 : 2.1) + (s > 0 ? 0 : 4.3);
       F3.x += 2.6 * k * (Math.sin(t * 2.3 + p2) + 0.6 * Math.sin(t * 3.7 + 1.7 * p2));
       F3.y += 1.2 * k * Math.sin(t * 2.9 + 2.3 * p2);
       F3.z += 2.6 * k * (Math.sin(t * 1.9 + 0.7 * p2) + 0.6 * Math.sin(t * 3.1 + 2.9 * p2));
@@ -6731,8 +6731,8 @@ function createDragonKit(THREE2, options = {}) {
           flapAmp = 0.85;
         } else {
           const climb = this.vel.y, hv = Math.hypot(this.vel.x, this.vel.z);
-          flapFreq = 0.88 + clamp76(climb * 0.06, -0.3, 0.5);
-          flapAmp = clamp76(0.62 + climb * 0.05, 0.12, 0.95);
+          flapFreq = 0.88 + clamp77(climb * 0.06, -0.3, 0.5);
+          flapAmp = clamp77(0.62 + climb * 0.05, 0.12, 0.95);
           if (climb < -3) flapAmp = 0.14;
           const work4 = Math.max(smoothstep6(9, 4, hv), smoothstep6(2, 6, (this.flySpeed || 0) - hv) * smoothstep6(14, 8, hv));
           flapAmp = lerp6(flapAmp, Math.max(flapAmp, 0.88), work4);
@@ -6758,21 +6758,21 @@ function createDragonKit(THREE2, options = {}) {
       sm.flap = lerp6(sm.flap, flapAmp, lam(3));
       this.flapFreqS = flapFreq <= 0 ? (this.flapFreqS || 0) < 0.02 ? 0 : damp2(this.flapFreqS, 0, 2.5, dt) : damp2(this.flapFreqS || flapFreq, flapFreq, 3.5, dt);
       flapFreq = this.flapFreqS;
-      let adv = dt * flapFreq * TAU50;
+      let adv = dt * flapFreq * TAU54;
       const FL = this.flapLock;
       if (FL && this.mode === "air" && !this.crashFall && !FL.done) {
         const rem = FL.at - this.clock;
         if (FL.target === void 0) {
-          const need = ((Math.PI / 2 - this.flapPhase) % TAU50 + TAU50) % TAU50;
-          FL.target = this.flapPhase + need + Math.max(0, Math.round((flapFreq * TAU50 * (rem + dt) - need) / TAU50)) * TAU50;
+          const need = ((Math.PI / 2 - this.flapPhase) % TAU54 + TAU54) % TAU54;
+          FL.target = this.flapPhase + need + Math.max(0, Math.round((flapFreq * TAU54 * (rem + dt) - need) / TAU54)) * TAU54;
         }
-        if (rem > 0) adv = clamp76((FL.target - this.flapPhase) * dt / (rem + dt), 0, dt * 3.2 * TAU50);
+        if (rem > 0) adv = clamp77((FL.target - this.flapPhase) * dt / (rem + dt), 0, dt * 3.2 * TAU54);
         else {
           adv = Math.max(0, FL.target - this.flapPhase);
           FL.done = true;
         }
       }
-      if (hold2 !== null) this.flapPhase += (hold2 + TAU50 * Math.round((this.flapPhase - hold2) / TAU50) - this.flapPhase) * lam(7);
+      if (hold2 !== null) this.flapPhase += (hold2 + TAU54 * Math.round((this.flapPhase - hold2) / TAU54) - this.flapPhase) * lam(7);
       else this.flapPhase += adv;
       const fs = Math.sin(this.flapPhase);
       if (this.prevFlapSin > -0.6 && fs <= -0.6 && sm.flap > 0.3) {
@@ -6793,7 +6793,7 @@ function createDragonKit(THREE2, options = {}) {
         let rel = wrapAngle2(Math.atan2(dx, dz) - this.yaw);
         if (Math.abs(rel) < 2.3) this.lookSide = rel >= 0 ? 1 : -1;
         else rel = (this.lookSide || 1) * Math.abs(rel);
-        const yawRel = clamp76(rel, -1.05, 1.05);
+        const yawRel = clamp77(rel, -1.05, 1.05);
         const dist2 = Math.hypot(dx, dz);
         const el2 = lerp6(0.56, 0.8, smoothstep6(5, 24, dist2)) - 0.16 * smoothstep6(1.5, 5, Math.abs(this.speed));
         hl = polarToHead(_v4.set(yawRel * 0.85, el2 + Math.sin(this.clock * 0.9) * 0.025, 5.15), _v5);
@@ -6843,8 +6843,8 @@ function createDragonKit(THREE2, options = {}) {
       }
       this._hbT += dt;
       if (this._hbT < 0.3) tp.lerpVectors(this._hbFrom, tp, smoothstep6(0, 0.3, this._hbT));
-      sp.x += clamp76((tp.x - sp.x) * hk, -maxA, maxA);
-      sp.y += clamp76((tp.y - sp.y) * hk, -maxA, maxA);
+      sp.x += clamp77((tp.x - sp.x) * hk, -maxA, maxA);
+      sp.y += clamp77((tp.y - sp.y) * hk, -maxA, maxA);
       sp.z += (tp.z - sp.z) * hk;
       const F3 = this.headF || (this.headF = { p: sp.clone(), v: new V32(), y: this.headYawS, yv: 0, pt: this.headPitchS, pv: 0 });
       const fw = 30, fS = Math.max(1, Math.ceil(dt * 60)), fh = dt / fS;
@@ -6868,12 +6868,12 @@ function createDragonKit(THREE2, options = {}) {
       let lookPitch = dl.lengthSq() < 1e-6 ? -0.1 : Math.atan2(dl.y, Math.hypot(dl.x, dl.z));
       let dev = wrapAngle2(lookYaw - neckAz);
       if (Math.abs(dev) > Math.PI / 2) dev = lerp6(dev, Math.sign(dev) * (Math.PI - Math.abs(dev)), smoothstep6(4, 2, Math.hypot(dl.x, dl.z) / DS));
-      lookYaw = clamp76(neckAz + clamp76(dev, -this.headDevMax, this.headDevMax), -this.headLookMax, this.headLookMax);
+      lookYaw = clamp77(neckAz + clamp77(dev, -this.headDevMax, this.headDevMax), -this.headLookMax, this.headLookMax);
       if (this.breathing) lookPitch += 0.3 * sm.jaw;
-      lookPitch = clamp76(lookPitch, -1.05, 0.8);
+      lookPitch = clamp77(lookPitch, -1.05, 0.8);
       const lk = lam(this.headSpeed * 1.2), maxL = this.headSpeed * 0.7 * dt;
-      this.headYawS += clamp76((lookYaw - this.headYawS) * lk, -maxL, maxL);
-      this.headPitchS += clamp76((lookPitch - this.headPitchS) * lk, -maxL, maxL);
+      this.headYawS += clamp77((lookYaw - this.headYawS) * lk, -maxL, maxL);
+      this.headPitchS += clamp77((lookPitch - this.headPitchS) * lk, -maxL, maxL);
       for (let i = 0; i < fS; i++) {
         F3.yv += (fw * fw * (this.headYawS - F3.y) - 2 * fw * F3.yv) * fh;
         F3.y += F3.yv * fh;
@@ -6920,8 +6920,8 @@ function createDragonKit(THREE2, options = {}) {
         for (const n of LEGS2) {
           const f15 = this.feet[n];
           let ld = 0;
-          if (ground) ld = f15.landHold ? 0 : (f15.stepping ? 0.25 : 1) * (clamp76(sq / 0.95, 0, 1) + clamp76(-this.impactY * 1.4, 0, 0.45) + this.brace * (n.charCodeAt(0) === 102 ? 0.3 : 0.2));
-          else if (f15.contact) ld = clamp76((f15.nearC - near) / (0.5 * DS), 0, 0.6);
+          if (ground) ld = f15.landHold ? 0 : (f15.stepping ? 0.25 : 1) * (clamp77(sq / 0.95, 0, 1) + clamp77(-this.impactY * 1.4, 0, 0.45) + this.brace * (n.charCodeAt(0) === 102 ? 0.3 : 0.2));
+          else if (f15.contact) ld = clamp77((f15.nearC - near) / (0.5 * DS), 0, 0.6);
           LL[n] += (Math.min(1, ld) - LL[n]) * lk2;
           const pa = P.pawAim[n];
           if (pa && this.pawAimOn !== n && pa.k > 0) pa.k = Math.max(0, pa.k - dt * 4);
@@ -6936,9 +6936,9 @@ function createDragonKit(THREE2, options = {}) {
       const reach = (n) => {
         const hl2 = this.rig.legs[n].homeLocal, R = n.charCodeAt(0) === 104 ? LEG_RANGE.hind : LEG_RANGE.front;
         const z = this.worldToBody(this.feet[n].cur, _vS).z - hl2.z;
-        return clamp76(z / (z < 0 ? R.b : R.f), -1, 1);
+        return clamp77(z / (z < 0 ? R.b : R.f), -1, 1);
       };
-      const amp = ground && this.state !== "death" && this.state !== "crashed" && this.state !== "tail" ? clamp76(Math.max(Math.abs(this.speed) / 3, Math.abs(this.yawRate) / 0.6), 0, 1) * (1 - this.gallopK) : 0;
+      const amp = ground && this.state !== "death" && this.state !== "crashed" && this.state !== "tail" ? clamp77(Math.max(Math.abs(this.speed) / 3, Math.abs(this.yawRate) / 0.6), 0, 1) * (1 - this.gallopK) : 0;
       let tpy = 0, tcy = 0, tpr = 0, tcr = 0, tx = 0, tbh = 0, tbf = 0;
       if (amp > 1e-3) {
         const lh = lift("hindL"), rh = lift("hindR"), lf = lift("frontL"), rf = lift("frontR");
@@ -6976,28 +6976,28 @@ function createDragonKit(THREE2, options = {}) {
       P.bodyZ = sm.shiftZ;
       P.spineRoll = ground ? g.cr - g.pr : 0;
       if (ground) {
-        const gk = this.gallopK, gp = this.gPhase * TAU50;
-        P.bodyY = sm.bodyY + this.impactY + 0.5 * (g.bobH + g.bobF) + Math.sin(this.clock * 1.3) * 0.03 + gk * (0.3 * Math.sin(gp - 0.12 * TAU50) + 0.06) - squash;
-        P.bodyPitch = this.sm.pitchT + sm.spinePitch * 0.35 + sm.lean + (g.bobF - g.bobH) / 4.2 + gk * 0.1 * Math.sin(gp + 0.05 * TAU50) - 0.05 * sq + this.landPitchNow();
+        const gk = this.gallopK, gp = this.gPhase * TAU54;
+        P.bodyY = sm.bodyY + this.impactY + 0.5 * (g.bobH + g.bobF) + Math.sin(this.clock * 1.3) * 0.03 + gk * (0.3 * Math.sin(gp - 0.12 * TAU54) + 0.06) - squash;
+        P.bodyPitch = this.sm.pitchT + sm.spinePitch * 0.35 + sm.lean + (g.bobF - g.bobH) / 4.2 + gk * 0.1 * Math.sin(gp + 0.05 * TAU54) - 0.05 * sq + this.landPitchNow();
         P.bodyRoll = sm.roll + g.pr;
-        P.spinePitch = sm.spinePitch - gk * 0.11 * Math.cos(gp - 0.4 * TAU50) - 0.14 * sq;
-        P.spineYaw = clamp76(this.turnRate * 0.42 + sm.spineYaw + g.cy - g.py, -0.5, 0.5);
+        P.spinePitch = sm.spinePitch - gk * 0.11 * Math.cos(gp - 0.4 * TAU54) - 0.14 * sq;
+        P.spineYaw = clamp77(this.turnRate * 0.42 + sm.spineYaw + g.cy - g.py, -0.5, 0.5);
       } else {
         P.bodyY = sm.bodyY + this.impactY;
         P.bodyPitch = 0;
         P.bodyRoll = 0;
         P.spinePitch = sm.spinePitch * 0.55;
-        P.spineYaw = clamp76(this.turnRate * 0.2 + sm.spineYaw, -0.4, 0.4);
+        P.spineYaw = clamp77(this.turnRate * 0.2 + sm.spineYaw, -0.4, 0.4);
       }
       this.airK = damp2(this.airK ?? (ground ? 0 : 1), ground ? 0 : 1, 5, dt);
       {
         const ak2 = this.airK;
         if (ground && ak2 > 2e-3) {
           P.spinePitch = lerp6(P.spinePitch, sm.spinePitch * 0.55, ak2);
-          P.spineYaw = lerp6(P.spineYaw, clamp76(this.turnRate * 0.2 + sm.spineYaw, -0.4, 0.4), ak2);
+          P.spineYaw = lerp6(P.spineYaw, clamp77(this.turnRate * 0.2 + sm.spineYaw, -0.4, 0.4), ak2);
         } else if (!ground && ak2 < 0.998) {
           P.spinePitch = lerp6(sm.spinePitch, P.spinePitch, ak2);
-          P.spineYaw = lerp6(clamp76(this.turnRate * 0.42 + sm.spineYaw, -0.5, 0.5), P.spineYaw, ak2);
+          P.spineYaw = lerp6(clamp77(this.turnRate * 0.42 + sm.spineYaw, -0.5, 0.5), P.spineYaw, ak2);
         }
       }
       this.breath += dt * (this.breathing ? 0 : 1.6);
@@ -7180,7 +7180,7 @@ function createDragonKit(THREE2, options = {}) {
       this.life[i] = life;
       this.s0[i] = s0;
       this.s1[i] = s1;
-      this.rot[i] = Math.random() * TAU50;
+      this.rot[i] = Math.random() * TAU54;
       this.rv[i] = (Math.random() - 0.5) * (opts.spin ?? 1.5);
       this.drag[i] = opts.drag ?? 1;
       this.grav[i] = opts.grav ?? 0;
@@ -7313,7 +7313,7 @@ function createDragonKit(THREE2, options = {}) {
         const f15 = Math.random(), age = (1 - f15) * dt;
         M2.copy(pm).lerp(mouth, f15);
         Dd.copy(pd).lerp(dir, f15).normalize();
-        const sp = 29 + Math.random() * 8, a = Math.random() * TAU50, r = Math.pow(Math.random(), 0.7) * 0.11;
+        const sp = 29 + Math.random() * 8, a = Math.random() * TAU54, r = Math.pow(Math.random(), 0.7) * 0.11;
         const vx = Dd.x * sp + (side2.x * Math.cos(a) + up7.x * Math.sin(a)) * r * sp + srcVel.x * 0.6;
         const vy = Dd.y * sp + (side2.y * Math.cos(a) + up7.y * Math.sin(a)) * r * sp + srcVel.y * 0.6;
         const vz = Dd.z * sp + (side2.z * Math.cos(a) + up7.z * Math.sin(a)) * r * sp + srcVel.z * 0.6;
@@ -7331,13 +7331,13 @@ function createDragonKit(THREE2, options = {}) {
     }
     dust(p2, n, size = 1.2) {
       for (let i = 0; i < n; i++) {
-        const a = Math.random() * TAU50, s = Math.random() * 2.2;
+        const a = Math.random() * TAU54, s = Math.random() * 2.2;
         this.alp.emit(PK.DUST, p2.x + Math.cos(a) * 0.5, p2.y + 0.15, p2.z + Math.sin(a) * 0.5, Math.cos(a) * s, 0.6 + Math.random() * 1.2, Math.sin(a) * s, 1.4 + Math.random() * 1.2, size * 0.6, size * 2.2, { drag: 1.6, grav: -0.2, alpha: 0.42 });
       }
     }
     dustRing(c2, radius, n) {
       for (let i = 0; i < n; i++) {
-        const a = i / n * TAU50 + Math.random() * 0.2, r0 = Math.random() * 1.5;
+        const a = i / n * TAU54 + Math.random() * 0.2, r0 = Math.random() * 1.5;
         const sp = radius * (0.9 + Math.random() * 0.6);
         const x = c2.x + Math.cos(a) * r0, z = c2.z + Math.sin(a) * r0;
         this.alp.emit(PK.DUST, x, terrainHeight(x, z) + 0.3, z, Math.cos(a) * sp, 0.8 + Math.random() * 1.8, Math.sin(a) * sp, 1.6 + Math.random() * 1.4, 1.2, 4.2, { drag: 2.4, grav: -0.3, alpha: 0.5 });
@@ -7406,7 +7406,7 @@ function createDragonKit(THREE2, options = {}) {
       const seg = 8, g = new THREE2.PlaneGeometry(r * 2, r * 2, seg, seg);
       g.rotateX(-Math.PI / 2);
       const pos2 = g.attributes.position;
-      const rot = Math.random() * TAU50, c2 = Math.cos(rot), s = Math.sin(rot);
+      const rot = Math.random() * TAU54, c2 = Math.cos(rot), s = Math.sin(rot);
       for (let i = 0; i < pos2.count; i++) {
         const x = pos2.getX(i), z = pos2.getZ(i);
         const wx = p2.x + x * c2 - z * s, wz = p2.z + x * s + z * c2;
@@ -7523,7 +7523,7 @@ function createDragonKit(THREE2, options = {}) {
         g.acc += dt * 70 * Math.min(1, k * 2.5);
         while (g.acc >= 1) {
           g.acc -= 1;
-          const a = Math.random() * TAU50, rr0 = Math.sqrt(Math.random()) * g.r;
+          const a = Math.random() * TAU54, rr0 = Math.sqrt(Math.random()) * g.r;
           const x = g.pos.x + Math.cos(a) * rr0, z = g.pos.z + Math.sin(a) * rr0;
           this.add.emit(PK.FIRE, x, terrainHeight(x, z) + 0.1, z, frand(-0.4, 0.4), 1.5 + Math.random() * 2.5, frand(-0.4, 0.4), 0.5 + Math.random() * 0.5, 0.55, 1.4 + Math.random(), { drag: 0.5, grav: -2.5 });
         }
@@ -7535,14 +7535,14 @@ function createDragonKit(THREE2, options = {}) {
         const b = this.burning[i], t = b.tree;
         b.age += dt;
         t.burn -= dt;
-        const k = clamp76(Math.min(b.age / 2.5, t.burn / 3), 0, 1);
+        const k = clamp77(Math.min(b.age / 2.5, t.burn / 3), 0, 1);
         b.acc += dt * 95 * k;
         const crownR = t.type === "spruce" ? 2.6 * t.s : 4 * t.s;
         while (b.acc >= 1) {
           b.acc -= 1;
           const hgt = t.y + t.h * (0.15 + Math.random() * 0.8);
           const rad = crownR * (1 - (hgt - t.y) / t.h) * Math.random() + 0.3;
-          const a = Math.random() * TAU50;
+          const a = Math.random() * TAU54;
           this.add.emit(PK.FIRE, t.x + Math.cos(a) * rad, hgt, t.z + Math.sin(a) * rad, frand(-0.5, 0.5), 2 + Math.random() * 3, frand(-0.5, 0.5), 0.6 + Math.random() * 0.6, 0.9, 2.6 + Math.random() * 1.5, { drag: 0.6, grav: -3 });
         }
         if (Math.random() < dt * 12 * k) this.add.emit(PK.EMBER, t.x + frand(-2, 2), t.y + t.h * Math.random(), t.z + frand(-2, 2), frand(-1, 1), 3 + Math.random() * 3, frand(-1, 1), 2 + Math.random() * 2, 0.12, 0.05, { drag: 0.4, grav: -0.6 });
@@ -7733,7 +7733,7 @@ function createDragonKit(THREE2, options = {}) {
       this.mistAcc = this.mist ? (this.mistAcc || 0) + dt * 2.2 : 0;
       while (this.mistAcc >= 1) {
         this.mistAcc -= 1;
-        const a = Math.random() * TAU50, r = 12 + Math.random() * 45;
+        const a = Math.random() * TAU54, r = 12 + Math.random() * 45;
         const x = pf.x + Math.cos(a) * r, z = pf.z + Math.sin(a) * r;
         this.alp.emit(PK.MIST, x, terrainHeight(x, z) + 0.8 + Math.random() * 2.5, z, frand(-0.4, 0.4), 0, frand(-0.4, 0.4), 14 + Math.random() * 8, 9, 16, { drag: 0, alpha: 0.06, spin: 0.15 });
       }
@@ -8325,7 +8325,7 @@ function createDragonKit(THREE2, options = {}) {
       const c2 = this.ctx, t0 = c2.currentTime, out2 = this.flat(0.1);
       this.tone(out2.input, t0, { f: 110, f2: 45, a: 2e-3, r: 0.3, peak: 0.8 });
       this.noiseBurst(out2.input, t0, { buf: this.brown, type: "lowpass", f: 600, a: 2e-3, r: 0.25, peak: 0.6 });
-      const k = clamp76(amount / 40, 0.2, 1);
+      const k = clamp77(amount / 40, 0.2, 1);
       this.duck.frequency.cancelScheduledValues(t0);
       this.duck.frequency.setValueAtTime(2e4, t0);
       this.duck.frequency.exponentialRampToValueAtTime(lerp6(3e3, 450, k), t0 + 0.03);
@@ -8747,7 +8747,7 @@ function createDragonKit(THREE2, options = {}) {
     }
     set hp(v) {
       const D = this.dragon;
-      if (D.alive) D.hp = clamp76(+v || 0, 1, D.maxHp);
+      if (D.alive) D.hp = clamp77(+v || 0, 1, D.maxHp);
     }
     get maxHp() {
       return this.dragon.maxHp;
@@ -9106,7 +9106,7 @@ function createDragonKit(THREE2, options = {}) {
       let moved = false;
       for (const s of this.dragon.hitSpheres) {
         if (s.zone === "wing" || s.zone === "head") continue;
-        const cy = clamp76(s.pos.y, p2.y + 0.3, p2.y + Math.max(0.4, height2 - 0.1));
+        const cy = clamp77(s.pos.y, p2.y + 0.3, p2.y + Math.max(0.4, height2 - 0.1));
         const dx = p2.x - s.pos.x, dy = cy - s.pos.y, dz = p2.z - s.pos.z, md = s.r + radius;
         if (dx * dx + dy * dy + dz * dz < md * md) {
           const hd = Math.hypot(dx, dz) || 1e-3, pen = Math.sqrt(md * md - dy * dy) - hd;
@@ -9194,7 +9194,7 @@ function createDragonKit(THREE2, options = {}) {
           for (const s of self.world.statics) {
             const fx = s.x - a.x, fz = s.z - a.z;
             let t = L22 > 1e-6 ? (fx * dx + fz * dz) / L22 : 0;
-            t = clamp76(t, 0, 1);
+            t = clamp77(t, 0, 1);
             const cx = a.x + dx * t - s.x, cz = a.z + dz * t - s.z;
             if (cx * cx + cz * cz < s.r * s.r * 0.85) {
               const y = a.y + (b.y - a.y) * t;
@@ -9207,14 +9207,14 @@ function createDragonKit(THREE2, options = {}) {
       this.setObstacles(o.obstacles || []);
       this.tex = { scale: genScaleTextures(), belly: genBellyTextures(), membrane: genMembraneTexture(), eye: genEyeTexture() };
       this.audio = new AudioEngine();
-      this.volume = clamp76(o.volume ?? 0.8, 0, 1);
+      this.volume = clamp77(o.volume ?? 0.8, 0, 1);
       this.audio.vol = this.volume;
       const ao = o.audio === false ? null : typeof o.audio === "object" && o.audio ? o.audio : {};
       this._audioOpts = ao;
-      this.fx = new FX2(this.scene, this.world, { audio: this.audio, shake: (a) => this._shake(a, null) }, { lights: clamp76(o.fireLights ?? 4, 0, 4) | 0, mist: false });
+      this.fx = new FX2(this.scene, this.world, { audio: this.audio, shake: (a) => this._shake(a, null) }, { lights: clamp77(o.fireLights ?? 4, 0, 4) | 0, mist: false });
       if (o.fireSpreads === false) this.fx.groundFire = () => {
       };
-      this.fireGain = clamp76(o.fireBrightness ?? 1, 0, 4);
+      this.fireGain = clamp77(o.fireBrightness ?? 1, 0, 4);
       {
         const add4 = this.fx.add, U = add4.mat.uniforms;
         add4.mesh.onBeforeRender = (r) => {
@@ -9284,7 +9284,7 @@ function createDragonKit(THREE2, options = {}) {
       return this;
     }
     setVolume(v) {
-      this.volume = clamp76(+v || 0, 0, 1);
+      this.volume = clamp77(+v || 0, 0, 1);
       this.audio.vol = this.volume;
       if (this.audio.ctx) this.audio.setVolume(this.volume);
       return this;
@@ -9456,16 +9456,16 @@ function createDragonKit(THREE2, options = {}) {
     // the ground itself (not trees or buildings standing on it).
     heightFromMesh(meshes, { cell = 1 } = {}) {
       const list = (Array.isArray(meshes) ? meshes : [meshes]).filter(Boolean);
-      const box4 = new THREE2.Box3();
+      const box5 = new THREE2.Box3();
       for (const m of list) {
         m.updateWorldMatrix(true, true);
-        box4.expandByObject(m);
+        box5.expandByObject(m);
       }
-      if (box4.isEmpty()) return () => 0;
+      if (box5.isEmpty()) return () => 0;
       let c2 = Math.max(0.05, +cell || 1);
-      const W4 = box4.max.x - box4.min.x, L4 = box4.max.z - box4.min.z;
+      const W4 = box5.max.x - box5.min.x, L4 = box5.max.z - box5.min.z;
       while ((W4 / c2 + 2) * (L4 / c2 + 2) > 8e6) c2 *= 1.5;
-      const nx = Math.max(2, Math.ceil(W4 / c2) + 1), nz = Math.max(2, Math.ceil(L4 / c2) + 1), x0 = box4.min.x, z0 = box4.min.z;
+      const nx = Math.max(2, Math.ceil(W4 / c2) + 1), nz = Math.max(2, Math.ceil(L4 / c2) + 1), x0 = box5.min.x, z0 = box5.min.z;
       const H = new Float32Array(nx * nz).fill(-Infinity);
       const a = new V32(), b = new V32(), d = new V32();
       for (const root2 of list) root2.traverse((o) => {
@@ -9491,7 +9491,7 @@ function createDragonKit(THREE2, options = {}) {
           }
         }
       });
-      for (let i = 0; i < H.length; i++) if (H[i] === -Infinity) H[i] = box4.min.y;
+      for (let i = 0; i < H.length; i++) if (H[i] === -Infinity) H[i] = box5.min.y;
       return (x, z) => {
         let fx = (x - x0) / c2, fz = (z - z0) / c2;
         fx = fx < 0 ? 0 : fx > nx - 1 ? nx - 1 : fx;
@@ -9674,7 +9674,7 @@ function triangleCount(geometry3) {
 function simplifyGeometry(geometry3, share, { byBone = false, tries = 6 } = {}) {
   const want = Math.max(12, triangleCount(geometry3) * share);
   geometry3.computeBoundingBox?.();
-  const box4 = geometry3.boundingBox, size = box4 ? box4.getSize(new Vector3()) : new Vector3(1, 1, 1);
+  const box5 = geometry3.boundingBox, size = box5 ? box5.getSize(new Vector3()) : new Vector3(1, 1, 1);
   let cell = Math.max(1e-3, Math.cbrt(size.x * size.y * size.z || 1) / Math.sqrt(want) * 1.6), best = null, bestError = Infinity;
   for (let i = 0; i < tries; i++) {
     const g = clusterGeometry(geometry3, cell, { byBone });
@@ -9946,6 +9946,27 @@ var DRAGON_STATE_JA = Object.freeze({ stalk: "構え", guard: "見張り", bite:
 var DRAGON_HIT_JA = Object.freeze({ bite: "噛みつき", claw: "爪", tail: "尻尾", charge: "突進", shock: "衝撃波", fire: "火球", burn: "炎" });
 var DRAGON_DEATH_JA = Object.freeze({ bite: "竜に噛み砕かれた", claw: "竜の爪に裂かれた", tail: "竜の尾に薙ぎ払われた", charge: "竜の突進に轢かれた", shock: "竜の踏みつけに吹き飛ばされた", fire: "竜の火球に焼かれた", burn: "竜の炎に焼かれた" });
 var ZONE_JA = Object.freeze({ head: "頭", neck: "首", body: "胴", leg: "脚", tail: "尻尾", wing: "翼" });
+var particleVersions = /* @__PURE__ */ new WeakMap();
+function trimParticleUploads(fx) {
+  for (const P of [fx?.add, fx?.alp]) {
+    if (!P) continue;
+    const live2 = Math.max(1, P.n | 0);
+    for (const [name, size] of [["iPos", 3], ["iCol", 4], ["iSR", 4], ["iVel", 3]]) {
+      const a = P[name];
+      if (!a?.array || typeof a.addUpdateRange !== "function") continue;
+      const seen = particleVersions.get(a);
+      particleVersions.set(a, a.version);
+      if (seen === void 0 || seen === a.version) continue;
+      const want = Math.min(a.array.length, live2 * size), ranges = a.updateRanges;
+      if (ranges.length) {
+        let end = 0;
+        for (const r of ranges) end = Math.max(end, r.start + r.count);
+        a.clearUpdateRanges();
+        a.addUpdateRange(0, Math.max(end, want));
+      } else a.addUpdateRange(0, want);
+    }
+  }
+}
 function createDragonBridge(THREE2, world2, { site, height: height2, player, hurt = () => true, burn = () => {
 }, notify = () => {
 }, onDiscover = () => {
@@ -9976,6 +9997,10 @@ function createDragonBridge(THREE2, world2, { site, height: height2, player, hur
     fireSpreads: true,
     ...kitOptions
   });
+  function advance(t, camera) {
+    kit.update(t, camera);
+    trimParticleUploads(kit.fx);
+  }
   for (const light of kit.fx?.lights || []) world2.localLights?.add?.(light.l);
   const particleMeshes = [kit.fx?.add?.mesh, kit.fx?.alp?.mesh].filter((m) => m?.isMesh);
   for (const m of particleMeshes) registerEmptyDraw(world2, m);
@@ -10010,7 +10035,7 @@ function createDragonBridge(THREE2, world2, { site, height: height2, player, hur
     if (handle.active !== awake) handle.active = awake;
     if (!awake) {
       state2.pending = 0;
-      kit.update(dt, camera);
+      advance(dt, camera);
       return;
     }
     const at = handle.position, eye = camera?.position ?? p2, far = Math.hypot(eye.x - at.x, eye.y - at.y, eye.z - at.z);
@@ -10039,7 +10064,7 @@ function createDragonBridge(THREE2, world2, { site, height: height2, player, hur
     }
     if (level === 0) {
       state2.pending = 0;
-      kit.update(dt, camera);
+      advance(dt, camera);
       return;
     }
     const step = 1 / (level === 1 ? DRAGON_LOD.middleRate : DRAGON_LOD.farRate);
@@ -10048,7 +10073,7 @@ function createDragonBridge(THREE2, world2, { site, height: height2, player, hur
     const t = Math.min(state2.pending, 1 / 20);
     state2.pending -= t;
     state2.steps++;
-    kit.update(t, camera);
+    advance(t, camera);
   }
   function strike(eye, yaw2, pitch2, amount) {
     if (state2.disposed || !handle.active || !handle.alive) return null;
@@ -12376,18 +12401,18 @@ function installTreeReservationResolver(world2, resolver, { expectedGeneratorSha
 }
 function assetBox(asset) {
   if (!boxes.has(asset)) {
-    const box4 = new Box3();
+    const box5 = new Box3();
     for (const p2 of asset.parts) {
       if (!p2.geometry.boundingBox) p2.geometry.computeBoundingBox();
-      box4.union(p2.geometry.boundingBox);
+      box5.union(p2.geometry.boundingBox);
     }
-    boxes.set(asset, box4);
+    boxes.set(asset, box5);
   }
   return boxes.get(asset);
 }
-function boxFootprint(box4, transform3) {
+function boxFootprint(box5, transform3) {
   const points = [];
-  for (const x of [box4.min.x, box4.max.x]) for (const y of [box4.min.y, box4.max.y]) for (const z of [box4.min.z, box4.max.z]) {
+  for (const x of [box5.min.x, box5.max.x]) for (const y of [box5.min.y, box5.max.y]) for (const z of [box5.min.z, box5.max.z]) {
     point.set(x, y, z).applyMatrix4(transform3);
     points.push({ x: point.x, z: point.z });
   }
@@ -12403,7 +12428,7 @@ function transformedBox(asset, position3, rotation, scale5) {
 function sourceTreeBody(world2, t) {
   const species = reservationTreeSpecies(world2, t), broad = species === "broadleaf", asset = world2.nature?.[species];
   if (!asset) throw new Error("Prepare tree assets before generated reservations");
-  const sy = t.h / asset.height, sx = sy * t.width, lean = t.lean * 0.45, burial = broad ? 0.35 : 0.22, box4 = assetBox(asset), cut = (2.5 + burial + Math.max(Math.abs(box4.min.x), Math.abs(box4.max.x)) * sx * Math.abs(Math.sin(lean))) / (sy * Math.cos(lean)), band = Math.ceil(cut * 2) / 2;
+  const sy = t.h / asset.height, sx = sy * t.width, lean = t.lean * 0.45, burial = broad ? 0.35 : 0.22, box5 = assetBox(asset), cut = (2.5 + burial + Math.max(Math.abs(box5.min.x), Math.abs(box5.max.x)) * sx * Math.abs(Math.sin(lean))) / (sy * Math.cos(lean)), band = Math.ceil(cut * 2) / 2;
   let cache2 = bodyBands.get(asset);
   if (!cache2) {
     cache2 = /* @__PURE__ */ new Map();
@@ -12450,13 +12475,13 @@ function fullBoundsPolygon(minX, minZ, maxX, maxZ, pad2 = 0) {
 function sourceTreeFull(world2, t) {
   const species = reservationTreeSpecies(world2, t), asset = world2.nature?.[species];
   if (!asset) throw new Error("Prepare tree assets before giant crown reservations");
-  const sy = t.h / asset.height, sx = sy * t.width, box4 = assetBox(asset).clone(), lod = world2.nature?.[species + "_lod"];
-  if (lod) box4.union(assetBox(lod));
+  const sy = t.h / asset.height, sx = sy * t.width, box5 = assetBox(asset).clone(), lod = world2.nature?.[species + "_lod"];
+  if (lod) box5.union(assetBox(lod));
   matrix.position.set(t.x, t.y - (species === "broadleaf" ? 0.35 : 0.22), t.z);
   matrix.rotation.set(0, t.r * Math.PI * 2, t.lean * 0.45);
   matrix.scale.set(sx, sy, sx);
   matrix.updateMatrix();
-  const poly = boxFootprint(box4, matrix.matrix), wind = sx * (species === "pine" ? 0.22 : 0.035);
+  const poly = boxFootprint(box5, matrix.matrix), wind = sx * (species === "pine" ? 0.22 : 0.035);
   let minX = Infinity, minZ = Infinity, maxX = -Infinity, maxZ = -Infinity;
   for (const p2 of poly) {
     minX = Math.min(minX, p2.x);
@@ -12630,27 +12655,27 @@ function marshTreeThinned(world2, x, z) {
 }
 var TREE_ROCK = Object.freeze({ scale: 1.35, trunk: 0.35, step: 0.05 });
 var rockSlotCache = /* @__PURE__ */ new Map();
-function chunkRockSlots(hash15, cx, cz) {
+function chunkRockSlots(hash16, cx, cz) {
   const key3 = cx + "," + cz;
   let list = rockSlotCache.get(key3);
-  if (list && list.hash === hash15) return list;
+  if (list && list.hash === hash16) return list;
   list = new Float64Array(ROCK_SLOTS.ordinary * 3);
-  list.hash = hash15;
+  list.hash = hash16;
   for (let i = 0; i < ROCK_SLOTS.ordinary; i++) {
     const seed = cx * 229 + cz * 733 + i * 13;
-    list[i * 3] = cx * 64 + hash15(seed, 9) * 64;
-    list[i * 3 + 1] = cz * 64 + hash15(seed, 10) * 64;
-    list[i * 3 + 2] = rockSlotRadius(i, hash15(seed, 11));
+    list[i * 3] = cx * 64 + hash16(seed, 9) * 64;
+    list[i * 3 + 1] = cz * 64 + hash16(seed, 10) * 64;
+    list[i * 3 + 2] = rockSlotRadius(i, hash16(seed, 11));
   }
   if (rockSlotCache.size > 4096) rockSlotCache.clear();
   rockSlotCache.set(key3, list);
   return list;
 }
-function rockAt(hash15, x, z) {
+function rockAt(hash16, x, z) {
   const reach = TREE_ROCK.scale * 3.4 + TREE_ROCK.trunk;
   let best = null, depth = 0;
   for (let gz = Math.floor((z - reach) / 64); gz <= Math.floor((z + reach) / 64); gz++) for (let gx = Math.floor((x - reach) / 64); gx <= Math.floor((x + reach) / 64); gx++) {
-    const list = chunkRockSlots(hash15, gx, gz);
+    const list = chunkRockSlots(hash16, gx, gz);
     for (let i = 0; i < list.length; i += 3) {
       const dx = x - list[i], dz = z - list[i + 1], r = list[i + 2] * TREE_ROCK.scale + TREE_ROCK.trunk, d = Math.sqrt(dx * dx + dz * dz);
       if (d < r && r - d > depth) {
@@ -12661,12 +12686,12 @@ function rockAt(hash15, x, z) {
   }
   return best;
 }
-function treeSpotOffRocks(hash15, x, z, cx, cz) {
-  const rock = rockAt(hash15, x, z);
+function treeSpotOffRocks(hash16, x, z, cx, cz) {
+  const rock = rockAt(hash16, x, z);
   if (!rock) return { x, z, moved: false };
-  const len3 = rock.d || 1, ux = rock.d ? rock.dx / len3 : Math.cos(hash15(Math.floor(x * 7), 41) * Math.PI * 2), uz = rock.d ? rock.dz / len3 : Math.sin(hash15(Math.floor(x * 7), 41) * Math.PI * 2);
+  const len3 = rock.d || 1, ux = rock.d ? rock.dx / len3 : Math.cos(hash16(Math.floor(x * 7), 41) * Math.PI * 2), uz = rock.d ? rock.dz / len3 : Math.sin(hash16(Math.floor(x * 7), 41) * Math.PI * 2);
   const nx = rock.x + ux * (rock.r + TREE_ROCK.step), nz = rock.z + uz * (rock.r + TREE_ROCK.step);
-  if (Math.floor(nx / 64) !== cx || Math.floor(nz / 64) !== cz || rockAt(hash15, nx, nz)) return null;
+  if (Math.floor(nx / 64) !== cx || Math.floor(nz / 64) !== cz || rockAt(hash16, nx, nz)) return null;
   return { x: nx, z: nz, moved: true };
 }
 function treePlacementCandidate(world2, cx, cz, i, climateScratch3 = scratch) {
@@ -14814,9 +14839,9 @@ mdInstanceMatrix=mat4(r0.x,r1.x,r2.x,0.,r0.y,r1.y,r2.y,0.,r0.z,r1.z,r2.z,0.,r0.w
 function createInstanceTexture(THREE2, renderer, { width = MULTI_DRAW.width } = {}) {
   const per = MULTI_DRAW.texels * 4, perRow = width / MULTI_DRAW.texels;
   if (!Number.isInteger(perRow)) throw new Error("multi-draw: width must hold whole instances");
-  let data = new Float32Array(width * 4), texture = make(1), lo = Infinity, hi = -1, capacity = perRow;
+  let data = new Float32Array(width * 4), texture = make2(1), lo = Infinity, hi = -1, capacity = perRow;
   const uniform = { value: texture }, stats3 = { uploads: 0, rows: 0, whole: 0, grown: 0 };
-  function make(rows) {
+  function make2(rows) {
     const t = new THREE2.DataTexture(data, width, rows, THREE2.RGBAFormat, THREE2.FloatType);
     t.name = "multi-draw-instances";
     t.minFilter = t.magFilter = THREE2.NearestFilter;
@@ -14834,7 +14859,7 @@ function createInstanceTexture(THREE2, renderer, { width = MULTI_DRAW.width } = 
     data = new Float32Array(width * rows * 4);
     data.set(old);
     texture.dispose();
-    texture = make(rows);
+    texture = make2(rows);
     uniform.value = texture;
     capacity = rows * perRow;
     lo = Infinity;
@@ -15023,9 +15048,9 @@ function createTreeMultiDraw(THREE2, world2, { group, families, pools: pools2, p
   }
   for (const species of SPECIES) for (const lod of LODS) {
     for (const part2 of [0, 1]) {
-      const merge = merges.get(species + ":" + lod + ":" + part2);
-      if (!merge) continue;
-      const { source: source2, material: material2, geometry: geometry3, ranges } = merge;
+      const merge4 = merges.get(species + ":" + lod + ":" + part2);
+      if (!merge4) continue;
+      const { source: source2, material: material2, geometry: geometry3, ranges } = merge4;
       const colour = { kind: "colour", species, lod, part: part2, leaf: !!source2.leaf, ranges, pools: [], list: rangeList(), leafDepthCamera: null, leafDepthFrame: -1 };
       colour.mesh = mesh2(`tree-pool:${species}:md:${lod}:${part2}`, geometry3, material2, colour);
       colour.mesh.castShadow = false;
@@ -15276,7 +15301,7 @@ function barkTint(choice) {
 }
 var TREE_LOD_RANGES = Object.freeze({ near: Object.freeze({ ultra: 60, high: 42 }), far2Start: TREE_FAR2_START, end: Object.freeze({ full: 215, reduced: 155 }) });
 function treeFamilyIndex(seed, tree, species) {
-  const hash15 = (...tokens) => {
+  const hash16 = (...tokens) => {
     let h = 2166136261;
     for (const c2 of tokens.join("|")) h = Math.imul(h ^ c2.charCodeAt(0), 16777619);
     h ^= h >>> 16;
@@ -15286,8 +15311,8 @@ function treeFamilyIndex(seed, tree, species) {
     h ^= h >>> 16;
     return h >>> 0;
   };
-  const regional = hash15(seed, species, Math.floor(tree.x / 256), Math.floor(tree.z / 256)) % 8;
-  return (regional + hash15(seed, tree.id) % 4) % 8;
+  const regional = hash16(seed, species, Math.floor(tree.x / 256), Math.floor(tree.z / 256)) % 8;
+  return (regional + hash16(seed, tree.id) % 4) % 8;
 }
 function treeBurial(world2, tree, species, family, scale5 = tree.h / (family?.height || 20)) {
   const base = species === "broadleaf" ? 0.35 : 0.22, height2 = world2.terrainFunctions?.height;
@@ -15642,8 +15667,8 @@ function createTreePools(THREE2, world2, families) {
       transform3.scale.set(scale5 * tree.width, scale5, scale5 * tree.width);
       transform3.updateMatrix();
       color3.set(vegetationTint(local2, leafless));
-      const box4 = new THREE2.Box3(new THREE2.Vector3().fromArray(family.bounds.min), new THREE2.Vector3().fromArray(family.bounds.max));
-      const sphere2 = box4.getBoundingSphere(new THREE2.Sphere()).applyMatrix4(transform3.matrix);
+      const box5 = new THREE2.Box3(new THREE2.Vector3().fromArray(family.bounds.min), new THREE2.Vector3().fromArray(family.bounds.max));
+      const sphere2 = box5.getBoundingSphere(new THREE2.Sphere()).applyMatrix4(transform3.matrix);
       sphere2.radius += Math.max(0.35, scale5 * tree.width * 0.4, tree.h * 0.03 + 0.1);
       const bark = barkTint(world2.terrainFunctions.hash(tree.x * 1.7 + 5.3, tree.z * 2.3 - 1.1)), grey = species === "broadleaf" ? BROADLEAF_BARK : [1, 1, 1];
       const record2 = { id: tree.id, tree, object: object2, family, matrix: new Float32Array(transform3.matrix.elements), color: new Float32Array([color3.r, color3.g, color3.b]), woodColor: new Float32Array([color3.r * bark[0] * grey[0], color3.g * bark[1] * grey[1], color3.b * bark[2] * grey[2]]), sphere: sphere2, entries: [], chunk, distantHandoff: 0, bare: leafless ? 1 : 0 };
@@ -17443,9 +17468,9 @@ function cloudSunAt(x, y, z) {
   if (!(u.z > 0)) return 1;
   const reach = (CLOUD_SHADOW.height - y) / Math.max(sun.z, CLOUD_SHADOW.minTan);
   const n = cloudField(x + sun.x * reach, z + sun.y * reach);
-  let shade3 = smooth6((n - (u.x - u.y)) / (2 * u.y));
-  shade3 *= 1 - u.w * (1 - smooth6((n - u.x) / 0.12));
-  return 1 - u.z * shade3;
+  let shade4 = smooth6((n - (u.x - u.y)) / (2 * u.y));
+  shade4 *= 1 - u.w * (1 - smooth6((n - u.x) / 0.12));
+  return 1 - u.z * shade4;
 }
 function cloudThreshold(share) {
   const t = CLOUD_SHADOW.thresholds, k = Math.min(t.length - 1.0001, Math.max(0, share / 0.05)), i = Math.floor(k);
@@ -17530,7 +17555,7 @@ function stampCapsule(target, size, x0, z0, x1, z1, r, a) {
 function* sweepShadeCeiling(h, nx, nz, cell, sx, sz, tan, out2, beyond = null) {
   const ax = Math.abs(sx), az = Math.abs(sz), open = () => -Infinity, edge2 = beyond || open;
   if (ax >= az) {
-    const dir = sx > 0 ? 1 : -1, slope2 = sz / ax, drop = cell / ax * tan;
+    const dir = sx > 0 ? 1 : -1, slope2 = sz / ax, drop2 = cell / ax * tan;
     for (let k = 0; k < nx; k++) {
       const ix = dir > 0 ? nx - 1 - k : k, px = ix + dir, inside3 = px >= 0 && px < nx;
       for (let iz = 0; iz < nz; iz++) {
@@ -17541,13 +17566,13 @@ function* sweepShadeCeiling(h, nx, nz, cell, sx, sz, tan, out2, beyond = null) {
           const z0 = Math.floor(fz), t = fz - z0, a = out2[z0 * nx + px];
           s = t > 0 ? a + (out2[(z0 + 1) * nx + px] - a) * t : a;
         }
-        const c2 = s - drop, v = h[i];
+        const c2 = s - drop2, v = h[i];
         out2[i] = c2 > v ? c2 : v;
       }
       yield;
     }
   } else {
-    const dir = sz > 0 ? 1 : -1, slope2 = sx / az, drop = cell / az * tan;
+    const dir = sz > 0 ? 1 : -1, slope2 = sx / az, drop2 = cell / az * tan;
     for (let k = 0; k < nz; k++) {
       const iz = dir > 0 ? nz - 1 - k : k, pz = iz + dir, inside3 = pz >= 0 && pz < nz, row2 = iz * nx, prow = pz * nx;
       for (let ix = 0; ix < nx; ix++) {
@@ -17558,25 +17583,25 @@ function* sweepShadeCeiling(h, nx, nz, cell, sx, sz, tan, out2, beyond = null) {
           const x0 = Math.floor(fx), t = fx - x0, a = out2[prow + x0];
           s = t > 0 ? a + (out2[prow + x0 + 1] - a) * t : a;
         }
-        const c2 = s - drop, v = h[i];
+        const c2 = s - drop2, v = h[i];
         out2[i] = c2 > v ? c2 : v;
       }
       yield;
     }
   }
 }
-function* softenShade(depth, nx, nz, passes, from, width, shade3 = new Float32Array(nx * nz), spare = new Float32Array(nx * nz)) {
+function* softenShade(depth, nx, nz, passes, from, width, shade4 = new Float32Array(nx * nz), spare = new Float32Array(nx * nz)) {
   const count2 = nx * nz;
   for (let i = 0; i < count2; i++) {
     const t = (depth[i] - from) / width;
-    shade3[i] = t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+    shade4[i] = t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
   }
   for (let pass = 0; pass < passes; pass++) {
     for (let iz = 0; iz < nz; iz++) {
       const row2 = iz * nx;
       for (let ix = 0; ix < nx; ix++) {
         const i = row2 + ix;
-        spare[i] = (shade3[ix > 0 ? i - 1 : i] + 2 * shade3[i] + shade3[ix < nx - 1 ? i + 1 : i]) * 0.25;
+        spare[i] = (shade4[ix > 0 ? i - 1 : i] + 2 * shade4[i] + shade4[ix < nx - 1 ? i + 1 : i]) * 0.25;
       }
       if ((iz & 63) === 63) yield;
     }
@@ -17584,13 +17609,13 @@ function* softenShade(depth, nx, nz, passes, from, width, shade3 = new Float32Ar
       const row2 = iz * nx, up7 = iz > 0 ? -nx : 0, down2 = iz < nz - 1 ? nx : 0;
       for (let ix = 0; ix < nx; ix++) {
         const i = row2 + ix;
-        shade3[i] = (spare[i + up7] + 2 * spare[i] + spare[i + down2]) * 0.25;
+        shade4[i] = (spare[i + up7] + 2 * spare[i] + spare[i + down2]) * 0.25;
       }
       if ((iz & 63) === 63) yield;
     }
   }
   for (let i = 0; i < count2; i++) {
-    const v = shade3[i];
+    const v = shade4[i];
     if (v > 1e-3 && v < 0.999) depth[i] = from + width * (0.5 - Math.sin(Math.asin(1 - 2 * v) / 3));
   }
 }
@@ -19193,11 +19218,11 @@ function gridSampler(grid) {
   };
 }
 var farClimate = { swamp: 0, ash: 0, snow: 0, mountain: 0 };
-function farTreeCell(cx, cz, { hash: hash15, sample: sample2, waterAt, landmarks = [], removed = null, seed, counters = null }, emit) {
+function farTreeCell(cx, cz, { hash: hash16, sample: sample2, waterAt, landmarks = [], removed = null, seed, counters = null }, emit) {
   for (let i = 0; i < TREE_PLACEMENT_SLOTS; i++) {
     if (counters) counters.slots++;
-    const rng4 = (n) => hash15(cx * 229 + cz * 733 + i * 13, n);
-    const spot = treeSpotOffRocks(hash15, cx * 64 + rng4(1) * 64, cz * 64 + rng4(2) * 64, cx, cz);
+    const rng4 = (n) => hash16(cx * 229 + cz * 733 + i * 13, n);
+    const spot = treeSpotOffRocks(hash16, cx * 64 + rng4(1) * 64, cz * 64 + rng4(2) * 64, cx, cz);
     if (!spot) continue;
     const x = spot.x, z = spot.z, s = sample2(x, z);
     if (!s || rng4(99) > s.density || s.height < 1.5 || s.slope > 0.9) continue;
@@ -19213,7 +19238,7 @@ function farTreeCell(cx, cz, { hash: hash15, sample: sample2, waterAt, landmarks
     farClimate.ash = s.ash;
     farClimate.snow = s.snow;
     farClimate.mountain = s.mountain;
-    const species = vegetationSpecies(farClimate, hash15(x, z)), leafless = vegetationLeafless(farClimate, hash15(x + 83, z - 47));
+    const species = vegetationSpecies(farClimate, hash16(x, z)), leafless = vegetationLeafless(farClimate, hash16(x + 83, z - 47));
     emit({
       x,
       y: s.height,
@@ -20165,11 +20190,11 @@ function treeTierOptionsHtml(quality, tiers) {
 }
 function bindTreeTierOptions(root2, { quality, tiers, onChange }) {
   const boxes2 = [...root2.querySelectorAll("[data-tree-tier]")];
-  const read = () => Object.fromEntries(boxes2.map((box4) => [box4.dataset.treeTier, box4.checked]));
-  for (const box4 of boxes2) box4.onchange = () => onChange(normalizeTreeTiers(read()));
+  const read = () => Object.fromEntries(boxes2.map((box5) => [box5.dataset.treeTier, box5.checked]));
+  for (const box5 of boxes2) box5.onchange = () => onChange(normalizeTreeTiers(read()));
   const all = root2.querySelector("[data-tree-tier-all]");
   if (all) all.onclick = () => {
-    for (const box4 of boxes2) box4.checked = true;
+    for (const box5 of boxes2) box5.checked = true;
     onChange(normalizeTreeTiers(read()));
   };
   return {
@@ -20387,9 +20412,9 @@ function pmremPrograms(pmrem) {
     }
   } catch {
   }
-  const box4 = new BoxGeometry(), background = new MeshBasicMaterial({ name: "PMREM.Background", side: BackSide, depthWrite: false, depthTest: false });
-  scene.add(new Mesh(box4, background));
-  made.push(box4, background);
+  const box5 = new BoxGeometry(), background = new MeshBasicMaterial({ name: "PMREM.Background", side: BackSide, depthWrite: false, depthTest: false });
+  scene.add(new Mesh(box5, background));
+  made.push(box5, background);
   return { scene, dispose() {
     for (const m of made) m.dispose();
   } };
@@ -20523,7 +20548,7 @@ varying vec3 vCaveNormal;
 
 // cave-formations.js
 function createCaveFormationGeometries(THREE2) {
-  const TAU50 = Math.PI * 2;
+  const TAU54 = Math.PI * 2;
   function builder7() {
     const positions = [], uv = [], indices = [], parts = [];
     const vertex3 = (x, y, z, u, v) => {
@@ -20550,13 +20575,13 @@ function createCaveFormationGeometries(THREE2) {
       for (let k = 0; k < rings3.length; k++) {
         const r = rings3[k];
         for (let j = 0; j <= segments; j++) {
-          const theta = j / segments * TAU50;
+          const theta = j / segments * TAU54;
           const radial = 1 + ribs * Math.sin(theta * 5 + phase2 + r.y * 0.65) + ribs * 0.48 * Math.cos(theta * 3 - phase2 * 1.3) + ribs * 0.22 * Math.sin(theta * 9 + r.y * 3.1 + phase2);
           vertex3(
             (r.x || 0) + Math.cos(theta) * r.rx * radial,
             r.y,
             (r.z || 0) + Math.sin(theta) * r.rz * radial,
-            j / segments * radius * TAU50 * uvScale,
+            j / segments * radius * TAU54 * uvScale,
             r.y * uvScale
           );
         }
@@ -22719,12 +22744,12 @@ function createWoodyShrubModels(seed = 728194) {
 }
 
 // camp-crystals.js
-function campCrystalSpots(landmarks, hash15) {
+function campCrystalSpots(landmarks, hash16) {
   const camp = landmarks?.find((l) => l.type === "camp");
-  if (!camp || typeof hash15 !== "function") return [];
-  const turn = hash15(9311, 951) * Math.PI * 2;
+  if (!camp || typeof hash16 !== "function") return [];
+  const turn = hash16(9311, 951) * Math.PI * 2;
   return [0, 1].map((j) => {
-    const a = turn + j * 2.4 + (hash15(9312 + j, 952) - 0.5) * 0.5, r = 8 + hash15(9314 + j, 953) * 2.5;
+    const a = turn + j * 2.4 + (hash16(9312 + j, 952) - 0.5) * 0.5, r = 8 + hash16(9314 + j, 953) * 2.5;
     return { j, x: camp.x + Math.cos(a) * r, z: camp.z + Math.sin(a) * r };
   });
 }
@@ -22908,45 +22933,45 @@ function polytopeBounds(planes, margin = 0) {
 function createRockPlan(familyId, worldSeed = 728194) {
   const match = /^(weathered|jointed|bedded|waterworn)-(\d)$/.exec(familyId);
   if (!match || Number(match[2]) > 3) throw new Error("Unknown procedural rock family " + familyId);
-  const type = match[1], variant = Number(match[2]), seed = hash32(worldSeed + ":rock:" + familyId), random10 = rng2(seed), planes = [];
+  const type = match[1], variant = Number(match[2]), seed = hash32(worldSeed + ":rock:" + familyId), random13 = rng2(seed), planes = [];
   const ratios = { weathered: [[1.12, 0.65, 0.81], [0.83, 0.91, 0.69], [1.04, 0.59, 0.93], [1.18, 0.78, 0.73]], jointed: [[0.8, 1.1, 0.69], [1.13, 0.72, 0.6], [0.86, 0.93, 0.96], [1.04, 0.87, 0.64]], bedded: [[1.31, 0.37, 0.8], [1.1, 0.49, 0.94], [1.34, 0.52, 0.62], [1.02, 0.43, 0.85]], waterworn: [[1.12, 0.43, 0.79], [0.86, 0.55, 1.02], [1.25, 0.38, 0.7], [0.93, 0.61, 0.81]] }[type][variant];
-  const [width, height2, depth] = ratios.map((v) => v * (0.91 + random10() * 0.17)), phase2 = random10() * TAU4;
-  const dip = (random10() - 0.5) * (type === "bedded" ? 0.75 : 0.95), bedding = normalize([Math.sin(dip), 1, (random10() - 0.5) * 0.42]);
+  const [width, height2, depth] = ratios.map((v) => v * (0.91 + random13() * 0.17)), phase2 = random13() * TAU4;
+  const dip = (random13() - 0.5) * (type === "bedded" ? 0.75 : 0.95), bedding = normalize([Math.sin(dip), 1, (random13() - 0.5) * 0.42]);
   const extent2 = (n) => Math.hypot(n[0] * width, n[1] * height2, n[2] * depth);
-  const joints = 5 + (type === "jointed" ? 1 : 0) + (random10() < 0.5 ? 1 : 0), leanRange = { weathered: [0.04, 0.3], jointed: [-0.06, 0.24], bedded: [0.08, 0.3], waterworn: [0.12, 0.43] }[type];
+  const joints = 5 + (type === "jointed" ? 1 : 0) + (random13() < 0.5 ? 1 : 0), leanRange = { weathered: [0.04, 0.3], jointed: [-0.06, 0.24], bedded: [0.08, 0.3], waterworn: [0.12, 0.43] }[type];
   for (let i = 0; i < joints; i++) {
-    const a = phase2 + i * TAU4 / joints + (random10() - 0.5) * 0.34;
-    const lean = (leanRange[0] + random10() * (leanRange[1] - leanRange[0])) * (type === "jointed" && i === 2 ? -0.6 : 1), n = normalize([Math.cos(a) / width, lean / height2, Math.sin(a) / depth]);
-    planes.push({ n, d: extent2(n) * (0.81 + random10() * 0.3), kind: "major-joint" });
+    const a = phase2 + i * TAU4 / joints + (random13() - 0.5) * 0.34;
+    const lean = (leanRange[0] + random13() * (leanRange[1] - leanRange[0])) * (type === "jointed" && i === 2 ? -0.6 : 1), n = normalize([Math.cos(a) / width, lean / height2, Math.sin(a) / depth]);
+    planes.push({ n, d: extent2(n) * (0.81 + random13() * 0.3), kind: "major-joint" });
   }
-  const top = normalize([bedding[0] + (random10() - 0.5) * 0.7, 1, bedding[2] + (random10() - 0.5) * 0.58]), bottom = normalize([(random10() - 0.5) * 0.3, -1, (random10() - 0.5) * 0.34]);
-  planes.push({ n: top, d: extent2(top) * (0.62 + random10() * 0.22), kind: "sloping-bedding" });
-  planes.push({ n: bottom, d: extent2(bottom) * (0.91 + random10() * 0.13), kind: "buried-base" });
+  const top = normalize([bedding[0] + (random13() - 0.5) * 0.7, 1, bedding[2] + (random13() - 0.5) * 0.58]), bottom = normalize([(random13() - 0.5) * 0.3, -1, (random13() - 0.5) * 0.34]);
+  planes.push({ n: top, d: extent2(top) * (0.62 + random13() * 0.22), kind: "sloping-bedding" });
+  planes.push({ n: bottom, d: extent2(bottom) * (0.91 + random13() * 0.13), kind: "buried-base" });
   for (let i = 0; i < 3; i++) {
-    const a = phase2 + (i * 0.73 + 0.14) * TAU4 + (random10() - 0.5) * 0.55, n = normalize([Math.cos(a) / width, (0.6 + random10() * 0.65) / height2, Math.sin(a) / depth]);
-    planes.push({ n, d: extent2(n) * (0.56 + random10() * 0.2), kind: "shoulder-spall" });
+    const a = phase2 + (i * 0.73 + 0.14) * TAU4 + (random13() - 0.5) * 0.55, n = normalize([Math.cos(a) / width, (0.6 + random13() * 0.65) / height2, Math.sin(a) / depth]);
+    planes.push({ n, d: extent2(n) * (0.56 + random13() * 0.2), kind: "shoulder-spall" });
   }
   const round = type === "waterworn" ? [0.19, 0.16, 0.22, 0.18][variant] : type === "weathered" ? 0.095 : type === "bedded" ? 0.04 : 0.035, erosion = type === "waterworn" ? 0.014 : type === "weathered" ? 0.029 : 0.02;
   const relief = type === "waterworn" ? 0.032 : type === "weathered" ? 0.135 : type === "bedded" ? 0.08 : 0.095;
   const seams = [];
-  for (let i = 0; i < (type === "bedded" ? 2 : type === "jointed" ? 1 : type === "weathered" && random10() < 0.5 ? 1 : 0); i++) {
-    const n = type === "bedded" ? bedding : normalize([random10() - 0.5, 0.25 + random10() * 0.5, random10() - 0.5]);
-    seams.push({ n, offset: (random10() - 0.5) * height2 * 0.85, width: type === "bedded" ? 0.13 : 0.1, depth: type === "bedded" ? 0.065 : 0.038, phase: random10() * TAU4 });
+  for (let i = 0; i < (type === "bedded" ? 2 : type === "jointed" ? 1 : type === "weathered" && random13() < 0.5 ? 1 : 0); i++) {
+    const n = type === "bedded" ? bedding : normalize([random13() - 0.5, 0.25 + random13() * 0.5, random13() - 0.5]);
+    seams.push({ n, offset: (random13() - 0.5) * height2 * 0.85, width: type === "bedded" ? 0.13 : 0.1, depth: type === "bedded" ? 0.065 : 0.038, phase: random13() * TAU4 });
   }
   const recessCount = type === "waterworn" ? 0 : type === "weathered" ? variant === 2 ? 0 : 1 : variant % 2 === 0 ? 1 : 0, recesses = [];
   for (let i = 0; i < recessCount; i++) {
-    const a = phase2 + (i * 0.43 + 0.13) * TAU4 + (random10() - 0.5) * 0.3, ny = 0.1 + random10() * 0.42;
-    void { center: [Math.cos(a) * width * (0.77 + random10() * 0.08), ny * height2, Math.sin(a) * depth * (0.77 + random10() * 0.1)], axes: [width * (0.36 + random10() * 0.13), height2 * (0.28 + random10() * 0.15), depth * (0.29 + random10() * 0.11)], radial: [Math.cos(a), 0, Math.sin(a)], tangent: [-Math.sin(a), 0, Math.cos(a)], shear: (random10() - 0.5) * 0.7, power: type === "weathered" ? 1.42 : 1.16, softness: type === "weathered" ? 0.04 : 0.024 };
+    const a = phase2 + (i * 0.43 + 0.13) * TAU4 + (random13() - 0.5) * 0.3, ny = 0.1 + random13() * 0.42;
+    void { center: [Math.cos(a) * width * (0.77 + random13() * 0.08), ny * height2, Math.sin(a) * depth * (0.77 + random13() * 0.1)], axes: [width * (0.36 + random13() * 0.13), height2 * (0.28 + random13() * 0.15), depth * (0.29 + random13() * 0.11)], radial: [Math.cos(a), 0, Math.sin(a)], tangent: [-Math.sin(a), 0, Math.cos(a)], shear: (random13() - 0.5) * 0.7, power: type === "weathered" ? 1.42 : 1.16, softness: type === "weathered" ? 0.04 : 0.024 };
   }
-  const abrasion = type === "waterworn" ? { center: [width * (random10() - 0.5) * 0.2, -height2 * 0.11, depth * (random10() - 0.5) * 0.17], axes: [width * 0.99, height2 * 1.13, depth * 0.99], skew: (random10() - 0.5) * 0.32 } : null;
+  const abrasion = type === "waterworn" ? { center: [width * (random13() - 0.5) * 0.2, -height2 * 0.11, depth * (random13() - 0.5) * 0.17], axes: [width * 0.99, height2 * 1.13, depth * 0.99], skew: (random13() - 0.5) * 0.32 } : null;
   const rawBounds = polytopeBounds(planes, relief * 0.56 + erosion * 0.7 + 7e-3), originY = rawBounds.min[1], bounds6 = { min: [rawBounds.min[0], 0, rawBounds.min[2]], max: [rawBounds.max[0], rawBounds.max[1] - originY, rawBounds.max[2]] };
   const solid2 = polytopeBounds(planes, 0).vertices, meanRadius = (width + height2 + depth) / 3, chips = [];
-  const chipCount = type === "waterworn" ? 0 : { weathered: 6, jointed: 8, bedded: 6 }[type] + Math.floor(random10() * 4);
+  const chipCount = type === "waterworn" ? 0 : { weathered: 6, jointed: 8, bedded: 6 }[type] + Math.floor(random13() * 4);
   for (let i = 0; i < chipCount; i++) {
-    const a = random10() * TAU4, n = normalize([Math.cos(a) / width, (random10() * 1.35 - 0.3) / height2, Math.sin(a) / depth]);
+    const a = random13() * TAU4, n = normalize([Math.cos(a) / width, (random13() * 1.35 - 0.3) / height2, Math.sin(a) / depth]);
     let support = -Infinity;
     for (const v of solid2) support = Math.max(support, dot(n, v));
-    chips.push({ n, d: support - meanRadius * (0.05 + random10() * 0.12) });
+    chips.push({ n, d: support - meanRadius * (0.05 + random13() * 0.12) });
   }
   const roundBias = { weathered: [0.6, 1.5], jointed: [0.8, 1.25], bedded: [0.8, 1.3], waterworn: [1, 1] }[type], chipRound = { weathered: 0.7, jointed: 0.6, bedded: 0.65, waterworn: 1 }[type];
   const envelopeVertices = rawBounds.vertices.map((v) => [v[0], v[1] - originY, v[2]]);
@@ -23236,13 +23261,13 @@ function* rockLodStages(plan2, { base = ROCK_LODS.base, triangles: triangles2 = 
   const out2 = {}, names = ["near", "far", "distant"];
   let radius = 0;
   for (let i = 0; i < 3; i++) {
-    const name = names[i], split = creaseSplit(lods[i], ROCK_LODS.crease[name] * Math.PI / 180), shade3 = fieldShading(field, split.positions, split.smooth, { reach: ROCK_LODS.cavityReach }), p2 = split.positions;
+    const name = names[i], split = creaseSplit(lods[i], ROCK_LODS.crease[name] * Math.PI / 180), shade4 = fieldShading(field, split.positions, split.smooth, { reach: ROCK_LODS.cavityReach }), p2 = split.positions;
     for (let j = 1; j < p2.length; j += 3) p2[j] -= plan2.originY;
     const g = new BufferGeometry();
     g.name = "procedural-rock:" + plan2.id + ":" + name;
     g.setAttribute("position", new BufferAttribute(p2, 3));
     g.setAttribute("normal", new BufferAttribute(split.normals, 3));
-    g.setAttribute("uv", new BufferAttribute(shade3, 2));
+    g.setAttribute("uv", new BufferAttribute(shade4, 2));
     if (name !== "near") g.setAttribute("rockSmoothN", new BufferAttribute(split.smooth, 3));
     g.setIndex(new BufferAttribute(split.indices, 1));
     g.computeBoundingBox();
@@ -23418,10 +23443,10 @@ function createProceduralRockMaterial(maps) {
 function supportSamples(geometry3) {
   const mesh2 = new Mesh(geometry3, new MeshBasicMaterial({ side: DoubleSide }));
   mesh2.updateMatrixWorld(true);
-  const box4 = geometry3.boundingBox, ray3 = new Raycaster(), samples = [], down2 = new V2(0, 1, 0), w = box4.max.x - box4.min.x, d = box4.max.z - box4.min.z;
+  const box5 = geometry3.boundingBox, ray3 = new Raycaster(), samples = [], down2 = new V2(0, 1, 0), w = box5.max.x - box5.min.x, d = box5.max.z - box5.min.z;
   for (let i = 0; i < 12; i++) {
     const a = i / 12 * TAU4, x = Math.cos(a) * w * 0.28, z = Math.sin(a) * d * 0.28;
-    ray3.set(new V2(x, box4.min.y - 1, z), down2);
+    ray3.set(new V2(x, box5.min.y - 1, z), down2);
     const hit2 = ray3.intersectObject(mesh2, false)[0];
     if (hit2) samples.push(hit2.point.clone());
   }
@@ -23433,7 +23458,7 @@ function template(geometry3, material2, plan2) {
   return { parts: [{ geometry: geometry3, material: material2, leaf: false }], geometry: geometry3, material: material2, height: size.y, size, bounds: { min: geometry3.boundingBox.min.toArray(), max: geometry3.boundingBox.max.toArray() }, plan: plan2 };
 }
 function footPoints(geometry3) {
-  const p2 = geometry3.attributes.position, box4 = geometry3.boundingBox, limit = box4.min.y + (box4.max.y - box4.min.y) * 0.33, seen = /* @__PURE__ */ new Set(), out2 = [];
+  const p2 = geometry3.attributes.position, box5 = geometry3.boundingBox, limit = box5.min.y + (box5.max.y - box5.min.y) * 0.33, seen = /* @__PURE__ */ new Set(), out2 = [];
   for (let i = 0; i < p2.count; i++) {
     const y = p2.getY(i);
     if (y > limit) continue;
@@ -24013,16 +24038,16 @@ var corners = (b) => {
 var radiusXZ = (b) => Math.hypot(Math.max(Math.abs(b.min.x), Math.abs(b.max.x)), Math.max(Math.abs(b.min.z), Math.abs(b.max.z)));
 var sphereRadius = (b) => Math.hypot(...["x", "y", "z"].map((k) => Math.max(Math.abs(b.min[k]), Math.abs(b.max[k]))));
 function geometryBox(g, state2) {
-  let box4 = state2.boxes.get(g);
-  if (box4) return box4;
-  box4 = new Box3();
+  let box5 = state2.boxes.get(g);
+  if (box5) return box5;
+  box5 = new Box3();
   const p2 = g?.attributes?.position;
   if (!p2) throw Error("Clearance requires actual position data");
   const v = new Vector3();
-  for (let i = 0; i < p2.count; i++) box4.expandByPoint(v.fromBufferAttribute(p2, i));
-  if (box4.isEmpty() || ![...box4.min, ...box4.max].every(Number.isFinite)) throw Error("Invalid clearance geometry");
-  state2.boxes.set(g, box4);
-  return box4;
+  for (let i = 0; i < p2.count; i++) box5.expandByPoint(v.fromBufferAttribute(p2, i));
+  if (box5.isEmpty() || ![...box5.min, ...box5.max].every(Number.isFinite)) throw Error("Invalid clearance geometry");
+  state2.boxes.set(g, box5);
+  return box5;
 }
 function assetBox2(asset, state2) {
   const b = new Box3();
@@ -24059,13 +24084,13 @@ function stateFor(world2) {
   try {
     s.seed = world2.proceduralTreeSeed;
     for (const species of ["pine", "broadleaf"]) for (let i = 0; i < 8; i++) {
-      const family = world2.proceduralTrees.family(species, i), parts = [...family?.near?.parts || [], ...family?.far?.parts || []].filter((p2) => !p2.leaf), box4 = new Box3();
+      const family = world2.proceduralTrees.family(species, i), parts = [...family?.near?.parts || [], ...family?.far?.parts || []].filter((p2) => !p2.leaf), box5 = new Box3();
       if (!(family?.height > 0) || !parts.length) throw Error("Missing current tree wood");
-      for (const p2 of parts) box4.union(geometryBox(p2.geometry, s));
+      for (const p2 of parts) box5.union(geometryBox(p2.geometry, s));
       const maxScale = 28 / family.height, maxWidth = maxScale * 1.4;
-      const reach = radiusXZ(box4) * maxWidth + Math.max(Math.abs(box4.min.y), Math.abs(box4.max.y)) * maxScale * Math.sin(0.0225);
+      const reach = radiusXZ(box5) * maxWidth + Math.max(Math.abs(box5.min.y), Math.abs(box5.max.y)) * maxScale * Math.sin(0.0225);
       s.maxHalo = Math.max(s.maxHalo, reach);
-      s.families.set(species + ":" + i, { family, parts, box: box4, bands: /* @__PURE__ */ new Map() });
+      s.families.set(species + ":" + i, { family, parts, box: box5, bands: /* @__PURE__ */ new Map() });
     }
     for (const type of ["weathered", "jointed", "bedded", "waterworn"]) for (let i = 0; i < 4; i++) for (const p2 of createRockPlan(type + "-" + i, s.seed).envelopeVertices) s.maxHalo = Math.max(s.maxHalo, Math.hypot(...p2) * ROCK_SIZES.ordinary[1] * 0.92 * Math.max(ROCK_FORM.stretch[1], ROCK_FORM.height[1]));
     s.logBox = assetBox2(world2.nature.fallen_log, s);
@@ -24082,8 +24107,8 @@ function stateFor(world2) {
       if (t.localMatrix) throw Error("Unsupported natural template transform");
       const b = t.bounds;
       if (!b?.min || !b?.max) throw Error("Missing actual natural bounds");
-      const box4 = new Box3(new Vector3(...b.min), new Vector3(...b.max));
-      s.natural.set(name, sphereRadius(box4));
+      const box5 = new Box3(new Vector3(...b.min), new Vector3(...b.max));
+      s.natural.set(name, sphereRadius(box5));
     }
     for (const name of ["snag-pine", "snag-broadleaf", "stump-a", "stump-b", "branch-a", "branch-b", "branch-c"]) if (!s.natural.has(name)) throw Error("Incomplete natural kit");
     const naturalReach = Math.max(...s.natural.values()) * 1.18;
@@ -24120,7 +24145,7 @@ function descriptors(world2, s, cx, cz) {
     s.counts.chunkHits++;
     return d;
   }
-  const { height: height2, hash: hash15, slope: slope2, biome: biome2 } = world2.terrainFunctions, rng4 = (i, n) => hash15(cx * 229 + cz * 733 + i * 13, n), context = reservationContext(world2, { cx, cz }), x0 = cx * 64, z0 = cz * 64;
+  const { height: height2, hash: hash16, slope: slope2, biome: biome2 } = world2.terrainFunctions, rng4 = (i, n) => hash16(cx * 229 + cz * 733 + i * 13, n), context = reservationContext(world2, { cx, cz }), x0 = cx * 64, z0 = cz * 64;
   d = { trees: [], rocks: [], circles: [] };
   const treeWorld = { terrainFunctions: world2.terrainFunctions, hydrology: world2.hydrology, landmarks: world2.landmarks, removed: EMPTY_REMOVED };
   for (let i = 0; i < 66; i++) {
@@ -24209,10 +24234,10 @@ function treeIntersects(world2, s, t, x, z, r, maxY) {
   const sy = t.h / entry.family.height, sx = sy * t.width, lean = t.lean * 0.45, burial = species === "broadleaf" ? 0.35 : 0.22;
   const nativeTop = (maxY - t.y + burial + sx * Math.max(Math.abs(entry.box.min.x), Math.abs(entry.box.max.x)) * Math.abs(Math.sin(lean))) / (sy * Math.cos(lean));
   if (nativeTop < entry.box.min.y) return false;
-  const box4 = woodBand(s, entry, nativeTop);
-  if (box4.isEmpty()) return false;
+  const box5 = woodBand(s, entry, nativeTop);
+  if (box5.isEmpty()) return false;
   const m = new Matrix4().compose(new Vector3(t.x, t.y - burial, t.z), new Quaternion().setFromEuler(new Euler(0, t.r * TAU6, lean)), new Vector3(sx, sy, sx));
-  const points = convexFootprint(corners(box4).map((v) => {
+  const points = convexFootprint(corners(box5).map((v) => {
     v.applyMatrix4(m);
     return { x: v.x, z: v.z };
   }));
@@ -24820,10 +24845,10 @@ function* prepareHabitatObstaclesSteps(world2, c2) {
 }
 function* obstaclesSteps(world2, c2) {
   if (c2.habitatObstacles) return c2.habitatObstacles;
-  const { height: height2, hash: hash15, slope: slope2 } = world2.terrainFunctions, list = [], margin = 7;
+  const { height: height2, hash: hash16, slope: slope2 } = world2.terrainFunctions, list = [], margin = 7;
   let work4 = 0;
   for (let cz = c2.cz - 1; cz <= c2.cz + 1; cz++) for (let cx = c2.cx - 1; cx <= c2.cx + 1; cx++) {
-    const baseReservations = reservationContext(world2, { cx, cz }), contentReservations = world2.hydrologyGeology?.context(baseReservations, cx, cz) || baseReservations, rng4 = (i, n) => hash15(cx * 229 + cz * 733 + i * 13, n);
+    const baseReservations = reservationContext(world2, { cx, cz }), contentReservations = world2.hydrologyGeology?.context(baseReservations, cx, cz) || baseReservations, rng4 = (i, n) => hash16(cx * 229 + cz * 733 + i * 13, n);
     let rockIndex = 0;
     for (let i = 0; i < 99; i++) {
       if (work4 && (work4 & 127) === 0) yield "habitat:obstacles";
@@ -24994,6 +25019,68 @@ function* selectBudgetSteps(candidates, budget, side2, c2) {
   }
   return selected;
 }
+function* partitionSmallestSteps(list, lo, hi, target, compare) {
+  let work4 = 0, left = lo, right = hi;
+  while (left < right) {
+    const pivot = list[left + right >> 1];
+    let i = left, j = right;
+    while (i <= j) {
+      while (compare(list[i], pivot) < 0) {
+        i++;
+        if ((++work4 & 127) === 0) yield "habitat:sort";
+      }
+      while (compare(list[j], pivot) > 0) {
+        j--;
+        if ((++work4 & 127) === 0) yield "habitat:sort";
+      }
+      if (i <= j) {
+        const t = list[i];
+        list[i] = list[j];
+        list[j] = t;
+        i++;
+        j--;
+      }
+      if ((++work4 & 127) === 0) yield "habitat:sort";
+    }
+    if (target <= j) right = j;
+    else if (target >= i) left = i;
+    else break;
+  }
+}
+function* selectAdmittedSteps(candidates, budget, side2, c2, admit) {
+  const compare = (a, b) => a.rank - b.rank || a.gz - b.gz || a.gx - b.gx, chosen = [];
+  let start2 = 0, work4 = 0;
+  while (chosen.length < budget && start2 < candidates.length) {
+    const need = budget - chosen.length, k = Math.min(candidates.length - start2, Math.max(128, Math.ceil(need * 1.25)));
+    if (start2 + k < candidates.length) yield* partitionSmallestSteps(candidates, start2, candidates.length - 1, start2 + k - 1, compare);
+    const batch = candidates.slice(start2, start2 + k).sort(compare);
+    for (let i = 0; i < batch.length && chosen.length < budget; i++) {
+      if ((++work4 & 127) === 0) yield "habitat:admit";
+      if (admit(batch[i])) chosen.push(batch[i]);
+    }
+    start2 += k;
+  }
+  const ordered = new Array(side2 * side2);
+  for (let i = 0; i < chosen.length; i++) {
+    if (i && (i & 127) === 0) yield "habitat:order";
+    const p2 = chosen[i];
+    ordered[(p2.gz - c2.cz * side2) * side2 + p2.gx - c2.cx * side2] = p2;
+  }
+  const selected = [];
+  for (let i = 0; i < ordered.length; i++) {
+    if (i && (i & 127) === 0) yield "habitat:select";
+    if (ordered[i]) selected.push(ordered[i]);
+  }
+  return selected;
+}
+function riverBankPossible(world2, c2) {
+  const h = world2.hydrology, L4 = DRY_BANK_PLANT_LIMITS;
+  if (h?.generationMode !== "water-first" || !h.surfaceAt || !h.nearWater) return false;
+  const query = h.geometry?.queryRiverSegments;
+  if (typeof query !== "function") return true;
+  const pad2 = L4.shoreRange + L4.radius + 1;
+  return query({ minX: c2.cx * 64 - pad2, maxX: (c2.cx + 1) * 64 + pad2, minZ: c2.cz * 64 - pad2, maxZ: (c2.cz + 1) * 64 + pad2 }).length > 0;
+}
 function* plantTerrainSteps(world2, c2) {
   const STEP4 = 4 / 3, canonical = world2.terrainFunctions.height, minX = c2.cx * 48 - 2, minZ = c2.cz * 48 - 2, side2 = 53;
   c2.reservePreparationBytes?.(side2 * side2 * 8);
@@ -25015,7 +25102,7 @@ function habitatMeadowPlanned(world2, c2) {
   return habitatAt(world2, c2.cx * 64 + 32, c2.cz * 64 + 32, tempHabitat).snow <= 0.6;
 }
 function* rebuildHabitatMeadowSteps(world2, c2, mesh2) {
-  const { hash: hash15 } = world2.terrainFunctions, { height: height2, slope: slope2 } = yield* plantTerrainSteps(world2, c2), original = mesh2.userData.natureCount ?? mesh2.count;
+  const { hash: hash16 } = world2.terrainFunctions, { height: height2, slope: slope2 } = yield* plantTerrainSteps(world2, c2), original = mesh2.userData.natureCount ?? mesh2.count;
   const mx = c2.cx * 64 + 32, mz = c2.cz * 64 + 32, climate3 = habitatAt(world2, mx, mz, {}), meadow = climate3.meadow;
   if (climate3.snow > 0.6) return false;
   const quality = world2.quality === "low" ? 0.28 : world2.quality === "balanced" ? 0.55 : 1;
@@ -25024,22 +25111,23 @@ function* rebuildHabitatMeadowSteps(world2, c2, mesh2) {
   c2.reservePreparationBytes?.(side2 * side2 * 192 + 65536);
   const candidates = [], bankCandidates = [], sampler = createHabitatSampler(world2.terrainFunctions, c2.cx * 64, c2.cz * 64, (c2.cx + 1) * 64, (c2.cz + 1) * 64);
   yield* obstaclesSteps(world2, c2);
+  const lazy = !riverBankPossible(world2, c2);
   for (let iz = 0; iz < side2; iz++) for (let ix = 0; ix < side2; ix++) {
     const completed = iz * side2 + ix;
     if (completed && (completed & 127) === 0) yield "habitat:meadow-candidates";
-    const gx = c2.cx * side2 + ix, gz = c2.cz * side2 + iz, x = (c2.cx * side2 + ix + 0.12 + hash15(gx + 181, gz - 337) * 0.76) * step, z = (c2.cz * side2 + iz + 0.12 + hash15(gx - 511, gz + 97) * 0.76) * step;
+    const gx = c2.cx * side2 + ix, gz = c2.cz * side2 + iz, x = (c2.cx * side2 + ix + 0.12 + hash16(gx + 181, gz - 337) * 0.76) * step, z = (c2.cz * side2 + iz + 0.12 + hash16(gx - 511, gz + 97) * 0.76) * step;
     const h = sampler.sample(x, z, tempHabitat);
     if (h.cover < 0.035 || h.snow > 0.65 || height2(x, z) < 0.8 || slope2(x, z) > 0.95) continue;
-    const ordinary = plantPositionAllowed(world2, c2, x, z, 0.04);
-    if (!ordinary && !plantPositionAllowed(world2, c2, x, z, 0.04, false, true)) continue;
     const weight = Math.pow(h.cover, 2.3 + h.dry * 4) * (0.35 + 0.65 * h.shelter);
     if (weight < 1e-4) continue;
-    const rank3 = -Math.log(Math.max(1e-6, hash15(gx + 811, gz - 571))) / weight;
+    const ordinary = lazy || plantPositionAllowed(world2, c2, x, z, 0.04);
+    if (!ordinary && !plantPositionAllowed(world2, c2, x, z, 0.04, false, true)) continue;
+    const rank3 = -Math.log(Math.max(1e-6, hash16(gx + 811, gz - 571))) / weight;
     (ordinary ? candidates : bankCandidates).push({ x, z, rank: rank3, cover: h.cover, core: h.core, shelter: h.shelter, dry: h.dry, edge: h.edge, meadow: h.meadow, swamp: h.swamp, bank: !ordinary, gx, gz });
   }
   c2.reservePreparationBytes?.(side2 * side2 * 16);
   const bankBudget = bankMeadowBudget(bankCandidates.length, step, budget), bankStrata = yield* stratifyBankMeadowSteps(world2.terrainFunctions, bankCandidates);
-  const selected = yield* selectBudgetSteps(candidates, budget - bankBudget, side2, c2);
+  const selected = lazy ? yield* selectAdmittedSteps(candidates, budget - bankBudget, side2, c2, (p2) => plantPositionAllowed(world2, c2, p2.x, p2.z, 0.04)) : yield* selectBudgetSteps(candidates, budget - bankBudget, side2, c2);
   const primaryCount = selected.length, pendingBank = yield* selectBudgetSteps(bankCandidates, bankBudget, side2, c2);
   selected.push(...pendingBank);
   mesh2.userData.riverBankPrimaryCount = primaryCount;
@@ -25051,15 +25139,15 @@ function* rebuildHabitatMeadowSteps(world2, c2, mesh2) {
   const matrix6 = new Float32Array(selected.length * 16), colors = new Float32Array(selected.length * 3), variants = [0, 0, 0, 0], stats3 = { source: original, budget, count: selected.length, variants, meanCover: 0, coreCount: 0, edgeCount: 0, openCount: 0, bankBudget, bankCandidateArea: bankCandidates.length * step * step, bankStrata: bankStrata.cells, mature: 0, matureRejected: 0 };
   for (let i = 0; i < selected.length; i++) {
     if (i && (i & 127) === 0) yield "habitat:meadow-instances";
-    const p2 = selected[i], r = hash15(p2.gx + 74, p2.gz - 16), j = hash15(p2.gx + 42, p2.gz + 19), age = clamp11(0.2 + 0.65 * p2.core + 0.15 * j, 0, 1);
-    let variant = chooseAtlas(p2, p2.meadow, r), phase2 = hash15(p2.gx + 37, p2.gz - 74);
+    const p2 = selected[i], r = hash16(p2.gx + 74, p2.gz - 16), j = hash16(p2.gx + 42, p2.gz + 19), age = clamp11(0.2 + 0.65 * p2.core + 0.15 * j, 0, 1);
+    let variant = chooseAtlas(p2, p2.meadow, r), phase2 = hash16(p2.gx + 37, p2.gz - 74);
     const low = variant === 1 || variant === 2, width = low ? 0.64 + 0.58 * j : 0.48 + 0.37 * j, vertical = variant === 0 ? 0.83 + 0.64 * j : variant === 1 ? 0.62 + 0.64 * j : variant === 2 ? 0.74 + 0.72 * j : 0.8 + 0.57 * j;
     const taper = 0.64 + 0.36 * smooth9(p2.cover, 0.12, 0.63), spread = low ? 1.08 + 0.3 * p2.edge : 1;
     const woodland = 1 - smooth9(p2.meadow, 0.28, 0.62), stature = variant === 1 ? 1 : 1 - woodland * (variant === 2 ? 0.06 + 0.09 * (1 - p2.core) : variant === 3 ? 0.02 + 0.07 * (1 - p2.core) : 0.05 + 0.13 * (1 - p2.core));
-    const yaw2 = hash15(p2.gx + 16, p2.gz + 99) * TAU7;
+    const yaw2 = hash16(p2.gx + 16, p2.gz + 99) * TAU7;
     dummy.position.set(p2.x, height2(p2.x, p2.z) - 2e-3, p2.z);
     dummy.rotation.set(0, yaw2, 0);
-    dummy.scale.set(width * spread, vertical * taper * stature, width * (0.8 + 0.2 * hash15(p2.gx - 56, p2.gz + 44)) * spread);
+    dummy.scale.set(width * spread, vertical * taper * stature, width * (0.8 + 0.2 * hash16(p2.gx - 56, p2.gz + 44)) * spread);
     const form = matureMeadowForm(world2.terrainFunctions, p2, j);
     if (form) {
       const dx = (height2(p2.x + 0.6, p2.z) - height2(p2.x - 0.6, p2.z)) / 1.2, dz = (height2(p2.x, p2.z + 0.6) - height2(p2.x, p2.z - 0.6)) / 1.2;
@@ -25121,14 +25209,14 @@ function* replaceHabitatShrubsSteps(world2, c2) {
     world2.habitatShrubSource = source2;
     world2.habitatShrubProfiles = profiles2;
   }
-  const { hash: hash15, height: height2 } = world2.terrainFunctions, profiles = world2.habitatShrubProfiles;
+  const { hash: hash16, height: height2 } = world2.terrainFunctions, profiles = world2.habitatShrubProfiles;
   for (const old of [...c2.group.children]) {
     if (old.userData.natureType !== "shrub" || old.userData.habitatProfile) continue;
     c2.reservePreparationBytes?.(old.userData.natureCount * 16);
     const src = old.userData.originalMatrices, colors = old.userData.originalColors, entries = old.userData.entries, groups = [[], [], []], names = ["juvenile", "mature", "senescent"];
     for (let i = 0; i < old.userData.natureCount; i++) {
       if (i && (i & 127) === 0) yield "habitat:shrub-candidates";
-      const x = src[i * 16 + 12], z = src[i * 16 + 14], h = habitatAt(world2, x, z, tempHabitat), r = hash15(x + 342, z - 637);
+      const x = src[i * 16 + 12], z = src[i * 16 + 14], h = habitatAt(world2, x, z, tempHabitat), r = hash16(x + 342, z - 637);
       const age = h.dry > 0.45 ? 2 : h.core < 0.42 || r < 0.32 ? 0 : r > 0.9 ? 2 : 1;
       groups[age].push(i);
     }
@@ -25304,7 +25392,7 @@ function makePaver(out2, world2, origin, stone, radius) {
   stone.bounds = bounds2(outline);
 }
 function createRuinCourt(world2, landmark, radius = landmark.type === "boss" ? 13 : 6.5) {
-  const { hash: hash15, noise: noise8 } = world2.terrainFunctions, materials = sharedMaterials(world2), group = new Group();
+  const { hash: hash16, noise: noise8 } = world2.terrainFunctions, materials = sharedMaterials(world2), group = new Group();
   group.name = "terrain-conforming-ruin-court";
   const origin = { x: landmark.x, y: landmark.y, z: landmark.z }, base = builder(), stones = builder(), circle = Array.from({ length: 64 }, (_, i) => {
     const a = i / 64 * TAU8, x = origin.x + Math.cos(a) * radius, z = origin.z + Math.sin(a) * radius;
@@ -25313,20 +25401,20 @@ function createRuinCourt(world2, landmark, radius = landmark.type === "boss" ? 1
   conformed(base, circle, world2, origin, [0.97, 0.95, 0.88], radius);
   const pavers = [], rowStep = 0.84, columnStep = 1.34, rows = Math.ceil(radius / rowStep), columns = Math.ceil(radius / columnStep);
   for (let row2 = -rows; row2 <= rows; row2++) for (let column = -columns - 1; column <= columns + 1; column++) {
-    const seed = row2 * 113 + column * 19 + landmark.x * 7, localX = (column + (row2 & 1) * 0.5) * columnStep + (hash15(seed, 861) - 0.5) * 0.045, localZ = row2 * rowStep + (hash15(seed, 862) - 0.5) * 0.045, x = origin.x + localX, z = origin.z + localZ, d = Math.hypot(localX, localZ);
+    const seed = row2 * 113 + column * 19 + landmark.x * 7, localX = (column + (row2 & 1) * 0.5) * columnStep + (hash16(seed, 861) - 0.5) * 0.045, localZ = row2 * rowStep + (hash16(seed, 862) - 0.5) * 0.045, x = origin.x + localX, z = origin.z + localZ, d = Math.hypot(localX, localZ);
     if (d > radius - 0.64) continue;
     const field = noise8(x * 0.22 + 19, z * 0.22 - 13) * 0.72 + noise8(x * 0.075 - 5, z * 0.075 + 31) * 0.28;
     const edge2 = smooth10(d / radius, 0.58, 0.95), retention = MathUtils.lerp(0.93, 0.36, edge2);
-    if (field < 0.34 + edge2 * 0.11 || hash15(seed, 863) > retention) continue;
-    const width = 1.17 + (hash15(seed, 864) - 0.5) * 0.13, depth = 0.68 + (hash15(seed, 865) - 0.5) * 0.08, broken = hash15(seed, 866) < 0.2;
-    const cut = Array.from({ length: 4 }, (_, i) => 0.035 + hash15(seed, 867 + i) * 0.075);
-    if (broken) cut[Math.floor(hash15(seed, 871) * 4)] = 0.18 + hash15(seed, 872) * 0.13;
-    const outline = paverOutline(x, z, width, depth, (hash15(seed, 873) - 0.5) * 0.045, cut);
+    if (field < 0.34 + edge2 * 0.11 || hash16(seed, 863) > retention) continue;
+    const width = 1.17 + (hash16(seed, 864) - 0.5) * 0.13, depth = 0.68 + (hash16(seed, 865) - 0.5) * 0.08, broken = hash16(seed, 866) < 0.2;
+    const cut = Array.from({ length: 4 }, (_, i) => 0.035 + hash16(seed, 867 + i) * 0.075);
+    if (broken) cut[Math.floor(hash16(seed, 871) * 4)] = 0.18 + hash16(seed, 872) * 0.13;
+    const outline = paverOutline(x, z, width, depth, (hash16(seed, 873) - 0.5) * 0.045, cut);
     if (outline.some((p2) => Math.hypot(p2.x - origin.x, p2.z - origin.z) > radius - 0.14)) continue;
     const lane = 1 - smooth10(Math.max(0, Math.abs(localX) - 0.75), 1.75, 3.25), central = 1 - smooth10(Math.max(0, d - 0.75), 3.6, 5.2), low = Math.max(lane, central);
-    const rise = MathUtils.lerp(0.04 + hash15(seed, 874) * 0.058, 0.018 + hash15(seed, 875) * 0.014, low), bevel = 0.032 + hash15(seed, 876) * 0.023;
-    const tone = 0.82 + hash15(seed, 877) * 0.2, moss = smooth10(field, 0.57, 0.78) * edge2;
-    const stone = { x, z, outline, rise, bevel, broken, textureRotation: Math.floor(hash15(seed, 878) * 4) * Math.PI / 2, textureOffset: [hash15(seed, 879) * 7, hash15(seed, 880) * 7], color: [tone * (1 - moss * 0.09), tone * (0.97 - moss * 0.02), tone * (0.88 - moss * 0.13)] };
+    const rise = MathUtils.lerp(0.04 + hash16(seed, 874) * 0.058, 0.018 + hash16(seed, 875) * 0.014, low), bevel = 0.032 + hash16(seed, 876) * 0.023;
+    const tone = 0.82 + hash16(seed, 877) * 0.2, moss = smooth10(field, 0.57, 0.78) * edge2;
+    const stone = { x, z, outline, rise, bevel, broken, textureRotation: Math.floor(hash16(seed, 878) * 4) * Math.PI / 2, textureOffset: [hash16(seed, 879) * 7, hash16(seed, 880) * 7], color: [tone * (1 - moss * 0.09), tone * (0.97 - moss * 0.02), tone * (0.88 - moss * 0.13)] };
     makePaver(stones, world2, origin, stone, radius);
     pavers.push(stone);
   }
@@ -25845,7 +25933,7 @@ function* replaceFernsSteps(world2, c2) {
 }
 function* clusterGrassSteps(world2, c2) {
   if (!habitatMeadowPlanned(world2, c2)) return yield* winterClusterGrassSteps(world2, c2);
-  const { hash: hash15 } = world2.terrainFunctions;
+  const { hash: hash16 } = world2.terrainFunctions;
   yield* prepareHabitatObstaclesSteps(world2, c2);
   for (const mesh2 of c2.group.children) {
     const type = mesh2.userData.natureType;
@@ -25866,7 +25954,7 @@ function* clusterGrassSteps(world2, c2) {
         continue;
       }
       const core = h.core, baseChance = 0.08 + 0.9 * Math.pow(field, 1.5), chance2 = MathUtils.lerp(1, baseChance, treatment);
-      if (hash15(x + 53, z - 17) > chance2 || !plantPositionAllowed(world2, c2, x, z, 0.08, false, type === "grass" || type === "grass_tall")) {
+      if (hash16(x + 53, z - 17) > chance2 || !plantPositionAllowed(world2, c2, x, z, 0.08, false, type === "grass" || type === "grass_tall")) {
         if (oldEntries?.[i]?.ref) oldEntries[i].ref.index = -1;
         continue;
       }
@@ -25987,10 +26075,10 @@ function supportsHydrologyDeposit(height2, patch2, maxGrade = 0.65) {
   return true;
 }
 function* addContactsSteps(world2, c2) {
-  const assets = prepareContacts(world2), { height: height2, hash: hash15, slope: slope2 } = world2.terrainFunctions, rng4 = rngFor(world2, c2), contentReservations = reservationContext(world2, c2), patches = [[], []], chips = [];
+  const assets = prepareContacts(world2), { height: height2, hash: hash16, slope: slope2 } = world2.terrainFunctions, rng4 = rngFor(world2, c2), contentReservations = reservationContext(world2, c2), patches = [[], []], chips = [];
   const addPatch = (x, z, rx, rz, rot, kind, opacity) => {
     const y = height2(x, z);
-    if (contactPatchAllowed(contentReservations, x, z, rx, rz) && y > 0.7 && !world2.hydrology?.waterAt(x, z, y) && winterAt(world2, x, z, y) < 0.45 && outsideRoute(world2, x, z, 0.25)) patches[kind].push({ x, z, rx, rz, rot, opacity, seed: hash15(x, z) * 20 });
+    if (contactPatchAllowed(contentReservations, x, z, rx, rz) && y > 0.7 && !world2.hydrology?.waterAt(x, z, y) && winterAt(world2, x, z, y) < 0.45 && outsideRoute(world2, x, z, 0.25)) patches[kind].push({ x, z, rx, rz, rot, opacity, seed: hash16(x, z) * 20 });
   };
   const addRockPatch = (rock, x, z, rx, rz, rot, kind, opacity) => {
     if (rock.hydroGeology && !supportsHydrologyDeposit(height2, { x, z, rx, rz, rot })) return;
@@ -25999,7 +26087,7 @@ function* addContactsSteps(world2, c2) {
   const addChip = (x, z, size) => {
     const y = height2(x, z);
     if (!reservationAllows(contentReservations, "groundcover", x, z, size * 1.3) || chips.length >= 560 || y < 0.65 || world2.hydrology?.waterAt(x, z, y) || winterAt(world2, x, z, y) > 0.45 || !outsideRoute(world2, x, z, 0.15)) return;
-    chips.push({ x, z, size, rot: hash15(x + 8, z - 9) * TAU9, flat: 0.28 + hash15(x - 8, z + 9) * 0.3 });
+    chips.push({ x, z, size, rot: hash16(x + 8, z - 9) * TAU9, flat: 0.28 + hash16(x - 8, z + 9) * 0.3 });
   };
   for (let i = 0; i < c2.rocks.length; i++) {
     if (i && i % 64 === 0) yield "ecology:rock-contacts";
@@ -26237,7 +26325,7 @@ function winterConfigureMeadow(material2) {
   material2.needsUpdate = true;
 }
 function* winterClusterGrassSteps(world2, c2) {
-  const { hash: hash15 } = world2.terrainFunctions;
+  const { hash: hash16 } = world2.terrainFunctions;
   for (const mesh2 of c2.group.children) {
     const type = mesh2.userData.natureType;
     if (!["meadow", "grass", "grass_tall", "shrub"].includes(type) || mesh2.userData.ecology) continue;
@@ -26256,7 +26344,7 @@ function* winterClusterGrassSteps(world2, c2) {
         continue;
       }
       const core = smooth11(field, 0.27, 0.65), baseChance = type === "shrub" ? 0.3 + 0.62 * core : type === "grass_tall" ? 0.33 + 0.57 * core : 0.33 + 0.67 * core, chance2 = MathUtils.lerp(1, baseChance, treatment);
-      if (hash15(x + 53, z - 17) > chance2 || !outsideRoute(world2, x, z)) continue;
+      if (hash16(x + 53, z - 17) > chance2 || !outsideRoute(world2, x, z)) continue;
       const m = Array.from(source2.subarray(offset, offset + 16));
       const horizontal = MathUtils.lerp(1, type === "meadow" ? 0.92 + core * 0.47 : 0.84 + core * 0.2, treatment);
       const vertical = MathUtils.lerp(1, type === "meadow" ? 0.78 + core * 0.24 : type === "grass_tall" ? 0.8 + core * 0.18 : type === "shrub" ? 0.62 + core * 0.33 : 0.9 + core * 0.1, treatment);
@@ -29059,10 +29147,10 @@ var { FullScreenPass, saveRendererState, restoreRendererState, mulberry32: mulbe
     const r = Math.sqrt(-2 * Math.log(u1));
     return [r * Math.cos(2 * Math.PI * u2), r * Math.sin(2 * Math.PI * u2)];
   }
-  const clamp76 = (x, a, b) => Math.min(b, Math.max(a, x));
+  const clamp77 = (x, a, b) => Math.min(b, Math.max(a, x));
   const lerp6 = (a, b, t) => a + (b - a) * t;
   const smoothstep6 = (a, b, x) => {
-    const t = clamp76((x - a) / (b - a), 0, 1);
+    const t = clamp77((x - a) / (b - a), 0, 1);
     return t * t * (3 - 2 * t);
   };
   function toVec32(v, target = new Vector3()) {
@@ -29107,7 +29195,7 @@ var { FullScreenPass, saveRendererState, restoreRendererState, mulberry32: mulbe
     for (const s of sources) for (const k in s) out2[k] = s[k];
     return out2;
   }
-  return { FullScreenPass: FullScreenPass2, saveRendererState: saveRendererState2, restoreRendererState: restoreRendererState2, mulberry32: mulberry324, gaussianPair: gaussianPair2, clamp: clamp76, lerp: lerp6, smoothstep: smoothstep6, toVec3: toVec32, makeTarget: makeTarget2, linkUniforms: linkUniforms2 };
+  return { FullScreenPass: FullScreenPass2, saveRendererState: saveRendererState2, restoreRendererState: restoreRendererState2, mulberry32: mulberry324, gaussianPair: gaussianPair2, clamp: clamp77, lerp: lerp6, smoothstep: smoothstep6, toVec3: toVec32, makeTarget: makeTarget2, linkUniforms: linkUniforms2 };
 })();
 var { GRAVITY, normalizeSpectrum, frequency, frequencyDerivative, spectrumAmplitude, SPECTRUM_GLSL } = /* @__PURE__ */ (() => {
   const GRAVITY4 = 9.81;
@@ -29158,9 +29246,9 @@ var { GRAVITY, normalizeSpectrum, frequency, frequencyDerivative, spectrumAmplit
     return omega > peakOmega ? 9.77 * Math.pow(x, -2.5) : 6.97 * Math.pow(x, 5);
   }
   function wrapAngle2(a) {
-    const TAU50 = Math.PI * 2;
-    a = (a + Math.PI) % TAU50;
-    if (a < 0) a += TAU50;
+    const TAU54 = Math.PI * 2;
+    a = (a + Math.PI) % TAU54;
+    if (a < 0) a += TAU54;
     return a - Math.PI;
   }
   function directionSpectrum(theta, omega, s) {
@@ -30315,6 +30403,10 @@ uniform vec4 uFoamEmitters[8]; // x, z, 半径, 強さ（滝つぼなど）
 uniform int uFoamEmitterCount;
 uniform float uSSREnabled;
 uniform float uSSRMaxDist;
+// KUMARIM v144: the march's step count as a uniform (the same as SSR_STEPS): with a constant count the D3D shader
+// compiler (Windows: Firefox, and Chrome/Edge in the background) unrolled the 32 steps and the 5-step search in each,
+// and the water's program took 17-18 s to build.
+uniform int uSSRSteps;
 uniform int uWaterDebug;       // 0:通常 1:屈折 2:反射 3:フレネル 4:太陽 5:SSS 6:泡 7:法線 8:SSRヒット 12:影
 uniform float uUnderBoost;     // 水中から見た時の散乱光の明るさ
 
@@ -30381,8 +30473,10 @@ vec4 traceSSR(vec3 vpos, vec3 vdir, float jitter) {
   float q0 = vpos.z * k0, q1 = vend.z * k1;
   float prevT = 0.0;
   float prevD = -vpos.z;
-  for (int i = 1; i <= SSR_STEPS; i++) {
-    float t = (float(i) - 1.0 + jitter) / float(SSR_STEPS);
+  int steps = max(uSSRSteps, 1);
+  float stepsF = float(steps);
+  for (int i = 1; i <= steps; i++) {
+    float t = (float(i) - 1.0 + jitter) / stepsF;
     t = t * t;                            // 手前ほど細かく
     vec2 uv = mix(s0, s1, t);
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) break;
@@ -30422,8 +30516,8 @@ float foamPattern(vec2 xz, float coverage, float flowTime) {
 // 泡エミッター（滝つぼなど）
 float emitterFoam(vec2 xz) {
   float f = 0.0;
-  for (int i = 0; i < 8; i++) {
-    if (i >= uFoamEmitterCount) break;
+  int count = min(uFoamEmitterCount, 8);
+  for (int i = 0; i < count; i++) {
     vec4 e = uFoamEmitters[i];
     float d = length(xz - e.xy) / max(e.z, 1e-3);
     float n = wNoise(xz * 0.45 + uTime * 0.35) * 0.6 + wNoise(xz * 1.7 - uTime * 0.6) * 0.4;
@@ -32328,18 +32422,18 @@ void main() {
       const lip = Math.max(0, o.lipLength ?? 1.2);
       const fade = Math.min(lip * 0.7, Math.max(0, o.lipFade ?? 0));
       const run = lip - fade;
-      const drop = run > 1e-3 ? Math.max(0, o.lipDrop ?? 0) : 0;
-      const depth = o.lipDepth ? Math.max(drop + 0.04, o.lipDepth) : 0;
+      const drop2 = run > 1e-3 ? Math.max(0, o.lipDrop ?? 0) : 0;
+      const depth = o.lipDepth ? Math.max(drop2 + 0.04, o.lipDepth) : 0;
       const lift = fade > 0 ? o.lipLift ?? 0.012 : 0;
-      const crown = Math.min(drop, o.lipCrown ?? drop * 0.6);
-      const brinkThick = depth > 0 ? depth - drop : 0;
-      const vy0 = drop > 0 ? this.speed * 2 * drop / run : 0;
+      const crown = Math.min(drop2, o.lipCrown ?? drop2 * 0.6);
+      const brinkThick = depth > 0 ? depth - drop2 : 0;
+      const vy0 = drop2 > 0 ? this.speed * 2 * drop2 / run : 0;
       const n0 = new Vector3(0, 1, 0).addScaledVector(dir, vy0 / this.speed).normalize();
-      const base = top.clone().addScaledVector(n0, -brinkThick * 0.5).add(new Vector3(0, -drop, 0));
+      const base = top.clone().addScaledVector(n0, -brinkThick * 0.5).add(new Vector3(0, -drop2, 0));
       const fallH = this.height + (base.y - top.y);
       const tEnd = (-vy0 + Math.sqrt(vy0 * vy0 + 2 * G2 * Math.max(0.01, fallH))) / G2;
       this.tEnd = tEnd;
-      this.lip = { length: lip, fade, drop, depth, vy0 };
+      this.lip = { length: lip, fade, drop: drop2, depth, vy0 };
       this.impact = base.clone().addScaledVector(dir, this.speed * tEnd);
       this.impact.y = top.y - this.height;
       const R = o.rows ?? 72, C3 = o.columns ?? 28, CT = 5;
@@ -32362,11 +32456,11 @@ void main() {
       for (let i = 0; i < Rs; i++) {
         const a = -lip + lip * i / Rs;
         const u = run > 0 ? Math.min(1, Math.max(0, (a + run) / run)) : 1;
-        const hs = lift * (1 - u * u * (3 - 2 * u)) - drop * u * u;
-        const slope2 = run > 0 ? (lift * -6 * u * (1 - u) - 2 * drop * u) / run : 0;
+        const hs = lift * (1 - u * u * (3 - 2 * u)) - drop2 * u * u;
+        const slope2 = run > 0 ? (lift * -6 * u * (1 - u) - 2 * drop2 * u) / run : 0;
         const vel = dir.clone().addScaledVector(up7, slope2).normalize();
         const n = normalOf(vel);
-        const thick = depth > 0 ? Math.max(0, depth - drop * u * u) : 0;
+        const thick = depth > 0 ? Math.max(0, depth - drop2 * u * u) : 0;
         const c2 = top.clone().addScaledVector(dir, a).add(new Vector3(0, hs, 0)).addScaledVector(n, -thick * 0.5);
         rows.push({ c: c2, vel, n, f: 0, sv: a / lip, fall: a / this.speed, w: this.width, thick, bulge: crown * u * u, round: 0 });
       }
@@ -33209,29 +33303,29 @@ var { FloatingBody } = (() => {
       this.object = object2;
       let size = o.size, center2 = o.center;
       if (!size || !center2) {
-        const box4 = new Box3();
+        const box5 = new Box3();
         if (object2.geometry) {
           object2.geometry.computeBoundingBox();
-          box4.copy(object2.geometry.boundingBox);
-          box4.min.multiply(object2.scale);
-          box4.max.multiply(object2.scale);
+          box5.copy(object2.geometry.boundingBox);
+          box5.min.multiply(object2.scale);
+          box5.max.multiply(object2.scale);
         } else {
           const q = object2.quaternion.clone();
           object2.quaternion.identity();
           object2.updateMatrixWorld(true);
-          box4.setFromObject(object2);
+          box5.setFromObject(object2);
           const wp = object2.getWorldPosition(new Vector3());
-          box4.min.sub(wp);
-          box4.max.sub(wp);
+          box5.min.sub(wp);
+          box5.max.sub(wp);
           object2.quaternion.copy(q);
           object2.updateMatrixWorld(true);
         }
         if (!size) {
-          const sz = box4.getSize(new Vector3());
+          const sz = box5.getSize(new Vector3());
           size = [sz.x, sz.y, sz.z];
         }
         if (!center2) {
-          const c2 = box4.getCenter(new Vector3());
+          const c2 = box5.getCenter(new Vector3());
           center2 = [c2.x, c2.y, c2.z];
         }
       }
@@ -33428,6 +33522,7 @@ var { WATER_QUALITY, WaterSystem } = (() => {
         uFoamTex: { value: null },
         uSSREnabled: { value: o.ssr === false || this.ssrSteps <= 0 ? 0 : 1 },
         uSSRMaxDist: { value: o.ssrMaxDistance ?? 250 },
+        uSSRSteps: { value: Math.max(1, this.ssrSteps | 0) },
         uFoamEmitters: { value: Array.from({ length: 8 }, () => new Vector4()) },
         uFoamEmitterCount: { value: 0 },
         uWaterDebug: { value: 0 },
@@ -33641,6 +33736,7 @@ var { WATER_QUALITY, WaterSystem } = (() => {
       this.materials.add(m);
       m.defines = m.defines || {};
       m.defines.SSR_STEPS = Math.max(1, this.ssrSteps | 0);
+      if (this.uniforms?.uSSRSteps) this.uniforms.uSSRSteps.value = m.defines.SSR_STEPS;
       this._applyEnvDefines(m);
     }
     // ---- 毎フレーム ------------------------------------------------------------
@@ -35046,7 +35142,7 @@ function createUnderworldWater({ world: world2, scene, field, quality = "ultra",
     bodies.set(spec.id, body2);
     counters.added++;
   }
-  function drop(id2) {
+  function drop2(id2) {
     const b = bodies.get(id2);
     if (b && water) water.remove(b);
     bodies.delete(id2);
@@ -35063,7 +35159,7 @@ function createUnderworldWater({ world: world2, scene, field, quality = "ultra",
           best = d;
           next = s;
         }
-      } else if (d > UNDER_WATER.keep && bodies.has(s.id)) drop(s.id);
+      } else if (d > UNDER_WATER.keep && bodies.has(s.id)) drop2(s.id);
     }
     if (next) add4(next);
   }
@@ -35290,7 +35386,7 @@ function createUnderworldLava({ world: world2, scene, field, time }) {
     bodies.set(spec.id, mesh2);
     counters.added++;
   }
-  function drop(id2) {
+  function drop2(id2) {
     const m = bodies.get(id2);
     if (m) {
       m.removeFromParent();
@@ -35310,7 +35406,7 @@ function createUnderworldLava({ world: world2, scene, field, time }) {
           best = d;
           next = s;
         }
-      } else if (d > LAVA.keep && bodies.has(s.id)) drop(s.id);
+      } else if (d > LAVA.keep && bodies.has(s.id)) drop2(s.id);
     }
     if (next) add4(next);
   }
@@ -35345,7 +35441,7 @@ function createUnderworldLava({ world: world2, scene, field, time }) {
     if (disposed) return;
     disposed = true;
     unwarm();
-    for (const id2 of [...bodies.keys()]) drop(id2);
+    for (const id2 of [...bodies.keys()]) drop2(id2);
     material2.dispose();
     root2.removeFromParent();
   }
@@ -35426,8 +35522,8 @@ function priorFernEnvelope(rnd3, bearing) {
   }
   return { min, max };
 }
-function woodlandUnderstory(base, hash15) {
-  const { seed, profile, family } = base, rnd3 = (a, b = 0) => hash15(seed, profile, family, 701 + a, b), p2 = [], uv = [], color3 = [], index2 = [], nodes = [{ id: "rhizome", parent: null, point: [0, 0, 0] }], leaves = [], groundLeaves = [];
+function woodlandUnderstory(base, hash16) {
+  const { seed, profile, family } = base, rnd3 = (a, b = 0) => hash16(seed, profile, family, 701 + a, b), p2 = [], uv = [], color3 = [], index2 = [], nodes = [{ id: "rhizome", parent: null, point: [0, 0, 0] }], leaves = [], groundLeaves = [];
   const linear5 = (v) => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
   function vertex3(point5, u, v, tone = 1) {
     const rgb = profile === 2 ? [0.33, 0.445, 0.245] : [0.315, 0.425, 0.235];
@@ -35628,7 +35724,7 @@ function buildGrassModel(seed = 728194, profile = 2, family = 0) {
       const bx = stations ? root2[0] + Math.cos(angle) * bs + Math.cos(leanAngle) * lean * baselineT : cx, by = stations ? root2[1] + height2 * br : cy, bz = stations ? root2[2] + Math.sin(angle) * bs + Math.sin(leanAngle) * lean * baselineT : cz;
       const bw = stations ? width * (0.12 + 1.06 * Math.sin(Math.PI * baselineT)) * Math.pow(1 - baselineT, 0.55) : w, ba = stations ? angle + twist * baselineT * baselineT : theta;
       for (let j = 0; j < across2; j++) {
-        const side2 = across2 === 3 ? j - 1 : j * 2 - 1, fold2 = side2 === 0 ? w * 0.28 : 0, shade3 = (0.81 + 0.21 * t) * (side2 === 0 ? 1.025 : 1), rgb = p2.color.map((c2, k) => Math.min(0.86, Math.max(0.03, (c2 * (1 - straw2) + [0.65, 0.56, 0.36][k] * straw2) * shade3 * hue * (k === 1 ? 1 + 0.014 * Math.sin(t * 5) : 1))));
+        const side2 = across2 === 3 ? j - 1 : j * 2 - 1, fold2 = side2 === 0 ? w * 0.28 : 0, shade4 = (0.81 + 0.21 * t) * (side2 === 0 ? 1.025 : 1), rgb = p2.color.map((c2, k) => Math.min(0.86, Math.max(0.03, (c2 * (1 - straw2) + [0.65, 0.56, 0.36][k] * straw2) * shade4 * hue * (k === 1 ? 1 + 0.014 * Math.sin(t * 5) : 1))));
         vertex3(cx - Math.sin(theta) * side2 * w, cy + fold2, cz + Math.cos(theta) * side2 * w, (side2 + 1) * 0.5, t, rgb, bx - Math.sin(ba) * side2 * bw, by + (side2 === 0 ? bw * 0.28 : 0), bz + Math.cos(ba) * side2 * bw);
       }
     }
@@ -35687,8 +35783,8 @@ function buildGrassModel(seed = 728194, profile = 2, family = 0) {
         groundLeaves.push({ id: lid, parent: stem, root: [...joint], angle: theta, tilt, length, width });
         const ca = Math.cos(theta), sa = Math.sin(theta), ct = Math.cos(tilt), st = Math.sin(tilt), baselineOutline = [[0, 0], [-0.72, 0.24], [-1, 0.6], [-0.64, 0.94], [0, 0.84], [0.63, 0.97], [0.97, 0.59], [0.67, 0.23]], outline = [[0, 0], [-0.62, 0.28], [-0.95, 0.65], [-0.56, 0.98], [0, 0.79], [0.55, 1], [0.93, 0.64], [0.59, 0.27]], start2 = positions.length / 3;
         const put2 = (u, v, center2 = false, bu = u, bv = v) => {
-          const ridge = (center2 ? length * 0.085 : 0) + length * 0.035 * Math.sin(Math.PI * v), along = length * v, across2 = width * u, shade3 = 0.84 + 0.12 * v, br = (center2 ? baselineLength * 0.085 : 0) + baselineLength * 0.035 * Math.sin(Math.PI * bv), bl = baselineLength * bv, ba = baselineWidth * bu;
-          vertex3(joint[0] + ca * ct * along - sa * across2, joint[1] + st * along + ridge, joint[2] + sa * ct * along + ca * across2, 2 + (u + 1) / 2, v, p2.color.map((c2, k2) => Math.min(0.82, c2 * hue * shade3 * (k2 === 2 ? 1.08 : 1))), joint[0] + ca * ct * bl - sa * ba, joint[1] + st * bl + br, joint[2] + sa * ct * bl + ca * ba);
+          const ridge = (center2 ? length * 0.085 : 0) + length * 0.035 * Math.sin(Math.PI * v), along = length * v, across2 = width * u, shade4 = 0.84 + 0.12 * v, br = (center2 ? baselineLength * 0.085 : 0) + baselineLength * 0.035 * Math.sin(Math.PI * bv), bl = baselineLength * bv, ba = baselineWidth * bu;
+          vertex3(joint[0] + ca * ct * along - sa * across2, joint[1] + st * along + ridge, joint[2] + sa * ct * along + ca * across2, 2 + (u + 1) / 2, v, p2.color.map((c2, k2) => Math.min(0.82, c2 * hue * shade4 * (k2 === 2 ? 1.08 : 1))), joint[0] + ca * ct * bl - sa * ba, joint[1] + st * bl + br, joint[2] + sa * ct * bl + ca * ba);
         };
         put2(0, 0.48, true);
         for (let e = 0; e < outline.length; e++) put2(...outline[e], false, ...baselineOutline[e]);
@@ -36278,7 +36374,7 @@ var LEGACY_GRASS_BOUNDS = Object.freeze({ grass: { halfX: 0.10948729515075684, h
 function legacyMatrices(source2, meta, type, pool) {
   const bounds6 = LEGACY_GRASS_BOUNDS[type], result = new Float32Array(source2);
   for (let i = 0; i < meta.length / 3; i++) {
-    const group = pool.groups[Math.round(meta[i * 3]) * 2 + Math.min(1, Math.floor(meta[i * 3 + 2] * 2))], box4 = group.model.legacyBounds, scale5 = [bounds6.halfX / Math.max(Math.abs(box4.min[0]), Math.abs(box4.max[0])), bounds6.height / box4.max[1], bounds6.halfZ / Math.max(Math.abs(box4.min[2]), Math.abs(box4.max[2]))];
+    const group = pool.groups[Math.round(meta[i * 3]) * 2 + Math.min(1, Math.floor(meta[i * 3 + 2] * 2))], box5 = group.model.legacyBounds, scale5 = [bounds6.halfX / Math.max(Math.abs(box5.min[0]), Math.abs(box5.max[0])), bounds6.height / box5.max[1], bounds6.halfZ / Math.max(Math.abs(box5.min[2]), Math.abs(box5.max[2]))];
     for (let axis2 = 0; axis2 < 3; axis2++) for (let k = 0; k < 3; k++) result[i * 16 + axis2 * 4 + k] *= scale5[axis2];
   }
   return result;
@@ -37536,7 +37632,7 @@ function createForestUnderstory(world2) {
     forget();
   }
   function buildCell(ix, iz) {
-    const c2 = F.cell, x0 = ix * c2, z0 = iz * c2, cx = x0 + c2 / 2, cz = z0 + c2 / 2, hash15 = functions.hash, height2 = functions.height;
+    const c2 = F.cell, x0 = ix * c2, z0 = iz * c2, cx = x0 + c2 / 2, cz = z0 + c2 / 2, hash16 = functions.hash, height2 = functions.height;
     const cy = height2(cx, cz);
     if (!(cy > 1.2)) return null;
     const cl = vegetationClimate(functions, cx, cz, cy, climate3);
@@ -37553,30 +37649,30 @@ function createForestUnderstory(world2) {
     const out2 = [], area = c2 * c2 / 100;
     let salt = 0;
     for (const kind of ["sapling", "thicket"]) {
-      const tries = Math.round(F.density[kind] * area * forest * (kind === "sapling" ? 2.2 : 1.2) + hash15(x0 + 3.7, z0 - 1.3 + salt));
+      const tries = Math.round(F.density[kind] * area * forest * (kind === "sapling" ? 2.2 : 1.2) + hash16(x0 + 3.7, z0 - 1.3 + salt));
       for (let k = 0; k < tries; k++, salt++) {
-        const x = x0 + hash15(x0 + salt * 0.618 + 11.3, z0 - salt * 0.382) * c2, z = z0 + hash15(x0 - salt * 1.31, z0 + salt * 0.77 - 5.1) * c2, y = height2(x, z);
+        const x = x0 + hash16(x0 + salt * 0.618 + 11.3, z0 - salt * 0.382) * c2, z = z0 + hash16(x0 - salt * 1.31, z0 + salt * 0.77 - 5.1) * c2, y = height2(x, z);
         if (!(y > 1.2) || functions.slope && functions.slope(x, z) > F.slope) continue;
         let gap = Infinity;
         for (const t of trees) gap = Math.min(gap, Math.hypot(t.x - x, t.z - z) - 0.022 * t.h * (t.width ?? 1));
         if (gap < F.clear[kind]) continue;
-        const species = vegetationSpecies(cl, hash15(x * 0.7 + 1.9, z * 0.7 - 4.4));
-        if (hash15(x * 1.3 - 2.2, z * 1.7 + 8.1) >= understoryChance(kind, gap, shoreNear ? coastBare(functions, x, z, y) : 0)) continue;
+        const species = vegetationSpecies(cl, hash16(x * 0.7 + 1.9, z * 0.7 - 4.4));
+        if (hash16(x * 1.3 - 2.2, z * 1.7 + 8.1) >= understoryChance(kind, gap, shoreNear ? coastBare(functions, x, z, y) : 0)) continue;
         const id2 = kind === "sapling" ? saplingId(Math.fround(x), Math.fround(z)) : null;
         if (id2 && gone?.has(id2)) continue;
-        if (kind === "thicket" && species === "pine" && hash15(x * 2.1, z * 1.9) > F.pineThickets) continue;
+        if (kind === "thicket" && species === "pine" && hash16(x * 2.1, z * 1.9) > F.pineThickets) continue;
         const chunk = chunkAt(x, z);
         if (!chunk || !plantPositionAllowed(world2, chunk, x, z, kind === "thicket" ? 0.55 : 0.3)) continue;
         const list = kind === "thicket" ? F.heights.thicket : F.heights[species], base = kind === "thicket" ? F.heights.broadleaf.length + F.heights.pine.length : species === "pine" ? F.heights.broadleaf.length : 0;
-        const shape = base + Math.min(list.length - 1, Math.floor(hash15(x * 3.1 + 7, z * 2.3 - 3) * list.length));
-        const s = F.scale[0] + (F.scale[1] - F.scale[0]) * hash15(x * 1.1 - 9, z * 1.9 + 2);
-        axis2.set(hash15(x - 4.4, z + 2.2) - 0.5, 0, hash15(x + 6.1, z - 7.3) - 0.5).normalize();
-        tilt.setFromAxisAngle(axis2, (hash15(x * 0.3, z * 0.3) - 0.5) * (kind === "thicket" ? 0.08 : 0.14));
-        q.setFromAxisAngle(upY, hash15(x * 5.7, z * 3.1) * TAU13).premultiply(tilt);
+        const shape = base + Math.min(list.length - 1, Math.floor(hash16(x * 3.1 + 7, z * 2.3 - 3) * list.length));
+        const s = F.scale[0] + (F.scale[1] - F.scale[0]) * hash16(x * 1.1 - 9, z * 1.9 + 2);
+        axis2.set(hash16(x - 4.4, z + 2.2) - 0.5, 0, hash16(x + 6.1, z - 7.3) - 0.5).normalize();
+        tilt.setFromAxisAngle(axis2, (hash16(x * 0.3, z * 0.3) - 0.5) * (kind === "thicket" ? 0.08 : 0.14));
+        q.setFromAxisAngle(upY, hash16(x * 5.7, z * 3.1) * TAU13).premultiply(tilt);
         pos2.set(x, y - 0.04, z);
         scale5.setScalar(s);
         m.compose(pos2, q, scale5);
-        const leaf = F.tint[kind === "thicket" ? "thicket" : species], tone = 0.88 + 0.24 * hash15(x * 9.3, z * 7.7);
+        const leaf = F.tint[kind === "thicket" ? "thicket" : species], tone = 0.88 + 0.24 * hash16(x * 9.3, z * 7.7);
         out2.push({ shape, matrix: Float32Array.from(m.elements), colour: [leaf[0] * tone * tr, leaf[1] * tone * tg, leaf[2] * tone * tb], kind, id: id2 });
       }
     }
@@ -37632,7 +37728,7 @@ function createForestUnderstory(world2) {
       }
     }
     for (const [key3, s] of springs) if (!springStep(s, dt)) springs.delete(key3);
-    const slots2 = uniforms.springs.value, box4 = uniforms.springBox.value;
+    const slots2 = uniforms.springs.value, box5 = uniforms.springBox.value;
     const list = springs.size > S.slots ? [...springs.values()].sort((a, b) => Math.hypot(b.ax, b.az) + Math.hypot(b.tx, b.tz) - Math.hypot(a.ax, a.az) - Math.hypot(a.tx, a.tz)) : springs.values();
     let n = 0, x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
     for (const s of list) {
@@ -37644,8 +37740,8 @@ function createForestUnderstory(world2) {
       z1 = Math.max(z1, s.z);
     }
     for (let i = n; i < S.slots; i++) slots2[i].set(1e7, 1e7, 0, 0);
-    if (n) box4.set(x0 - 0.05, z0 - 0.05, x1 + 0.05, z1 + 0.05);
-    else box4.set(1e9, 1e9, -1e9, -1e9);
+    if (n) box5.set(x0 - 0.05, z0 - 0.05, x1 + 0.05, z1 + 0.05);
+    else box5.set(1e9, 1e9, -1e9, -1e9);
     stats3.springs = springs.size;
   }
   function unbend() {
@@ -38422,7 +38518,7 @@ function newtInstances(geometry3, capacity) {
   geometry3.setAttribute("sLight", light);
   return { gait, light };
 }
-function beastMaterial(kind, { roughness = 0.45, metalness = 0.1, time = { value: 0 }, mark = null, tint: tint4 = null } = {}) {
+function beastMaterial(kind, { roughness = 0.45, metalness = 0.1, time = { value: 0 }, mark: mark2 = null, tint: tint4 = null } = {}) {
   const material2 = new MeshStandardMaterial({ name: "underworld-" + kind, vertexColors: true, roughness, metalness, side: FrontSide });
   if (tint4) material2.color.setRGB(...tint4.body);
   const glow = { value: 1 };
@@ -38433,9 +38529,9 @@ function beastMaterial(kind, { roughness = 0.45, metalness = 0.1, time = { value
     s.uniforms.uwTime = time;
     s.vertexShader = "uniform float uwTime;varying float vKPulse;\n" + s.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n vKPulse=.78+.22*sin(uwTime*2.1+modelMatrix[3].x*.7+modelMatrix[3].z*.5+position.z*3.);");
     let marks = "";
-    if (mark) {
-      s.uniforms.kMarkColour = { value: new Vector3(...mark.colour) };
-      s.uniforms.kMarkK = { value: mark.k };
+    if (mark2) {
+      s.uniforms.kMarkColour = { value: new Vector3(...mark2.colour) };
+      s.uniforms.kMarkK = { value: mark2.k };
       s.vertexShader = "attribute float kMark;varying float vKMark;varying vec3 vKMade;\n" + s.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n vKMark=kMark;vKMade=position;");
       marks = "if(vKMark>.001){float zz=-vKMade.z/kMarkK,ax=abs(vKMade.x)/kMarkK;float ph=zz*5.6-ax*6.2,c=abs(fract(ph)-.5);float chev=(1.-smoothstep(.07,.14,c))*smoothstep(.42,.5,zz)*(1.-smoothstep(.9,1.,zz))*(1.-smoothstep(.17,.26,ax));float spine=(1.-smoothstep(.01,.03,ax))*smoothstep(.34,.44,zz)*(1.-smoothstep(.98,1.06,zz))*.55;totalEmissiveRadiance+=kMarkColour*max(chev,spine)*vKMark*beastGlow*vKPulse;}";
       s.fragmentShader = "uniform vec3 kMarkColour;uniform float kMarkK;varying float vKMark;varying vec3 vKMade;\n" + s.fragmentShader;
@@ -38443,7 +38539,7 @@ function beastMaterial(kind, { roughness = 0.45, metalness = 0.1, time = { value
     const glowOf = tint4 ? "dot(vKGlow,vec3(.3,.59,.11))*vec3(" + tint4.glow.map((v) => v.toFixed(3)).join(",") + ")" : "vKGlow";
     s.fragmentShader = "uniform float beastGlow;varying vec3 vKGlow;varying float vKPulse;\n" + s.fragmentShader.replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n totalEmissiveRadiance+=" + glowOf + "*beastGlow*vKPulse;" + marks);
   };
-  material2.customProgramCacheKey = () => CREATURE_MODELS.revision + ":" + kind + (tint4 ? ":tint" : "") + (mark ? ":mark" : "");
+  material2.customProgramCacheKey = () => CREATURE_MODELS.revision + ":" + kind + (tint4 ? ":tint" : "") + (mark2 ? ":mark" : "");
   return material2;
 }
 var SPIDER = Object.freeze({
@@ -38612,8 +38708,8 @@ function spiderSkeleton() {
   }
   return { root: root2, bones };
 }
-function spiderMaterial(time, mark = SPIDER.mark) {
-  return beastMaterial("spider", { roughness: 0.48, metalness: 0.12, time, mark: { colour: mark, k: SPIDER.body } });
+function spiderMaterial(time, mark2 = SPIDER.mark) {
+  return beastMaterial("spider", { roughness: 0.48, metalness: 0.12, time, mark: { colour: mark2, k: SPIDER.body } });
 }
 var LIZARD = Object.freeze({
   spine: Object.freeze([[0, 0.38, 0.05], [0, 0.4, 0.62], [0, 0.42, 0.86], [0, 0.44, 1.02]]),
@@ -42570,7 +42666,7 @@ function createUnderworldBosses({ world: world2, scene, field, interior, creatur
     e.head?.removeFromParent();
     e.body?.removeFromParent();
   }
-  function make(lair) {
+  function make2(lair) {
     if (lair.entity || world2.removed?.has(lair.id)) return;
     const r = lair.room;
     if (lair.kind === "spiderQueen") {
@@ -42604,7 +42700,7 @@ function createUnderworldBosses({ world: world2, scene, field, interior, creatur
       clock2 = 0.5;
       for (const lair of lairs) {
         const d = Math.hypot(lair.x - player.x, lair.z - player.z), e = lair.entity, fighting = e && e.hp > 0 && !["dormant", "roam", "idle", "patrol", "hang"].includes(e.state);
-        if (!e && d < BOSSES.near) make(lair);
+        if (!e && d < BOSSES.near) make2(lair);
         else if (e && d > BOSSES.far && !fighting) release(lair);
         else if (e && e.handed && e.disposed) lair.entity = null;
       }
@@ -42640,14 +42736,14 @@ function createUnderworldBosses({ world: world2, scene, field, interior, creatur
     add4(new Mesh(ringGeometry, own(new MeshBasicMaterial({ color: 16777215, transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide }))));
     add4(new Points(fireGeometry, fireMaterial), 1);
     add4(new Mesh(blobGeometry, own(new MeshBasicMaterial({ color: 16777215, transparent: true, blending: AdditiveBlending, depthWrite: false }))));
-    const box4 = own(new BoxGeometry(1, 1, 1));
-    box4.setAttribute("color", new Float32BufferAttribute(new Float32Array(72).fill(1), 3));
-    box4.setAttribute("sGlow", new Float32BufferAttribute(new Float32Array(72), 3));
-    box4.setAttribute("sUV", new Float32BufferAttribute(new Float32Array(72), 3));
-    add4(new Mesh(box4, serpentMaterial));
-    add4(new Mesh(box4, stoneMaterial)).castShadow = true;
-    add4(new Mesh(box4, webs()[0]));
-    for (const m of [toothMat, hornMat, frillMat, eyeMat]) add4(new Mesh(box4, m));
+    const box5 = own(new BoxGeometry(1, 1, 1));
+    box5.setAttribute("color", new Float32BufferAttribute(new Float32Array(72).fill(1), 3));
+    box5.setAttribute("sGlow", new Float32BufferAttribute(new Float32Array(72), 3));
+    box5.setAttribute("sUV", new Float32BufferAttribute(new Float32Array(72), 3));
+    add4(new Mesh(box5, serpentMaterial));
+    add4(new Mesh(box5, stoneMaterial)).castShadow = true;
+    add4(new Mesh(box5, webs()[0]));
+    for (const m of [toothMat, hornMat, frillMat, eyeMat]) add4(new Mesh(box5, m));
   }
   function setPixel(pixel) {
     fireMaterial.uniforms.pixel.value = pixel;
@@ -42848,8 +42944,8 @@ function snailGeometry(region) {
   grid(ROWS, COLS, (i, j) => {
     const u = i / ROWS, th = -T2 + u * T2, g = Math.exp(M2.growth * th), R = M2.radius * g, rt = M2.tube * g * (1 + 0.03 * Math.sin(th * 9)), y = M2.spire * (1 - g);
     const ph = j / COLS * TAU17, cx = Math.cos(th), sz = Math.sin(th), lx = R * cx + rt * Math.cos(ph) * cx, ly = y + rt * Math.sin(ph), lz = R * sz + rt * Math.cos(ph) * sz;
-    const p2 = toSnail(lx, ly, lz), shade3 = 0.82 + 0.18 * r();
-    return v(p2, L4.shell.map((c2) => c2 * shade3), 1, 0, [0, 0, 0], [0, 0, 0], [u, j / COLS]);
+    const p2 = toSnail(lx, ly, lz), shade4 = 0.82 + 0.18 * r();
+    return v(p2, L4.shell.map((c2) => c2 * shade4), 1, 0, [0, 0, 0], [0, 0, 0], [u, j / COLS]);
   });
   {
     const th = 0, g = 1, R = M2.radius, rt = M2.tube, ring2 = [];
@@ -43167,18 +43263,18 @@ function createUnderworldSnails({ world: world2, scene, field, plan: plan2, time
       const key3 = i + "," + j;
       if (cells.has(key3)) continue;
       if (Math.hypot((i + 0.5) * cs - player.x, (j + 0.5) * cs - player.z) > SNAILS.reach) continue;
-      cells.set(key3, planCell(i, j).map(make).filter(Boolean));
+      cells.set(key3, planCell(i, j).map(make2).filter(Boolean));
       break find;
     }
     for (const [key3, list] of cells) {
       const [i, j] = key3.split(",").map(Number);
       if (Math.hypot((i + 0.5) * cs - player.x, (j + 0.5) * cs - player.z) > SNAILS.keep && !list.some((e) => e.state === "shelled")) {
-        for (const e of list) drop(e);
+        for (const e of list) drop2(e);
         cells.delete(key3);
       }
     }
   }
-  function make(spec) {
+  function make2(spec) {
     if (entities.has(spec.id)) return null;
     const look2 = SNAIL_LOOKS[spec.kind], { material: material2, depth, uniforms } = snailMaterial(time, look2.index, look2.glow, air);
     const mesh2 = new Mesh(geometryOf(spec.kind), material2);
@@ -43241,7 +43337,7 @@ function createUnderworldSnails({ world: world2, scene, field, plan: plan2, time
     stats3.snails++;
     return e;
   }
-  function drop(e) {
+  function drop2(e) {
     if (e.dropped) return;
     e.dropped = true;
     const i = snails.indexOf(e);
@@ -43461,7 +43557,7 @@ function createUnderworldSnails({ world: world2, scene, field, plan: plan2, time
   function dispose() {
     if (disposed) return;
     disposed = true;
-    for (const e of [...snails]) drop(e);
+    for (const e of [...snails]) drop2(e);
     cells.clear();
     unwarm();
     for (const g of geometries2.values()) g.dispose();
@@ -43476,12 +43572,12 @@ function createUnderworldSnails({ world: world2, scene, field, plan: plan2, time
     dispose,
     list: snails,
     stats: () => ({ ...stats3 }),
-    release: drop,
+    release: drop2,
     // For the dev tools: one brought to a place (its region's look, or the one asked).
     spawnAt(x, z, kind = null) {
       const s = field.surfaces(x, z, S);
       const k = kind && SNAIL_LOOKS[kind] ? kind : SNAIL_LOOKS[s.kind] ? s.kind : "verdant";
-      return make({ id: "under:snail:dev:" + Math.round(x) + "," + Math.round(z) + ":" + Math.floor(Math.random() * 1e6), x, z, kind: k, yaw: Math.random() * TAU17, scale: 1.3, seed: Math.floor(Math.random() * 1e6) });
+      return make2({ id: "under:snail:dev:" + Math.round(x) + "," + Math.round(z) + ":" + Math.floor(Math.random() * 1e6), x, z, kind: k, yaw: Math.random() * TAU17, scale: 1.3, seed: Math.floor(Math.random() * 1e6) });
     }
   };
 }
@@ -44252,10 +44348,10 @@ function mountUnderworldMap(content, { world: world2, state: state2, position: p
       ctx.fillText(UNDER_SITE_ICONS[place.kind] || "◇", p2.x, p2.y + 0.5);
       ctx.textBaseline = "alphabetic";
       if (chosen || view.zoom >= 2.2) {
-        const box4 = { x: p2.x - 62, y: p2.y + 16, w: 124, h: 18 };
-        if (chosen || !occupied.some((b) => box4.x < b.x + b.w && box4.x + box4.w > b.x && box4.y < b.y + b.h && box4.y + box4.h > b.y)) {
+        const box5 = { x: p2.x - 62, y: p2.y + 16, w: 124, h: 18 };
+        if (chosen || !occupied.some((b) => box5.x < b.x + b.w && box5.x + box5.w > b.x && box5.y < b.y + b.h && box5.y + box5.h > b.y)) {
           label(place.name, p2.x, p2.y + 27, 11);
-          occupied.push(box4);
+          occupied.push(box5);
         }
       }
     }
@@ -45175,8 +45271,8 @@ function createUnderworld(world2, plan2, builder7) {
     rec.anchors.push({ x: f15.x + ix * 3, y: foot + 2, z: f15.z + iz * 3, color: 10474208, intensity: 40, range: 30, kind: "falls" });
   }
   function spawnCascade(room, rec) {
-    const c2 = room.cascade, foot = field.waterLevel(room), top = Math.max(foot + 6, field.ceilingHeight(c2.x, c2.z) - 0.3), drop = top - foot;
-    rec.sounds.push({ id: "under:cascade:" + room.id, kind: "waterfall", x: c2.x, y: foot + Math.min(8, drop / 2), z: c2.z, range: 70, gain: 0.85 });
+    const c2 = room.cascade, foot = field.waterLevel(room), top = Math.max(foot + 6, field.ceilingHeight(c2.x, c2.z) - 0.3), drop2 = top - foot;
+    rec.sounds.push({ id: "under:cascade:" + room.id, kind: "waterfall", x: c2.x, y: foot + Math.min(8, drop2 / 2), z: c2.z, range: 70, gain: 0.85 });
     rec.anchors.push({ x: c2.x, y: foot + 2.5, z: c2.z, color: 10474208, intensity: 36, range: 30, kind: "falls" });
   }
   function spawnShaft(room, rec) {
@@ -45910,8 +46006,8 @@ function createUnderworld(world2, plan2, builder7) {
       one(G2.crystal, M2.crystalR, false, false);
       one(G2.mushStem, M2.mushStem, true, true);
       add4(mushroomMesh());
-      const box4 = own(new BoxGeometry(1, 1, 1)), n = box4.attributes.position.count;
-      const shellG = own(box4.clone());
+      const box5 = own(new BoxGeometry(1, 1, 1)), n = box5.attributes.position.count;
+      const shellG = own(box5.clone());
       shellG.setAttribute("color", new Float32BufferAttribute(new Float32Array(n * 3).fill(1), 3));
       shellG.setAttribute("uwGlow", new Float32BufferAttribute(new Float32Array(n * 4), 4));
       shellG.setAttribute("uwEmit", new Float32BufferAttribute(new Float32Array(n * 4), 4));
@@ -45928,7 +46024,7 @@ function createUnderworld(world2, plan2, builder7) {
       wg.setAttribute("level", new Float32BufferAttribute([0], 1));
       add4(new Points(wg, M2.glowWater));
       add4(new Points(pg, M2.spores));
-      for (const m of [M2.sky, M2.beam, M2.daylight, M2.halo, M2.flame, M2.iron, M2.sunPool, M2.heat]) add4(new Mesh(box4, m));
+      for (const m of [M2.sky, M2.beam, M2.daylight, M2.halo, M2.flame, M2.iron, M2.sunPool, M2.heat]) add4(new Mesh(box5, m));
       {
         const eg = own(new BufferGeometry());
         eg.setAttribute("position", new Float32BufferAttribute([0, 0, 0], 3));
@@ -46213,10 +46309,10 @@ function createUnderworldBuilder(plan2, { useWorker = typeof Worker !== "undefin
     });
   }
   let chain = Promise.resolve();
-  function inline(make) {
+  function inline(make2) {
     const run = chain.then(() => new Promise((resolve) => setTimeout(resolve, 0))).then(() => {
       if (disposed) throw new DOMException("Underworld builder disposed", "AbortError");
-      const t = performance.now(), r = make();
+      const t = performance.now(), r = make2();
       stats3.ms += performance.now() - t;
       return r;
     });
@@ -46629,8 +46725,8 @@ function createDebugPlaces(world2, { height: height2, waterAt = () => false } = 
       const lip = fall2.lip, flow = fall2.flow;
       if (!lip || !flow) continue;
       const P = (a, v) => ({ x: lip.x + flow.x * a - flow.z * v, z: lip.z + flow.z * a + flow.x * v }), s = P(-2.2, -((+fall2.width || 6) / 2 + 6)), t = P(-0.6, 0);
-      const drop = Number.isFinite(fall2.base?.y) ? lip.y - fall2.base.y : null;
-      add4({ id: "fall:" + fall2.id, kind: "fall", name: fall2.channel ? "川の滝" : "滝", detail: drop ? `落差 ${drop.toFixed(1)} m` : "", x: lip.x, y: lip.y, z: lip.z, go: { x: s.x, z: s.z, yaw: face(t.x - s.x, t.z - s.z) } });
+      const drop2 = Number.isFinite(fall2.base?.y) ? lip.y - fall2.base.y : null;
+      add4({ id: "fall:" + fall2.id, kind: "fall", name: fall2.channel ? "川の滝" : "滝", detail: drop2 ? `落差 ${drop2.toFixed(1)} m` : "", x: lip.x, y: lip.y, z: lip.z, go: { x: s.x, z: s.z, yaw: face(t.x - s.x, t.z - s.z) } });
     }
     for (const a of world2.colossalCreatures?.snapshot?.()?.actors || []) {
       if (!Number.isFinite(a.homeX)) continue;
@@ -47027,10 +47123,10 @@ function mountWorldMap(content, { world: world2, island, heightAt, biomeAt, isla
       ctx.fillText(iconOf(place), p2.x, p2.y + 0.5);
       ctx.textBaseline = "alphabetic";
       if (chosen || view.zoom >= 2.2) {
-        const box4 = { x: p2.x - 62, y: p2.y + 16, w: 124, h: 18 };
-        if (chosen || !occupied.some((b) => box4.x < b.x + b.w && box4.x + box4.w > b.x && box4.y < b.y + b.h && box4.y + box4.h > b.y)) {
+        const box5 = { x: p2.x - 62, y: p2.y + 16, w: 124, h: 18 };
+        if (chosen || !occupied.some((b) => box5.x < b.x + b.w && box5.x + box5.w > b.x && box5.y < b.y + b.h && box5.y + box5.h > b.y)) {
           label(place.name, p2.x, p2.y + 29, 11);
-          occupied.push(box4);
+          occupied.push(box5);
         }
       }
     }
@@ -47494,8 +47590,8 @@ function createStoneBridge(THREE2, world2, descriptor) {
     for (let y = Math.max(base, spring - 4); y < deckBase - 0.12; y += 0.48) for (const side2 of [-1, 1]) {
       const length = z1 - z0;
       for (let k = 0; k < 2; k++) {
-        const zz0 = z0 + k * length / 2 + 0.015, zz1 = z0 + (k + 1) * length / 2 - 0.015, x = side2 * (halfWidth + 12e-4), shade3 = tint4(serial3++, 0.91);
-        stone.face([[x, y, zz0], [x, Math.min(y + 0.44, deckBase), zz0], [x, Math.min(y + 0.44, deckBase), zz1], [x, y, zz1]], shade3, [side2, 0, 0]);
+        const zz0 = z0 + k * length / 2 + 0.015, zz1 = z0 + (k + 1) * length / 2 - 0.015, x = side2 * (halfWidth + 12e-4), shade4 = tint4(serial3++, 0.91);
+        stone.face([[x, y, zz0], [x, Math.min(y + 0.44, deckBase), zz0], [x, Math.min(y + 0.44, deckBase), zz1], [x, y, zz1]], shade4, [side2, 0, 0]);
       }
     }
   }
@@ -47512,8 +47608,8 @@ function createStoneBridge(THREE2, world2, descriptor) {
     }
     archProfiles.push({ centre, radius, spring, points: profile });
     for (let j = 0; j < segments; j++) for (const side2 of [-1, 1]) {
-      const t0 = -Math.PI / 2 + Math.PI * (j + 0.035) / segments, t1 = -Math.PI / 2 + Math.PI * (j + 0.965) / segments, r1 = radius + 0.48 + random2(seed, serial3) * 0.055, x = side2 * (halfWidth + 15e-4), p2 = (r, t) => [x, spring + r * Math.cos(t), centre + r * Math.sin(t)], shade3 = tint4(serial3++, 0.99);
-      stone.face([p2(radius + 0.012, t0), p2(radius + 0.012, t1), p2(r1, t1), p2(r1, t0)], shade3, [side2, 0, 0]);
+      const t0 = -Math.PI / 2 + Math.PI * (j + 0.035) / segments, t1 = -Math.PI / 2 + Math.PI * (j + 0.965) / segments, r1 = radius + 0.48 + random2(seed, serial3) * 0.055, x = side2 * (halfWidth + 15e-4), p2 = (r, t) => [x, spring + r * Math.cos(t), centre + r * Math.sin(t)], shade4 = tint4(serial3++, 0.99);
+      stone.face([p2(radius + 0.012, t0), p2(radius + 0.012, t1), p2(r1, t1), p2(r1, t0)], shade4, [side2, 0, 0]);
       stones++;
     }
   }
@@ -48268,7 +48364,7 @@ function createRockFracturePhysics(THREE2, { group, height: height2, onLand } = 
       parentPoints = new Float64Array(selected);
     }
     let randomState = (Number.isFinite(seed) ? seed : 1) >>> 0;
-    function random10() {
+    function random13() {
       randomState = Math.imul(randomState, 1664525) + 1013904223 >>> 0;
       return randomState / 4294967296;
     }
@@ -48320,10 +48416,10 @@ function createRockFracturePhysics(THREE2, { group, height: height2, onLand } = 
       if (finiteVector(spin)) body2.angularMomentum.set(spin.x, spin.y, spin.z).applyMatrix3(inertia);
       worldInertia(body2);
     } else {
-      const launch = Math.min(8 + random10() * 3, mass * 1.2);
+      const launch = Math.min(8 + random13() * 3, mass * 1.2);
       impulse.copy(normal4).multiplyScalar(launch);
-      impulse.x += (random10() - 0.5) * launch * 0.12;
-      impulse.z += (random10() - 0.5) * launch * 0.12;
+      impulse.x += (random13() - 0.5) * launch * 0.12;
+      impulse.z += (random13() - 0.5) * launch * 0.12;
       body2.velocity.copy(impulse).multiplyScalar(body2.inverseMass);
       if (point5) lever.copy(point5).sub(center2);
       else lever.set(radius * 0.19, -radius * 0.18, radius * 0.13);
@@ -49268,13 +49364,13 @@ function createNaturalDecorKit({ materials, templates: source2 = {} }) {
   };
   const part2 = (geometry3, material2, castShadow = true) => ({ geometry: geometry3, material: material2, castShadow, receiveShadow: true, geometryOwned: ownedGeometry.has(geometry3), materialOwned: ownedMaterials.has(material2) });
   const alignBase = (parts) => {
-    const box4 = new Box3();
+    const box5 = new Box3();
     for (const p2 of parts) {
       p2.geometry.computeBoundingBox();
-      box4.union(p2.geometry.boundingBox);
+      box5.union(p2.geometry.boundingBox);
     }
-    for (const p2 of parts) p2.geometry.translate(0, -box4.min.y, 0);
-    return box4.min.y;
+    for (const p2 of parts) p2.geometry.translate(0, -box5.min.y, 0);
+    return box5.min.y;
   };
   const anchorShift = (anchors, y) => anchors.map((a) => ({ ...a, position: [a.position[0], a.position[1] - y, a.position[2]] }));
   for (const [name, height2] of [["pine", 6.4], ["broadleaf", 5.7]]) {
@@ -49396,7 +49492,7 @@ function createTreeFelling(THREE2, world2, hooks2 = {}) {
   const { sound: sound2 = () => {
   }, chips = () => {
   }, dust = () => {
-  }, drop = () => {
+  }, drop: drop2 = () => {
   }, hurtPlayer = () => {
   }, hurtCreature = () => {
   }, creatures = () => [], player = () => null, damageTree = () => false, onChange = () => {
@@ -49477,10 +49573,10 @@ function createTreeFelling(THREE2, world2, hooks2 = {}) {
     const n = ring2.position.length / 3 - 1, c2 = ring2.centre, position3 = [], uv = [], color3 = [], index2 = [], cut = [0.52, 0.44, 0.35];
     let radius = 0;
     for (let j = 0; j < n; j++) radius += Math.hypot(ring2.position[j * 3] - c2[0], ring2.position[j * 3 + 2] - c2[2]) / n;
-    const push2 = (p2, u, v, shade3) => {
+    const push2 = (p2, u, v, shade4) => {
       position3.push(...p2);
       uv.push(u, v);
-      color3.push(cut[0] * shade3, cut[1] * shade3, cut[2] * shade3);
+      color3.push(cut[0] * shade4, cut[1] * shade4, cut[2] * shade4);
       return position3.length / 3 - 1;
     };
     const edge2 = [], inner = [];
@@ -50027,7 +50123,7 @@ function createTreeFelling(THREE2, world2, hooks2 = {}) {
       stumpDirty = true;
       counters.stumpsRemoved++;
       dust(v12.set(stump.x, stump.top, stump.z), { count: 8, size: 0.5, speed: 1.4, rise: 0.5, life: 1.6, tint: 9271900 });
-      drop("log", FELLING.stumpWood, stump.x, stump.z);
+      drop2("log", FELLING.stumpWood, stump.x, stump.z);
       sound2("logBreak", { position: target.point, gain: 0.9 });
       onChange();
       return { status: "broken", remaining: 0, wood: FELLING.stumpWood };
@@ -50084,7 +50180,7 @@ function createTreeFelling(THREE2, world2, hooks2 = {}) {
       sound2("logBreak", { position: mid, gain: 1 });
       dust(mid, { count: 8, size: 0.4, speed: 1.4, rise: 0.5, life: 1.5, tint: 10126180 });
     }
-    drop("log", wood, mid.x, mid.z);
+    drop2("log", wood, mid.x, mid.z);
     syncColliders();
     onChange();
     return wood;
@@ -50242,12 +50338,12 @@ function createTreeFelling(THREE2, world2, hooks2 = {}) {
     leaves.update(dt);
   }
   function prepare2() {
-    const holder = new THREE2.Group(), box4 = new THREE2.BoxGeometry(0.1, 0.1, 0.1);
-    const cutBox = box4.clone();
-    cutBox.setAttribute("color", new THREE2.Float32BufferAttribute(new Float32Array(box4.attributes.position.count * 3).fill(0.5), 3));
-    cutBox.setAttribute("naturalRole", new THREE2.Float32BufferAttribute(new Float32Array(box4.attributes.position.count).fill(3), 1));
+    const holder = new THREE2.Group(), box5 = new THREE2.BoxGeometry(0.1, 0.1, 0.1);
+    const cutBox = box5.clone();
+    cutBox.setAttribute("color", new THREE2.Float32BufferAttribute(new Float32Array(box5.attributes.position.count * 3).fill(0.5), 3));
+    cutBox.setAttribute("naturalRole", new THREE2.Float32BufferAttribute(new Float32Array(box5.attributes.position.count).fill(3), 1));
     holder.add(new THREE2.Mesh(cutBox, cutMaterial));
-    for (const species of ["pine", "broadleaf"]) holder.add(new THREE2.InstancedMesh(box4, leaves.system(species).material, 1));
+    for (const species of ["pine", "broadleaf"]) holder.add(new THREE2.InstancedMesh(box5, leaves.system(species).material, 1));
     for (const o of holder.children) {
       o.visible = true;
       o.castShadow = true;
@@ -50256,7 +50352,7 @@ function createTreeFelling(THREE2, world2, hooks2 = {}) {
     world2.prepareShaders?.(holder, { hide: true });
     setTimeout(() => {
       holder.removeFromParent();
-      box4.dispose();
+      box5.dispose();
       cutBox.dispose();
     }, 6e3);
   }
@@ -50297,13 +50393,13 @@ function createToolHarvesting(THREE2, world2, { onImpact = () => {
 }, onFell = () => {
 }, onChange = () => {
 }, sound: sound2 = () => {
-}, drop = () => {
+}, drop: drop2 = () => {
 }, hurtPlayer = () => {
 }, hurtCreature = () => {
 }, creatures = () => [], player = () => null } = {}) {
   const REACH2 = 3.6, MAX_TREES = 4, MAX_DEBRIS = 8, damage = /* @__PURE__ */ new Map(), falls = [], debris = [];
   const ray3 = new THREE2.Raycaster(), proxy = new THREE2.Mesh(), instance2 = new THREE2.Matrix4(), matrix6 = new THREE2.Matrix4(), inverse2 = new THREE2.Matrix4();
-  const origin = new THREE2.Vector3(), direction = new THREE2.Vector3(), point5 = new THREE2.Vector3(), normal4 = new THREE2.Vector3(), instanceColor = new THREE2.Color(), normalMatrix = new THREE2.Matrix3(), box4 = new THREE2.Box3(), localRay = new THREE2.Ray(), localOrigin = new THREE2.Vector3(), localDirection = new THREE2.Vector3(), dummy6 = new THREE2.Object3D();
+  const origin = new THREE2.Vector3(), direction = new THREE2.Vector3(), point5 = new THREE2.Vector3(), normal4 = new THREE2.Vector3(), instanceColor = new THREE2.Color(), normalMatrix = new THREE2.Matrix3(), box5 = new THREE2.Box3(), localRay = new THREE2.Ray(), localOrigin = new THREE2.Vector3(), localDirection = new THREE2.Vector3(), dummy6 = new THREE2.Object3D();
   const scene = world2.outdoor || world2.scene, group = new THREE2.Group();
   group.name = "tool-harvesting-effects";
   scene.add(group);
@@ -50348,7 +50444,7 @@ function createToolHarvesting(THREE2, world2, { onImpact = () => {
   let disposed = false, lastSerial = -1, lastResult = null;
   const felling = createTreeFelling(THREE2, world2, {
     sound: sound2,
-    drop,
+    drop: drop2,
     hurtPlayer,
     hurtCreature,
     creatures,
@@ -50443,9 +50539,9 @@ function createToolHarvesting(THREE2, world2, { onImpact = () => {
         localOrigin.set((origin.x - r.x) * r.cos + (origin.z - r.z) * r.sin, origin.y, -(origin.x - r.x) * r.sin + (origin.z - r.z) * r.cos);
         localDirection.set(direction.x * r.cos + direction.z * r.sin, direction.y, -direction.x * r.sin + direction.z * r.cos);
         localRay.set(localOrigin, localDirection);
-        box4.min.set(-r.halfX, r.minY, -r.halfZ);
-        box4.max.set(r.halfX, r.maxY, r.halfZ);
-        if (localRay.intersectBox(box4, point5) && point5.distanceTo(localOrigin) < hit2.distance - 0.04) return true;
+        box5.min.set(-r.halfX, r.minY, -r.halfZ);
+        box5.max.set(r.halfX, r.maxY, r.halfZ);
+        if (localRay.intersectBox(box5, point5) && point5.distanceTo(localOrigin) < hit2.distance - 0.04) return true;
       } else if (r.shape === "capsule") {
         const dx = r.bx - r.ax, dz = r.bz - r.az, length = dx * dx + dz * dz;
         for (let t = 0.04; t < hit2.distance - 0.04; t += 0.04) {
@@ -50637,8 +50733,8 @@ function createToolHarvesting(THREE2, world2, { onImpact = () => {
     return { normal: normal5, constant: normal5[0] * cx + normal5[1] * c2 + normal5[2] * cz };
   }
   function rockSize(geometry3, matrix7) {
-    const box5 = geometry3.boundingBox || (geometry3.computeBoundingBox(), geometry3.boundingBox);
-    return box5.getSize(point5).length() * Math.cbrt(Math.abs(matrix7.determinant()));
+    const box6 = geometry3.boundingBox || (geometry3.computeBoundingBox(), geometry3.boundingBox);
+    return box6.getSize(point5).length() * Math.cbrt(Math.abs(matrix7.determinant()));
   }
   function queueRock(object2, geometry3, matrix7, hit2, bite) {
     const pieces = Math.round(Math.max(5, Math.min(12, 4 + rockSize(geometry3, matrix7) * 2.2)));
@@ -50851,7 +50947,7 @@ function createToolHarvesting(THREE2, world2, { onImpact = () => {
       world2.renderer.shadowMap.needsUpdate = true;
       if (object2.id.includes(":log:")) {
         dust.burst(hit2.point, { count: 9, size: 0.45, speed: 1.5, rise: 0.5, life: 1.6, tint: 10126180 });
-        drop("log", HARVEST_BLOWS.log, object2.x, object2.z);
+        drop2("log", HARVEST_BLOWS.log, object2.x, object2.z);
         sound2("logBreak", { position: hit2.point, gain: 1 });
         world2.remove(object2);
         onFell({ object: object2, point: hit2.point, log: true });
@@ -51171,10 +51267,10 @@ function sweptSphereInside(planes, x, y, z, r, sx, sy, sz) {
 function groundFloor(chunks, x, z, reach) {
   let floor = Infinity;
   for (const chunk of chunks?.values?.() || []) {
-    const box4 = chunk.ground?.geometry?.boundingBox;
-    if (!box4) continue;
-    if (box4.max.x < x - reach || box4.min.x > x + reach || box4.max.z < z - reach || box4.min.z > z + reach) continue;
-    if (box4.min.y < floor) floor = box4.min.y;
+    const box5 = chunk.ground?.geometry?.boundingBox;
+    if (!box5) continue;
+    if (box5.max.x < x - reach || box5.min.x > x + reach || box5.max.z < z - reach || box5.min.z > z + reach) continue;
+    if (box5.min.y < floor) floor = box5.min.y;
   }
   return floor;
 }
@@ -51516,7 +51612,7 @@ function installChunkViewCull(world2, THREE2, settings2 = CHUNK_VIEW_CULL) {
   const renderer = world2?.renderer;
   if (!renderer || typeof renderer.render !== "function" || !renderer.info?.render || world2.chunkViewCull) return world2?.chunkViewCull || null;
   const render = renderer.render, records2 = /* @__PURE__ */ new WeakMap(), hidden3 = [];
-  const frustum = new THREE2.Frustum(), matrix6 = new THREE2.Matrix4(), box4 = new THREE2.Box3(), sphere2 = new THREE2.Sphere();
+  const frustum = new THREE2.Frustum(), matrix6 = new THREE2.Matrix4(), box5 = new THREE2.Box3(), sphere2 = new THREE2.Sphere();
   const stats3 = { renders: 0, tested: 0, hidden: 0, objectsHidden: 0, refreshed: 0, uncullable: 0, cpuMs: 0 };
   let enabled = true, serial3 = 0, budgetSerial = -1, budget = 0;
   const show = () => {
@@ -51606,16 +51702,16 @@ function installChunkViewCull(world2, THREE2, settings2 = CHUNK_VIEW_CULL) {
       }
       if (record2.moverOpen) continue;
       stats3.tested++;
-      box4.copy(record2.box).union(record2.moverBox);
-      if (box4.isEmpty()) {
+      box5.copy(record2.box).union(record2.moverBox);
+      if (box5.isEmpty()) {
         group.visible = false;
         hidden3.push(group);
         stats3.hidden++;
         stats3.objectsHidden += record2.count;
         continue;
       }
-      box4.expandByScalar(settings2.margin);
-      if (!frustum.intersectsBox(box4)) {
+      box5.expandByScalar(settings2.margin);
+      if (!frustum.intersectsBox(box5)) {
         group.visible = false;
         hidden3.push(group);
         stats3.hidden++;
@@ -51800,7 +51896,7 @@ function installInstancedMerge(world2, THREE2, settings2 = INSTANCED_MERGE) {
     cached.serial = serial3;
     return cached.list;
   }
-  function merge(camera) {
+  function merge4(camera) {
     const start2 = performance.now(), mask = camera.layers.mask, now = start2;
     serial3++;
     scratch3.clear();
@@ -51852,7 +51948,7 @@ function installInstancedMerge(world2, THREE2, settings2 = INSTANCED_MERGE) {
     if (enabled && scene === world2.scene && camera === world2.camera && !world2.inDungeon) {
       stats3.renders++;
       try {
-        merge(camera);
+        merge4(camera);
       } catch (error) {
         restore();
         throw error;
@@ -52524,7 +52620,7 @@ function createForestFloor(world2) {
     return F2.radius[world2.quality] ?? 0;
   }
   function buildCell(ix, iz) {
-    const c2 = F2.cell, x0 = ix * c2, z0 = iz * c2, cx = x0 + c2 / 2, cz = z0 + c2 / 2, hash15 = functions.hash;
+    const c2 = F2.cell, x0 = ix * c2, z0 = iz * c2, cx = x0 + c2 / 2, cz = z0 + c2 / 2, hash16 = functions.hash;
     const f00 = forestAt(x0, z0), f102 = forestAt(x0 + c2, z0), f01 = forestAt(x0, z0 + c2), f112 = forestAt(x0 + c2, z0 + c2), fMost = Math.max(f00, f102, f01, f112);
     if (fMost < 0.04) return null;
     if (world2.landmarks?.some((l) => l.clear && Math.hypot(cx - l.x, cz - l.z) < l.clear * 0.4)) return null;
@@ -52541,7 +52637,7 @@ function createForestFloor(world2) {
     for (const t of trees) {
       let crown = crownOf.get(t);
       if (crown === void 0) {
-        crown = vegetationSpecies(vegetationClimate(functions, t.x, t.z, t.y, treeClimate2), hash15(t.x, t.z)) === "broadleaf" ? 1 / Math.max(F2.fall.least, (t.h || 10) * F2.fall.crown * (t.width || 1) * F2.fall.spread) ** 2 : 0;
+        crown = vegetationSpecies(vegetationClimate(functions, t.x, t.z, t.y, treeClimate2), hash16(t.x, t.z)) === "broadleaf" ? 1 / Math.max(F2.fall.least, (t.h || 10) * F2.fall.crown * (t.width || 1) * F2.fall.spread) ** 2 : 0;
         crownOf.set(t, crown);
       }
       if (!crown) continue;
@@ -52557,11 +52653,11 @@ function createForestFloor(world2) {
     for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) h[j * 4 + i] = functions.height(x0 + i * LATTICE, z0 + j * LATTICE);
     const most = F2.density * Math.min(1, fallMost) * (1 + F2.near.bonus * nearMost) * fMost, count2 = Math.round(most * c2 * c2);
     if (!count2) return null;
-    const out2 = new Float32Array(count2 * 23), random10 = cellStream(Math.floor(hash15(ix * 7.13 + 0.5, iz * 3.71 - 0.5) * 4294967296) ^ Math.imul(ix, 374761393) ^ Math.imul(iz, 668265263));
+    const out2 = new Float32Array(count2 * 23), random13 = cellStream(Math.floor(hash16(ix * 7.13 + 0.5, iz * 3.71 - 0.5) * 4294967296) ^ Math.imul(ix, 374761393) ^ Math.imul(iz, 668265263));
     let used2 = 0;
     {
       for (let salt = 0; salt < count2; salt++) {
-        const a = random10(), b = random10(), keep = random10();
+        const a = random13(), b = random13(), keep = random13();
         const x = x0 + a * c2, z = z0 + b * c2;
         let fall2 = 0, near = 0;
         for (let k = 0; k < crowns.length; k += 4) {
@@ -52599,7 +52695,7 @@ function createForestFloor(world2) {
         }
         if (nearWater && world2.hydrology?.waterAt?.(x, z, y)) continue;
         if (nearShore && coastBare(functions, x, z, y) > 0.5) continue;
-        const r1 = hash15(x * 3.3, z * 2.9), r2 = hash15(x * 1.9 - 5, z * 4.1 + 2), r3 = hash15(x * 0.7 + 11, z * 5.3 - 4);
+        const r1 = hash16(x * 3.3, z * 2.9), r2 = hash16(x * 1.9 - 5, z * 4.1 + 2), r3 = hash16(x * 0.7 + 11, z * 5.3 - 4);
         const [l0, l1] = F2.length, length = l0 + (l1 - l0) * r1 * r1, width = length * F2.width;
         n.set(-sx, 1, -sz).normalize();
         q.setFromUnitVectors(up7, n);
@@ -52610,7 +52706,7 @@ function createForestFloor(world2) {
         m.compose(pos2, q, scale5);
         let t = r3, pick2 = 0;
         for (; pick2 < F2.leafShare.length - 1 && t > F2.leafShare[pick2]; pick2++) t -= F2.leafShare[pick2];
-        const colour = F2.leaves[pick2], tone = 0.85 + 0.3 * hash15(x * 9.1, z * 8.7);
+        const colour = F2.leaves[pick2], tone = 0.85 + 0.3 * hash16(x * 9.1, z * 8.7);
         out2.set(m.elements, used2);
         used2 += 16;
         out2[used2++] = colour[0] * tone;
@@ -52933,6 +53029,59 @@ function createFootprints(world2, { capacity = FOOTPRINTS.capacity } = {}) {
   }, stats: () => ({ ...stats3, used }) };
 }
 
+// aim-target.js
+var AIM = Object.freeze({ pad: 0.1, slack: 0.06, nearer: 0.08 });
+function viewRay(camera, out2 = { ox: 0, oy: 0, oz: 0, dx: 0, dy: 0, dz: -1 }) {
+  const p2 = camera.position, q = camera.quaternion, x = q.x, y = q.y, z = q.z, w = q.w;
+  out2.ox = p2.x;
+  out2.oy = p2.y;
+  out2.oz = p2.z;
+  let dx = -2 * (x * z + w * y), dy = -2 * (y * z - w * x), dz = -(1 - 2 * (x * x + y * y));
+  const n = Math.hypot(dx, dy, dz) || 1;
+  out2.dx = dx / n;
+  out2.dy = dy / n;
+  out2.dz = dz / n;
+  return out2;
+}
+function aimScore(ray3, x, y0, y1, z, half, settings2 = AIM) {
+  const wx = ray3.ox - x, wz = ray3.oz - z, dy = ray3.dy;
+  const along0 = ray3.dx * wx + dy * ray3.oy + ray3.dz * wz, denom = 1 - dy * dy;
+  let s = denom > 1e-6 ? (ray3.oy - dy * along0) / denom : ray3.oy;
+  if (s < y0) s = y0;
+  else if (s > y1) s = y1;
+  const vx = -wx, vy = s - ray3.oy, vz = -wz;
+  const along = vx * ray3.dx + vy * dy + vz * ray3.dz;
+  if (!(along > 0)) return -1;
+  const dist2 = vx * vx + vy * vy + vz * vz, miss = Math.sqrt(Math.max(0, dist2 - along * along));
+  const allow = half + settings2.pad + settings2.slack * along;
+  if (miss > allow) return -1;
+  return miss / allow + settings2.nearer * Math.sqrt(dist2);
+}
+var SHAPES = Object.freeze({
+  herb: [0, 0.78, 0.3],
+  crystal: [0, 0.95, 0.42],
+  mushroom: [0, 0.4, 0.2],
+  chest: [0, 1, 0.62],
+  memory: [0, 2.6, 0.75],
+  tree: [0, 6, 0.55],
+  content: [0, 1.4, 0.7]
+});
+function aimShape(o) {
+  if (o.type === "rock") {
+    const r = o.r || 1;
+    return [0, r * 0.85, r * 0.9];
+  }
+  if (o.type === "content") return o.action === "enter-cave" ? null : SHAPES.content;
+  if (o.type === "cave" || o.type === "pit" || o.type === "exit" || o.type === "shrine" || o.type === "boss") return null;
+  return SHAPES[o.type] || [0, 1.2, 0.5];
+}
+function aimAtObject(ray3, o, settings2 = AIM) {
+  const shape = aimShape(o);
+  if (!shape) return -1;
+  const y = Number.isFinite(o.y) ? o.y : ray3.oy - 1.66;
+  return aimScore(ray3, o.x, y + shape[0], y + shape[1], o.z, shape[2], settings2);
+}
+
 // forest-life.js
 var FOREST_LIFE = Object.freeze({
   revision: "forest-life-v1",
@@ -52972,7 +53121,13 @@ var FOREST_LIFE = Object.freeze({
   squirrel: Object.freeze({ count: 3, spawn: Object.freeze([12, 36]), keep: 52, flee: Object.freeze([8, 13]), run: Object.freeze([2.2, 4.6]), climb: 1.6, cling: Object.freeze([7, 15]), height: Object.freeze([2.6, 7]) }),
   // The daylight they need (the sky's 0..1) and the rain that keeps them away.
   daylight: 0.3,
-  rain: 0.22
+  rain: 0.22,
+  // v144 (the user: "森にいる小鳥やリスも弓で倒せて食料を取れるようにして、あとリスが登っている木を伐採すると空中に浮いた
+  // ままになるから落ちてきてまた動くようにして、鳥の罠やリスの罠もクラフトできるようにして生け捕りにして飼えるようにして
+  // かごで飼えるようにして"): a body lies (s) before it is gone; how near the view finds one (m); how far a blow reaches (m);
+  // how many more of each are drawn (the bodies, and those kept in cages and caught in traps); how much nearer one may come
+  // walking softly (C held) or standing still; a fall's pull (m/s2).
+  hunt: Object.freeze({ dead: 300, reach: 2.1, strike: 2.4, extra: Object.freeze({ bird: 16, squirrel: 8 }), soft: 0.6, still: 0.45, gravity: 9.8 })
 });
 var L = FOREST_LIFE;
 var TAU22 = Math.PI * 2;
@@ -53256,7 +53411,21 @@ function createForestLife(world2, { seed = 1 } = {}) {
   const B2 = L.butterfly, BD = L.bird, SQR = L.squirrel;
   const group = new Group();
   group.name = "forest-life";
-  const stats3 = { butterflies: 0, birds: 0, squirrels: 0, flushes: 0, climbs: 0, spawns: 0 };
+  const stats3 = {
+    butterflies: 0,
+    birds: 0,
+    squirrels: 0,
+    flushes: 0,
+    climbs: 0,
+    spawns: 0,
+    /* v144 */
+    falls: 0,
+    killed: 0,
+    taken: 0,
+    released: 0,
+    bodies: 0,
+    kept: 0
+  };
   let events = {}, enabled = true, time = 0, spawnClock = 0;
   const m = new Matrix4(), q = new Quaternion(), e = new Euler(0, 0, 0, "YXZ"), p2 = new Vector3(), s = new Vector3();
   const soundPoint = new Vector3();
@@ -53278,10 +53447,11 @@ function createForestLife(world2, { seed = 1 } = {}) {
   }
   const butterflyMesh = instanced(butterflyGeometry(), butterflyMaterial(), B2.count, { flap: 1, kind: 1 });
   butterflyMesh.name = "forest-life:butterflies";
-  const birdMesh = instanced(birdGeometry(), birdMaterial2(), BD.count, { pose: 2, kind: 1 });
+  const HU = L.hunt, birdCap = BD.count + HU.extra.bird, squirrelCap = SQR.count + HU.extra.squirrel;
+  const birdMesh = instanced(birdGeometry(), birdMaterial2(), birdCap, { pose: 2, kind: 1 });
   birdMesh.name = "forest-life:birds";
   const squirrelMats = squirrelMaterials();
-  const sqParts = { body: instanced(squirrelBody(), squirrelMats.fur, SQR.count), head: instanced(squirrelHead(), squirrelMats.fur, SQR.count), tail: instanced(squirrelTail(), squirrelMats.tail, SQR.count), front: instanced(squirrelLegs(true), squirrelMats.fur, SQR.count), hind: instanced(squirrelLegs(false), squirrelMats.fur, SQR.count) };
+  const sqParts = { body: instanced(squirrelBody(), squirrelMats.fur, squirrelCap), head: instanced(squirrelHead(), squirrelMats.fur, squirrelCap), tail: instanced(squirrelTail(), squirrelMats.tail, squirrelCap), front: instanced(squirrelLegs(true), squirrelMats.fur, squirrelCap), hind: instanced(squirrelLegs(false), squirrelMats.fur, squirrelCap) };
   for (const [name, mesh2] of Object.entries(sqParts)) {
     mesh2.name = "forest-life:squirrel-" + name;
     mesh2.castShadow = true;
@@ -53351,9 +53521,18 @@ function createForestLife(world2, { seed = 1 } = {}) {
     }
     return null;
   }
+  let pace = 0, paceFrom = null;
+  function measurePace(player, dt) {
+    if (paceFrom && dt > 0) {
+      const v = Math.hypot(player.x - paceFrom.x, player.z - paceFrom.z) / dt;
+      if (v < 30) pace += (v - pace) * Math.min(1, dt * 6);
+    }
+    paceFrom = { x: player.x, z: player.z };
+  }
   function playerMotion() {
-    const motion = world2.player?.userData?.motion || {};
-    return { speed: motion.speed || 0, running: !!motion.sprint || (motion.speed || 0) > 4.5 };
+    const motion = world2.player?.userData?.motion || {}, speed = Math.max(motion.speed || 0, pace);
+    const shy = pace < 0.5 && !motion.swimming ? HU.still : motion.soft ? HU.soft : 1;
+    return { speed, running: !!motion.sprint || speed > 4.5, shy };
   }
   const butterflies = Array.from({ length: B2.count }, () => ({ active: false }));
   const butterflyHabitat = (x, z, y, c2) => (1 - c2.snow) * (1 - c2.ash * 0.85) * (1 - c2.swamp * 0.5) * (0.22 + 0.78 * c2.meadow) * (0.3 + 0.7 * (1 - clamp32(c2.treeDensity ?? 0, 0, 1))) * smooth19(1.5, 4, y);
@@ -53488,7 +53667,7 @@ function createForestLife(world2, { seed = 1 } = {}) {
       const mm = m.fromArray(info.matrix), foot = info.matrix[13];
       for (const a of info.family.branchAnchors) if (a.kind === "primary" || a.kind === "secondary") {
         p2.fromArray(a.point).applyMatrix4(mm);
-        if (p2.y - foot > 1.6 && p2.y - foot < 7.5) list.push({ x: p2.x, y: p2.y, z: p2.z, hidden: p2.y - foot > 5 });
+        if (p2.y - foot > 1.6 && p2.y - foot < 7.5) list.push({ x: p2.x, y: p2.y, z: p2.z, hidden: p2.y - foot > 5, tree: t.id });
       }
     }
     let best = null, bestScore = -Infinity;
@@ -53542,6 +53721,7 @@ function createForestLife(world2, { seed = 1 } = {}) {
     };
     b.state = "fly";
     b.roll = b.roll || 0;
+    b.perchTree = to.tree ?? null;
   }
   function bezier2(P, t, out2 = []) {
     const u = 1 - t, a = u * u * u, c2 = 3 * u * u * t, e2 = 3 * u * t * t, f15 = t * t * t;
@@ -53563,7 +53743,7 @@ function createForestLife(world2, { seed = 1 } = {}) {
       b.active = false;
       return;
     }
-    const flushAt = motion.running ? BD.flush[1] : BD.flush[0];
+    const flushAt = (motion.running ? BD.flush[1] : BD.flush[0]) * motion.shy;
     if (b.state === "ground") {
       b.flap = -0.2;
       b.fold = 1;
@@ -53670,7 +53850,10 @@ function createForestLife(world2, { seed = 1 } = {}) {
       b.timer -= dt;
       if (rnd3() < dt * 1.5) b.yaw += (rnd3() - 0.5) * 1.8;
       b.pitch = Math.sin(time * 9 + b.seed) > 0.97 ? -0.25 : 0;
-      if (d < flushAt * 0.5) flyBird(b, birdPerch(b, player));
+      if (b.perchTree && world2.removed?.has(b.perchTree)) {
+        flyBird(b, birdPerch(b, player));
+        sound2("birdflush", b.x, b.y, b.z, 0.7, 45);
+      } else if (d < flushAt * 0.5) flyBird(b, birdPerch(b, player));
       else if (b.timer < 0) {
         if (d > 11 && fine) {
           const a = rnd3() * TAU22, r = 3 + rnd3() * 5, x = b.x + Math.sin(a) * r, z = b.z + Math.cos(a) * r;
@@ -53701,8 +53884,36 @@ function createForestLife(world2, { seed = 1 } = {}) {
       kind.array[n] = b.kind + (b.state === "fly" ? 0.25 : 0);
       n++;
     }
-    birdMesh.count = n;
     stats3.birds = n;
+    for (const o of bodies) {
+      if (o.kind !== "bird" || n >= birdCap) continue;
+      const k = BIRD_SCALE[o.look] * BD.size;
+      e.set(0, o.yaw, o.roll);
+      q.setFromEuler(e);
+      p2.set(o.x, o.y + 0.028 * k * Math.abs(Math.sin(o.roll)), o.z);
+      s.setScalar(k);
+      m.compose(p2, q, s);
+      birdMesh.setMatrixAt(n, m);
+      pose.array[n * 2] = -0.2;
+      pose.array[n * 2 + 1] = 1;
+      kind.array[n] = o.look;
+      n++;
+    }
+    for (const o of kept) {
+      if (o.kind !== "bird" || n >= birdCap) continue;
+      const ph = o.phase, look2 = Math.sin(time * 0.8 + ph) > 0.2, peck = Math.max(0, Math.sin(time * 1.7 + ph * 3)) ** 12;
+      e.set(0.55 * peck, o.yaw + (look2 ? 0.6 * Math.sin(time * 0.35 + ph) : 0), 0);
+      q.setFromEuler(e);
+      p2.set(o.x, o.y + (Math.sin(time * 2.3 + ph) > 0.985 ? 0.02 : 0), o.z);
+      s.setScalar(BIRD_SCALE[o.look ?? 0] * BD.size * (o.scale ?? 1));
+      m.compose(p2, q, s);
+      birdMesh.setMatrixAt(n, m);
+      pose.array[n * 2] = Math.sin(time * 3.1 + ph) > 0.97 ? 0.6 * Math.sin(time * 60) : -0.2;
+      pose.array[n * 2 + 1] = 1;
+      kind.array[n] = o.look ?? 0;
+      n++;
+    }
+    birdMesh.count = n;
     if (n) {
       birdMesh.instanceMatrix.needsUpdate = true;
       pose.needsUpdate = true;
@@ -53749,13 +53960,50 @@ function createForestLife(world2, { seed = 1 } = {}) {
     stats3.climbs++;
     sound2("scrabble", tree.x, ground(tree.x, tree.z) + 1, tree.z, 0.8, 30);
   }
+  function dropOff(sq) {
+    const speed = 1.2 + rnd3() * 0.9, rx = sq.radialX ?? Math.cos(sq.climb.angle), rz = sq.radialZ ?? Math.sin(sq.climb.angle);
+    Object.assign(sq, { state: "fall", vx: rx * speed, vz: rz * speed, vy: 0.5 + rnd3() * 0.8, yaw: Math.atan2(rx, rz), climb: null, sit: 0, gait: 0, speed: 0, tail: 1 });
+    stats3.falls++;
+    sound2("squirrel", sq.x, sq.y, sq.z, 0.8, 35);
+  }
+  function stepFall(sq, dt, player) {
+    sq.vy -= HU.gravity * dt;
+    sq.x += sq.vx * dt;
+    sq.y += sq.vy * dt;
+    sq.z += sq.vz * dt;
+    sq.pitch = clamp32(-sq.vy * 0.1, -0.5, 0.45);
+    sq.front = 0.95;
+    sq.hind = -0.75;
+    sq.bounce = 0;
+    sq.headPitch = -0.2;
+    sq.headYaw = 0;
+    sq.tail = 1;
+    const g = ground(sq.x, sq.z);
+    if (sq.y <= g) {
+      sq.y = g;
+      sq.pitch = 0;
+      sq.front = 0;
+      sq.hind = 0;
+      sq.vx = sq.vz = sq.vy = 0;
+      sound2("scrabble", sq.x, g + 0.2, sq.z, 0.7, 30);
+      const a = Math.atan2(sq.x - player.x, sq.z - player.z), x = sq.x + Math.sin(a) * 11, z = sq.z + Math.cos(a) * 11;
+      sq.home = treesNear(x, z, 12, nearTrees)[0] || { x, z, h: 12 };
+      sq.fleeTree = null;
+      runTo(sq, x, z, SQR.run[1], true);
+    }
+  }
   function updateSquirrel(sq, dt, player, fine, motion) {
     const d = Math.hypot(sq.x - player.x, sq.z - player.z);
-    if (d > SQR.keep || !fine && d > 22 && sq.state !== "climb" && sq.state !== "cling") {
+    if (d > SQR.keep || !fine && d > 22 && sq.state !== "climb" && sq.state !== "cling" && sq.state !== "fall") {
       sq.active = false;
       return;
     }
-    const fleeAt = motion.running ? SQR.flee[1] : SQR.flee[0];
+    if (sq.climb && world2.removed?.has(sq.climb.tree.id)) dropOff(sq);
+    if (sq.state === "fall") {
+      stepFall(sq, dt, player);
+      return;
+    }
+    const fleeAt = (motion.running ? SQR.flee[1] : SQR.flee[0]) * motion.shy;
     const onGround = sq.state === "idle" || sq.state === "run" || sq.state === "flee";
     if (onGround && sq.state !== "flee" && d < fleeAt) {
       const tree = treeToClimb(sq, player);
@@ -53879,8 +54127,32 @@ function createForestLife(world2, { seed = 1 } = {}) {
   const X2 = new Vector3(1, 0, 0), Y2 = new Vector3(0, 1, 0);
   function drawSquirrels() {
     let n = 0;
-    for (const sq of squirrels) {
-      if (!sq.active) continue;
+    for (const sq of squirrels) if (sq.active) drawSquirrel(sq, n++);
+    stats3.squirrels = n;
+    for (const o of bodies) if (o.kind === "squirrel" && n < squirrelCap) {
+      Object.assign(lying, { x: o.x, y: o.y + 0.045 * Math.abs(Math.sin(o.roll)), z: o.z, yaw: o.yaw, roll: o.roll });
+      drawSquirrel(lying, n++);
+    }
+    for (const o of kept) if (o.kind === "squirrel" && n < squirrelCap) {
+      const ph = o.phase, flick = Math.sin(time * 6 + ph) > 0.85 ? 0.3 * Math.sin(time * 38) : 0;
+      Object.assign(sitting, { x: o.x, y: o.y, z: o.z, yaw: o.yaw + (o.crouch ? 0.1 : 0.4) * Math.sin(time * 0.3 + ph), headYaw: Math.sin(time * 1.1 + ph) * 0.7 * (Math.sin(time * 0.5 + ph * 2) > 0 ? 1 : 0.2), headPitch: Math.sin(time * 0.7 + ph) > 0.6 ? 0.5 : 0, tail: flick, sit: Math.sin(time * 0.23 + ph) > -0.4 ? 1 : 0.2, front: 0 });
+      if (o.crouch) {
+        sitting.sit = 0;
+        sitting.tail = 1.3;
+        sitting.headPitch = 0.2;
+      }
+      sitting.front = -1.1 * sitting.sit;
+      drawSquirrel(sitting, n++);
+    }
+    for (const mesh2 of Object.values(sqParts)) {
+      mesh2.count = n;
+      if (n) mesh2.instanceMatrix.needsUpdate = true;
+    }
+  }
+  const lying = { sit: 0, pitch: 0, bounce: 0, headPitch: 0.35, headYaw: 0.3, tail: -0.4, front: 0.55, hind: -0.45, climb: null, state: "dead" };
+  const sitting = { roll: 0, pitch: 0, bounce: 0, hind: 0, climb: null, state: "kept" };
+  function drawSquirrel(sq, n) {
+    {
       if (sq.climb) {
         const dir = sq.climb.dir > 0 || sq.state === "cling" ? 1 : -1;
         basis.y.set(sq.radialX, 0, sq.radialZ);
@@ -53888,7 +54160,7 @@ function createForestLife(world2, { seed = 1 } = {}) {
         basis.x.crossVectors(basis.y, basis.z).normalize();
         body2.makeBasis(basis.x, basis.y, basis.z).setPosition(sq.x, sq.y, sq.z);
       } else {
-        e.set(0, sq.yaw, 0);
+        e.set(0, sq.yaw, sq.roll || 0);
         q.setFromEuler(e);
         body2.compose(p2.set(sq.x, sq.y, sq.z), q, s.setScalar(1));
       }
@@ -53902,13 +54174,7 @@ function createForestLife(world2, { seed = 1 } = {}) {
       sqParts.front.setMatrixAt(n, part2);
       part2.copy(body2).multiply(about(X2, sq.hind, SQ.hipJoint));
       sqParts.hind.setMatrixAt(n, part2);
-      n++;
     }
-    for (const mesh2 of Object.values(sqParts)) {
-      mesh2.count = n;
-      if (n) mesh2.instanceMatrix.needsUpdate = true;
-    }
-    stats3.squirrels = n;
   }
   const viewDir = new Vector3();
   function seen(x, y, z) {
@@ -53924,6 +54190,7 @@ function createForestLife(world2, { seed = 1 } = {}) {
     if (!on || !player) return;
     dt = Math.min(dt, 0.1);
     time += dt;
+    measurePace(player, dt);
     const fine = weatherNow(), motion = playerMotion();
     spawnClock -= dt;
     if (fine && spawnClock < 0) {
@@ -53940,9 +54207,180 @@ function createForestLife(world2, { seed = 1 } = {}) {
     for (const b of butterflies) if (b.active && !b.held) updateButterfly(b, dt, player, fine);
     for (const b of birds) if (b.active && !b.held) updateBird(b, dt, player, fine, motion);
     for (const sq of squirrels) if (sq.active && !sq.held) updateSquirrel(sq, dt, player, fine, motion);
+    stepBodies(dt, player);
     drawButterflies();
     drawBirds();
     drawSquirrels();
+  }
+  const bodies = [], kept = [];
+  let bodySerial = 0;
+  function kill(o, kind, from = null) {
+    if (!o?.active || kind === "bird" && o.state === "hidden") return null;
+    const body3 = { id: kind + ":body:" + ++bodySerial, kind, look: kind === "bird" ? o.kind : 0, x: o.x, y: o.y, z: o.z, yaw: o.yaw, vx: 0, vy: 0, vz: 0, t: 0, roll: 0, landed: false };
+    const away = from || { x: o.x - Math.sin(o.yaw), z: o.z - Math.cos(o.yaw) };
+    if (kind === "bird") {
+      if (o.state === "fly" && o.path) {
+        const v = o.path.v * 0.5;
+        body3.vx = Math.sin(o.yaw) * v;
+        body3.vz = Math.cos(o.yaw) * v;
+      }
+      body3.landed = o.state === "ground";
+      body3.y = o.state === "ground" ? ground(o.x, o.z) : o.y;
+      let first = true;
+      for (const b of birds) if (b !== o && b.active && b.flock === o.flock && (b.state === "ground" || b.state === "perch")) {
+        flyBird(b, birdPerch(b, away));
+        if (first) {
+          sound2("birdflush", b.x, b.y + 0.3, b.z, 0.9, 45);
+          first = false;
+        }
+      }
+    } else {
+      if (o.climb) {
+        body3.vx = (o.radialX ?? 0) * 0.7;
+        body3.vz = (o.radialZ ?? 0) * 0.7;
+        body3.yaw = Math.atan2(o.radialX ?? 0, o.radialZ ?? 1);
+      } else if (o.state === "fall") {
+        body3.vx = o.vx;
+        body3.vy = o.vy;
+        body3.vz = o.vz;
+      } else body3.landed = true;
+      sound2("squirrel", o.x, o.y + 0.2, o.z, 0.6, 30);
+      for (const q2 of squirrels) if (q2 !== o && q2.active && Math.hypot(q2.x - o.x, q2.z - o.z) < 10 && (q2.state === "idle" || q2.state === "run")) {
+        const a = Math.atan2(q2.x - away.x, q2.z - away.z);
+        runTo(q2, q2.x + Math.sin(a) * 10, q2.z + Math.cos(a) * 10, SQR.run[1], true);
+        q2.fleeTree = null;
+      }
+    }
+    o.active = false;
+    o.held = false;
+    o.climb = null;
+    bodies.push(body3);
+    while (bodies.length > 12) bodies.shift();
+    stats3.killed++;
+    return body3;
+  }
+  function stepBodies(dt, player) {
+    for (let i = bodies.length - 1; i >= 0; i--) {
+      const o = bodies[i];
+      o.t += dt;
+      if (!o.landed) {
+        o.vy -= HU.gravity * dt;
+        o.x += o.vx * dt;
+        o.y += o.vy * dt;
+        o.z += o.vz * dt;
+        o.roll += dt * 5;
+        const w = world2.hydrology?.waterAt?.(o.x, o.z, ground(o.x, o.z)), floor = w && Number.isFinite(w.level) ? w.level - 0.02 : ground(o.x, o.z);
+        if (o.y <= floor) {
+          o.y = floor;
+          o.landed = true;
+          o.vx = o.vy = o.vz = 0;
+          o.roll = Math.PI / 2 * (o.roll % Math.PI < Math.PI / 2 ? 1 : -1);
+          sound2("scrabble", o.x, o.y + 0.1, o.z, 0.35, 20);
+        }
+      } else o.roll += ((o.roll < 0 ? -1 : 1) * Math.PI / 2 - o.roll) * Math.min(1, dt * 10);
+      if (o.t > HU.dead || Math.hypot(o.x - player.x, o.z - player.z) > SQR.keep * 1.8) bodies.splice(i, 1);
+    }
+    stats3.bodies = bodies.length;
+  }
+  function strike({ eye, yaw: yaw2, reach = HU.strike } = {}) {
+    if (!eye || world2.inDungeon) return null;
+    const fx = -Math.sin(yaw2), fz = -Math.cos(yaw2);
+    let best = null, bd = Infinity;
+    const test = (o, kind, y) => {
+      const dx = o.x - eye.x, dz = o.z - eye.z, d = Math.hypot(dx, dz);
+      if (d > reach || d > 0.25 && (dx * fx + dz * fz) / d < 0.45 || eye.y - y > 3.2 || y - eye.y > 0.6) return;
+      if (d < bd) {
+        bd = d;
+        best = [o, kind];
+      }
+    };
+    for (const b of birds) if (b.active && (b.state === "ground" || b.state === "perch")) test(b, "bird", b.y);
+    for (const sq of squirrels) if (sq.active && sq.state !== "fall") test(sq, "squirrel", sq.y);
+    return best ? kill(best[0], best[1], eye) : null;
+  }
+  function segmentHit(a, b) {
+    const ux = b.x - a.x, uy = b.y - a.y, uz = b.z - a.z, len22 = ux * ux + uy * uy + uz * uz || 1e-9;
+    const minX = Math.min(a.x, b.x) - 1, maxX = Math.max(a.x, b.x) + 1, minZ = Math.min(a.z, b.z) - 1, maxZ = Math.max(a.z, b.z) + 1;
+    let best = null;
+    const test = (o, kind, cx, cy, cz, r) => {
+      if (cx < minX || cx > maxX || cz < minZ || cz > maxZ) return;
+      const t = clamp32(((cx - a.x) * ux + (cy - a.y) * uy + (cz - a.z) * uz) / len22, 0, 1), ex = a.x + ux * t - cx, ey = a.y + uy * t - cy, ez = a.z + uz * t - cz;
+      if (ex * ex + ey * ey + ez * ez < r * r && (!best || t < best.t)) best = { t, hit: { critter: o, kind } };
+    };
+    for (const o of birds) if (o.active && o.state !== "hidden") {
+      const k = BIRD_SCALE[o.kind] * BD.size;
+      test(o, "bird", o.x, o.y + 0.05 * k, o.z, 0.065 * k + 0.04);
+    }
+    for (const o of squirrels) if (o.active) {
+      const out2 = o.climb ? 0.05 : 0;
+      test(o, "squirrel", o.x + (o.radialX ?? 0) * out2, o.y + (o.climb ? 0 : 0.08), o.z + (o.radialZ ?? 0) * out2, 0.14);
+    }
+    return best;
+  }
+  function arrowHit(info) {
+    const h = info?.hit;
+    return h ? kill(h.critter, h.kind) : null;
+  }
+  const arrowTarget = { hp: 1, type: "critter", critterTarget: "forest", mesh: group, segmentHit };
+  function aimed(px, pz, ray3, reach = HU.reach) {
+    let best = null;
+    for (const o of bodies) {
+      const d = Math.hypot(o.x - px, o.z - pz);
+      if (d > reach) continue;
+      const aim = aimScore(ray3, o.x, o.y - 0.05, o.y + 0.14, o.z, 0.2);
+      if (aim < 0) continue;
+      if (!best || aim < best.aim) best = { critter: o, kind: o.kind, alive: false, aim, distance: d };
+    }
+    return best;
+  }
+  function take(hit2) {
+    const i = bodies.indexOf(hit2?.critter);
+    if (i < 0) return false;
+    bodies.splice(i, 1);
+    stats3.taken++;
+    return true;
+  }
+  function startle() {
+  }
+  function release(kind, x, z, from = null, look2 = null) {
+    const y = ground(x, z);
+    if (!Number.isFinite(y)) return null;
+    const away = from || { x: x - 1, z };
+    if (kind === "bird") {
+      const b = birds.find((o) => !o.active);
+      if (!b) return null;
+      Object.assign(b, { active: true, kind: look2 ?? Math.floor(rnd3() * BIRD_KINDS.length), x, y: y + 1.1, z, yaw: Math.atan2(x - away.x, z - away.z), pitch: 0, state: "perch", timer: 0, hop: null, flap: -0.2, fold: 1, wingPhase: 0, seed: rnd3() * 100, flock: { x, z }, held: false, perchTree: null });
+      flyBird(b, birdPerch(b, away));
+      sound2("birdflush", x, y + 1, z, 0.8, 45);
+      stats3.released++;
+      return b;
+    }
+    if (kind === "squirrel") {
+      const sq = squirrels.find((o) => !o.active);
+      if (!sq) return null;
+      Object.assign(sq, { active: true, x, y, z, yaw: Math.atan2(x - away.x, z - away.z), home: treesNear(x, z, 12, nearTrees)[0] || { x, z, h: 12 }, state: "idle", timer: 2, sit: 0, gait: 0, phase: 0, speed: 0, headYaw: 0, headPitch: 0, tail: 0.8, front: 0, hind: 0, bounce: 0, pitch: 0, seed: rnd3() * 100, climb: null, held: false });
+      const tree = treeToClimb(sq, away);
+      if (tree) {
+        const a = Math.atan2(tree.x - away.x, tree.z - away.z), r = trunkOf(tree).at(0.3, trunkPoint).r;
+        sq.fleeTree = tree;
+        runTo(sq, tree.x + Math.sin(a) * (r + 0.08), tree.z + Math.cos(a) * (r + 0.08), SQR.run[1], true);
+      } else {
+        const a = Math.atan2(x - away.x, z - away.z);
+        sq.fleeTree = null;
+        runTo(sq, x + Math.sin(a) * 10, z + Math.cos(a) * 10, SQR.run[1], true);
+      }
+      sound2("squirrel", x, y + 0.2, z, 0.6, 30);
+      stats3.released++;
+      return sq;
+    }
+    return null;
+  }
+  function setKept(next) {
+    const n = (next || []).slice(0, HU.extra.bird + HU.extra.squirrel);
+    for (let i = 0; i < n.length; i++) n[i].phase = kept[i]?.phase ?? rnd3() * TAU22;
+    kept.length = 0;
+    kept.push(...n);
+    stats3.kept = kept.length;
   }
   function setEvents(next) {
     events = next || {};
@@ -53992,12 +54430,36 @@ function createForestLife(world2, { seed = 1 } = {}) {
     Object.assign(sq, { active: true, x, y, z, yaw: options.yaw ?? 0, home: treesNear(x, z, 12, nearTrees)[0] || { x, z, h: 12 }, state: "idle", timer: 99, sit: options.sit ?? 1, gait: 0, phase: 0, speed: 0, headYaw: 0, headPitch: 0, tail: 0, front: 0, hind: 0, bounce: 0, pitch: 0, seed: 1, climb: null });
     return sq;
   }
-  function release() {
+  function releaseHeld() {
     for (const list of [butterflies, birds, squirrels]) for (const o of list) o.held = false;
   }
-  return { group, update, setEvents, setEnabled, dispose, snapshot, place, release, stats: () => ({ ...stats3 }), get meshes() {
-    return { butterflies: butterflyMesh, birds: birdMesh, ...sqParts };
-  } };
+  return {
+    group,
+    update,
+    setEvents,
+    setEnabled,
+    dispose,
+    snapshot,
+    place,
+    release: releaseHeld,
+    stats: () => ({ ...stats3 }),
+    get meshes() {
+      return { butterflies: butterflyMesh, birds: birdMesh, ...sqParts };
+    },
+    /* v144 */
+    kill,
+    strike,
+    segmentHit,
+    arrowHit,
+    arrowTarget,
+    aimed,
+    take,
+    startle,
+    letGo: release,
+    setKept,
+    dead: () => bodies.map((o) => ({ id: o.id, kind: o.kind, x: o.x, y: o.y, z: o.z, landed: o.landed, roll: o.roll })),
+    live: () => ({ birds: birds.filter((b) => b.active), squirrels: squirrels.filter((o) => o.active) })
+  };
 }
 
 // island-fish.js
@@ -54030,7 +54492,20 @@ var ISLAND_FISH = Object.freeze({
   // Shoals at most in one kind of water (the sea's shoals are big).
   perWater: Object.freeze({ ocean: 6 }),
   // The fishing float: how near a shoal must be to come to it (m).
-  lure: 15
+  lure: 15,
+  // v143 (the user: "魚の群れが旋回するとき塊で動いて動きが不自然" - the shoal turned as one block, its places swung round
+  // its middle): each fish behind the middle follows the shoal's own path (its places along it, `step` m apart, `length`
+  // m of it kept), turning where the ones ahead turned.
+  trail: Object.freeze({ step: 0.12, length: 9 }),
+  // v143 (the user: fish struck down, caught by hand, kept alive): a struck fish floats up belly first and drifts (`dead`
+  // seconds, then sinks away); one near enough (`reach` m, no deeper than `shallow` m) taken in the hand; how wary they
+  // are of a player standing still (a share of `shy`) or walking softly (C held).
+  dead: 240,
+  reach: 1.9,
+  shallow: 0.9,
+  still: 0.3,
+  soft: 0.55,
+  kept: 24
 });
 var FISH_LOOKS = Object.freeze({
   trout: Object.freeze({ back: [0.2, 0.23, 0.14], flank: [0.56, 0.57, 0.47], belly: [0.9, 0.89, 0.84], marks: [0.75, 0.25, 0, 0.35], scales: 0.15 }),
@@ -54207,9 +54682,11 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
     group.add(mesh2);
   }
   world2.scene?.add(group);
-  const stats3 = { shoals: 0, fish: 0, placed: 0, dropped: 0, leaps: 0, fled: 0, lured: 0, caught: 0, tries: 0, near: false };
+  const stats3 = { shoals: 0, fish: 0, placed: 0, dropped: 0, leaps: 0, fled: 0, lured: 0, caught: 0, tries: 0, near: false, killed: 0, taken: 0, dead: 0, kept: 0, released: 0 };
   let events = {}, time = 0, placeClock = 0, nearClock = 0, waterNear = false, lure = null, lureMode = null, disposed = false;
   const shoals = [];
+  const dead = [], kept = [];
+  let deadSerial = 0;
   const M2 = new Matrix4(), Q2 = new Quaternion(), E3 = new Euler(0, 0, 0, "YXZ"), P = new Vector3(), S = new Vector3(), view = new Vector3(), point5 = new Vector3();
   const ground = (x, z) => world2.terrainFunctions?.height?.(x, z);
   function waterAt(x, z) {
@@ -54277,7 +54754,8 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
     for (const s of shoals) if (Math.hypot(s.x - x, s.z - z) < 8) return false;
     const n = Math.round(between3(def.n)), room = C3.capacity[def.shape] - used(def.shape);
     if (room < Math.min(n, 2)) return false;
-    const sh = { kind, def, water: w.kind, x, z, tx: x, tz: z, vx: 0, vz: 0, heading: w.fx || w.fz ? Math.atan2(-w.fx, -w.fz) : rnd3() * TAU23, retarget: 1 + rnd3() * 3, flee: 0, leapIn: between3(def.leap) * (0.3 + rnd3() * 0.7), lured: false, fish: [], seed: rnd3() * 1e3 };
+    const sh = { kind, def, water: w.kind, x, z, tx: x, tz: z, vx: 0, vz: 0, heading: w.fx || w.fz ? Math.atan2(-w.fx, -w.fz) : rnd3() * TAU23, retarget: 1 + rnd3() * 3, flee: 0, leapIn: between3(def.leap) * (0.3 + rnd3() * 0.7), lured: false, fish: [], seed: rnd3() * 1e3, trail: [], form: 1 };
+    for (let k = 0; k * C3.trail.step < 3; k++) sh.trail.push({ x: x - Math.sin(sh.heading) * k * C3.trail.step, z: z - Math.cos(sh.heading) * k * C3.trail.step, h: sh.heading });
     if (!sample2(sh)) return false;
     for (let k = 0; k < Math.min(n, room); k++) {
       const r = Math.sqrt(rnd3()) * def.spread, b = rnd3() * TAU23, size = between3(def.size);
@@ -54308,7 +54786,7 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
     stats3.placed++;
     return true;
   }
-  function drop(i) {
+  function drop2(i) {
     shoals.splice(i, 1);
     stats3.dropped++;
   }
@@ -54325,7 +54803,7 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
     return false;
   }
   function steer2(sh, dt, player, motion) {
-    const def = sh.def, pd = Math.hypot(player.x - sh.x, player.z - sh.z), shy = def.shy * (motion.running ? 1.45 : 1);
+    const def = sh.def, pd = Math.hypot(player.x - sh.x, player.z - sh.z), shy = def.shy * (motion.running ? 1.45 : motion.still ? C3.still : motion.soft ? C3.soft : 1);
     sh.retarget -= dt;
     sh.flee = Math.max(0, sh.flee - dt);
     const lured = lure && sh.lured;
@@ -54366,12 +54844,44 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
       sh.z = nz;
     }
     const hs = Math.hypot(sh.vx, sh.vz), current = Math.hypot(sh.fx, sh.fz) > 0.1;
-    const want2 = current && sh.flee <= 0 && !(sh.lured && lure) ? Math.atan2(-sh.fx, -sh.fz) : hs > 0.12 ? Math.atan2(sh.vx, sh.vz) : sh.heading + Math.sin(time * 0.25 + sh.seed) * dt * 0.4;
+    const holds2 = current && sh.flee <= 0 && !(sh.lured && lure);
+    const want2 = holds2 ? Math.atan2(-sh.fx, -sh.fz) : hs > 0.12 ? Math.atan2(sh.vx, sh.vz) : sh.heading + Math.sin(time * 0.25 + sh.seed) * dt * 0.4;
+    sh.form += ((holds2 ? 0 : 1) - sh.form) * Math.min(1, dt * 1.5);
     sh.heading += wrap5(want2 - sh.heading) * Math.min(1, dt * (sh.flee > 0 ? 6 : 1.6));
+    const last2 = sh.trail[0];
+    if (!last2 || Math.hypot(sh.x - last2.x, sh.z - last2.z) >= C3.trail.step) {
+      sh.trail.unshift({ x: sh.x, z: sh.z, h: sh.heading });
+      if (sh.trail.length * C3.trail.step > C3.trail.length) sh.trail.length = Math.ceil(C3.trail.length / C3.trail.step);
+    } else {
+      last2.h = sh.heading;
+    }
+  }
+  const onTrail = { x: 0, z: 0, h: 0 };
+  function trailAt(sh, back) {
+    const t = sh.trail;
+    let left = back + (t.length ? Math.hypot(sh.x - t[0].x, sh.z - t[0].z) : 0), px = sh.x, pz = sh.z, ph = sh.heading;
+    for (let i = 0; i < t.length; i++) {
+      const q = t[i], seg = Math.hypot(q.x - px, q.z - pz);
+      if (seg >= left && seg > 1e-6) {
+        const u = left / seg;
+        onTrail.x = px + (q.x - px) * u;
+        onTrail.z = pz + (q.z - pz) * u;
+        onTrail.h = ph + wrap5(q.h - ph) * u;
+        return onTrail;
+      }
+      left -= seg;
+      px = q.x;
+      pz = q.z;
+      ph = q.h;
+    }
+    onTrail.x = px - Math.sin(ph) * left;
+    onTrail.z = pz - Math.cos(ph) * left;
+    onTrail.h = ph;
+    return onTrail;
   }
   const budget = { left: 0 };
   function swim(sh, f15, dt, bite) {
-    const def = sh.def, ch = Math.cos(sh.heading), shh = Math.sin(sh.heading);
+    const def = sh.def;
     const px = f15.x, pz = f15.z;
     if (f15.leap) {
       const L4 = f15.leap;
@@ -54402,9 +54912,17 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
         sz = lure.z;
       }
     } else {
-      const wob = Math.sin(time * 0.7 + f15.wob) * 0.22 * def.spread;
-      sx = sh.x + f15.ox * ch + f15.oz * shh + wob;
-      sz = sh.z - f15.ox * shh + f15.oz * ch + Math.cos(time * 0.55 + f15.wob) * 0.2 * def.spread;
+      const wob = Math.sin(time * 0.7 + f15.wob) * 0.22 * def.spread, wob2 = Math.cos(time * 0.55 + f15.wob) * 0.2 * def.spread;
+      const back = def.spread * 0.75 - f15.oz, q = trailAt(sh, back), c2 = Math.cos(q.h), s2 = Math.sin(q.h);
+      sx = q.x + f15.ox * c2;
+      sz = q.z - f15.ox * s2;
+      if (sh.form < 0.999) {
+        const m = sh.form, ch = Math.cos(sh.heading), shh = Math.sin(sh.heading);
+        sx += (sh.x - shh * back + f15.ox * ch - sx) * (1 - m);
+        sz += (sh.z - ch * back - f15.ox * shh - sz) * (1 - m);
+      }
+      sx += wob;
+      sz += wob2;
     }
     f15.sampleIn -= dt;
     if (f15.sampleIn <= 0 && budget.left > 0) {
@@ -54426,7 +54944,7 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
     const fresh = time - f15.at < 1, level = fresh ? f15.lv : slopeLevel, depth = fresh ? Math.min(f15.dp, slopeDepth + 0.3) : Math.min(slopeDepth, sh.depth);
     const room = Math.max(0, Math.min(def.below[1], depth - 0.1) - def.below[0]);
     sy = level - (bite === f15 ? 0.1 : Math.min(depth * 0.55, def.below[0] + f15.oy * room));
-    const follow = Math.min(1, dt * (sh.flee > 0 ? 5 : lured ? 2 : 1.7));
+    const follow = Math.min(1, dt * (sh.flee > 0 ? 5 : lured ? 2 : 1.7) * (0.78 + f15.wob % 1 * 0.44));
     f15.x += (sx - f15.x) * follow;
     f15.z += (sz - f15.z) * follow;
     f15.y += (sy - f15.y) * Math.min(1, dt * 2.2);
@@ -54459,13 +54977,15 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
     void player;
   }
   const motionOf = () => {
-    const m = world2.player?.userData?.motion || {};
-    return { running: !!m.sprint || (m.speed || 0) > 4.5 };
+    const m = world2.player?.userData?.motion;
+    if (!Number.isFinite(m?.speed)) return { running: !!m?.sprint, still: false, soft: !!m?.soft };
+    const speed = m.speed || 0;
+    return { running: !!m.sprint || speed > 4.5, still: speed < 0.5 && !m.swimming, soft: !!m.soft || speed < 1.8 && !m.swimming };
   };
   function update(dt, player) {
     if (disposed) return;
     const on = !world2.inDungeon && !!player;
-    group.visible = on && shoals.length > 0;
+    group.visible = on && shoals.length + dead.length + kept.length > 0;
     if (!on) return;
     dt = Math.min(Math.max(dt || 0, 0), 0.1);
     time += dt;
@@ -54486,7 +55006,7 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
       placeClock = C3.every;
       for (let k = 0; k < C3.tries && shoals.length < C3.shoals; k++) if (place(player)) break;
     }
-    for (let i = shoals.length - 1; i >= 0; i--) if (Math.hypot(shoals[i].x - player.x, shoals[i].z - player.z) > C3.keep || !shoals[i].fish.length) drop(i);
+    for (let i = shoals.length - 1; i >= 0; i--) if (Math.hypot(shoals[i].x - player.x, shoals[i].z - player.z) > C3.keep || !shoals[i].fish.length) drop2(i);
     if (lure) {
       let best = null, bd = C3.lure;
       for (const s of shoals) {
@@ -54537,6 +55057,52 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
         at.look.setXYZW(i, kindIndex, f15.light, f15.mark * 7.31, sh.def.scales ?? FISH_LOOKS[sh.kind].scales);
       }
     }
+    for (let i = dead.length - 1; i >= 0; i--) {
+      const d = dead[i];
+      d.t += dt;
+      if (d.t > C3.dead || Math.hypot(d.x - player.x, d.z - player.z) > C3.keep * 1.6) {
+        dead.splice(i, 1);
+        continue;
+      }
+      const up7 = Math.min(1, d.t / 1.6), sink = Math.max(0, d.t - (C3.dead - 6)) / 6;
+      d.roll = Math.PI * up7 * up7 * (3 - 2 * up7);
+      d.y += (d.level - d.size * 0.05 + Math.sin(d.t * 1.7 + d.phase) * 8e-3 - sink * 0.7 - d.y) * Math.min(1, dt * 2.4);
+      d.check -= dt;
+      if (d.check <= 0) {
+        d.check = 0.6;
+        const w = waterAt(d.x + d.fx * 0.6, d.z + d.fz * 0.6);
+        if (!w || w.kind !== d.water) {
+          d.fx = 0;
+          d.fz = 0;
+        } else d.level = w.level;
+      }
+      d.x += d.fx * 0.22 * dt;
+      d.z += d.fz * 0.22 * dt;
+      d.yaw += Math.sin(d.t * 0.3 + d.phase) * dt * 0.12;
+      const shape = d.def.shape, i2 = counts[shape];
+      if (i2 >= C3.capacity[shape]) continue;
+      counts[shape]++;
+      E3.set(0, d.yaw, d.roll, "YXZ");
+      Q2.setFromEuler(E3);
+      P.set(d.x, d.y, d.z);
+      S.setScalar(d.size);
+      meshes[shape].setMatrixAt(i2, M2.compose(P, Q2, S));
+      attrs[shape].swim.setXYZ(i2, d.phase, 0, 0);
+      attrs[shape].look.setXYZW(i2, KIND_INDEX[d.kind], d.light * 0.86, d.mark * 7.31, d.def.scales ?? FISH_LOOKS[d.kind].scales);
+    }
+    for (const k of kept) {
+      const def = C3.kinds[k.kind] || C3.kinds.trout, shape = def.shape, i2 = counts[shape];
+      if (i2 >= C3.capacity[shape]) continue;
+      counts[shape]++;
+      k.phase = (k.phase || 0) + dt * 6;
+      E3.set(0, k.yaw, k.bend || 0, "YXZ");
+      Q2.setFromEuler(E3);
+      P.set(k.x, k.y, k.z);
+      S.setScalar(k.size);
+      meshes[shape].setMatrixAt(i2, M2.compose(P, Q2, S));
+      attrs[shape].swim.setXYZ(i2, k.phase, 0.06, k.bend || 0);
+      attrs[shape].look.setXYZW(i2, KIND_INDEX[k.kind] ?? 0, k.light ?? 1, (k.mark ?? 0.5) * 7.31, FISH_LOOKS[k.kind]?.scales ?? 0.2);
+    }
     for (const shape of ["slim", "deep"]) {
       const mesh2 = meshes[shape], n = counts[shape];
       mesh2.count = n;
@@ -54550,6 +55116,8 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
     group.visible = counts.slim + counts.deep > 0;
     stats3.shoals = shoals.length;
     stats3.fish = counts.slim + counts.deep;
+    stats3.dead = dead.length;
+    stats3.kept = kept.length;
   }
   function setLure(position3, mode = "waiting") {
     if (!position3) {
@@ -54580,6 +55148,129 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
     stats3.caught++;
     return true;
   }
+  function kill(sh, f15, from = null) {
+    const i = sh.fish.indexOf(f15);
+    if (i < 0) return null;
+    sh.fish.splice(i, 1);
+    const level = f15.lv ?? sh.level, d = { id: "fish-dead:" + ++deadSerial, kind: sh.kind, def: sh.def, water: sh.water, x: f15.x, y: f15.y, z: f15.z, yaw: f15.yaw, size: f15.size, light: f15.light, mark: f15.mark, level, fx: sh.fx, fz: sh.fz, t: 0, roll: 0, phase: f15.phase, check: 0 };
+    dead.push(d);
+    stats3.killed++;
+    sh.flee = 2.5;
+    sh.lured = false;
+    sh.retarget = 3;
+    if (from) targetAround(sh, sh.x, sh.z, 5, 10, Math.atan2(sh.z - from.z, sh.x - from.x));
+    splash(f15.x, level, f15.z, f15.size, true);
+    return d;
+  }
+  function strike({ eye, yaw: yaw2, reach = 2.4 } = {}) {
+    if (!eye) return null;
+    const fx = -Math.sin(yaw2), fz = -Math.cos(yaw2);
+    let best = null, bd = Infinity;
+    for (const sh of shoals) {
+      if (Math.hypot(sh.x - eye.x, sh.z - eye.z) > reach + 6) continue;
+      for (const f15 of sh.fish) {
+        if (f15.leap) continue;
+        const dx = f15.x - eye.x, dz = f15.z - eye.z, d = Math.hypot(dx, dz);
+        if (d > reach || d > 0.2 && (dx * fx + dz * fz) / d < 0.5) continue;
+        if ((f15.lv ?? sh.level) - f15.y > C3.shallow + 0.2 || eye.y - f15.y > 3.4) continue;
+        if (d < bd) {
+          bd = d;
+          best = [sh, f15];
+        }
+      }
+    }
+    return best ? kill(best[0], best[1], eye) : null;
+  }
+  function segmentHit(a, b) {
+    const minX = Math.min(a.x, b.x) - 0.6, maxX = Math.max(a.x, b.x) + 0.6, minZ = Math.min(a.z, b.z) - 0.6, maxZ = Math.max(a.z, b.z) + 0.6;
+    const ux = b.x - a.x, uy = b.y - a.y, uz = b.z - a.z, len22 = ux * ux + uy * uy + uz * uz || 1e-9;
+    let best = null;
+    for (const sh of shoals) {
+      if (sh.x < minX - 10 || sh.x > maxX + 10 || sh.z < minZ - 10 || sh.z > maxZ + 10) continue;
+      for (const f15 of sh.fish) {
+        if (f15.x < minX || f15.x > maxX || f15.z < minZ || f15.z > maxZ) continue;
+        const t = clamp33(((f15.x - a.x) * ux + (f15.y - a.y) * uy + (f15.z - a.z) * uz) / len22, 0, 1), cx = a.x + ux * t - f15.x, cy = a.y + uy * t - f15.y, cz = a.z + uz * t - f15.z;
+        if (cx * cx + cy * cy + cz * cz < (f15.size * 0.3 + 0.07) ** 2 && (!best || t < best.t)) best = { t, hit: { fish: f15, shoal: sh } };
+        const level = f15.lv ?? sh.level;
+        if (a.y > level && b.y <= level && level - f15.y < 0.65) {
+          const tc = (a.y - level) / (a.y - b.y), wx = a.x + ux * tc - f15.x, wz = a.z + uz * tc - f15.z;
+          if (wx * wx + wz * wz < (0.3 + f15.size * 0.3) ** 2 && (!best || tc - 1e-4 < best.t)) best = { t: Math.max(0, tc - 1e-4), hit: { fish: f15, shoal: sh } };
+        }
+      }
+    }
+    return best;
+  }
+  function arrowHit(info) {
+    const h = info?.hit;
+    return h?.fish && h.shoal ? kill(h.shoal, h.fish, null) : null;
+  }
+  const arrowTarget = { hp: 1, type: "fish", critterTarget: "fish", mesh: group, segmentHit };
+  function aimed(px, pz, ray3, reach = C3.reach) {
+    let best = null;
+    for (const sh of shoals) {
+      if (Math.hypot(sh.x - px, sh.z - pz) > reach + 6) continue;
+      for (const f15 of sh.fish) {
+        const d = Math.hypot(f15.x - px, f15.z - pz);
+        if (f15.leap || d > reach || (f15.lv ?? sh.level) - f15.y > C3.shallow) continue;
+        const aim = aimScore(ray3, f15.x, f15.y - 0.14, f15.y + 0.14, f15.z, f15.size * 0.45 + 0.12);
+        if (aim < 0) continue;
+        if (!best || aim < best.aim) best = { fish: f15, shoal: sh, kind: sh.kind, alive: true, aim, distance: d };
+      }
+    }
+    for (const b of dead) {
+      const d = Math.hypot(b.x - px, b.z - pz);
+      if (d > reach + 0.4) continue;
+      const aim = aimScore(ray3, b.x, b.y - 0.1, b.y + 0.12, b.z, b.size * 0.45 + 0.15);
+      if (aim < 0) continue;
+      if (!best || aim < best.aim) best = { body: b, kind: b.kind, alive: false, aim, distance: d };
+    }
+    return best;
+  }
+  function take(hit2) {
+    if (hit2?.body) {
+      const i2 = dead.indexOf(hit2.body);
+      if (i2 < 0) return false;
+      dead.splice(i2, 1);
+      stats3.taken++;
+      return true;
+    }
+    if (!hit2?.fish || !hit2.shoal) return false;
+    const i = hit2.shoal.fish.indexOf(hit2.fish);
+    if (i < 0) return false;
+    hit2.shoal.fish.splice(i, 1);
+    hit2.shoal.flee = 2;
+    stats3.caught++;
+    splash(hit2.fish.x, hit2.fish.lv ?? hit2.shoal.level, hit2.fish.z, hit2.fish.size, false);
+    return true;
+  }
+  function startle(hit2, from) {
+    const sh = hit2?.shoal;
+    if (!sh) return;
+    sh.flee = 2.6;
+    sh.lured = false;
+    targetAround(sh, sh.x, sh.z, 5, 10, from ? Math.atan2(sh.z - from.z, sh.x - from.x) : null);
+    sh.retarget = 3;
+    if (hit2.fish) splash(hit2.fish.x, hit2.fish.lv ?? sh.level, hit2.fish.z, hit2.fish.size, true);
+  }
+  function release(x, z) {
+    const w = waterAt(x, z);
+    if (!w) return false;
+    const kind = pick2(C3.waters[w.kind]), def = C3.kinds[kind];
+    const sh = { kind, def, water: w.kind, x, z, tx: x, tz: z, vx: 0, vz: 0, heading: rnd3() * TAU23, retarget: 0.5, flee: 1.5, leapIn: between3(def.leap), lured: false, fish: [], seed: rnd3() * 1e3, trail: [], form: 1 };
+    if (!sample2(sh)) return false;
+    sh.fish.push({ ox: 0, oz: 0, oy: rnd3(), x, y: sh.level - 0.05, z, yaw: sh.heading, pitch: 0, bend: 0, phase: 0, size: between3(def.size), speed: 0, wob: rnd3() * 100, light: 1, mark: rnd3(), leap: null, lv: sh.level, dp: sh.depth, at: -1, sampleIn: 0 });
+    targetAround(sh, x, z, 3, 7);
+    shoals.push(sh);
+    stats3.released++;
+    splash(x, sh.level, z, 0.3, false);
+    return true;
+  }
+  function setKept(list) {
+    const next = (list || []).slice(0, C3.kept);
+    for (let i = 0; i < next.length; i++) next[i].phase = kept[i]?.phase ?? rnd3() * TAU23;
+    kept.length = 0;
+    kept.push(...next);
+  }
   function dispose() {
     disposed = true;
     group.removeFromParent();
@@ -54591,9 +55282,698 @@ function createIslandFish(world2, { seed = 1, now = () => performance.now() } = 
     shoals.length = 0;
   }
   void now;
-  return { group, meshes, update, setLure, caught, dispose, setEvents(next) {
-    events = next || {};
-  }, stats: () => ({ ...stats3 }), shoals: () => shoals.map((s) => ({ kind: s.kind, water: s.water, x: s.x, z: s.z, level: s.level, depth: s.depth, heading: s.heading, flee: s.flee, lured: s.lured, fish: s.fish.map((f15) => ({ x: f15.x, y: f15.y, z: f15.z, yaw: f15.yaw, size: f15.size, leaping: !!f15.leap })) })) };
+  return {
+    group,
+    meshes,
+    update,
+    setLure,
+    caught,
+    dispose,
+    /* v143 */
+    strike,
+    segmentHit,
+    arrowHit,
+    arrowTarget,
+    aimed,
+    take,
+    startle,
+    release,
+    setKept,
+    waterAt,
+    dead: () => dead.map((d) => ({ id: d.id, kind: d.kind, x: d.x, y: d.y, z: d.z, roll: d.roll, t: d.t })),
+    setEvents(next) {
+      events = next || {};
+    },
+    stats: () => ({ ...stats3 }),
+    shoals: () => shoals.map((s) => ({ kind: s.kind, water: s.water, x: s.x, z: s.z, level: s.level, depth: s.depth, heading: s.heading, flee: s.flee, lured: s.lured, fish: s.fish.map((f15) => ({ x: f15.x, y: f15.y, z: f15.z, yaw: f15.yaw, size: f15.size, leaping: !!f15.leap })) }))
+  };
+}
+
+// shore-life.js
+var SHORE_LIFE = Object.freeze({
+  revision: "shore-life-v1",
+  // Instances at most of each, alive at most near the player of each, where they are placed (m from the player: nearer
+  // than `hidden` only out of sight), how far before one is let go, seconds between placing rounds and tries a round.
+  capacity: Object.freeze({ crab: 40, frog: 32 }),
+  most: Object.freeze({ crab: 12, frog: 9 }),
+  spawn: Object.freeze([6, 30]),
+  hidden: 13,
+  keep: 44,
+  every: 0.35,
+  tries: 5,
+  nearEvery: 1.5,
+  near: 38,
+  // A body lies (s) before it is gone; how near the view finds one (m); how far a blow reaches (m).
+  dead: 300,
+  reach: 2.1,
+  strike: 2.4,
+  kinds: Object.freeze({
+    // size: across its shell (m); group: how many together; waters: by which; shore: how far from the water (m) at most;
+    // speed: walking, fleeing (m/s); shy: how near before it flees (walking - softly - standing still, m); wander:
+    // seconds between its own little moves.
+    crab: Object.freeze({ size: Object.freeze([0.07, 0.14]), group: Object.freeze([1, 3]), waters: Object.freeze(["ocean", "stream"]), shore: 4.5, speed: Object.freeze([0.22, 1.65]), shy: Object.freeze([2.8, 1.25, 0.85]), wander: Object.freeze([2.5, 8]) }),
+    // hop: how far a leap goes (m), its height (m) and time (s).
+    frog: Object.freeze({ size: Object.freeze([0.05, 0.1]), group: Object.freeze([1, 2]), waters: Object.freeze(["pond", "marsh", "lake", "stream"]), shore: 3.2, hop: Object.freeze([0.9, 1.4]), hopHeight: 0.32, hopTime: 0.42, shy: Object.freeze([3.2, 1.45, 1]), wander: Object.freeze([4, 11]) })
+  })
+});
+var TAU24 = Math.PI * 2;
+var clamp34 = (v, a, b) => v < a ? a : v > b ? b : v;
+var wrap6 = (a) => {
+  a %= TAU24;
+  if (a > Math.PI) a -= TAU24;
+  if (a < -Math.PI) a += TAU24;
+  return a;
+};
+function random6(seed) {
+  let n = seed >>> 0 || 1;
+  return () => {
+    n = n + 1831565813 >>> 0;
+    let t = n;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function shapeBuilder() {
+  const P = [], N = [], C3 = [], A3 = [], I = [];
+  const v = new Vector3(), n = new Vector3();
+  function add4(geo, color3, part2, matrix6 = null) {
+    const g = geo.index ? geo : geo.toNonIndexed(), pos2 = g.attributes.position, nor = g.attributes.normal, base = P.length / 3;
+    const nm = matrix6 ? new Matrix3().getNormalMatrix(matrix6) : null;
+    for (let i = 0; i < pos2.count; i++) {
+      v.fromBufferAttribute(pos2, i);
+      n.fromBufferAttribute(nor, i);
+      const local2 = part2(v, i);
+      if (matrix6) {
+        v.applyMatrix4(matrix6);
+        n.applyMatrix3(nm).normalize();
+      }
+      P.push(v.x, v.y, v.z);
+      N.push(n.x, n.y, n.z);
+      const c2 = typeof color3 === "function" ? color3(v) : color3;
+      C3.push(c2[0], c2[1], c2[2]);
+      A3.push(...local2);
+    }
+    if (g.index) for (let i = 0; i < g.index.count; i++) I.push(base + g.index.getX(i));
+    else for (let i = 0; i < pos2.count; i++) I.push(base + i);
+    geo.dispose();
+    if (g !== geo) g.dispose();
+  }
+  function blob3(x, y, z, a, b, c2, color3, part2, { w = 10, h = 7, turn = null, squash = null } = {}) {
+    const g = new SphereGeometry(1, w, h);
+    g.scale(a, b, c2);
+    if (squash) {
+      const p2 = g.attributes.position;
+      for (let i = 0; i < p2.count; i++) {
+        const yy = p2.getY(i);
+        if (yy < 0) p2.setY(i, yy * squash);
+      }
+      g.computeVertexNormals();
+    }
+    const m = new Matrix4().compose(new Vector3(x, y, z), new Quaternion().setFromEuler(new Euler(...turn || [0, 0, 0])), new Vector3(1, 1, 1));
+    add4(g, color3, () => part2, m);
+  }
+  function limb2(p0, p1, r0, r1, color3, kind, index2, side2, a0, a1, sides = 5) {
+    const from = new Vector3(...p0), to = new Vector3(...p1), dir = to.clone().sub(from), len3 = dir.length();
+    const g = new CylinderGeometry(r1, r0, len3, sides, 2, false);
+    g.translate(0, len3 / 2, 0);
+    const m = new Matrix4().compose(from, new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), dir.normalize()), new Vector3(1, 1, 1));
+    add4(g, color3, (p2) => [kind, index2, a0 + (a1 - a0) * clamp34(p2.y / len3, 0, 1), side2], m);
+  }
+  function finish3(radius) {
+    const g = new BufferGeometry();
+    g.setAttribute("position", new Float32BufferAttribute(P, 3));
+    g.setAttribute("normal", new Float32BufferAttribute(N, 3));
+    g.setAttribute("color", new Float32BufferAttribute(C3, 3));
+    g.setAttribute("cPart", new Float32BufferAttribute(A3, 4));
+    g.setIndex(I);
+    g.boundingSphere = new Sphere(new Vector3(0, 0.3, 0), radius);
+    return g;
+  }
+  return { blob: blob3, limb: limb2, finish: finish3 };
+}
+function crabGeometry() {
+  const b = shapeBuilder(), shell = [0.32, 0.2, 0.11], leg = [0.42, 0.3, 0.17], dark = [0.1, 0.07, 0.05], eye = [0.03, 0.03, 0.03], under = [0.55, 0.45, 0.3];
+  b.blob(0, 0.36, 0, 0.5, 0.17, 0.37, (p2) => p2.y < 0.33 ? under : shell, [0, 0, 0, 0], { w: 16, h: 9, squash: 0.55 });
+  for (const s of [-1, 1]) {
+    b.limb([s * 0.12, 0.42, 0.28], [s * 0.15, 0.55, 0.35], 0.028, 0.022, shell, 0, 0, 0, 0, 0);
+    b.blob(s * 0.15, 0.57, 0.36, 0.045, 0.045, 0.045, eye, [0, 0, 0, 0], { w: 6, h: 5 });
+  }
+  for (const s of [-1, 1]) {
+    b.limb([s * 0.34, 0.32, 0.2], [s * 0.52, 0.3, 0.44], 0.065, 0.055, shell, 2, 0, s, 0, 0.3);
+    b.limb([s * 0.52, 0.3, 0.44], [s * 0.46, 0.31, 0.6], 0.055, 0.06, shell, 2, 0, s, 0.3, 0.5);
+    b.blob(s * 0.41, 0.31, 0.7, 0.1, 0.085, 0.14, shell, [2, 0, 0.7, s], { turn: [0, -s * 0.25, 0] });
+    b.limb([s * 0.36, 0.28, 0.8], [s * 0.33, 0.27, 0.95], 0.036, 0.012, dark, 2, 0, s, 0.8, 1);
+    b.limb([s * 0.45, 0.34, 0.8], [s * 0.4, 0.34, 0.95], 0.032, 0.01, dark, 3, 0, s, 0, 1);
+  }
+  const zs = [0.17, 0.04, -0.1, -0.23];
+  for (const s of [-1, 1]) zs.forEach((z, k) => {
+    const knee = [s * 0.8, 0.47, z * 1.15 + 0.03 * (k - 1.5)], tip = [s * 1.02, 0, z * 1.4 - 0.07 * (k - 1.5)], index2 = k + (s > 0 ? 4 : 0);
+    b.limb([s * 0.42, 0.31, z], knee, 0.042, 0.034, leg, 1, index2, s, 0, 0.5);
+    b.limb(knee, tip, 0.034, 0.012, leg, 1, index2, s, 0.5, 1);
+  });
+  return b.finish(1.25);
+}
+function frogGeometry() {
+  const b = shapeBuilder(), back = [0.3, 0.42, 0.16], belly = [0.78, 0.76, 0.58], eyeRing = [0.62, 0.5, 0.2], pupil = [0.02, 0.02, 0.02], skin = (p2) => p2.y < 0.2 ? belly : back;
+  b.blob(0, 0.28, -0.06, 0.33, 0.21, 0.45, skin, [0, 0, 0, 0], { w: 14, h: 9, turn: [-0.38, 0, 0], squash: 0.7 });
+  b.blob(0, 0.37, 0.3, 0.27, 0.16, 0.23, skin, [0, 0, 0, 0], { w: 12, h: 8, turn: [-0.12, 0, 0] });
+  for (const s of [-1, 1]) {
+    b.blob(s * 0.16, 0.5, 0.36, 0.085, 0.08, 0.085, eyeRing, [0, 0, 0, 0], { w: 8, h: 6 });
+    b.blob(s * 0.2, 0.52, 0.41, 0.045, 0.04, 0.04, pupil, [0, 0, 0, 0], { w: 6, h: 5 });
+  }
+  for (const s of [-1, 1]) {
+    b.limb([s * 0.2, 0.24, 0.22], [s * 0.28, 0.05, 0.34], 0.045, 0.035, back, 4, 0, s, 0, 1);
+    b.blob(s * 0.3, 0.02, 0.38, 0.075, 0.018, 0.06, back, [4, 0, 1, s], { w: 6, h: 4 });
+    b.limb([s * 0.25, 0.22, -0.32], [s * 0.47, 0.2, 0.02], 0.085, 0.06, back, 2, 0, s, 0, 0.33, 6);
+    b.limb([s * 0.47, 0.2, 0.02], [s * 0.38, 0.07, -0.36], 0.06, 0.04, back, 2, 0, s, 0.33, 0.66);
+    b.limb([s * 0.38, 0.06, -0.36], [s * 0.52, 0.015, -0.04], 0.04, 0.022, back, 2, 0, s, 0.66, 0.95);
+    b.blob(s * 0.54, 0.01, 0, 0.1, 0.014, 0.1, back, [2, 0, 1, s], { w: 6, h: 4 });
+  }
+  return b.finish(1.1);
+}
+var CRITTER_ANIM_GLSL = `
+ {float kind=cPart.x,along=cPart.z,side=cPart.w;
+  if(cLook.w<.5){
+   if(kind>.5&&kind<1.5){float ph=cAnim.x+cPart.y*1.9+(side>0.?3.1416:0.);
+    transformed.z+=sin(ph)*cAnim.y*.2*along;transformed.y+=max(0.,cos(ph))*cAnim.y*.16*along*(1.-along)*4.;
+    transformed.x-=side*cAnim.z*along*.38;transformed.y+=cAnim.z*along*.42;}
+   if(kind>1.5&&kind<3.5){transformed.y+=sin(cAnim.x*.5)*.025*cAnim.y+cAnim.w*.05*step(1.5,kind)*along;transformed.x-=side*cAnim.z*.12*along;}
+  }else{
+   if(kind>1.5&&kind<2.5){float e=cAnim.z;transformed.z-=e*along*.95;transformed.y-=e*along*.12;transformed.x+=side*e*along*.08;}
+   if(kind<.5&&transformed.y<.24&&transformed.z>.12){transformed.y-=cAnim.w*.035*smoothstep(.24,.12,transformed.y);}
+  }}`;
+function critterMaterial() {
+  const material2 = new MeshStandardMaterial({ name: "shore-life", vertexColors: true, roughness: 0.55, metalness: 0 });
+  material2.onBeforeCompile = (s) => {
+    const v02 = s.vertexShader, f0 = s.fragmentShader;
+    s.vertexShader = "attribute vec4 cPart;attribute vec4 cAnim;attribute vec4 cLook;varying vec4 vCLook;varying vec3 vCLocal;varying float vCKind;\n" + v02.replace("#include <begin_vertex>", "#include <begin_vertex>" + CRITTER_ANIM_GLSL + "\n vCLook=cLook;vCLocal=position;vCKind=cPart.x;");
+    s.fragmentShader = "varying vec4 vCLook;varying vec3 vCLocal;varying float vCKind;\n" + f0.replace("#include <color_fragment>", `#include <color_fragment>
+ diffuseColor.rgb*=vCLook.rgb;
+ // A frog's back spotted; a crab's shell freckled darker at its rim.
+ {float h=fract(sin(dot(floor(vCLocal*vec3(11.,11.,9.)),vec3(12.9898,78.233,37.719)))*43758.5453);
+  if(vCLook.w>.5)diffuseColor.rgb*=mix(1.,.45,step(.8,h)*step(.24,vCLocal.y)*step(vCKind,.5));
+  else diffuseColor.rgb*=mix(1.,.7,step(.86,h)*step(vCKind,.5));}`).replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
+ roughnessFactor=vCLook.w>.5?.38:.5;`);
+    if (s.vertexShader === v02 || s.fragmentShader === f0 || !s.fragmentShader.includes("roughnessFactor=vCLook")) throw new Error("Shore life shader seams missing");
+  };
+  material2.customProgramCacheKey = () => SHORE_LIFE.revision;
+  return material2;
+}
+var TINTS = Object.freeze({ crab: [[1, 1, 1], [1.9, 0.72, 0.52]], frog: [[1, 1, 1], [1.35, 0.95, 0.72]] });
+function createShoreLife(world2, { seed = 1 } = {}) {
+  const S = SHORE_LIFE, rnd3 = random6(seed * 4517 + 77);
+  const group = new Group();
+  group.name = "shore-life";
+  const material2 = critterMaterial(), meshes = {}, attrs = {};
+  for (const [kind, geometry3] of [["crab", crabGeometry()], ["frog", frogGeometry()]]) {
+    const n = S.capacity[kind];
+    const anim = new InstancedBufferAttribute(new Float32Array(n * 4), 4).setUsage(DynamicDrawUsage);
+    const look2 = new InstancedBufferAttribute(new Float32Array(n * 4), 4).setUsage(DynamicDrawUsage);
+    geometry3.setAttribute("cAnim", anim);
+    geometry3.setAttribute("cLook", look2);
+    const mesh2 = new InstancedMesh(geometry3, material2, n);
+    mesh2.name = "shore-life:" + kind;
+    mesh2.count = 0;
+    mesh2.frustumCulled = false;
+    mesh2.instanceMatrix.setUsage(DynamicDrawUsage);
+    mesh2.castShadow = true;
+    mesh2.receiveShadow = true;
+    meshes[kind] = mesh2;
+    attrs[kind] = { anim, look: look2 };
+    group.add(mesh2);
+  }
+  world2.scene?.add(group);
+  const list = [], kept = [];
+  const stats3 = { placed: 0, dropped: 0, fled: 0, hid: 0, killed: 0, taken: 0, caught: 0, released: 0, alive: 0, dead: 0, kept: 0, tries: 0, near: false };
+  let events = {}, time = 0, placeClock = 0, nearClock = 0, waterNear = false, serial3 = 0, disposed = false;
+  const M2 = new Matrix4(), Q2 = new Quaternion(), E3 = new Euler(0, 0, 0, "YXZ"), P = new Vector3(), SC = new Vector3(), view = new Vector3(), point5 = new Vector3();
+  const ground = (x, z) => world2.terrainFunctions?.height?.(x, z);
+  const between3 = ([a, b]) => a + rnd3() * (b - a);
+  function waterAt(x, z) {
+    let w = null;
+    try {
+      w = world2.hydrology?.waterAt?.(x, z, ground(x, z)) ?? null;
+    } catch {
+      w = null;
+    }
+    if (!w || !(w.depth > 0.03) || !Number.isFinite(w.level)) return null;
+    return { kind: w.kind === "river" ? "stream" : w.kind, level: w.level, depth: w.depth };
+  }
+  function nearWater(x, z, r) {
+    let n = null;
+    try {
+      n = world2.hydrology?.nearWater?.(x, z, r) ?? null;
+    } catch {
+      n = null;
+    }
+    return n && Number.isFinite(n.distance) ? { ...n, kind: n.kind === "river" ? "stream" : n.kind } : null;
+  }
+  function sound2(name, x, y, z, gain, rate) {
+    point5.set(x, y, z);
+    events.sound?.(name, { position: point5, gain, rate, range: 18, refDistance: 2 });
+  }
+  function seen(x, y, z) {
+    const camera = world2.camera;
+    if (!camera) return true;
+    camera.getWorldDirection(view);
+    const dx = x - camera.position.x, dy = y - camera.position.y, dz = z - camera.position.z, d = Math.hypot(dx, dz, dy) || 1;
+    return (dx * view.x + dy * view.y + dz * view.z) / d > 0.4;
+  }
+  function waterWay(x, z, r) {
+    for (const d of [r * 0.5, r, r * 1.5]) for (let k = 0; k < 8; k++) {
+      const a = k / 8 * TAU24;
+      if (waterAt(x + Math.sin(a) * d, z + Math.cos(a) * d)) return a;
+    }
+    return null;
+  }
+  const alive2 = (kind) => list.reduce((n, c2) => n + (c2.kind === kind && c2.state !== "dead"), 0);
+  function make2(kind, x, z, extra = {}) {
+    const def = S.kinds[kind], y = ground(x, z);
+    const c2 = {
+      id: kind + ":" + ++serial3,
+      kind,
+      def,
+      x,
+      z,
+      y,
+      yaw: rnd3() * TAU24,
+      size: between3(def.size),
+      state: "idle",
+      t: 0,
+      wait: between3(def.wander) * rnd3(),
+      vx: 0,
+      vz: 0,
+      phase: rnd3() * TAU24,
+      amp: 0,
+      pose: 0,
+      beat: 0,
+      claw: 0,
+      tint: TINTS[kind][extra.water === "stream" && kind === "crab" ? 1 : kind === "frog" && rnd3() < 0.3 ? 1 : 0],
+      light: 0.85 + rnd3() * 0.3,
+      way: null,
+      hop: null,
+      roll: 0,
+      deadFor: 0,
+      sink: 0,
+      ...extra
+    };
+    list.push(c2);
+    return c2;
+  }
+  const shores = { crab: [], frog: [] };
+  function place(player, kind) {
+    stats3.tries++;
+    const def = S.kinds[kind], known = shores[kind];
+    for (let i = known.length - 1; i >= 0; i--) if (Math.hypot(known[i].x - player.x, known[i].z - player.z) > S.spawn[1] + 12) known.splice(i, 1);
+    let x, z;
+    if (known.length && rnd3() < 0.65) {
+      const k = known[Math.floor(rnd3() * known.length)];
+      x = k.x + (rnd3() - 0.5) * 14;
+      z = k.z + (rnd3() - 0.5) * 14;
+    } else {
+      const a = rnd3() * TAU24, r = between3(S.spawn);
+      x = player.x + Math.sin(a) * r;
+      z = player.z + Math.cos(a) * r;
+    }
+    const d = Math.hypot(x - player.x, z - player.z), y = ground(x, z);
+    if (d < S.spawn[0] || d > S.spawn[1] || !Number.isFinite(y) || waterAt(x, z)) return false;
+    const near = nearWater(x, z, def.shore);
+    if (!near || !def.waters.includes(near.kind) || !Number.isFinite(near.level)) return false;
+    if (known.length < 16 && !known.some((k) => Math.hypot(k.x - x, k.z - z) < 4)) known.push({ x, z });
+    if (y - near.level > 1.4 || y < near.level - 0.05) return false;
+    if ((world2.terrainFunctions?.slope?.(x, z) ?? 0) > 0.55) return false;
+    if (d < S.hidden && seen(x, y, z)) return false;
+    for (const c2 of list) if (c2.kind === kind && Math.hypot(c2.x - x, c2.z - z) < 5) return false;
+    const n = Math.round(between3(def.group)), way = waterWay(x, z, near.distance + 0.6);
+    for (let k = 0; k < n && alive2(kind) < S.most[kind]; k++) {
+      const ox = k ? (rnd3() - 0.5) * 2.4 : 0, oz = k ? (rnd3() - 0.5) * 2.4 : 0;
+      if (k && (waterAt(x + ox, z + oz) || !Number.isFinite(ground(x + ox, z + oz)))) continue;
+      make2(kind, x + ox, z + oz, { water: near.kind, way });
+    }
+    stats3.placed++;
+    return true;
+  }
+  const shyOf = (def, motion) => motion.still ? def.shy[2] : motion.soft ? def.shy[1] : def.shy[0] * (motion.running ? 1.35 : 1);
+  function flee(c2, from) {
+    if (c2.state === "dead" || c2.state === "water") return;
+    stats3.fled++;
+    c2.state = "flee";
+    c2.t = 0;
+    const away = from ? Math.atan2(c2.x - from.x, c2.z - from.z) : rnd3() * TAU24;
+    const toWater = c2.way !== null && c2.way !== void 0 && Math.abs(wrap6(c2.way - away)) < 1.9;
+    c2.fleeYaw = toWater ? c2.way : away + (rnd3() - 0.5) * 0.6;
+    if (c2.kind === "crab") {
+      c2.fleeFor = 1.6 + rnd3() * 1.4;
+      sound2("pickStone", c2.x, c2.y, c2.z, 0.08, 2.4);
+    } else {
+      c2.hops = 3 + Math.floor(rnd3() * 3);
+      c2.hop = null;
+    }
+  }
+  function stepCrab(c2, dt, player, motion) {
+    const def = c2.def, pd = Math.hypot(player.x - c2.x, player.z - c2.z);
+    c2.wary = Math.max(0, (c2.wary || 0) - dt);
+    if (c2.state === "idle" && pd < shyOf(def, motion) && c2.wary <= 0) flee(c2, player);
+    let speed = 0, dir = 0;
+    if (c2.state === "flee") {
+      c2.t += dt;
+      speed = def.speed[1];
+      dir = c2.fleeYaw;
+      c2.yaw += wrap6(dir + Math.PI / 2 * (wrap6(c2.yaw - dir) > 0 ? 1 : -1) - c2.yaw) * Math.min(1, dt * 8);
+      if (c2.t > c2.fleeFor) {
+        c2.state = "idle";
+        c2.wait = between3(def.wander);
+        c2.wary = 0.8;
+      }
+    } else if (c2.state === "walk") {
+      c2.t += dt;
+      speed = def.speed[0];
+      dir = c2.walkYaw;
+      if (c2.t > c2.walkFor) {
+        c2.state = "idle";
+        c2.wait = between3(def.wander);
+      }
+    } else if (c2.state === "idle") {
+      c2.wait -= dt;
+      c2.claw = Math.max(0, c2.claw - dt * 0.8);
+      if (c2.wait <= 0) {
+        const r = rnd3();
+        if (r < 0.6) {
+          c2.state = "walk";
+          c2.t = 0;
+          c2.walkFor = 0.8 + rnd3() * 2.2;
+          c2.walkYaw = c2.yaw + (rnd3() < 0.5 ? 1 : -1) * Math.PI / 2 + (rnd3() - 0.5) * 0.5;
+        } else if (r < 0.85) {
+          c2.claw = 1;
+          c2.wait = between3(def.wander) * 0.5;
+        } else {
+          c2.yaw += (rnd3() - 0.5) * 1.6;
+          c2.wait = between3(def.wander);
+        }
+      }
+    }
+    move(c2, dt, speed, dir);
+    c2.amp += (Math.min(1, speed / 0.3) - c2.amp) * Math.min(1, dt * 8);
+    c2.phase += dt * (6 + speed * 20);
+  }
+  function stepFrog(c2, dt, player, motion) {
+    const def = c2.def, pd = Math.hypot(player.x - c2.x, player.z - c2.z);
+    c2.wary = Math.max(0, (c2.wary || 0) - dt);
+    c2.beat = 0.5 + 0.5 * Math.sin(time * 9 + c2.phase);
+    if (c2.state === "idle" && pd < shyOf(def, motion) && c2.wary <= 0) flee(c2, player);
+    if (c2.hop) {
+      const h = c2.hop;
+      h.t += dt;
+      const u = Math.min(1, h.t / h.dur);
+      c2.x = h.x0 + (h.x1 - h.x0) * u;
+      c2.z = h.z0 + (h.z1 - h.z0) * u;
+      c2.y = h.y0 + (h.y1 - h.y0) * u + Math.sin(u * Math.PI) * h.height;
+      c2.pose = Math.sin(Math.min(1, u * 1.6) * Math.PI) * 0.9;
+      c2.pitch = (u < 0.5 ? 0.5 : -0.25) * Math.sin(u * Math.PI);
+      if (u >= 1) {
+        c2.hop = null;
+        c2.pose = 0;
+        c2.pitch = 0;
+        const w = waterAt(c2.x, c2.z);
+        if (w) {
+          c2.state = "water";
+          c2.t = 0;
+          c2.y = w.level - 0.02;
+          sound2("swimStroke", c2.x, w.level, c2.z, 0.12, 2.2);
+          world2.realisticWater?.splash?.(c2.x, c2.z, 0.18, -0.05);
+        } else if (c2.state === "flee" && --c2.hops > 0) leap(c2, c2.fleeYaw + (rnd3() - 0.5) * 0.5, between3(def.hop));
+        else if (c2.state === "flee") {
+          c2.state = "idle";
+          c2.wait = between3(def.wander);
+          c2.wary = 1.2;
+        }
+      }
+      return;
+    }
+    if (c2.state === "flee") {
+      leap(c2, c2.fleeYaw, between3(def.hop));
+      return;
+    }
+    c2.wait -= dt;
+    if (c2.wait <= 0) {
+      c2.wait = between3(def.wander);
+      if (rnd3() < 0.55) leap(c2, c2.yaw + (rnd3() - 0.5) * 2, 0.25 + rnd3() * 0.3, 0.5);
+      else c2.yaw += (rnd3() - 0.5) * 1.4;
+    }
+    c2.y += (ground(c2.x, c2.z) - c2.y) * Math.min(1, dt * 10);
+  }
+  function leap(c2, yaw2, dist2, scale5 = 1) {
+    const def = c2.def;
+    c2.yaw = yaw2;
+    let x1 = c2.x + Math.sin(yaw2) * dist2, z1 = c2.z + Math.cos(yaw2) * dist2;
+    const g = ground(x1, z1), w = waterAt(x1, z1);
+    if (!Number.isFinite(g)) return;
+    if (!w && g - c2.y > 0.5) {
+      x1 = c2.x;
+      z1 = c2.z;
+    }
+    c2.hop = { t: 0, dur: def.hopTime * (0.7 + 0.3 * scale5), x0: c2.x, z0: c2.z, y0: c2.y, x1, z1, y1: w ? w.level - 0.02 : ground(x1, z1), height: def.hopHeight * scale5 * (0.8 + rnd3() * 0.4) };
+  }
+  function move(c2, dt, speed, dir) {
+    if (!(speed > 0)) {
+      c2.y += (ground(c2.x, c2.z) - c2.y) * Math.min(1, dt * 10);
+      return;
+    }
+    const nx = c2.x + Math.sin(dir) * speed * dt, nz = c2.z + Math.cos(dir) * speed * dt, g = ground(nx, nz), w = waterAt(nx, nz);
+    if (!Number.isFinite(g) || g - c2.y > 0.35) {
+      if (c2.state === "walk") c2.state = "idle";
+      return;
+    }
+    if (w) {
+      if (c2.state !== "flee") {
+        if (c2.state === "walk") {
+          c2.state = "idle";
+          c2.wait = between3(c2.def.wander);
+        }
+        return;
+      }
+      c2.state = "water";
+      c2.t = 0;
+      sound2("swimStroke", nx, w.level, nz, 0.08, 2.6);
+    }
+    c2.x = nx;
+    c2.z = nz;
+    c2.y = w ? Math.min(g, w.level) : g;
+  }
+  function stepWater(c2, dt) {
+    c2.t += dt;
+    c2.sink += dt * 0.3;
+    c2.pose = c2.kind === "frog" ? 0.9 : 0;
+    if (c2.kind === "frog") {
+      c2.x += Math.sin(c2.yaw) * 0.5 * dt;
+      c2.z += Math.cos(c2.yaw) * 0.5 * dt;
+    }
+    return c2.t > 1.6;
+  }
+  function stepDead(c2, dt) {
+    c2.deadFor += dt;
+    c2.roll += (Math.PI - c2.roll) * Math.min(1, dt * 7);
+    c2.pose += (1 - c2.pose) * Math.min(1, dt * 5);
+    c2.amp = 0;
+    c2.pitch = 0;
+    const w = waterAt(c2.x, c2.z), g = ground(c2.x, c2.z);
+    c2.y += ((w ? w.level - 0.01 : g) + (c2.kind === "crab" ? c2.size * 0.35 : c2.size * 0.2) - c2.y) * Math.min(1, dt * 6);
+    return c2.deadFor > S.dead;
+  }
+  const motionOf = () => {
+    const m = world2.player?.userData?.motion;
+    if (!Number.isFinite(m?.speed)) return { running: !!m?.sprint, still: false, soft: !!m?.soft };
+    const speed = m.speed || 0;
+    return { running: !!m.sprint || speed > 4.5, still: speed < 0.5, soft: !!m.soft || speed < 1.8 };
+  };
+  function update(dt, player) {
+    if (disposed) return;
+    const on = !world2.inDungeon && !!player;
+    if (!on) {
+      group.visible = false;
+      return;
+    }
+    dt = Math.min(Math.max(dt || 0, 0), 0.1);
+    time += dt;
+    nearClock -= dt;
+    if (nearClock <= 0) {
+      nearClock = S.nearEvery;
+      waterNear = !!nearWater(player.x, player.z, S.near);
+      stats3.near = waterNear;
+    }
+    placeClock -= dt;
+    if (waterNear && placeClock <= 0) {
+      placeClock = S.every;
+      for (const kind of ["crab", "frog"]) if (alive2(kind) < S.most[kind]) {
+        for (let k = 0; k < S.tries; k++) if (place(player, kind)) break;
+      }
+    }
+    const motion = motionOf(), counts = { crab: 0, frog: 0 };
+    for (let i = list.length - 1; i >= 0; i--) {
+      const c2 = list[i], far = Math.hypot(c2.x - player.x, c2.z - player.z);
+      let gone = false;
+      if (c2.state === "dead") gone = stepDead(c2, dt) || far > S.keep * 1.8;
+      else if (c2.state === "water") {
+        gone = stepWater(c2, dt);
+        if (gone) stats3.hid++;
+      } else {
+        if (far > S.keep && !seen(c2.x, c2.y, c2.z)) gone = true;
+        else if (c2.kind === "crab") stepCrab(c2, dt, player, motion);
+        else stepFrog(c2, dt, player, motion);
+      }
+      if (gone) {
+        list.splice(i, 1);
+        stats3.dropped++;
+        continue;
+      }
+    }
+    for (const c2 of list) draw(c2, counts);
+    for (const k of kept) {
+      k.phase = (k.phase || 0) + dt * (k.kind === "crab" ? 2 : 1);
+      draw({ ...k, state: "kept", amp: k.kind === "crab" ? 0.25 + 0.25 * Math.sin(time * 0.7 + k.phase) : 0, pose: 0, roll: 0, sink: 0, claw: 0.5 + 0.5 * Math.sin(time * 1.3 + k.phase), beat: 0.5 + 0.5 * Math.sin(time * 9 + k.phase), tint: k.tint || TINTS[k.kind][0], light: k.light ?? 1 }, counts);
+    }
+    for (const kind of ["crab", "frog"]) {
+      const mesh2 = meshes[kind], n = counts[kind];
+      mesh2.count = n;
+      mesh2.visible = n > 0;
+      if (n) {
+        mesh2.instanceMatrix.needsUpdate = true;
+        attrs[kind].anim.needsUpdate = true;
+        attrs[kind].look.needsUpdate = true;
+      }
+    }
+    group.visible = counts.crab + counts.frog > 0;
+    stats3.alive = list.filter((c2) => c2.state !== "dead").length;
+    stats3.dead = list.length - stats3.alive;
+    stats3.kept = kept.length;
+  }
+  function draw(c2, counts) {
+    const i = counts[c2.kind];
+    if (i >= S.capacity[c2.kind]) return;
+    counts[c2.kind]++;
+    E3.set(-(c2.pitch || 0), c2.yaw, c2.roll || 0, "YXZ");
+    Q2.setFromEuler(E3);
+    P.set(c2.x, c2.y - (c2.sink || 0) + (c2.roll > 1.6 ? c2.size * 0.25 : 0), c2.z);
+    SC.setScalar(c2.size);
+    meshes[c2.kind].setMatrixAt(i, M2.compose(P, Q2, SC));
+    attrs[c2.kind].anim.setXYZW(i, c2.phase, c2.amp || 0, c2.pose || 0, c2.kind === "crab" ? c2.claw || 0 : c2.beat || 0);
+    const t = c2.tint || TINTS[c2.kind][0], l = c2.light ?? 1;
+    attrs[c2.kind].look.setXYZW(i, t[0] * l, t[1] * l, t[2] * l, c2.kind === "frog" ? 1 : 0);
+  }
+  function kill(c2, from = null) {
+    if (!c2 || c2.state === "dead" || !list.includes(c2)) return null;
+    c2.state = "dead";
+    c2.deadFor = 0;
+    c2.hop = null;
+    c2.amp = 0;
+    stats3.killed++;
+    sound2("pickStone", c2.x, c2.y, c2.z, 0.12, 1.6);
+    for (const o of list) if (o !== c2 && o.state !== "dead" && Math.hypot(o.x - c2.x, o.z - c2.z) < 4) flee(o, from || c2);
+    return c2;
+  }
+  function strike({ eye, yaw: yaw2, reach = S.strike } = {}) {
+    if (!eye) return null;
+    const fx = -Math.sin(yaw2), fz = -Math.cos(yaw2);
+    let best = null, bd = Infinity;
+    for (const c2 of list) {
+      if (c2.state === "dead" || c2.state === "water") continue;
+      const dx = c2.x - eye.x, dz = c2.z - eye.z, d = Math.hypot(dx, dz);
+      if (d > reach || d > 0.25 && (dx * fx + dz * fz) / d < 0.45 || eye.y - c2.y > 3.2 || c2.y - eye.y > 0.8) continue;
+      if (d < bd) {
+        bd = d;
+        best = c2;
+      }
+    }
+    return best ? kill(best, eye) : null;
+  }
+  function segmentHit(a, b) {
+    const ux = b.x - a.x, uy = b.y - a.y, uz = b.z - a.z, len22 = ux * ux + uy * uy + uz * uz || 1e-9;
+    const minX = Math.min(a.x, b.x) - 0.5, maxX = Math.max(a.x, b.x) + 0.5, minZ = Math.min(a.z, b.z) - 0.5, maxZ = Math.max(a.z, b.z) + 0.5;
+    let best = null;
+    for (const c2 of list) {
+      if (c2.state === "dead" || c2.state === "water" || c2.x < minX || c2.x > maxX || c2.z < minZ || c2.z > maxZ) continue;
+      const cy = c2.y + c2.size * 0.32, t = clamp34(((c2.x - a.x) * ux + (cy - a.y) * uy + (c2.z - a.z) * uz) / len22, 0, 1);
+      const ex = a.x + ux * t - c2.x, ey = a.y + uy * t - cy, ez = a.z + uz * t - c2.z;
+      if (ex * ex + ey * ey + ez * ez < (c2.size * 0.55 + 0.06) ** 2 && (!best || t < best.t)) best = { t, hit: { critter: c2 } };
+    }
+    return best;
+  }
+  function arrowHit(info) {
+    return kill(info?.hit?.critter ?? null);
+  }
+  const arrowTarget = { hp: 1, type: "critter", critterTarget: "shore", mesh: group, segmentHit };
+  function aimed(px, pz, ray3, reach = S.reach) {
+    let best = null;
+    for (const c2 of list) {
+      if (c2.state === "water") continue;
+      const d = Math.hypot(c2.x - px, c2.z - pz);
+      if (d > reach) continue;
+      const aim = aimScore(ray3, c2.x, c2.y - 0.05, c2.y + c2.size * 0.7 + 0.05, c2.z, c2.size * 0.6 + 0.14);
+      if (aim < 0) continue;
+      if (!best || aim < best.aim) best = { critter: c2, kind: c2.kind, alive: c2.state !== "dead", aim, distance: d };
+    }
+    return best;
+  }
+  function take(hit2) {
+    const c2 = hit2?.critter, i = list.indexOf(c2);
+    if (i < 0) return false;
+    list.splice(i, 1);
+    if (c2.state === "dead") stats3.taken++;
+    else stats3.caught++;
+    return true;
+  }
+  function startle(hit2, from) {
+    if (hit2?.critter) flee(hit2.critter, from);
+  }
+  function release(kind, x, z, from = null) {
+    if (!S.kinds[kind] || !Number.isFinite(ground(x, z))) return null;
+    const near = nearWater(x, z, 8), c2 = make2(kind, x, z, { water: near?.kind ?? null, way: near ? waterWay(x, z, near.distance + 0.6) : null });
+    stats3.released++;
+    flee(c2, from || { x: x - 0.5, z: z - 0.5 });
+    return c2;
+  }
+  function setKept(next) {
+    const n = (next || []).slice(0, 24);
+    for (let i = 0; i < n.length; i++) n[i].phase = kept[i]?.phase ?? rnd3() * TAU24;
+    kept.length = 0;
+    kept.push(...n);
+  }
+  function dispose() {
+    disposed = true;
+    group.removeFromParent();
+    for (const m of Object.values(meshes)) {
+      m.geometry.dispose();
+      m.dispose();
+    }
+    material2.dispose();
+    list.length = 0;
+    kept.length = 0;
+  }
+  return {
+    group,
+    meshes,
+    update,
+    strike,
+    segmentHit,
+    arrowHit,
+    arrowTarget,
+    aimed,
+    take,
+    startle,
+    release,
+    setKept,
+    flee,
+    kill,
+    dispose,
+    setEvents(next) {
+      events = next || {};
+    },
+    stats: () => ({ ...stats3 }),
+    list: () => list.map((c2) => ({ id: c2.id, kind: c2.kind, state: c2.state, x: c2.x, y: c2.y, z: c2.z, yaw: c2.yaw, size: c2.size })),
+    // (Tests and the warm-ups: one placed by hand.)
+    add: (kind, x, z, extra = {}) => make2(kind, x, z, extra)
+  };
 }
 
 // resize-queue.js
@@ -54846,9 +56226,9 @@ var TYPES2 = Object.freeze([
   Object.freeze({ type: "boss", id: "landmark:boss", name: "朽ちた王庭", radius: 19, feather: 22, clear: 18, maxRelief: 5, maxGrade: 0.24 }),
   Object.freeze({ type: "memory", id: "landmark:wind-memory", name: "風の記憶碑", radius: 8, feather: 12, clear: 7.4, maxRelief: 3, maxGrade: 0.32 })
 ]);
-var clamp34 = (v) => Math.max(0, Math.min(1, v));
+var clamp35 = (v) => Math.max(0, Math.min(1, v));
 var smooth21 = (v) => {
-  const t = clamp34(v);
+  const t = clamp35(v);
   return t * t * t * (t * (t * 6 - 15) + 10);
 };
 function hash7(seed, type, index2, salt) {
@@ -54950,9 +56330,9 @@ function createSeededLandmarkPlan({ seed, island, height: height2, waterAt, near
 }
 
 // start-access-terrain.js
-var clamp35 = (t) => Math.max(0, Math.min(1, t));
+var clamp36 = (t) => Math.max(0, Math.min(1, t));
 var smooth22 = (a, b, x) => {
-  const t = clamp35((x - a) / (b - a));
+  const t = clamp36((x - a) / (b - a));
   return t * t * t * (t * (t * 6 - 15) + 10);
 };
 var mix9 = (a, b, t) => a + (b - a) * t;
@@ -54964,18 +56344,18 @@ function createStartAccessTerrain({ access, height: height2, waterAt }) {
   if (!Number.isFinite(startY) || startY < level + 0.2 || waterAt(spawn.x, spawn.z, startY)) throw RangeError("Planned start must already have dry river-fitted ground");
   const endY = height2(approach.to.x, approach.to.z);
   if (!Number.isFinite(endY) || endY < level + 0.2 || waterAt(approach.to.x, approach.to.z, endY)) throw RangeError("Planned river approach must finish on dry ground");
-  const make = (a, b, ay, by, radius) => {
+  const make2 = (a, b, ay, by, radius) => {
     const dx = b.x - a.x, dz = b.z - a.z, length = Math.hypot(dx, dz);
     if (length < 1) throw RangeError("Collapsed access route");
     return { a, b, dx, dz, length2: length * length, length, ay, by, radius, minX: Math.min(a.x, b.x) - radius, maxX: Math.max(a.x, b.x) + radius, minZ: Math.min(a.z, b.z) - radius, maxZ: Math.max(a.z, b.z) + radius };
   };
-  const paths = [make(campfire, spawn, startY, startY, 6), make(spawn, approach.to, startY, endY, approach.radius ?? 6)];
+  const paths = [make2(campfire, spawn, startY, startY, 6), make2(spawn, approach.to, startY, endY, approach.radius ?? 6)];
   if (paths.some((p2) => Math.abs(p2.by - p2.ay) / p2.length > 0.25)) throw RangeError("Start river approach is too steep");
   function applyHeight(x, z, original) {
     let uncovered = 1;
     for (const p2 of paths) {
       if (x < p2.minX || x > p2.maxX || z < p2.minZ || z > p2.maxZ) continue;
-      const t2 = clamp35(((x - p2.a.x) * p2.dx + (z - p2.a.z) * p2.dz) / p2.length2), distance4 = Math.hypot(x - p2.a.x - t2 * p2.dx, z - p2.a.z - t2 * p2.dz), w = 1 - smooth22(2, p2.radius, distance4);
+      const t2 = clamp36(((x - p2.a.x) * p2.dx + (z - p2.a.z) * p2.dz) / p2.length2), distance4 = Math.hypot(x - p2.a.x - t2 * p2.dx, z - p2.a.z - t2 * p2.dz), w = 1 - smooth22(2, p2.radius, distance4);
       uncovered *= 1 - w;
     }
     const main = paths[1], t = ((x - spawn.x) * main.dx + (z - spawn.z) * main.dz) / main.length2;
@@ -55153,9 +56533,9 @@ var DEFAULT_MARGIN = 0.015;
 var WATER_HOOK_LENGTH = 1407;
 var WATER_HOOK_FNV1A = 1691362886;
 function hookHash(source2) {
-  let hash15 = 2166136261;
-  for (let i = 0; i < source2.length; i++) hash15 = Math.imul(hash15 ^ source2.charCodeAt(i), 16777619);
-  return hash15 >>> 0;
+  let hash16 = 2166136261;
+  for (let i = 0; i < source2.length; i++) hash16 = Math.imul(hash16 ^ source2.charCodeAt(i), 16777619);
+  return hash16 >>> 0;
 }
 function defaultHook(material2) {
   let p2 = Object.getPrototypeOf(material2);
@@ -56474,8 +57854,8 @@ function sampleGrid(g, array, x, z) {
   const ix = Math.min(g.nx - 2, Math.floor(gx)), iz = Math.min(g.nz - 2, Math.floor(gz)), tx = gx - ix, tz = gz - iz, i = iz * g.nx + ix;
   return (array[i] * (1 - tx) + array[i + 1] * tx) * (1 - tz) + (array[i + g.nx] * (1 - tx) + array[i + g.nx + 1] * tx) * tz;
 }
-var TAU24 = Math.PI * 2;
-var wrap6 = (a) => a - TAU24 * Math.floor((a + Math.PI) / TAU24);
+var TAU25 = Math.PI * 2;
+var wrap7 = (a) => a - TAU25 * Math.floor((a + Math.PI) / TAU25);
 var distanceLists = /* @__PURE__ */ new Map();
 function distancesFor(C3) {
   const key3 = [C3.firstStep, C3.growth, C3.reach].join();
@@ -56556,7 +57936,7 @@ function viewHorizon(camera, grid, sea, options = WATER_VIEW, out2 = {}) {
 function belowHorizon(horizon, x, y, z, guard = WATER_VIEW.guard) {
   const dx = x - horizon.x, dz = z - horizon.z, D = Math.hypot(dx, dz);
   if (!(D > guard)) return false;
-  const column = wrap6(Math.atan2(dx, dz) - horizon.yaw0 - Math.PI) / horizon.step + Math.PI / horizon.step;
+  const column = wrap7(Math.atan2(dx, dz) - horizon.yaw0 - Math.PI) / horizon.step + Math.PI / horizon.step;
   if (!(column >= -0.5 && column <= horizon.columns - 0.5)) return false;
   const d = horizon.distances, reach = D - guard;
   let lo = 0, hi = horizon.bins - 1;
@@ -56577,23 +57957,23 @@ function waterBoxes(body2, chunk = 96, pad2 = WATER_VIEW.boxPad) {
     if (!mesh2.isMesh || !mesh2.geometry) return;
     const position3 = mesh2.geometry.attributes.position;
     if (!position3 || mesh2.geometry.isInstancedBufferGeometry || mesh2.isInstancedMesh || position3.count < 4) {
-      const box4 = new Box3().setFromObject(mesh2);
-      if (!box4.isEmpty()) boxes2.push(box4.expandByScalar(pad2));
+      const box5 = new Box3().setFromObject(mesh2);
+      if (!box5.isEmpty()) boxes2.push(box5.expandByScalar(pad2));
       return;
     }
     const run = Math.max(chunk, Math.ceil(position3.count / 48));
     for (let start2 = 0; start2 < position3.count; start2 += run) {
-      const box4 = new Box3(), end = Math.min(position3.count, start2 + run + 1);
-      for (let i = start2; i < end; i++) box4.expandByPoint(point5.fromBufferAttribute(position3, i).applyMatrix4(mesh2.matrixWorld));
-      if (!box4.isEmpty() && [box4.min.x, box4.min.y, box4.min.z, box4.max.x, box4.max.y, box4.max.z].every(Number.isFinite)) boxes2.push(box4.expandByScalar(pad2));
+      const box5 = new Box3(), end = Math.min(position3.count, start2 + run + 1);
+      for (let i = start2; i < end; i++) box5.expandByPoint(point5.fromBufferAttribute(position3, i).applyMatrix4(mesh2.matrixWorld));
+      if (!box5.isEmpty() && [box5.min.x, box5.min.y, box5.min.z, box5.max.x, box5.max.y, box5.max.z].every(Number.isFinite)) boxes2.push(box5.expandByScalar(pad2));
     }
   });
   return boxes2;
 }
 var corner = new Vector4();
-function screenExtent(box4, viewProjection, extent2) {
+function screenExtent(box5, viewProjection, extent2) {
   for (let i = 0; i < 8; i++) {
-    corner.set(i & 1 ? box4.max.x : box4.min.x, i & 2 ? box4.max.y : box4.min.y, i & 4 ? box4.max.z : box4.min.z, 1).applyMatrix4(viewProjection);
+    corner.set(i & 1 ? box5.max.x : box5.min.x, i & 2 ? box5.max.y : box5.min.y, i & 4 ? box5.max.z : box5.min.z, 1).applyMatrix4(viewProjection);
     if (!(corner.w > 1e-3)) {
       extent2.minX = -Infinity;
       extent2.maxX = Infinity;
@@ -56642,19 +58022,19 @@ function createWaterView(world2, options = {}) {
     for (let node2 = object2; node2; node2 = node2.parent) if (!node2.visible) return false;
     return true;
   }
-  function occluded(box4) {
+  function occluded(box5) {
     const occlusion = world2.occlusion;
     if (!occlusion?.occludesBounds) return false;
-    bounds6.minX = box4.min.x;
-    bounds6.minY = box4.min.y;
-    bounds6.minZ = box4.min.z;
-    bounds6.maxX = box4.max.x;
-    bounds6.maxY = box4.max.y;
-    bounds6.maxZ = box4.max.z;
+    bounds6.minX = box5.min.x;
+    bounds6.minY = box5.min.y;
+    bounds6.minZ = box5.min.z;
+    bounds6.maxX = box5.max.x;
+    bounds6.maxY = box5.max.y;
+    bounds6.maxZ = box5.max.z;
     return occlusion.occludesBounds(bounds6);
   }
-  function hidden3(box4) {
-    const y = box4.max.y - C3.boxPad + 0.5, x0 = box4.min.x + C3.boxPad, x1 = box4.max.x - C3.boxPad, z0 = box4.min.z + C3.boxPad, z1 = box4.max.z - C3.boxPad;
+  function hidden3(box5) {
+    const y = box5.max.y - C3.boxPad + 0.5, x0 = box5.min.x + C3.boxPad, x1 = box5.max.x - C3.boxPad, z0 = box5.min.z + C3.boxPad, z1 = box5.max.z - C3.boxPad;
     return belowHorizon(horizon, (x0 + x1) / 2, y, (z0 + z1) / 2, C3.guard) && belowHorizon(horizon, x0, y, z0, C3.guard) && belowHorizon(horizon, x1, y, z0, C3.guard) && belowHorizon(horizon, x0, y, z1, C3.guard) && belowHorizon(horizon, x1, y, z1, C3.guard);
   }
   function update(camera, bodies, ocean, sea) {
@@ -56677,21 +58057,21 @@ function createWaterView(world2, options = {}) {
     for (const body2 of bodies || []) {
       if (body2 === ocean || !shown(body2)) continue;
       let seen = false;
-      for (const box4 of bodyBoxes(body2)) {
+      for (const box5 of bodyBoxes(body2)) {
         boxes2++;
-        if (!frustum.intersectsBox(box4)) continue;
-        const distance4 = box4.distanceToPoint(at);
-        if (grid && distance4 > C3.horizonFrom && hidden3(box4)) {
+        if (!frustum.intersectsBox(box5)) continue;
+        const distance4 = box5.distanceToPoint(at);
+        if (grid && distance4 > C3.horizonFrom && hidden3(box5)) {
           behind++;
           continue;
         }
         if (distance4 < nearest2) {
-          if (occluded(box4)) continue;
+          if (occluded(box5)) continue;
           nearest2 = distance4;
-          nearestFlat = Math.min(nearestFlat, Math.hypot(Math.max(box4.min.x - at.x, 0, at.x - box4.max.x), Math.max(box4.min.z - at.z, 0, at.z - box4.max.z)));
+          nearestFlat = Math.min(nearestFlat, Math.hypot(Math.max(box5.min.x - at.x, 0, at.x - box5.max.x), Math.max(box5.min.z - at.z, 0, at.z - box5.max.z)));
         }
         seen = true;
-        screenExtent(box4, viewProjection, extent2);
+        screenExtent(box5, viewProjection, extent2);
       }
       if (seen) inView++;
     }
@@ -56728,7 +58108,7 @@ function createWaterView(world2, options = {}) {
 function createCaptureScope(world2, { margin = WATER_CAPTURE_MARGIN, chunk = CHUNK3, overhang = 16, crown = 40, band = 0.15, largest = 400 } = {}) {
   const boxes2 = /* @__PURE__ */ new WeakMap(), managed = /* @__PURE__ */ new Set(), stats3 = { scoped: 0, hidden: 0, beside: 0 }, viewProjection = new Matrix4(), span = { minX: Infinity, maxX: -Infinity };
   const farthest = (minX, minZ, maxX, maxZ, x, z) => Math.hypot(Math.max(Math.abs(minX - x), Math.abs(maxX - x)), Math.max(Math.abs(minZ - z), Math.abs(maxZ - z)));
-  function mark(object2, hide) {
+  function mark2(object2, hide) {
     if (!object2?.userData) return;
     managed.add(object2);
     stats3.scoped++;
@@ -56736,30 +58116,30 @@ function createCaptureScope(world2, { margin = WATER_CAPTURE_MARGIN, chunk = CHU
     if (object2.userData.waterCaptureHidden === true !== hide) object2.userData.waterCaptureHidden = hide;
   }
   function boxOf(object2) {
-    let box4 = boxes2.get(object2);
-    if (box4 === void 0) {
-      box4 = new Box3().setFromObject(object2);
-      if (box4.isEmpty() || box4.max.x - box4.min.x > largest || box4.max.z - box4.min.z > largest) box4 = null;
-      boxes2.set(object2, box4);
+    let box5 = boxes2.get(object2);
+    if (box5 === void 0) {
+      box5 = new Box3().setFromObject(object2);
+      if (box5.isEmpty() || box5.max.x - box5.min.x > largest || box5.max.z - box5.min.z > largest) box5 = null;
+      boxes2.set(object2, box5);
     }
-    return box4;
+    return box5;
   }
   function chunkBox2(c2) {
-    let box4 = boxes2.get(c2);
-    if (box4 === void 0) {
+    let box5 = boxes2.get(c2);
+    if (box5 === void 0) {
       const ground = c2.ground?.geometry;
       if (ground && !ground.boundingBox) ground.computeBoundingBox();
       const low = ground?.boundingBox ? ground.boundingBox.min.y - 2 : -1e4, high = ground?.boundingBox ? ground.boundingBox.max.y + crown : 1e4;
-      box4 = new Box3(new Vector3(c2.cx * chunk - overhang, low, c2.cz * chunk - overhang), new Vector3((c2.cx + 1) * chunk + overhang, high, (c2.cz + 1) * chunk + overhang));
-      boxes2.set(c2, box4);
+      box5 = new Box3(new Vector3(c2.cx * chunk - overhang, low, c2.cz * chunk - overhang), new Vector3((c2.cx + 1) * chunk + overhang, high, (c2.cz + 1) * chunk + overhang));
+      boxes2.set(c2, box5);
     }
-    return box4;
+    return box5;
   }
-  function beside(box4, minX, maxX) {
+  function beside(box5, minX, maxX) {
     if (!(minX > -Infinity && maxX < Infinity)) return false;
     span.minX = Infinity;
     span.maxX = -Infinity;
-    screenExtent(box4, viewProjection, span);
+    screenExtent(box5, viewProjection, span);
     return span.maxX < minX - band || span.minX > maxX + band;
   }
   function update(camera, view) {
@@ -56768,9 +58148,9 @@ function createCaptureScope(world2, { margin = WATER_CAPTURE_MARGIN, chunk = CHU
     const minX = view?.screenMinX ?? -Infinity, maxX = view?.screenMaxX ?? Infinity;
     camera.updateMatrixWorld();
     viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-    const decide = (box4) => {
-      if (limit > 0 && farthest(box4.min.x, box4.min.z, box4.max.x, box4.max.z, x, z) < limit) return true;
-      if (beside(box4, minX, maxX)) {
+    const decide = (box5) => {
+      if (limit > 0 && farthest(box5.min.x, box5.min.z, box5.max.x, box5.max.z, x, z) < limit) return true;
+      if (beside(box5, minX, maxX)) {
         stats3.beside++;
         return true;
       }
@@ -56779,13 +58159,13 @@ function createCaptureScope(world2, { margin = WATER_CAPTURE_MARGIN, chunk = CHU
     for (const c2 of world2.chunks?.values?.() ?? []) {
       const g = c2.group;
       if (!g || g.parent !== scene) continue;
-      mark(g, decide(chunkBox2(c2)));
+      mark2(g, decide(chunkBox2(c2)));
     }
     for (const l of world2.landmarks ?? []) {
       const m = l.mesh;
       if (!m || m.parent !== scene || m.isMesh) continue;
-      const box4 = boxOf(m);
-      if (box4) mark(m, decide(box4));
+      const box5 = boxOf(m);
+      if (box5) mark2(m, decide(box5));
     }
   }
   function release() {
@@ -58427,7 +59807,7 @@ var WATER_FIRST_QUERY_LIMITS = Object.freeze({ features: 160, segments: 32768, p
 var finite2 = Number.isFinite;
 var EMPTY3 = Object.freeze([]);
 var EPS3 = 0.025;
-var clamp36 = (t) => Math.max(0, Math.min(1, t));
+var clamp37 = (t) => Math.max(0, Math.min(1, t));
 var mix10 = (a, b, t) => a + (b - a) * t;
 var inside2 = (b, x, z, pad2 = 0) => x >= b.minX - pad2 && x <= b.maxX + pad2 && z >= b.minZ - pad2 && z <= b.maxZ + pad2;
 var overlap2 = (a, b) => a.minX <= b.maxX && a.maxX >= b.minX && a.minZ <= b.maxZ && a.maxZ >= b.minZ;
@@ -58485,7 +59865,7 @@ function index(records2, boundsOf5, size) {
   };
 }
 function distanceSegment2(x, z, a, b) {
-  const dx = b.x - a.x, dz = b.z - a.z, den = dx * dx + dz * dz, t = den ? clamp36(((x - a.x) * dx + (z - a.z) * dz) / den) : 0;
+  const dx = b.x - a.x, dz = b.z - a.z, den = dx * dx + dz * dz, t = den ? clamp37(((x - a.x) * dx + (z - a.z) * dz) / den) : 0;
   return Math.hypot(x - a.x - dx * t, z - a.z - dz * t);
 }
 function ringDistance(ring2, x, z) {
@@ -58496,6 +59876,50 @@ function ringDistance(ring2, x, z) {
     if (a.z > z !== b.z > z && x < (b.x - a.x) * (z - a.z) / (b.z - a.z) + a.x) wet = !wet;
   }
   return distance4 === 0 ? 0 : wet ? distance4 : -distance4;
+}
+var POND_CELL = 2;
+var POND_REACH = POND_CELL * 0.7072;
+var pondCells = /* @__PURE__ */ new WeakMap();
+function pondGrid(pond) {
+  let g = pondCells.get(pond);
+  if (g === void 0) {
+    const b = pond.bounds, nx = Math.max(1, Math.ceil((b.maxX - b.minX) / POND_CELL)), nz = Math.max(1, Math.ceil((b.maxZ - b.minZ) / POND_CELL));
+    g = nx * nz > 1 << 22 ? null : { nx, nz, state: new Int8Array(nx * nz), near: /* @__PURE__ */ new Map(), pieces: null };
+    pondCells.set(pond, g);
+  }
+  return g;
+}
+function pondQuick(pond, x, z) {
+  const g = pondGrid(pond);
+  if (!g) return NaN;
+  const b = pond.bounds, ix = Math.min(g.nx - 1, Math.floor((x - b.minX) / POND_CELL)), iz = Math.min(g.nz - 1, Math.floor((z - b.minZ) / POND_CELL));
+  if (!(ix >= 0 && iz >= 0)) return NaN;
+  const k = iz * g.nx + ix;
+  let state2 = g.state[k];
+  if (state2 === 0) {
+    const cx = b.minX + (ix + 0.5) * POND_CELL, cz = b.minZ + (iz + 0.5) * POND_CELL, d = ringDistance(pond.polygon, cx, cz);
+    state2 = 2;
+    if (d < -POND_REACH) state2 = 1;
+    else if (d > POND_REACH && (pond.holes || EMPTY3).every((hole) => ringDistance(hole, cx, cz) < -POND_REACH)) {
+      const pieces = g.pieces || (g.pieces = [pond.polygon, ...pond.holes || EMPTY3].flatMap((ring2) => ring2.map((a, i) => [ring2[(i + ring2.length - 1) % ring2.length], a])));
+      const far = new Float64Array(pieces.length);
+      let nearest2 = Infinity;
+      for (let i = 0; i < pieces.length; i++) {
+        far[i] = distanceSegment2(cx, cz, pieces[i][0], pieces[i][1]);
+        if (far[i] < nearest2) nearest2 = far[i];
+      }
+      const near = [];
+      for (let i = 0; i < pieces.length; i++) if (far[i] <= nearest2 + 2 * POND_REACH) near.push(pieces[i]);
+      g.near.set(k, near);
+      state2 = 3;
+    }
+    g.state[k] = state2;
+  }
+  if (state2 === 1) return -1;
+  if (state2 !== 3) return NaN;
+  let edge2 = Infinity;
+  for (const [a, c2] of g.near.get(k)) edge2 = Math.min(edge2, distanceSegment2(x, z, a, c2));
+  return edge2;
 }
 function sampleWaterFirstPond(pond, x, z, out2 = {}) {
   checkedXZ(x, z);
@@ -58521,7 +59945,7 @@ function sampleWaterFirstPond(pond, x, z, out2 = {}) {
   return out2;
 }
 function sampleWaterFirstRiverSegment(segment2, x, z, out2 = {}) {
-  const { a, b, dx, dz, length2 } = segment2, t = clamp36(((x - a.x) * dx + (z - a.z) * dz) / length2), px = mix10(a.x, b.x, t), pz = mix10(a.z, b.z, t);
+  const { a, b, dx, dz, length2 } = segment2, t = clamp37(((x - a.x) * dx + (z - a.z) * dz) / length2), px = mix10(a.x, b.x, t), pz = mix10(a.z, b.z, t);
   out2.id = segment2.id;
   out2.featureId = segment2.featureId;
   out2.reachId = segment2.reachId;
@@ -58855,6 +60279,9 @@ function createWaterFirstRuntime({ plan: plan2, geometry: geometry3 = compileWat
   function inlandSurface(x, z) {
     for (const pond of geometry3.ponds) {
       if (!inside2(pond.bounds, x, z)) continue;
+      const quick = pondQuick(pond, x, z);
+      if (quick === -1) continue;
+      if (quick >= 0) return { id: pond.id, featureId: pond.id, kind: pond.kind, level: pond.level, edgeDistance: quick, flow: { x: 0, z: 0 } };
       const q = sampleWaterFirstPond(pond, x, z);
       if (q.inside) return { id: pond.id, featureId: pond.id, kind: pond.kind, level: pond.level, edgeDistance: q.edgeDistance, flow: { x: 0, z: 0 } };
     }
@@ -58952,7 +60379,7 @@ function createWaterFirstRuntime({ plan: plan2, geometry: geometry3 = compileWat
 // water-first-environment.js
 function createWaterFirstEnvironment({ plan: plan2, hydrology: hydrology2, island, height: height2, slope: slope2 = null }) {
   if (!plan2 || !hydrology2?.nearWater || !hydrology2?.waterAt || typeof height2 !== "function" || !island?.sample) throw TypeError("Water-first field and canonical height required");
-  const clamp76 = (v) => Math.max(0, Math.min(1, v));
+  const clamp77 = (v) => Math.max(0, Math.min(1, v));
   const swampRegions = (plan2.swampCoverage || []).map((c2) => ({ id: c2.wetlandId, bodyId: c2.bodyId, region: c2.region, cos: Math.cos(c2.region.yaw), sin: Math.sin(c2.region.yaw) }));
   const mouths = Object.freeze(plan2.rivers.filter((r) => r.mouth).map((r) => Object.freeze({
     ...r.mouth,
@@ -58969,8 +60396,8 @@ function createWaterFirstEnvironment({ plan: plan2, hydrology: hydrology2, islan
     const wet = hydrology2.waterAt(x, z, elevation), shore = wet ? { ...wet, distance: 0 } : hydrology2.nearWater(x, z, 24), distance4 = shore?.distance ?? Infinity;
     const grade = slope2 ? slope2(x, z) : Math.hypot(height2(x + 2, z) - height2(x - 2, z), height2(x, z + 2) - height2(x, z - 2)) / 4;
     if (!Number.isFinite(grade) || grade < 0) throw TypeError("Finite nonnegative terrain slope required");
-    const shoreBlend = clamp76((24 - distance4) / 6), shoreWeight = shoreBlend * shoreBlend * (3 - 2 * shoreBlend);
-    const humidity = clamp76(0.28 + 0.55 * Math.exp(-distance4 / 18) * shoreWeight);
+    const shoreBlend = clamp77((24 - distance4) / 6), shoreWeight = shoreBlend * shoreBlend * (3 - 2 * shoreBlend);
+    const humidity = clamp77(0.28 + 0.55 * Math.exp(-distance4 / 18) * shoreWeight);
     let swampRegionId = null;
     for (const r of swampRegions) {
       if ((shore?.featureId ?? shore?.id) !== r.bodyId) continue;
@@ -59031,16 +60458,16 @@ function createWaterFirstEnvironment({ plan: plan2, hydrology: hydrology2, islan
 }
 
 // hydrology-shape.js
-var clamp37 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+var clamp38 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 var smooth24 = (a, b, x) => {
-  const t = clamp37((x - a) / (b - a));
+  const t = clamp38((x - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
 var mix11 = (a, b, t) => a + (b - a) * t;
 var HYDROLOGY_EROSION_LIMITS = Object.freeze({ bankRadius: 62, maxBankCut: 2.4, maxChannelCut: 4.9, maxDepth: 1.2 });
 var POND_POLYGON_LIMITS = Object.freeze({ vertices: 1024, minEdge: 1e-6, minArea: 1e-6 });
 var polygonCache = /* @__PURE__ */ new WeakMap();
-var TAU25 = Math.PI * 2;
+var TAU26 = Math.PI * 2;
 var orient = (a, b, c2) => (b.x - a.x) * (c2.z - a.z) - (b.z - a.z) * (c2.x - a.x);
 function segmentsMeet(a, b, c2, d) {
   const o1 = orient(a, b, c2), o2 = orient(a, b, d), o3 = orient(c2, d, a), o4 = orient(c2, d, b);
@@ -59088,7 +60515,7 @@ function polygonDistance(data, x, z) {
   let inside3 = false, distance4 = Infinity;
   for (let i = 0, j = data.ring.length - 1; i < data.ring.length; j = i++) {
     const a = data.ring[j], b = data.ring[i], dx = b.x - a.x, dz = b.z - a.z;
-    const t = clamp37(((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz));
+    const t = clamp38(((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz));
     distance4 = Math.min(distance4, Math.hypot(x - a.x - dx * t, z - a.z - dz * t));
     if (a.z > z !== b.z > z && x < (b.x - a.x) * (z - a.z) / (b.z - a.z) + a.x) inside3 = !inside3;
   }
@@ -59132,7 +60559,7 @@ function pondRadius(p2, x, z) {
 function pondPoint(p2, a, r = 1) {
   if (p2.polygon) {
     const data = pondPolygonData(p2);
-    return pondPerimeterPoint(p2, a / TAU25, (r - 1) * data.scale);
+    return pondPerimeterPoint(p2, a / TAU26, (r - 1) * data.scale);
   }
   const k = r * pondOutline(p2, a), u = Math.cos(a) * p2.radiusX * k, v = Math.sin(a) * p2.radiusZ * k, c2 = Math.cos(p2.yaw), s = Math.sin(p2.yaw);
   return { x: p2.center.x + u * c2 - v * s, z: p2.center.z + u * s + v * c2 };
@@ -59144,7 +60571,7 @@ function fallFrame(fall2, x, z) {
 function fallLipT(fall2, across2) {
   const p2 = fall2.profile;
   if (!p2) return 0;
-  const u = clamp37(across2 / (fall2.width * 0.5), -1.8, 1.8), bend = p2.crestBend * Math.sin(u * 1.7) + p2.crestBowl * (Math.cos(u * 2.2) - 1);
+  const u = clamp38(across2 / (fall2.width * 0.5), -1.8, 1.8), bend = p2.crestBend * Math.sin(u * 1.7) + p2.crestBowl * (Math.cos(u * 2.2) - 1);
   return bend / p2.length;
 }
 function fallProfile(fall2, t, across2) {
@@ -59153,7 +60580,7 @@ function fallProfile(fall2, t, across2) {
   const radiusAlong = p2?.receiverLength ?? 3.6, radiusAcross = p2?.receiverWidth ?? 3.5, angle = Math.atan2(across2 / radiusAcross, (s - length) / radiusAlong), outline = 1 + 0.09 * Math.sin(angle * 2 + (p2?.phase || 0)) + 0.055 * Math.cos(angle * 3 - (p2?.phase || 0));
   const receiverRadius = Math.hypot((s - length) / radiusAlong, across2 / radiusAcross) / outline, receiverEdge = (1 - receiverRadius) * Math.min(radiusAlong, radiusAcross);
   const outlet = p2?.outlet || fall2.plungePool.outlet, ox = outlet.x - fall2.base.x, oz = outlet.z - fall2.base.z, outletAlong = p2?.outletAlong ?? ox * fall2.flow.x + oz * fall2.flow.z, outletAcross = p2?.outletAcross ?? -ox * fall2.flow.z + oz * fall2.flow.x, inverseLength2 = p2?.outletInverseLength2 ?? 1 / (ox * ox + oz * oz);
-  const outletT = ((s - length) * outletAlong + across2 * outletAcross) * inverseLength2, receiverLevel = mix11(fall2.base.y, outlet.y, clamp37(outletT));
+  const outletT = ((s - length) * outletAlong + across2 * outletAcross) * inverseLength2, receiverLevel = mix11(fall2.base.y, outlet.y, clamp38(outletT));
   const upper = s <= crest + 1e-8, receiving = !upper && receiverRadius <= 1, upperLevel = crestLevel + crestSlope * (s - crest * smooth24(-1.4, crest, s)), level = upper ? upperLevel : receiving ? receiverLevel : null;
   const shoulders = 0.5 + 0.5 * Math.sin(across2 / Math.max(half, 1) * 1.2 + (p2?.phase || 0));
   const start2 = crest - 0.1, end = Math.max(start2 + 8 / 3, length * 0.95 + crest * 0.18 + 0.18 * (shoulders - 0.5));
@@ -59167,7 +60594,7 @@ function fallProfile(fall2, t, across2) {
     bed = mix11(bed, Math.min(bed, scour), basinWeight);
   }
   const bankWeight = 1 - smooth24(half - 0.3, side2, Math.abs(across2));
-  const impactLevel = mix11(fall2.base.y, outlet.y, clamp37(((impactT * length - length) * outletAlong + across2 * outletAcross) * inverseLength2));
+  const impactLevel = mix11(fall2.base.y, outlet.y, clamp38(((impactT * length - length) * outletAlong + across2 * outletAcross) * inverseLength2));
   return { crestT, crestLevel, crestSlope, impactT, impactLevel, crestHalfWidth: half, upper, receiving, receiverRadius, receiverEdge, receiverLevel, outletT, level, bed, bankWeight, influence };
 }
 function fallProfileBounds(fall2) {
@@ -59188,7 +60615,7 @@ var PUBLIC_RIVER_CONTROL_LIMITS = Object.freeze({
 });
 var finite3 = Number.isFinite;
 var mix12 = (a, b, t) => a + (b - a) * t;
-var clamp38 = (t) => Math.max(0, Math.min(1, t));
+var clamp39 = (t) => Math.max(0, Math.min(1, t));
 function publicRiverCurvePoint(points, index2, t) {
   const b = points[index2], c2 = points[index2 + 1], a = points[index2 - 1] || b.map((v, k) => 2 * v - c2[k]), d = points[index2 + 2] || c2.map((v, k) => 2 * v - b[k]);
   let d0 = Math.sqrt(Math.hypot(...a.map((v, k) => v - b[k]))), d1 = Math.sqrt(Math.hypot(...b.map((v, k) => v - c2[k]))), d2 = Math.sqrt(Math.hypot(...c2.map((v, k) => v - d[k])));
@@ -59298,7 +60725,7 @@ function buildPublicRiverControls(points, options = {}) {
       proof.ownerComparisons++;
       const { a, b, dx, dz, length2 } = segments[i], rawT = ((x - a.x) * dx + (z - a.z) * dz) / length2;
       if (a.fallReceiverStart && rawT < 0) continue;
-      const t = clamp38(rawT), distance4 = Math.hypot(x - mix12(a.x, b.x, t), z - mix12(a.z, b.z, t)), width = mix12(a.width, b.width, t);
+      const t = clamp39(rawT), distance4 = Math.hypot(x - mix12(a.x, b.x, t), z - mix12(a.z, b.z, t)), width = mix12(a.width, b.width, t);
       if (distance4 <= width * 0.5 && distance4 < nearest2) {
         nearest2 = distance4;
         best = { segment: i, t, distance: distance4, level: mix12(a.y, b.y, t), width };
@@ -59381,7 +60808,7 @@ var WATER_BODY_SPEC_LIMITS = Object.freeze({ pondVertices: 64, ponds: 5, streams
 var NETWORK_WATER_BODY_LIMITS = Object.freeze({ polygonVertices: 1024, polygonGridCells: 262144, endpointOverlap: 0.25 });
 var finite4 = Number.isFinite;
 var EPS4 = 1e-6;
-var TAU26 = Math.PI * 2;
+var TAU27 = Math.PI * 2;
 var point3 = (p2) => p2 && [p2.x, p2.y, p2.z].every(finite4);
 var xz = (p2) => p2 && [p2.x, p2.z].every(finite4);
 var issue = (id2, code, message, severity = "warning", detail) => ({ id: id2, code, message, severity, ...detail ? { detail } : {} });
@@ -59509,7 +60936,7 @@ function pondBodySpec(pond, featureId, { gridSpacing = 0.35 } = {}) {
     });
   }
   if (!pond?.id || !xz(pond.center) || ![pond.radiusX, pond.radiusZ, pond.yaw, pond.phase, pond.level].every(finite4) || pond.radiusX <= 0 || pond.radiusZ <= 0 || !finite4(gridSpacing) || gridSpacing <= 0) throw new TypeError("A finite authoritative pond descriptor is required");
-  const polygon2 = Array.from({ length: WATER_BODY_SPEC_LIMITS.pondVertices }, (_, i) => pondPoint(pond, i / WATER_BODY_SPEC_LIMITS.pondVertices * TAU26));
+  const polygon2 = Array.from({ length: WATER_BODY_SPEC_LIMITS.pondVertices }, (_, i) => pondPoint(pond, i / WATER_BODY_SPEC_LIMITS.pondVertices * TAU27));
   const marsh = pond.kind === "marsh", lake = pond.kind === "lake";
   return record(pond.id, featureId, marsh ? "marsh" : lake ? "lake" : "pond", lake ? "addLake" : "addPond", {
     name: pond.id,
@@ -59631,16 +61058,16 @@ function streamBodySpecs(stream, featureId, { speed = 0.65 } = {}) {
     }, boundsOf3(points, Math.max(...points.map((p2) => p2.width)) * 0.5 + 2.4), { source: "stream.points", splineApproximation: reach.length > 2, upstreamToDownstream: true, maxControlInterval: 2, wetShoulderMeters: 2.4 });
   });
 }
-function fallFlight(drop, run, lip = null) {
+function fallFlight(drop2, run, lip = null) {
   const L4 = lip && lip.length > 0 ? lip : null, fade = L4 ? Math.min(L4.length * 0.7, Math.max(0, L4.fade || 0)) : 0, span = L4 ? L4.length - fade : 0;
   const d = L4 && span > 1e-3 ? Math.max(0, L4.drop || 0) : 0, depth = L4?.depth ? Math.max(d + 0.04, L4.depth) : 0, thick = depth > 0 ? depth - d : 0;
-  let speed = run / Math.sqrt(2 * drop / 9.81), seconds = Math.sqrt(2 * drop / 9.81), vy0 = 0, nx = 0, ny = 1;
+  let speed = run / Math.sqrt(2 * drop2 / 9.81), seconds = Math.sqrt(2 * drop2 / 9.81), vy0 = 0, nx = 0, ny = 1;
   for (let k = 0; k < 12; k++) {
     vy0 = d > 0 ? speed * 2 * d / span : 0;
     const s = vy0 / speed, len3 = Math.hypot(1, s);
     nx = s / len3;
     ny = 1 / len3;
-    seconds = (-vy0 + Math.sqrt(vy0 * vy0 + 2 * 9.81 * Math.max(0.01, drop - d - ny * thick / 2))) / 9.81;
+    seconds = (-vy0 + Math.sqrt(vy0 * vy0 + 2 * 9.81 * Math.max(0.01, drop2 - d - ny * thick / 2))) / 9.81;
     speed = (run + nx * thick / 2) / seconds;
   }
   return { speed, seconds, vy0, drop: d, thick, nx, ny, crown: L4 ? Math.min(d, L4.crown ?? d * 0.6) : 0 };
@@ -59697,9 +61124,9 @@ function fitWaterfallBodySpec(fall2, featureId, { height: terrainHeight, mist = 
   }
   const top = [fall2.lip.x + fx * authoredRun * crestT - fz * acrossCenter, crestLevel, fall2.lip.z + fz * authoredRun * crestT + fx * acrossCenter];
   const impact = [fall2.lip.x + fx * authoredRun * impactT - fz * acrossCenter, impactLevel, fall2.lip.z + fz * authoredRun * impactT + fx * acrossCenter];
-  const drop = top[1] - impact[1], run = Math.hypot(impact[0] - top[0], impact[2] - top[2]);
-  if (![...top, ...impact, drop, run].every(finite4) || drop <= 0 || run < EPS4) return { spec: null, issues: [issue(fall2.id, "invalid-fall-flight", "The canonical crest and receiver must have a positive drop and horizontal run.", "error")] };
-  const flight = fallFlight(drop, run, lip), flightSeconds = flight.seconds, speed = flight.speed;
+  const drop2 = top[1] - impact[1], run = Math.hypot(impact[0] - top[0], impact[2] - top[2]);
+  if (![...top, ...impact, drop2, run].every(finite4) || drop2 <= 0 || run < EPS4) return { spec: null, issues: [issue(fall2.id, "invalid-fall-flight", "The canonical crest and receiver must have a positive drop and horizontal run.", "error")] };
+  const flight = fallFlight(drop2, run, lip), flightSeconds = flight.seconds, speed = flight.speed;
   if (Math.abs(crestSlope) > EPS4) issues.push(issue(fall2.id, "fall-inlet-slope", "The public ballistic sheet has a horizontal initial tangent; the authored incoming slope cannot be reproduced exactly.", "warning", { crestSlope }));
   if (fall2.profile && (Math.abs(fall2.profile.crestBend || 0) > EPS4 || Math.abs(fall2.profile.crestBowl || 0) > EPS4)) issues.push(issue(fall2.id, "fall-curved-crest", "The public sheet has a straight crest; the canonical curved crest cannot be matched exactly."));
   let minClearance = Infinity, probes = 0;
@@ -59729,7 +61156,7 @@ function fitWaterfallBodySpec(fall2, featureId, { height: terrainHeight, mist = 
     top,
     direction: Math.atan2(fz, fx) * 180 / Math.PI,
     width,
-    height: drop,
+    height: drop2,
     speed,
     spread: 0,
     lipLength: 0,
@@ -60244,7 +61671,7 @@ function createWaterFirstStream(world2) {
 
 // water-contact.js
 var finite5 = Number.isFinite;
-var clamp39 = (v) => Math.max(0, Math.min(1, v));
+var clamp40 = (v) => Math.max(0, Math.min(1, v));
 function worldWaterAt(world2, x, z, groundHeight2) {
   if (world2?.inDungeon) return world2.dungeonLayout?.waterAt?.(x, z) ?? null;
   const query = world2?.hydrology?.waterAt || world2?.terrainFunctions?.waterAt;
@@ -60258,7 +61685,7 @@ function feetWaterDepth(world2, x, z, feetY, groundHeight2) {
   return water && finite5(feetY) ? Math.max(0, water.level - feetY) : 0;
 }
 function wadingSpeed(depth) {
-  return 1 - 0.52 * clamp39((depth - 0.035) / 0.3);
+  return 1 - 0.52 * clamp40((depth - 0.035) / 0.3);
 }
 function waterFootstep(world2, x, z, feetY, groundHeight2) {
   return feetWaterDepth(world2, x, z, feetY, groundHeight2) > 0.035;
@@ -60356,9 +61783,9 @@ function buildPublicLakeGeometry(THREE2, pond, spec, { auditPrecision = false } 
     const p2 = [a.x, a.y, b2.x, b2.y, c2.x, c2.y], area = polygonArea(p2);
     if (!(area > 0)) throw new RangeError("Degenerate owner triangle");
     triangulatedArea += area;
-    const id2 = owners.length, box4 = { minX: Math.min(a.x, b2.x, c2.x), maxX: Math.max(a.x, b2.x, c2.x), minZ: Math.min(a.y, b2.y, c2.y), maxZ: Math.max(a.y, b2.y, c2.y) };
-    owners.push({ p: p2, ...box4 });
-    const x0 = Math.max(0, Math.floor((box4.minX - xs[0]) / dx / 16)), x1 = Math.min(Math.floor((nx - 1) / 16), Math.floor((box4.maxX - xs[0]) / dx / 16)), z0 = Math.max(0, Math.floor((box4.minZ - zs[0]) / dz / 16)), z1 = Math.min(Math.floor((nz - 1) / 16), Math.floor((box4.maxZ - zs[0]) / dz / 16));
+    const id2 = owners.length, box5 = { minX: Math.min(a.x, b2.x, c2.x), maxX: Math.max(a.x, b2.x, c2.x), minZ: Math.min(a.y, b2.y, c2.y), maxZ: Math.max(a.y, b2.y, c2.y) };
+    owners.push({ p: p2, ...box5 });
+    const x0 = Math.max(0, Math.floor((box5.minX - xs[0]) / dx / 16)), x1 = Math.min(Math.floor((nx - 1) / 16), Math.floor((box5.maxX - xs[0]) / dx / 16)), z0 = Math.max(0, Math.floor((box5.minZ - zs[0]) / dz / 16)), z1 = Math.min(Math.floor((nz - 1) / 16), Math.floor((box5.maxZ - zs[0]) / dz / 16));
     for (let z = z0; z <= z1; z++) for (let x = x0; x <= x1; x++) {
       if (++binEntries > limits.binEntries) throw new RangeError("Public lake owner bin budget");
       const key3 = x + "," + z;
@@ -61089,9 +62516,9 @@ var CLEAR_WATER_OPTICS = Object.freeze({
 var HYDROLOGY_WATER_LIMITS = Object.freeze({ features: 12, standardFeatures: 8, range: 480, standardRange: 360, sprayRange: 105, gridStep: 4 / 3, maxCells: 32768, maxBoundsCells: 131072, maxTriangles: 72e3, sprayPerFall: 144, maxFalls: 3, fallColumns: 40, fallRows: 52, impactCellsPerFall: 2048, lipRefinementDepth: 3, lipCellsPerFall: 256 });
 var STEP2 = HYDROLOGY_WATER_LIMITS.gridStep;
 var EPS5 = 0.026;
-var clamp40 = (v, a, b) => Math.max(a, Math.min(b, v));
+var clamp41 = (v, a, b) => Math.max(a, Math.min(b, v));
 var smooth25 = (a, b, v) => {
-  const t = clamp40((v - a) / (b - a), 0, 1);
+  const t = clamp41((v - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
 };
 var EMPTY4 = Object.freeze([]);
@@ -64300,7 +65727,7 @@ function smoothstep5(a, b, x) {
 function lum(c2) {
   return 0.2126 * c2[0] + 0.7152 * c2[1] + 0.0722 * c2[2];
 }
-function wrap7(x, p2) {
+function wrap8(x, p2) {
   return (x % p2 + p2) % p2;
 }
 function makeRT(w, h, type = HalfFloatType, opts = {}) {
@@ -65038,10 +66465,10 @@ var DynamicSky = class extends Group {
     this._windT += delta;
     const cx = _camPos2.x * this.unitScale, cz = _camPos2.z * this.unitScale;
     const wx = this._windX, wz = this._windZ;
-    u.uWeatherOffset.value.set(wrap7(cx + wx * 0.8, TUNING.weatherTile), wrap7(cz + wz * 0.8, TUNING.weatherTile));
-    u.uShapeOffset.value.set(wrap7(cx + wx, TUNING.shapeTile), wrap7(-this._windT * 1.5, TUNING.shapeTile), wrap7(cz + wz, TUNING.shapeTile));
-    u.uDetailOffset.value.set(wrap7(cx + wx * 1.25, TUNING.detailTile), wrap7(-this._windT * 4, TUNING.detailTile), wrap7(cz + wz * 1.25, TUNING.detailTile));
-    u.uCirrusOffset.value.set(wrap7(cx + wx * 2.5, 132e4), wrap7(cz + wz * 2.5, 132e4));
+    u.uWeatherOffset.value.set(wrap8(cx + wx * 0.8, TUNING.weatherTile), wrap8(cz + wz * 0.8, TUNING.weatherTile));
+    u.uShapeOffset.value.set(wrap8(cx + wx, TUNING.shapeTile), wrap8(-this._windT * 1.5, TUNING.shapeTile), wrap8(cz + wz, TUNING.shapeTile));
+    u.uDetailOffset.value.set(wrap8(cx + wx * 1.25, TUNING.detailTile), wrap8(-this._windT * 4, TUNING.detailTile), wrap8(cz + wz * 1.25, TUNING.detailTile));
+    u.uCirrusOffset.value.set(wrap8(cx + wx * 2.5, 132e4), wrap8(cz + wz * 2.5, 132e4));
     u.uCirrusDir.value.set(Math.cos(wd), Math.sin(wd));
     u.uCirrus.value = clamp013(this.cirrusCoverage);
     u.uCirrusAlt.value = Math.max(this.cirrusAltitude, this.cloudTop + 500);
@@ -65187,7 +66614,7 @@ var DynamicSky = class extends Group {
       camera.getWorldDirection(_camDir2);
       viewUp = clamp013(_camDir2.y);
       const az = Math.atan2(_camDir2.z, _camDir2.x);
-      const f15 = isFinite(az) ? wrap7(az / (2 * Math.PI) * 32 - 0.5, 32) : 0;
+      const f15 = isFinite(az) ? wrap8(az / (2 * Math.PI) * 32 - 0.5, 32) : 0;
       const i0 = Math.floor(f15) % 32, i1 = (i0 + 1) % 32, t = f15 - Math.floor(f15);
       for (let c2 = 0; c2 < 3; c2++) viewSky[c2] = pr.ring[i0][c2] * (1 - t) + pr.ring[i1][c2] * t;
     }
@@ -65729,7 +67156,7 @@ var CHANNELS = Object.freeze(["rain", "snow", "wind", "cloud", "fog", "haze", "s
 var EMPTY_CONTEXT = Object.freeze({});
 var TICK = 0.25;
 var EPSILON = 1e-9;
-var TAU27 = Math.PI * 2;
+var TAU28 = Math.PI * 2;
 var clamp014 = (value) => Math.max(0, Math.min(1, value));
 var smooth26 = (a, b, value) => {
   const t = clamp014((value - a) / (b - a));
@@ -65738,9 +67165,9 @@ var smooth26 = (a, b, value) => {
 function seedValue(seed) {
   if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
   if (typeof seed !== "string") throw new TypeError("Weather seed must be a finite number or string");
-  let hash15 = 2166136261;
-  for (let i = 0; i < seed.length; i++) hash15 = Math.imul(hash15 ^ seed.charCodeAt(i), 16777619);
-  return hash15 >>> 0;
+  let hash16 = 2166136261;
+  for (let i = 0; i < seed.length; i++) hash16 = Math.imul(hash16 ^ seed.charCodeAt(i), 16777619);
+  return hash16 >>> 0;
 }
 function biomeId(value, previous) {
   const id2 = value && typeof value === "object" ? value.id : value;
@@ -65772,8 +67199,8 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
   let selectedFront = "clear", frontStrength = 1, frontRemaining = 0;
   let localBiome = 0, altitude = 30, hour = 12, ambientTemperature = 18;
   let firstEnvironment = true, inDungeon = false, underwater = false;
-  let windAngle = random10() * TAU27, targetWindAngle = windAngle;
-  const gustPhase = random10() * TAU27;
+  let windAngle = random13() * TAU28, targetWindAngle = windAngle;
+  const gustPhase = random13() * TAU28;
   const weights = new Float64Array(8), target = new Float64Array(7);
   const state2 = {
     seed: normalizedSeed,
@@ -65808,7 +67235,7 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
     transition: 0,
     frontSerial: 0
   };
-  function random10() {
+  function random13() {
     randomState = randomState + 1831565813 >>> 0;
     let value = randomState;
     value = Math.imul(value ^ value >>> 15, value | 1);
@@ -65816,8 +67243,8 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
     return ((value ^ value >>> 14) >>> 0) / 4294967296;
   }
   function holdFront() {
-    frontRemaining = Math.floor((150 + random10() * 180) / TICK) * TICK;
-    targetWindAngle = windAngle + (random10() - 0.5) * Math.PI * 0.85;
+    frontRemaining = Math.floor((150 + random13() * 180) / TICK) * TICK;
+    targetWindAngle = windAngle + (random13() - 0.5) * Math.PI * 0.85;
     state2.frontSerial++;
   }
   function selectAutomaticFront() {
@@ -65837,7 +67264,7 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
       if (FRONT_NAMES[i] === selectedFront) weights[i] *= 0.3;
       total += weights[i];
     }
-    let choice = random10() * total;
+    let choice = random13() * total;
     for (let i = 0; i < weights.length; i++) {
       choice -= weights[i];
       if (choice <= 0 || i === weights.length - 1) {
@@ -65845,7 +67272,7 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
         break;
       }
     }
-    frontStrength = 0.86 + random10() * 0.14;
+    frontStrength = 0.86 + random13() * 0.14;
     holdFront();
   }
   function refreshTarget() {
@@ -65898,9 +67325,9 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
     }
     state2.transition = clamp014(state2.transition + TICK / (manual ? 12 : 40));
     if (largestGap < 0.075) state2.current = state2.target;
-    let angleDifference = (targetWindAngle - windAngle) % TAU27;
-    if (angleDifference > Math.PI) angleDifference -= TAU27;
-    if (angleDifference < -Math.PI) angleDifference += TAU27;
+    let angleDifference = (targetWindAngle - windAngle) % TAU28;
+    if (angleDifference > Math.PI) angleDifference -= TAU28;
+    if (angleDifference < -Math.PI) angleDifference += TAU28;
     windAngle += angleDifference * (1 - Math.exp(-TICK / 28));
     state2.windX = Math.cos(windAngle + Math.sin(state2.elapsed * 0.071 + gustPhase) * 0.045);
     state2.windZ = Math.sin(windAngle + Math.sin(state2.elapsed * 0.071 + gustPhase) * 0.045);
@@ -65928,7 +67355,7 @@ function createWeatherClimate({ seed = 1, mode = "auto", strengths } = {}) {
       if (Number.isFinite(context.altitude)) altitude = Math.max(-100, Math.min(2e3, context.altitude));
     }
     if (Number.isFinite(context.timeOfDay)) hour = (context.timeOfDay % 24 + 24) % 24;
-    ambientTemperature = 17 + Math.cos((hour - 14) / 24 * TAU27) * 3 - altitude * 0.052;
+    ambientTemperature = 17 + Math.cos((hour - 14) / 24 * TAU28) * 3 - altitude * 0.052;
     if (localBiome === 2) ambientTemperature -= 4;
     else if (localBiome === 3) ambientTemperature += 5;
     else if (localBiome === 4) ambientTemperature -= 1.5;
@@ -65997,10 +67424,10 @@ var PRECIPITATION_QUALITY = Object.freeze({
 var SPLASH = Object.freeze({ radius: 13, ahead: 5.5, gridSize: 35, cellSize: 4 / 3, crown: 0.42, span: [0.36, 0.52] });
 var NO_WATER = -1e4;
 var splashCellKey = (tx, tz) => mod(tx, 4096) + mod(tz, 4096) * 4096;
-var clamp41 = (n, a = 0, b = 1) => Math.max(a, Math.min(b, Number.isFinite(n) ? n : a));
+var clamp42 = (n, a = 0, b = 1) => Math.max(a, Math.min(b, Number.isFinite(n) ? n : a));
 var mod = (n, d) => (n % d + d) % d;
 var finite11 = (n, fallback = 0) => Number.isFinite(n) ? n : fallback;
-var TAU28 = Math.PI * 2;
+var TAU29 = Math.PI * 2;
 function seededRandom(seed) {
   let value = (Number(seed) || 1) >>> 0;
   return () => {
@@ -66379,7 +67806,7 @@ void main() {
 }`;
 function createWeatherPrecipitation({ THREE: THREE2, scene, camera, quality = "high", heightAt, waterAt, shelterAt, onThunder, seed = 71423 } = {}) {
   if (!THREE2 || !scene || !camera) throw new TypeError("Precipitation requires THREE, scene, and camera");
-  const random10 = seededRandom(seed), lightningRandom = seededRandom(seed + 907);
+  const random13 = seededRandom(seed), lightningRandom = seededRandom(seed + 907);
   const heightGrid = createPrecipitationHeightGrid({ heightAt, waterAt, shelterAt });
   const gridTexture = new THREE2.DataTexture(heightGrid.data, heightGrid.size, heightGrid.size, THREE2.RGBAFormat, THREE2.FloatType);
   gridTexture.name = "weather-local-ground";
@@ -66399,7 +67826,7 @@ function createWeatherPrecipitation({ THREE: THREE2, scene, camera, quality = "h
     geometry3.setAttribute("uv", new THREE2.Float32BufferAttribute([0, 0, 1, 0, 0, 1, 1, 1], 2));
     geometry3.setIndex([0, 1, 2, 2, 1, 3]);
     const seeds = new Float32Array(maxCount * 4);
-    for (let i = 0; i < seeds.length; i++) seeds[i] = random10();
+    for (let i = 0; i < seeds.length; i++) seeds[i] = random13();
     geometry3.setAttribute("particleSeed", new THREE2.InstancedBufferAttribute(seeds, 4));
     geometry3.instanceCount = 0;
     const uniforms = { ...THREE2.UniformsUtils.clone(THREE2.UniformsLib.fog), ...shared4, kind: { value: kind }, particleColor: { value: color3 }, intensity: { value: 0 } };
@@ -66503,7 +67930,7 @@ function createWeatherPrecipitation({ THREE: THREE2, scene, camera, quality = "h
     boltOther.set([bx, by, bz, bx, by, bz, ax, ay, az, ax, ay, az], offset);
   }
   function strike(strength) {
-    const angle = lightningRandom() * TAU28, distance4 = 240 + lightningRandom() * 480;
+    const angle = lightningRandom() * TAU29, distance4 = 240 + lightningRandom() * 480;
     const x = center2.x + Math.cos(angle) * distance4, z = center2.z + Math.sin(angle) * distance4;
     const ground = finite11(heightAt?.(x, z), center2.y - 2), top = Math.max(ground + 110, center2.y + 150 + lightningRandom() * 65);
     const cloudOnly = lightningRandom() < 0.36;
@@ -66517,7 +67944,7 @@ function createWeatherPrecipitation({ THREE: THREE2, scene, camera, quality = "h
         addBoltSegment(ax, ay, az, bx, by, bz);
         if ((i === 5 || i === 9) && lightningRandom() > 0.18) {
           let px = bx, py = by, pz = bz;
-          const direction = lightningRandom() * TAU28;
+          const direction = lightningRandom() * TAU29;
           for (let j = 0; j < 6; j++) {
             const qx = px + Math.cos(direction) * (5 + lightningRandom() * 7), qy = py - 5 - lightningRandom() * 8, qz = pz + Math.sin(direction) * (4 + lightningRandom() * 6);
             addBoltSegment(px, py, pz, qx, qy, qz);
@@ -66537,7 +67964,7 @@ function createWeatherPrecipitation({ THREE: THREE2, scene, camera, quality = "h
     strikeAge = 0;
     sinceStrike = 0;
     strikeDuration = 0.3 + lightningRandom() * 0.19;
-    strikeStrength = clamp41(strength) * (0.7 + lightningRandom() * 0.3);
+    strikeStrength = clamp42(strength) * (0.7 + lightningRandom() * 0.3);
     strikeCount++;
     const delay = distance4 / 343;
     thunder = { distance: distance4, delay, strength: strikeStrength * (1 - distance4 / 1600), x, y: ground, z };
@@ -66545,7 +67972,7 @@ function createWeatherPrecipitation({ THREE: THREE2, scene, camera, quality = "h
   }
   function update(dt, weather = {}, context = {}) {
     if (disposed) return frameState;
-    const step = clamp41(dt, 0, 0.25), activeCamera = context.camera || camera;
+    const step = clamp42(dt, 0, 0.25), activeCamera = context.camera || camera;
     const p2 = context.position || activeCamera.position;
     center2.set(finite11(p2.x), finite11(p2.y), finite11(p2.z));
     elapsed += step;
@@ -66553,11 +67980,11 @@ function createWeatherPrecipitation({ THREE: THREE2, scene, camera, quality = "h
     sinceStrike += step;
     strikeAge += step;
     const hidden3 = !!(context.inDungeon || context.underwater || context.sheltered);
-    const rain = hidden3 ? 0 : clamp41(weather.rain), snow = hidden3 ? 0 : clamp41(weather.snow), storm = hidden3 ? 0 : clamp41(weather.storm);
-    const wind = typeof weather.wind === "object" ? Math.min(1, Math.hypot(finite11(weather.wind?.x), finite11(weather.wind?.z)) / 12) : clamp41(weather.wind);
+    const rain = hidden3 ? 0 : clamp42(weather.rain), snow = hidden3 ? 0 : clamp42(weather.snow), storm = hidden3 ? 0 : clamp42(weather.storm);
+    const wind = typeof weather.wind === "object" ? Math.min(1, Math.hypot(finite11(weather.wind?.x), finite11(weather.wind?.z)) / 12) : clamp42(weather.wind);
     let wx = typeof weather.wind === "object" ? finite11(weather.wind?.x) : finite11(weather.windX, 1), wz = typeof weather.wind === "object" ? finite11(weather.wind?.z) : finite11(weather.windZ);
     const windLength = Math.hypot(wx, wz) || 1;
-    const whiteout = Math.max(clamp41(weather.blizzard), snow * clamp41((wind - 0.54) / 0.46));
+    const whiteout = Math.max(clamp42(weather.blizzard), snow * clamp42((wind - 0.54) / 0.46));
     const windSpeed = wind * (7 + whiteout * 10);
     windVelocity.set(wx / windLength * windSpeed, wz / windLength * windSpeed);
     windTravel.x += windVelocity.x * step;
@@ -66581,14 +68008,14 @@ function createWeatherPrecipitation({ THREE: THREE2, scene, camera, quality = "h
     splashMesh.visible = splashing;
     splashMesh.geometry.instanceCount = splashing ? Math.ceil(limits.splashes * rain) : 0;
     splashMesh.material.uniforms.intensity.value = (0.72 + 0.28 * rain) * Math.min(1, rain * 8);
-    splashMesh.material.uniforms.splashStanding.value = clamp41(weather.puddles) * (1 - clamp41(weather.snowCover));
+    splashMesh.material.uniforms.splashStanding.value = clamp42(weather.puddles) * (1 - clamp42(weather.snowCover));
     rainMesh.visible = rain > 2e-3;
     snowMesh.visible = snow > 2e-3;
     rainMesh.geometry.instanceCount = Math.ceil(limits.rain * rain);
     snowMesh.geometry.instanceCount = Math.ceil(limits.snow * snow * (0.62 + whiteout * 0.38));
     rainMesh.material.uniforms.intensity.value = (0.23 + 0.15 * rain) * Math.min(1, rain * 12);
     snowMesh.material.uniforms.intensity.value = (0.66 + whiteout * 0.14) * Math.min(1, snow * 12);
-    const daylight = clamp41(context.daylight ?? weather.daylight ?? 1);
+    const daylight = clamp42(context.daylight ?? weather.daylight ?? 1);
     colorRain.setRGB(0.08 + 0.47 * daylight, 0.1 + 0.5 * daylight, 0.15 + 0.52 * daylight);
     colorSnow.setRGB(0.09 + 0.72 * daylight, 0.12 + 0.72 * daylight, 0.19 + 0.72 * daylight);
     if (scene.fog?.color) {
@@ -66933,9 +68360,9 @@ function createWeatherSurfaces({ height: height2, getShelter, isBlocked, quality
 }
 
 // island-air.js
-var clamp42 = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, Number.isFinite(v) ? v : lo));
+var clamp43 = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, Number.isFinite(v) ? v : lo));
 var smooth27 = (a, b, v) => {
-  const t = clamp42((v - a) / (b - a));
+  const t = clamp43((v - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
 var ISLAND_AIR = Object.freeze({
@@ -66979,13 +68406,13 @@ function eveningAir(hour) {
   return smooth27(e.rise[0], e.rise[1], h) * (1 - smooth27(e.clear[0], e.clear[1], h));
 }
 function stillAir(weather) {
-  const wind = clamp42(weather?.wind), cloud = clamp42(weather?.cloud ?? 0.3);
+  const wind = clamp43(weather?.wind), cloud = clamp43(weather?.cloud ?? 0.3);
   return (1 - 0.85 * smooth27(0.25, 0.85, wind)) * (1 - 0.55 * cloud);
 }
 function islandHaze({ hour = 12, weather = null, cave = false, underwater = false, enabled = true } = {}, out2 = {}) {
   const H = ISLAND_AIR.haze, w = H.weather;
-  const humid = 1 + w.haze * clamp42(weather?.outsideHaze ?? weather?.haze) + w.fog * clamp42(weather?.outsideFog ?? weather?.fog) + w.rain * clamp42(weather?.outsideRain ?? weather?.rain) + w.wetness * clamp42(weather?.wetness);
-  const wind = 1 - H.wind * smooth27(0.3, 0.9, clamp42(weather?.wind));
+  const humid = 1 + w.haze * clamp43(weather?.outsideHaze ?? weather?.haze) + w.fog * clamp43(weather?.outsideFog ?? weather?.fog) + w.rain * clamp43(weather?.outsideRain ?? weather?.rain) + w.wetness * clamp43(weather?.wetness);
+  const wind = 1 - H.wind * smooth27(0.3, 0.9, clamp43(weather?.wind));
   out2.strength = enabled && !cave && !underwater ? 1 : 0;
   out2.density = H.density * humid * wind;
   out2.height = H.height;
@@ -67002,9 +68429,9 @@ function islandHazeColor(fog, out2) {
 }
 function coastMist(hour, weather) {
   const M2 = ISLAND_AIR.morning, E3 = ISLAND_AIR.evening, C3 = ISLAND_AIR.coast, still = stillAir(weather);
-  const humid = C3.haze * clamp42(weather?.haze) + C3.fog * clamp42(weather?.fog);
+  const humid = C3.haze * clamp43(weather?.haze) + C3.fog * clamp43(weather?.fog);
   const timed = (M2.coast * morningAir(hour) + E3.coast * eveningAir(hour)) * still;
-  return clamp42((timed + humid * (1 - 0.6 * smooth27(0.3, 0.9, clamp42(weather?.wind)))) * (1 - C3.rain * clamp42(weather?.rain)) * (1 - 0.65 * clamp42(weather?.snow)));
+  return clamp43((timed + humid * (1 - 0.6 * smooth27(0.3, 0.9, clamp43(weather?.wind)))) * (1 - C3.rain * clamp43(weather?.rain)) * (1 - 0.65 * clamp43(weather?.snow)));
 }
 
 // weather-mist.js
@@ -67015,17 +68442,17 @@ var QUALITY2 = Object.freeze({
   balanced: Object.freeze({ side: 4, radius: 44 }),
   low: Object.freeze({ side: 3, radius: 30 })
 });
-var clamp43 = (value, low = 0, high = 1) => Math.max(low, Math.min(high, Number.isFinite(value) ? value : low));
+var clamp44 = (value, low = 0, high = 1) => Math.max(low, Math.min(high, Number.isFinite(value) ? value : low));
 var smooth28 = (low, high, value) => {
-  const t = clamp43((value - low) / (high - low));
+  const t = clamp44((value - low) / (high - low));
   return t * t * (3 - 2 * t);
 };
 var normalizeQuality = (quality) => quality === "low" ? "low" : quality === "balanced" || quality === "medium" ? "balanced" : "high";
 function seedNumber(seed) {
   if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
-  let hash15 = 2166136261;
-  for (const char of String(seed ?? 1)) hash15 = Math.imul(hash15 ^ char.charCodeAt(0), 16777619);
-  return hash15 >>> 0;
+  let hash16 = 2166136261;
+  for (const char of String(seed ?? 1)) hash16 = Math.imul(hash16 ^ char.charCodeAt(0), 16777619);
+  return hash16 >>> 0;
 }
 function cellRandom(seed, x, z, channel2) {
   let value = seed ^ Math.imul(x, 374761393) ^ Math.imul(z, 668265263) ^ Math.imul(channel2, 1442695041);
@@ -67182,10 +68609,10 @@ function createWeatherMist({ THREE: THREE2, scene, camera, seed = 1, heightAt, w
     }
   };
   function sampleCell(xCell, zCell) {
-    const random10 = (channel2) => cellRandom(normalizedSeed, xCell, zCell, channel2);
-    const x = (xCell + 0.2 + random10(1) * 0.6) * CELL_SIZE;
-    const z = (zCell + 0.2 + random10(2) * 0.6) * CELL_SIZE;
-    const width = 19 + random10(3) * 11, height2 = 1.5 + random10(4) * 1.6;
+    const random13 = (channel2) => cellRandom(normalizedSeed, xCell, zCell, channel2);
+    const x = (xCell + 0.2 + random13(1) * 0.6) * CELL_SIZE;
+    const z = (zCell + 0.2 + random13(2) * 0.6) * CELL_SIZE;
+    const width = 19 + random13(3) * 11, height2 = 1.5 + random13(4) * 1.6;
     const reach = width * 0.5;
     const points = [[x, z], [x - reach, z], [x + reach, z], [x, z - reach], [x, z + reach]];
     let minY = Infinity, maxY = -Infinity, centerY = NaN, totalY = 0, wet = 0, sea = 0;
@@ -67220,8 +68647,8 @@ function createWeatherMist({ THREE: THREE2, scene, camera, seed = 1, heightAt, w
     const hollow = smooth28(-0.1, 1.1, totalY / points.length - centerY);
     const lowland = 1 - smooth28(35, 230, centerY);
     const smoothGround = 1 - smooth28(0.6, 2.6, relief) * 0.75;
-    const moisture = sea === points.length ? 0.45 : clamp43(0.28 + lowland * 0.24 + hollow * 0.25 + wet * 0.09) * smoothGround;
-    return { x, z, y: maxY + 0.025, width, height: height2, moisture, coast: sea / points.length, phase: random10(5) * 40 };
+    const moisture = sea === points.length ? 0.45 : clamp44(0.28 + lowland * 0.24 + hollow * 0.25 + wet * 0.09) * smoothGround;
+    return { x, z, y: maxY + 0.025, width, height: height2, moisture, coast: sea / points.length, phase: random13(5) * 40 };
   }
   function rebuild(xCell, zCell) {
     const side2 = QUALITY2[selectedQuality].side, start2 = -Math.floor((side2 - 1) / 2);
@@ -67253,7 +68680,7 @@ function createWeatherMist({ THREE: THREE2, scene, camera, seed = 1, heightAt, w
     if (disposed) return;
     state2 = state2 || {};
     context = context || {};
-    const seconds = clamp43(dt, 0, 0.25);
+    const seconds = clamp44(dt, 0, 0.25);
     elapsed += seconds;
     uniforms.uTime.value = elapsed;
     const observer = context.position || context.camera?.position || camera?.position;
@@ -67262,14 +68689,14 @@ function createWeatherMist({ THREE: THREE2, scene, camera, seed = 1, heightAt, w
       mesh2.visible = false;
       return;
     }
-    lastDaylight = clamp43(context.daylight ?? lastDaylight);
-    const fog = clamp43(state2.fog), haze = clamp43(state2.haze), wind = clamp43(state2.wind);
-    const rain = clamp43(state2.rain), snow = clamp43(state2.snow), wetness = clamp43(state2.wetness);
+    lastDaylight = clamp44(context.daylight ?? lastDaylight);
+    const fog = clamp44(state2.fog), haze = clamp44(state2.haze), wind = clamp44(state2.wind);
+    const rain = clamp44(state2.rain), snow = clamp44(state2.snow), wetness = clamp44(state2.wetness);
     const cool = 1 - smooth28(8, 24, Number.isFinite(state2.temperature) ? state2.temperature : 16);
     const calm = 1 - smooth28(0.24, 0.92, wind) * 0.85;
     const humid = fog * 0.88 + haze * 0.35 + rain * 0.13 + wetness * cool * 0.16;
     const hour = Number.isFinite(context.timeOfDay) ? context.timeOfDay : 12;
-    const target = clamp43((humid - 0.035) * (1.05 + cool * 0.2 + (1 - lastDaylight) * 0.2) * calm * (1 - snow * 0.65));
+    const target = clamp44((humid - 0.035) * (1.05 + cool * 0.2 + (1 - lastDaylight) * 0.2) * calm * (1 - snow * 0.65));
     const ease3 = 1 - Math.exp(-seconds / 2.6);
     strength += (target - strength) * ease3;
     coast += (coastMist(hour, state2) - coast) * ease3;
@@ -67351,7 +68778,7 @@ function createWeatherMist({ THREE: THREE2, scene, camera, seed = 1, heightAt, w
 }
 
 // weather-sky.js
-var clamp44 = (value, min = 0, max = 1) => Math.max(min, Math.min(max, Number.isFinite(value) ? value : min));
+var clamp45 = (value, min = 0, max = 1) => Math.max(min, Math.min(max, Number.isFinite(value) ? value : min));
 var OPTIONS = Object.freeze(["cloudCoverage", "cloudDensity", "windSpeed", "windDirection", "fogDensity", "sunLightIntensity", "exposure"]);
 function createWeatherSky({ sky }) {
   if (!sky) throw new TypeError("Weather requires the installed DynamicSky");
@@ -67363,18 +68790,18 @@ function createWeatherSky({ sky }) {
       restore();
       return;
     }
-    const rain = clamp44(state2.rain), snow = clamp44(state2.snow), storm = clamp44(state2.storm), wind = clamp44(state2.wind);
-    const cloud = clamp44(Number.isFinite(state2.cloud) ? state2.cloud : baseline.cloudCoverage);
-    const fog = clamp44(state2.fog), haze = clamp44(state2.haze), blizzard = clamp44(state2.blizzard ?? snow * wind);
+    const rain = clamp45(state2.rain), snow = clamp45(state2.snow), storm = clamp45(state2.storm), wind = clamp45(state2.wind);
+    const cloud = clamp45(Number.isFinite(state2.cloud) ? state2.cloud : baseline.cloudCoverage);
+    const fog = clamp45(state2.fog), haze = clamp45(state2.haze), blizzard = clamp45(state2.blizzard ?? snow * wind);
     sky.cloudCoverage = cloud;
     sky.cloudDensity = baseline.cloudDensity * (1 + 0.44 * rain + 0.66 * storm + 0.26 * snow + 0.2 * cloud);
     sky.windSpeed = 3 + 33 * wind;
     if (Number.isFinite(state2.windX) && Number.isFinite(state2.windZ) && Math.hypot(state2.windX, state2.windZ) > 1e-3)
       sky.windDirection = (Math.atan2(state2.windZ, state2.windX) * 180 / Math.PI + 540) % 360;
-    sky.fogDensity = clamp44(baseline.fogDensity + 9e-3 * Math.pow(fog, 1.45) + 2e-3 * haze + 12e-4 * rain + 3e-3 * blizzard, baseline.fogDensity, 0.014);
-    const overcast = clamp44((cloud - 0.4) / 0.6);
-    const sunlight = clamp44(1 - 0.28 * overcast - 0.2 * rain - 0.3 * storm - 0.13 * snow - 0.08 * fog, 0.22, 1);
-    const pulse = clamp44(flash, 0, 0.5);
+    sky.fogDensity = clamp45(baseline.fogDensity + 9e-3 * Math.pow(fog, 1.45) + 2e-3 * haze + 12e-4 * rain + 3e-3 * blizzard, baseline.fogDensity, 0.014);
+    const overcast = clamp45((cloud - 0.4) / 0.6);
+    const sunlight = clamp45(1 - 0.28 * overcast - 0.2 * rain - 0.3 * storm - 0.13 * snow - 0.08 * fog, 0.22, 1);
+    const pulse = clamp45(flash, 0, 0.5);
     sky.sunLightIntensity = baseline.sunLightIntensity * (sunlight + 4 * pulse);
     sky.exposure = baseline.exposure * (1 - 0.035 * rain - 0.05 * storm + 0.3 * pulse);
   }
@@ -67899,11 +69326,11 @@ var matrix2 = new Matrix4();
 var instance = new Matrix4();
 var scale = new Vector3();
 function fitGroundCapsule(points, kind = "rock") {
-  const box4 = new Box3();
-  for (const p2 of points) box4.expandByPoint(p2);
-  if (box4.isEmpty()) return null;
-  box4.getCenter(center);
-  box4.getSize(extent).multiplyScalar(0.5);
+  const box5 = new Box3();
+  for (const p2 of points) box5.expandByPoint(p2);
+  if (box5.isEmpty()) return null;
+  box5.getCenter(center);
+  box5.getSize(extent).multiplyScalar(0.5);
   let axis2 = kind === "tree" ? 1 : extent.x >= extent.y && extent.x >= extent.z ? 0 : extent.y >= extent.z ? 1 : 2;
   const others = [0, 1, 2].filter((i) => i !== axis2);
   const radius = Math.min(extent.getComponent(others[0]), extent.getComponent(others[1])) * 0.86;
@@ -68401,7 +69828,7 @@ function createPOIStream({ scene, collision, removed, discovered, entities, plan
     const aborted = () => {
       if (signal?.aborted) throw new DOMException("Content readiness cancelled", "AbortError");
     };
-    const wait2 = (promise) => {
+    const wait3 = (promise) => {
       if (!signal) return promise;
       return new Promise((resolve, reject2) => {
         const abort = () => {
@@ -68425,7 +69852,7 @@ function createPOIStream({ scene, collision, removed, discovered, entities, plan
       update(coverage, lastPosition, clock2);
       const tasks = [...pending.values()].map((e) => e.promise);
       if (!tasks.length && serial3 === before) break;
-      await wait2(Promise.race([Promise.all(tasks), readinessChange]));
+      await wait3(Promise.race([Promise.all(tasks), readinessChange]));
     }
     aborted();
     return { active: active2.size, pending: pending.size, failures: failures.size, generation: serial3, closed };
@@ -68494,18 +69921,18 @@ function createRockPhotoOcclusion({ loader = new TextureLoader() } = {}) {
 
 // procedural-rock-support.js
 var feet = /* @__PURE__ */ new WeakMap();
-var TAU29 = Math.PI * 2;
+var TAU30 = Math.PI * 2;
 function lowerFoot(geometry3) {
   let cached = feet.get(geometry3);
   if (cached) return cached;
-  const p2 = geometry3.attributes.position, box4 = geometry3.boundingBox;
-  const cx = (box4.min.x + box4.max.x) * 0.5, cz = (box4.min.z + box4.max.z) * 0.5;
+  const p2 = geometry3.attributes.position, box5 = geometry3.boundingBox;
+  const cx = (box5.min.x + box5.max.x) * 0.5, cz = (box5.min.z + box5.max.z) * 0.5;
   const material2 = new MeshBasicMaterial({ side: DoubleSide });
   const mesh2 = new Mesh(geometry3, material2), ray3 = new Raycaster();
   mesh2.updateMatrixWorld(true);
   const samples = [], up7 = new Vector3(0, 1, 0), origin = new Vector3();
   for (let i = 0; i < 24; i++) {
-    const angle = i / 24 * TAU29, dx = Math.cos(angle), dz = Math.sin(angle);
+    const angle = i / 24 * TAU30, dx = Math.cos(angle), dz = Math.sin(angle);
     let radius = 0;
     const indices = geometry3.index.array;
     for (let j = 0; j < indices.length; j += 3) {
@@ -68518,7 +69945,7 @@ function lowerFoot(geometry3) {
         }
       }
     }
-    origin.set(cx + dx * radius * 0.82, box4.min.y - 1, cz + dz * radius * 0.82);
+    origin.set(cx + dx * radius * 0.82, box5.min.y - 1, cz + dz * radius * 0.82);
     ray3.set(origin, up7);
     const hits = ray3.intersectObject(mesh2, false);
     if (hits.length) samples.push({ lower: hits[0].point.clone(), upper: hits.at(-1).point.clone() });
@@ -68595,9 +70022,9 @@ function seatProceduralRock(world2, family, rock, choice) {
   }
   touch.sort((a, b) => a - b);
   let y = touch[Math.floor((touch.length - 1) * ROCK_SEAT.rim)] - ROCK_SEAT.embed;
-  const box4 = family.near.geometry.boundingBox;
+  const box5 = family.near.geometry.boundingBox;
   let top = -Infinity, bottom = Infinity;
-  for (const cx of [box4.min.x, box4.max.x]) for (const cy of [box4.min.y, box4.max.y]) for (const cz of [box4.min.z, box4.max.z]) {
+  for (const cx of [box5.min.x, box5.max.x]) for (const cy of [box5.min.y, box5.max.y]) for (const cz of [box5.min.z, box5.max.z]) {
     seatPoint.set(cx, cy, cz).applyMatrix4(m);
     top = Math.max(top, seatPoint.y);
     bottom = Math.min(bottom, seatPoint.y);
@@ -68715,7 +70142,7 @@ function createRockShadowDepth(THREE2) {
 var HYDROLOGY_GEOLOGY_LIMITS = Object.freeze({ region: 384, rocksPerCatchment: 6, clusters: 3, range: 155, maxVisible: 24, cache: 64, gravelPerRock: 4, maxGravelHeight: 0.045 });
 var UPPER_RIVER_GEOLOGY_LIMITS = Object.freeze({ stationSlots: 32, candidates: 128, attempts: 128, clusters: 4, rocksPerFeature: 8, rocksPerFeatureChunk: 4, minSpacing: 18, maxProgress: 0.32, minUpper: 0.12 });
 var HYDROLOGY_GEOLOGY_FAMILIES = Object.freeze(["jointed-1", "bedded-2"]);
-var TAU30 = Math.PI * 2;
+var TAU31 = Math.PI * 2;
 var EMPTY5 = Object.freeze([]);
 var up4 = new Vector3(0, 1, 0);
 var down = new Vector3(0, -1, 0);
@@ -68752,7 +70179,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
     proxy.material = asset.material;
     proxy.matrixWorld.identity();
     for (let i = 0; i < 20; i++) {
-      const a = i / 20 * TAU30, dx = Math.cos(a), dz = Math.sin(a);
+      const a = i / 20 * TAU31, dx = Math.cos(a), dz = Math.sin(a);
       let radius = 0;
       const index2 = g.index.array;
       for (let j = 0; j < index2.length; j += 3) for (let k = 0; k < 3; k++) {
@@ -68810,9 +70237,9 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
       counters.blocked++;
       return null;
     }
-    const envelope = world2.proceduralRockEnvelope(rock), pad2 = 0.28, box4 = { minX: rock.x - envelope.rx - pad2, maxX: rock.x + envelope.rx + pad2, minZ: rock.z - envelope.rz - pad2, maxZ: rock.z + envelope.rz + pad2 };
+    const envelope = world2.proceduralRockEnvelope(rock), pad2 = 0.28, box5 = { minX: rock.x - envelope.rx - pad2, maxX: rock.x + envelope.rx + pad2, minZ: rock.z - envelope.rz - pad2, maxZ: rock.z + envelope.rz + pad2 };
     const region = feature.region;
-    if (!feature.networkVersion && (!region || box4.minX < region.x * 384 || box4.maxX > (region.x + 1) * 384 || box4.minZ < region.z * 384 || box4.maxZ > (region.z + 1) * 384)) {
+    if (!feature.networkVersion && (!region || box5.minX < region.x * 384 || box5.maxX > (region.x + 1) * 384 || box5.minZ < region.z * 384 || box5.maxZ > (region.z + 1) * 384)) {
       counters.blocked++;
       return null;
     }
@@ -68825,7 +70252,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
       counters.blocked++;
       return null;
     }
-    for (let z = box4.minZ; z <= box4.maxZ + 1e-3; z += 0.65) for (let x = box4.minX; x <= box4.maxX + 1e-3; x += 0.65) {
+    for (let z = box5.minZ; z <= box5.maxZ + 1e-3; z += 0.65) for (let x = box5.minX; x <= box5.maxX + 1e-3; x += 0.65) {
       if (!rockEnvelopeContains(envelope, x, z, pad2)) continue;
       if (world2.hydrology.surfaceAt(x, z) || world2.hydrology.waterAt(x, z, height2(x, z))) {
         counters.waterRejected++;
@@ -68861,7 +70288,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
     }
     rock.hydroGeology.support = { y: seat, colliderHeight: Math.max(0.2, seat + top - rock.y), lowering: ordinary.lowering + ordinary.y - seat };
     rock.hydroGeology.footprint = envelope;
-    rock.hydroGeology.bounds = box4;
+    rock.hydroGeology.bounds = box5;
     rock.hydroGeology.crown = crown;
     rock.hydroGeology.maxFootGap = maxGap;
     rock.hydroGeology.strike = { x: fr.tx, z: fr.tz };
@@ -68953,7 +70380,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
     for (const pond of feature.ponds) {
       if (pond.kind === "marsh") continue;
       for (let i = 0; i < 40; i++) for (const radius of [1.25, 1.55, 1.9, 2.25]) {
-        const q = pondPoint(pond, (i + 0.13) / 40 * TAU30, radius), fr = frame(f15, q.x, q.z), rise = height2(q.x, q.z) - pond.level;
+        const q = pondPoint(pond, (i + 0.13) / 40 * TAU31, radius), fr = frame(f15, q.x, q.z), rise = height2(q.x, q.z) - pond.level;
         if (rise < 0.45 || rise > 12) continue;
         candidates.push({ ...q, score: fr.grade * 3 + Math.min(rise, 5) * 0.2 + hash9(seed, feature.id, "rank:" + i) * 0.03, kind: "pond" });
       }
@@ -69033,7 +70460,7 @@ function createHydrologyGeology(world2, { seed = 728194, library } = {}) {
         const id2 = r.id + ":scree:" + i, d = r.r * (1.1 + hash9(seed, id2, "distance") * 0.65), s = (hash9(seed, id2, "side") - 0.5) * r.r * 1.7, x = r.x - fr.ux * d + fr.tx * s, z = r.z - fr.uz * d + fr.tz * s;
         if (Math.floor(x / 64) !== chunk.cx || Math.floor(z / 64) !== chunk.cz || world2.hydrology.surfaceAt(x, z) || world2.hydrology.waterAt(x, z, height2(x, z)) || f15.slope(x, z) > 0.65) continue;
         const scale5 = 0.05 + hash9(seed, id2, "size") * 0.035;
-        records2.push({ id: id2, featureId: r.hydroGeology.featureId, kind: "stone", x, y: height2(x, z) - scale5 * 0.1, z, scale: scale5, yaw: hash9(seed, id2, "yaw") * TAU30, winter: false, marsh: false, rank: 0.05 + hash9(seed, id2, "rank") * 0.05, hydroGeology: true });
+        records2.push({ id: id2, featureId: r.hydroGeology.featureId, kind: "stone", x, y: height2(x, z) - scale5 * 0.1, z, scale: scale5, yaw: hash9(seed, id2, "yaw") * TAU31, winter: false, marsh: false, rank: 0.05 + hash9(seed, id2, "rank") * 0.05, hydroGeology: true });
       }
     }
     return records2;
@@ -69409,7 +70836,7 @@ function createRockPools(world2, library, { ring: useRing = true } = {}) {
     fractures.delete(id2);
   }
   function makeRecord(kind, rock, choice, family, y, extra = {}) {
-    const matrix6 = rockFormMatrix(choice, rock, y, transform3), box4 = new Box3(new Vector3().fromArray(family.plan.bounds.min), new Vector3().fromArray(family.plan.bounds.max)), sphere2 = box4.getBoundingSphere(new Sphere()).applyMatrix4(matrix6);
+    const matrix6 = rockFormMatrix(choice, rock, y, transform3), box5 = new Box3(new Vector3().fromArray(family.plan.bounds.min), new Vector3().fromArray(family.plan.bounds.max)), sphere2 = box5.getBoundingSphere(new Sphere()).applyMatrix4(matrix6);
     const e = matrix6.elements, scale5 = Math.max(Math.hypot(e[0], e[1], e[2]), Math.hypot(e[4], e[5], e[6]), Math.hypot(e[8], e[9], e[10]));
     const record2 = { kind, id: rock.id, rock, family, choice, matrix: new Float32Array(e), sphere: sphere2, size: family.radius * scale5, x: rock.x, z: rock.z, entries: {}, shadows: {}, renderMain: true, renderMirror: true, orderDistance: 0, ...extra };
     for (const lod of LODS2) {
@@ -69784,14 +71211,14 @@ function createRockPools(world2, library, { ring: useRing = true } = {}) {
     last2 = frame3;
     counters.updateMs = performance.now() - start2;
   }
-  let shade3 = null;
+  let shade4 = null;
   function shadeSource() {
-    if (shade3 && (shade3.revision === revision || ringJob && performance.now() - shade3.time < 3e3)) return shade3;
+    if (shade4 && (shade4.revision === revision || ringJob && performance.now() - shade4.time < 3e3)) return shade4;
     const list = [];
     for (const r of records2.values()) if (!world2.removed.has(r.id) && r.size >= 0.5 && !gone(r)) list.push(r.x, r.z, r.footRadius, r.standing);
     for (const entry of ringChunks.values()) for (const r of entry.records) if (!world2.removed.has(r.id)) list.push(r.x, r.z, r.footRadius, r.standing);
-    shade3 = { revision, time: performance.now(), count: list.length / 4, data: Float32Array.from(list) };
-    return shade3;
+    shade4 = { revision, time: performance.now(), count: list.length / 4, data: Float32Array.from(list) };
+    return shade4;
   }
   function stats3() {
     let draws = 0, triangles2 = 0, capacity = 0, bytes = 0, stale = 0, refs = 0, shadowTriangles = 0, shadowDraws = 0, shadowTrianglesUntrimmed = 0;
@@ -71629,13 +73056,13 @@ function invalidateNaturalAnchor(world2, id2) {
 
 // world-content-collision.js
 var EPS6 = 1e-7;
-var clamp45 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp46 = (x, a, b) => Math.max(a, Math.min(b, x));
 var finite13 = (v, label) => {
   if (!Number.isFinite(v)) throw new TypeError(label + " must be finite");
   return v;
 };
 var closest = (x, z, ax, az, bx, bz) => {
-  const dx = bx - ax, dz = bz - az, t = clamp45(((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1), 0, 1);
+  const dx = bx - ax, dz = bz - az, t = clamp46(((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1), 0, 1);
   return { x: ax + t * dx, z: az + t * dz, t };
 };
 function polygonPoint(points, x, z) {
@@ -71836,7 +73263,7 @@ function createWorldContentCollision({ cellSize = 32 } = {}) {
           if (r.undersideTriangles) {
             let q = polygon2 ? polygon2.inside ? { x, z } : polygon2 : { x, z };
             if (!polygon2) {
-              const lx = clamp45((x - r.x) * r.cos + (z - r.z) * r.sin, -r.halfX, r.halfX), lz = clamp45(-(x - r.x) * r.sin + (z - r.z) * r.cos, -r.halfZ, r.halfZ);
+              const lx = clamp46((x - r.x) * r.cos + (z - r.z) * r.sin, -r.halfX, r.halfX), lz = clamp46(-(x - r.x) * r.sin + (z - r.z) * r.cos, -r.halfZ, r.halfZ);
               q = { x: r.x + lx * r.cos - lz * r.sin, z: r.z + lx * r.sin + lz * r.cos };
             }
             let authoredBottom = Infinity;
@@ -71866,7 +73293,7 @@ function createWorldContentCollision({ cellSize = 32 } = {}) {
             px = q.x + ux * inv;
             pz = q.z + uz * inv;
           } else if (r.shape === "obb") {
-            const lx = (x - r.x) * r.cos + (z - r.z) * r.sin, lz = -(x - r.x) * r.sin + (z - r.z) * r.cos, qx = clamp45(lx, -r.halfX, r.halfX), qz = clamp45(lz, -r.halfZ, r.halfZ), d = Math.hypot(lx - qx, lz - qz);
+            const lx = (x - r.x) * r.cos + (z - r.z) * r.sin, lz = -(x - r.x) * r.sin + (z - r.z) * r.cos, qx = clamp46(lx, -r.halfX, r.halfX), qz = clamp46(lz, -r.halfZ, r.halfZ), d = Math.hypot(lx - qx, lz - qz);
             let ox = lx, oz = lz;
             if (d >= radius - EPS6) continue;
             if (d > EPS6) {
@@ -72246,7 +73673,7 @@ function makeWisps(keep, count2) {
 
 // crystal-resource.js
 var sharedByThree = /* @__PURE__ */ new WeakMap();
-var clamp46 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+var clamp47 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 var mix14 = (a, b, t) => a + (b - a) * t;
 function hash10(x, y = 0, seed = 37) {
   let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ Math.imul(seed, 1442695041);
@@ -72267,7 +73694,7 @@ function mineralTextures(THREE2, size) {
   const tile = size / 4, pad2 = 4, color3 = new Uint8Array(size * size * 4), detail = new Uint8Array(size * size * 4), relief = new Float32Array(size * size);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const tx = Math.floor(x / tile), ty = Math.floor(y / tile), panel = tx + ty * 4;
-    const u = clamp46((x % tile - pad2) / (tile - 2 * pad2 - 1)), v = clamp46((y % tile - pad2) / (tile - 2 * pad2 - 1));
+    const u = clamp47((x % tile - pad2) / (tile - 2 * pad2 - 1)), v = clamp47((y % tile - pad2) / (tile - 2 * pad2 - 1));
     const seed = 101 + panel * 17, i = y * size + x, o = i * 4;
     const cloud = fbm(u * 5.3, v * 3.8, seed), grain = noise5(u * 95, v * 125, seed + 3);
     let r, g, b, h, rough;
@@ -72290,20 +73717,20 @@ function mineralTextures(THREE2, size) {
       const du = u * 21 - cellX - 0.5, dv = v * 31 - cellY - 0.5;
       const inclusion = inclusionSeed > 0.953 ? Math.exp(-(du * du * 24 + dv * dv * 80)) * 0.8 : 0;
       const etch = 0.5 + 0.5 * Math.sin(u * 220 + noise5(u * 12, v * 5, seed + 17) * 1.2);
-      const pale = veil * 48 + fracture * 36 + second * 22, shade3 = (cloud - 0.5) * 33 + (grain - 0.5) * 3 - inclusion * 36;
+      const pale = veil * 48 + fracture * 36 + second * 22, shade4 = (cloud - 0.5) * 33 + (grain - 0.5) * 3 - inclusion * 36;
       const tint4 = hash10(panel, 97);
-      r = 85 + tint4 * 14 + shade3 + pale + v * 9;
-      g = 117 + tint4 * 12 + shade3 * 0.93 + pale * 0.91 + v * 10;
-      b = 116 + tint4 * 14 + shade3 * 0.92 + pale * 0.88 + v * 11;
+      r = 85 + tint4 * 14 + shade4 + pale + v * 9;
+      g = 117 + tint4 * 12 + shade4 * 0.93 + pale * 0.91 + v * 10;
+      b = 116 + tint4 * 14 + shade4 * 0.92 + pale * 0.88 + v * 11;
       h = grain * 75e-5 + etch * 28e-5 + fracture * 5e-4 - inclusion * 12e-4;
       rough = 0.225 + (cloud - 0.5) * 0.11 + veil * 0.23 + fracture * 0.12 + inclusion * 0.19 + (etch - 0.5) * 0.018;
     }
-    color3[o] = clamp46(r, 0, 255);
-    color3[o + 1] = clamp46(g, 0, 255);
-    color3[o + 2] = clamp46(b, 0, 255);
+    color3[o] = clamp47(r, 0, 255);
+    color3[o + 1] = clamp47(g, 0, 255);
+    color3[o + 2] = clamp47(b, 0, 255);
     color3[o + 3] = 255;
     relief[i] = h;
-    detail[o + 3] = Math.round(clamp46(rough, 0.16, 0.96) * 255);
+    detail[o + 3] = Math.round(clamp47(rough, 0.16, 0.96) * 255);
   }
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const x0 = Math.floor(x / tile) * tile, y0 = Math.floor(y / tile) * tile, i = y * size + x, o = i * 4;
@@ -72365,7 +73792,7 @@ function builder5(THREE2, textures) {
   const positions = [], uvs = [], colors = [];
   function uv(panel, u, v) {
     const { size, tile, pad: pad2 } = textures;
-    return [(panel % 4 * tile + pad2 + clamp46(u) * (tile - 2 * pad2 - 1) + 0.5) / size, (Math.floor(panel / 4) * tile + pad2 + clamp46(v) * (tile - 2 * pad2 - 1) + 0.5) / size];
+    return [(panel % 4 * tile + pad2 + clamp47(u) * (tile - 2 * pad2 - 1) + 0.5) / size, (Math.floor(panel / 4) * tile + pad2 + clamp47(v) * (tile - 2 * pad2 - 1) + 0.5) / size];
   }
   function tri(a, b, c2, ta, tb, tc, tint4) {
     for (const [p2, t] of [[a, ta], [b, tb], [c2, tc]]) {
@@ -72544,10 +73971,10 @@ function hideFromMainView(world2, object2) {
 }
 
 // shadow-body.js
-var TAU31 = Math.PI * 2;
-var clamp47 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+var TAU32 = Math.PI * 2;
+var clamp48 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 var smooth32 = (a, b, x) => {
-  const t = clamp47((x - a) / (b - a));
+  const t = clamp48((x - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
 function limb(radius, length, radial = 7) {
@@ -72595,7 +74022,7 @@ function createShadowBody(world2) {
   const skull2 = new SphereGeometry(0.112, 12, 9);
   skull2.scale(1, 1.12, 1.05);
   add4(head2, skull2, mats.skin);
-  const hair = new SphereGeometry(0.12, 12, 8, 0, TAU31, 0, Math.PI * 0.55);
+  const hair = new SphereGeometry(0.12, 12, 8, 0, TAU32, 0, Math.PI * 0.55);
   hair.scale(1, 1.1, 1.08);
   hair.translate(0, 0.01, -0.012);
   add4(head2, hair, mats.dark);
@@ -72690,7 +74117,7 @@ function animateShadowBody(world2, dt) {
   avatar.time += dt;
   const swim = !!m.swimming, dead = !!m.dead, air = m.grounded === false && !swim && !dead;
   const speed = m.speed || 0, moving2 = !swim && !air && !dead && speed > 0.18;
-  const amp = moving2 ? 0.28 + 0.5 * clamp47(speed / 5.8) : 0, g = (m.gaitPhase || 0) * TAU31;
+  const amp = moving2 ? 0.28 + 0.5 * clamp48(speed / 5.8) : 0, g = (m.gaitPhase || 0) * TAU32;
   t.hipL = -Math.sin(g) * amp;
   t.hipR = Math.sin(g) * amp;
   t.kneeL = moving2 ? Math.max(0, Math.sin(g + 0.9)) * amp * 1.5 : 0.05;
@@ -72701,7 +74128,7 @@ function animateShadowBody(world2, dt) {
   t.lean = moving2 ? 0.05 + 0.03 * speed : 0;
   t.pitch = 0;
   t.drop = 0;
-  t.roll = moving2 ? -clamp47(m.turn || 0, -1, 1) * 0.09 : 0;
+  t.roll = moving2 ? -clamp48(m.turn || 0, -1, 1) * 0.09 : 0;
   let state2 = moving2 ? m.sprint ? "Run" : "Walk" : "Idle";
   if (air) {
     state2 = "Jump";
@@ -72711,7 +74138,7 @@ function animateShadowBody(world2, dt) {
   }
   if (swim) {
     state2 = "Swim";
-    const p2 = (m.swimPhase || 0) * TAU31, e = 0.5 + 0.5 * clamp47(m.swimEffort || 0);
+    const p2 = (m.swimPhase || 0) * TAU32, e = 0.5 + 0.5 * clamp48(m.swimEffort || 0);
     t.pitch = 1.3;
     t.lean = 0;
     t.shoulderL = -2.4 + Math.sin(p2) * 1.1 * e;
@@ -72723,7 +74150,7 @@ function animateShadowBody(world2, dt) {
   }
   if (m.attack && !swim) {
     state2 = "Attack";
-    const p2 = clamp47((m.attackElapsed || 0) / (m.attackDuration || 0.74)), contact = m.combo === 0 || m.combo === 2 ? 0.6226 : 0.6364;
+    const p2 = clamp48((m.attackElapsed || 0) / (m.attackDuration || 0.74)), contact = m.combo === 0 || m.combo === 2 ? 0.6226 : 0.6364;
     const raise = smooth32(0, contact * 0.75, p2), strike = smooth32(contact * 0.75, contact * 1.04, p2), settle2 = smooth32(contact * 1.1, 1, p2);
     t.shoulderR = -2.5 * raise * (1 - strike) + -0.55 * strike * (1 - settle2) + t.shoulderR * settle2;
     t.elbowR = -1.2 * raise * (1 - strike) + -0.12 * strike * (1 - settle2) + t.elbowR * settle2;
@@ -72731,7 +74158,7 @@ function animateShadowBody(world2, dt) {
   }
   if (m.hurt > 0 && !dead) {
     state2 = state2 === "Attack" ? state2 : "Hit";
-    t.lean -= 0.22 * clamp47(m.hurt / 0.36);
+    t.lean -= 0.22 * clamp48(m.hurt / 0.36);
   }
   if (dead) {
     state2 = "Death";
@@ -72766,6 +74193,14 @@ function animateShadowBody(world2, dt) {
     const weapon = world2.firstPerson.held.state().weapon;
     for (const [id2, group] of Object.entries(avatar.tools)) group.visible = id2 === weapon && !swim && !dead;
   }
+}
+
+// instance-upload.js
+function markShown(attribute, shown, size) {
+  if (!attribute) return;
+  const n = attribute.array.length;
+  if (n >= size) attribute.addUpdateRange(0, Math.min(n, Math.max(1, shown) * size));
+  attribute.needsUpdate = true;
 }
 
 // river-mineral-material.js
@@ -72814,15 +74249,15 @@ function planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f15, c
   if (hydrology2?.generationMode !== "water-first") return [];
   const x0 = chunk.cx * 64, z0 = chunk.cz * 64, features = hydrology2.queryBounds({ minX: x0 - 22, maxX: x0 + 86, minZ: z0 - 22, maxZ: z0 + 86 });
   if (!features.some((feature) => feature.kind === "stream")) return [];
-  const hash15 = (id2, slot) => stableHash(seed, "river-margin-v59", id2, slot), candidates = [], reedSites = [];
+  const hash16 = (id2, slot) => stableHash(seed, "river-margin-v59", id2, slot), candidates = [], reedSites = [];
   for (let gz = chunk.cz * 16; gz < (chunk.cz + 1) * 16; gz++) for (let gx = chunk.cx * 16; gx < (chunk.cx + 1) * 16; gx++) {
-    const id2 = gx + "," + gz, x = (gx + 0.15 + hash15(id2, "x") * 0.7) * 4, z = (gz + 0.15 + hash15(id2, "z") * 0.7) * 4;
+    const id2 = gx + "," + gz, x = (gx + 0.15 + hash16(id2, "x") * 0.7) * 4, z = (gz + 0.15 + hash16(id2, "z") * 0.7) * 4;
     const shore = hydrology2.nearWater(x, z, 20);
     if (shore?.kind !== "stream") continue;
     const y = f15.height(x, z), cover = riverBankVegetationAt(seed, x, y, z, shore, hydrology2);
     const rise = y - shore.level;
-    if (rise > RIVER_REED_LIMITS.rise[0] && rise < RIVER_REED_LIMITS.rise[1] + 0.2 && shore.distance < 2.6 && hash15(Math.floor(gx / 3) + "," + Math.floor(gz / 3), "reed-colony") < 0.6 && hash15(id2, "reed") < 0.6 * (1 - smooth33(0.5, 0.78, riverBankDepositAt(hydrology2, x, z, seed)))) reedSites.push({ id: id2, x, z, featureId: shore.featureId, rank: hash15(id2, "reed-rank") });
-    if (cover < 0.16 || hash15(id2, "colony") > cover * 0.85 || hydrology2.waterAt(x, z, y)) continue;
+    if (rise > RIVER_REED_LIMITS.rise[0] && rise < RIVER_REED_LIMITS.rise[1] + 0.2 && shore.distance < 2.6 && hash16(Math.floor(gx / 3) + "," + Math.floor(gz / 3), "reed-colony") < 0.6 && hash16(id2, "reed") < 0.6 * (1 - smooth33(0.5, 0.78, riverBankDepositAt(hydrology2, x, z, seed)))) reedSites.push({ id: id2, x, z, featureId: shore.featureId, rank: hash16(id2, "reed-rank") });
+    if (cover < 0.16 || hash16(id2, "colony") > cover * 0.85 || hydrology2.waterAt(x, z, y)) continue;
     const climate3 = f15.climate?.(x, z, y);
     if (climate3 && (climate3.ash > 0.45 || climate3.snow > 0.2)) continue;
     for (let i = 0; i < 3; i++) candidates.push({
@@ -72832,21 +74267,21 @@ function planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f15, c
       riverMargin: true,
       marsh: false,
       winter: false,
-      x: x + (hash15(id2 + "/" + i, "dx") - 0.5) * 1.4,
-      z: z + (hash15(id2 + "/" + i, "dz") - 0.5) * 1.4,
-      scale: 0.7 + hash15(id2 + "/" + i, "spread") * 0.35,
-      scaleY: 0.2 + hash15(id2 + "/" + i, "height") * 0.24,
-      yaw: hash15(id2 + "/" + i, "yaw") * Math.PI * 2,
-      rank: hash15(id2, "priority") + i * 1e-6
+      x: x + (hash16(id2 + "/" + i, "dx") - 0.5) * 1.4,
+      z: z + (hash16(id2 + "/" + i, "dz") - 0.5) * 1.4,
+      scale: 0.7 + hash16(id2 + "/" + i, "spread") * 0.35,
+      scaleY: 0.2 + hash16(id2 + "/" + i, "height") * 0.24,
+      yaw: hash16(id2 + "/" + i, "yaw") * Math.PI * 2,
+      rank: hash16(id2, "priority") + i * 1e-6
     });
   }
   candidates.sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id));
   const records2 = [], r = RIVER_MARGIN_LIMITS.rootRadius;
   reedSites.sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id));
   for (const site of reedSites.slice(0, RIVER_REED_LIMITS.colonies)) {
-    const [low, high] = RIVER_REED_LIMITS.stems, count2 = low + Math.floor(hash15(site.id, "reed-count") * (high - low + 1));
+    const [low, high] = RIVER_REED_LIMITS.stems, count2 = low + Math.floor(hash16(site.id, "reed-count") * (high - low + 1));
     for (let i = 0; i < count2; i++) {
-      const key3 = site.id + "/" + i, a = hash15(key3, "reed-angle") * Math.PI * 2, d = Math.sqrt(hash15(key3, "reed-offset")) * RIVER_REED_LIMITS.spread, px = site.x + Math.cos(a) * d, pz = site.z + Math.sin(a) * d;
+      const key3 = site.id + "/" + i, a = hash16(key3, "reed-angle") * Math.PI * 2, d = Math.sqrt(hash16(key3, "reed-offset")) * RIVER_REED_LIMITS.spread, px = site.x + Math.cos(a) * d, pz = site.z + Math.sin(a) * d;
       const py = f15.height(px, pz), s = hydrology2.nearWater(px, pz, 8);
       if (s?.featureId !== site.featureId || !Number.isFinite(s.level)) continue;
       const rise = py - s.level, water = hydrology2.waterAt(px, pz, py);
@@ -72867,9 +74302,9 @@ function planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f15, c
         x: px,
         y: py - 0.04,
         z: pz,
-        scale: 0.85 + hash15(key3, "reed-width") * 0.3,
-        scaleY: h0 + hash15(key3, "reed-height") * (h1 - h0),
-        yaw: hash15(key3, "reed-yaw") * Math.PI * 2,
+        scale: 0.85 + hash16(key3, "reed-width") * 0.3,
+        scaleY: h0 + hash16(key3, "reed-height") * (h1 - h0),
+        yaw: hash16(key3, "reed-yaw") * Math.PI * 2,
         rank: site.rank - 1 + i * 1e-6,
         ground: py,
         rootClearance: rise
@@ -72901,7 +74336,7 @@ function planRiverMarginPlants({ hydrology: hydrology2, terrainFunctions: f15, c
 // marsh-riparian-model.js
 var MARSH_PATCH_LIMITS = Object.freeze({ triangles: 254, radius: 0.78, rootRadius: 0.34, maxSlope: 0.58, maxSupportError: 0.045 });
 var MARSH_ROOTS = Object.freeze([[-0.16, -0.08], [0.12, 0.04], [0.21, -0.15], [-0.11, 0.17], [-0.29, 0.11], [0.06, -0.27]].map(Object.freeze));
-var TAU32 = Math.PI * 2;
+var TAU33 = Math.PI * 2;
 var linear3 = (v) => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
 var color2 = (hex) => [(hex >> 16 & 255) / 255, (hex >> 8 & 255) / 255, (hex & 255) / 255].map(linear3);
 var green = color2(12701330);
@@ -72943,7 +74378,7 @@ function buildMarshRiparianModel() {
   for (let n = 0; n < 3; n++) {
     const root2 = colonies[n], h = [0.82, 1.22, 0.97][n], lean = 0.08 + n * 0.017, a = 0.6 + n * 2.27, cs = Math.cos(a), sn = Math.sin(a), base = positions.length / 9;
     const at = (s, k, extra = 0, radius = 9e-3) => {
-      const t2 = s / 3, q = k * TAU32 / 3, r = radius * (1 - 0.65 * t2);
+      const t2 = s / 3, q = k * TAU33 / 3, r = radius * (1 - 0.65 * t2);
       return [root2[0] + cs * lean * t2 * t2 + Math.cos(q) * r, h * t2 + extra, root2[1] + sn * lean * t2 * t2 + Math.sin(q) * r];
     };
     for (let s = 0; s < 3; s++) for (let k = 0; k < 3; k++) {
@@ -72957,7 +74392,7 @@ function buildMarshRiparianModel() {
     if (n !== 0) {
       const start2 = positions.length / 9, tip = [root2[0] + cs * lean, root2[1] + sn * lean];
       for (let k = 0; k < 3; k++) {
-        const p2 = (y, j, r) => [tip[0] + Math.cos(j * TAU32 / 3) * r, h + y, tip[1] + Math.sin(j * TAU32 / 3) * r];
+        const p2 = (y, j, r) => [tip[0] + Math.cos(j * TAU33 / 3) * r, h + y, tip[1] + Math.sin(j * TAU33 / 3) * r];
         triangle4(p2(-0.095, k, 0.017), p2(0.035, k, 0.01), p2(-0.095, k + 1, 0.017), head, root2);
         triangle4(p2(-0.095, k + 1, 0.017), p2(0.035, k, 0.01), p2(0.035, k + 1, 0.01), head, root2);
       }
@@ -72977,15 +74412,15 @@ function planRiparian({ hydrology: hydrology2, terrainFunctions: f15, chunk, all
   const marshChunk = features.some((f16) => f16.kind === "wetland");
   const swampCoverage = hydrology2?.generationMode === "water-first" ? hydrology2.geometry?.plan?.swampCoverage : null;
   const mappedChunk = Array.isArray(swampCoverage) && features.some((f16) => swampCoverage.some((c2) => c2.bodyId === f16.id));
-  const records2 = [], hash15 = (id2, slot) => stableHash(seed, "riparian-v1", id2, slot), heights = /* @__PURE__ */ new Map();
+  const records2 = [], hash16 = (id2, slot) => stableHash(seed, "riparian-v1", id2, slot), heights = /* @__PURE__ */ new Map();
   const height2 = (x, z) => {
     const key3 = x + "," + z;
     if (!heights.has(key3)) heights.set(key3, f15.height(x, z));
     return heights.get(key3);
   };
   for (let gz = chunk.cz * 32; gz < (chunk.cz + 1) * 32; gz++) for (let gx = chunk.cx * 32; gx < (chunk.cx + 1) * 32; gx++) {
-    const id2 = gx + "," + gz, x = (gx + 0.2 + hash15(id2, "x") * 0.6) * 2, z = (gz + 0.2 + hash15(id2, "z") * 0.6) * 2;
-    const colony = hash15(id2, "colony");
+    const id2 = gx + "," + gz, x = (gx + 0.2 + hash16(id2, "x") * 0.6) * 2, z = (gz + 0.2 + hash16(id2, "z") * 0.6) * 2;
+    const colony = hash16(id2, "colony");
     if (colony > (marshChunk || mappedChunk ? 0.44 : 0.22)) continue;
     const near = hydrology2.nearWater(x, z, 2.6);
     if (!near || near.kind === "river" || near.kind === "stream" || near.kind === "ocean" || !near.featureId) continue;
@@ -72994,10 +74429,10 @@ function planRiparian({ hydrology: hydrology2, terrainFunctions: f15, chunk, all
     const y = height2(x, z);
     if (y - near.level < -maxReedDepth || y - near.level > 1.05 || f15.slope(x, z) > 0.65) continue;
     const biome2 = f15.biome(x, z), winter = (typeof biome2 === "number" ? biome2 : biome2.id) === 2;
-    if (winter && hash15(id2, "winter") > 0.43) continue;
-    const kind = hash15(id2, "kind") < (marsh ? 0.94 : 0.74) ? "reed" : "stone", count2 = kind === "reed" ? marsh ? 4 : 3 : 2;
+    if (winter && hash16(id2, "winter") > 0.43) continue;
+    const kind = hash16(id2, "kind") < (marsh ? 0.94 : 0.74) ? "reed" : "stone", count2 = kind === "reed" ? marsh ? 4 : 3 : 2;
     for (let i = 0; i < count2; i++) {
-      const slot = id2 + "/" + i, a = hash15(slot, "angle") * Math.PI * 2, d = hash15(slot, "offset") * 0.78, px = x + Math.cos(a) * d, pz = z + Math.sin(a) * d;
+      const slot = id2 + "/" + i, a = hash16(slot, "angle") * Math.PI * 2, d = hash16(slot, "offset") * 0.78, px = x + Math.cos(a) * d, pz = z + Math.sin(a) * d;
       const bank = hydrology2.nearWater(px, pz, 2.6);
       if (!bank || bank.featureId !== near.featureId) continue;
       if (context.swampRegionId !== null) {
@@ -73006,10 +74441,10 @@ function planRiparian({ hydrology: hydrology2, terrainFunctions: f15, chunk, all
       }
       const py = height2(px, pz), relative = py - bank.level, water = hydrology2.waterAt(px, pz, py);
       if (relative < -(kind === "reed" ? maxReedDepth : 0.08) || relative > (kind === "reed" ? 0.86 : 1.15) || water && water.depth > (kind === "reed" ? maxReedDepth : 0.08) || f15.slope(px, pz) > (kind === "reed" ? 0.58 : 0.82)) continue;
-      const size = kind === "reed" ? marsh ? 0.9 + hash15(slot, "scale") * 0.58 : 0.66 + hash15(slot, "scale") * 0.48 : 0.1 + hash15(slot, "scale") * 0.23;
-      const yaw2 = hash15(slot, "yaw") * Math.PI * 2;
+      const size = kind === "reed" ? marsh ? 0.9 + hash16(slot, "scale") * 0.58 : 0.66 + hash16(slot, "scale") * 0.48 : 0.1 + hash16(slot, "scale") * 0.23;
+      const yaw2 = hash16(slot, "yaw") * Math.PI * 2;
       if (!allowed(px, pz, kind === "reed" ? 0.14 : size * 0.85)) continue;
-      const record2 = { id: "riparian:" + slot, featureId: near.featureId, kind, x: px, y: py - (kind === "reed" ? 0.025 : size * 0.18), z: pz, scale: size, yaw: yaw2, winter, marsh, ...context.swampRegionId ? { swampRegionId: context.swampRegionId } : {}, rank: marsh && kind === "reed" ? hash15(id2, "priority") + i * 1e-6 : hash15(slot, "priority") };
+      const record2 = { id: "riparian:" + slot, featureId: near.featureId, kind, x: px, y: py - (kind === "reed" ? 0.025 : size * 0.18), z: pz, scale: size, yaw: yaw2, winter, marsh, ...context.swampRegionId ? { swampRegionId: context.swampRegionId } : {}, rank: marsh && kind === "reed" ? hash16(id2, "priority") + i * 1e-6 : hash16(slot, "priority") };
       records2.push(Object.freeze(record2));
     }
   }
@@ -73070,14 +74505,14 @@ function selectRiparian(chunks, activeFeatures, position3, quality = "high") {
 
 // river-cobbles.js
 var RIVER_COBBLE_LIMITS = Object.freeze({ chunk: 320, candidates: 640, clusterMax: 28, bankWidth: 5.2, maxDepth: 0.14, maxCrown: 0.3, range: 64, visible: 1024 });
-var TAU33 = Math.PI * 2;
+var TAU34 = Math.PI * 2;
 var EMPTY7 = Object.freeze([]);
 function planRiverCobbles({ hydrology: hydrology2, terrainFunctions: f15, chunk, allowed = () => true, seed = hydrology2?.seed ?? 728194 }) {
   if (hydrology2?.generationMode !== "water-first") return EMPTY7;
   const x0 = chunk.cx * 64, z0 = chunk.cz * 64, area = { minX: x0 - 8, minZ: z0 - 8, maxX: x0 + 72, maxZ: z0 + 72 };
   const features = hydrology2.queryBounds(area).filter((feature) => feature.generationMode === "water-first" && feature.streams?.length).sort((a, b) => a.id.localeCompare(b.id));
   if (!features.length) return EMPTY7;
-  const hash15 = (id2, slot) => stableHash(seed, "river-cobbles-v2", id2, slot), candidates = [], L4 = RIVER_COBBLE_LIMITS;
+  const hash16 = (id2, slot) => stableHash(seed, "river-cobbles-v2", id2, slot), candidates = [], L4 = RIVER_COBBLE_LIMITS;
   for (const feature of features) for (const stream of feature.streams) {
     const points = stream.points;
     for (let row2 = 2; row2 < points.length - 2; row2++) {
@@ -73090,21 +74525,21 @@ function planRiverCobbles({ hydrology: hydrology2, terrainFunctions: f15, chunk,
         const deposit = riverBankDepositAt(hydrology2, bankX + normalX * 1.8, bankZ + normalZ * 1.8, seed);
         if (deposit < 0.33) continue;
         const knot = Math.floor(row2 / 6), t = row2 / 6 - knot, u = t * t * (3 - 2 * t);
-        const bar = hash15(stream.id + ":" + knot + ":" + side2, "bar") * (1 - u) + hash15(stream.id + ":" + (knot + 1) + ":" + side2, "bar") * u;
+        const bar = hash16(stream.id + ":" + knot + ":" + side2, "bar") * (1 - u) + hash16(stream.id + ":" + (knot + 1) + ":" + side2, "bar") * u;
         const chance2 = Math.max(0, Math.min(1, (bar - 0.2) / 0.34)) * Math.min(1, (deposit - 0.3) * 2.6);
-        if (hash15(id2, "clump") >= chance2) continue;
-        const coarse2 = hash15(id2, "coarse"), count2 = 3 + Math.floor(Math.pow(hash15(id2, "count"), 1.4) * (L4.clusterMax - 3) * Math.min(1, 0.4 + deposit * 0.8));
-        const centerAlong = (hash15(id2, "along") - 0.5) * 2.4, centerAcross = -0.2 + Math.pow(hash15(id2, "across"), 1.5) * (0.9 + deposit * 3.4);
-        const spread = 0.2 + hash15(id2, "spread") * 0.75, stretch = 1.15 + hash15(id2, "stretch") * 1.3, flowYaw = Math.atan2(-p2.fz, p2.fx);
+        if (hash16(id2, "clump") >= chance2) continue;
+        const coarse2 = hash16(id2, "coarse"), count2 = 3 + Math.floor(Math.pow(hash16(id2, "count"), 1.4) * (L4.clusterMax - 3) * Math.min(1, 0.4 + deposit * 0.8));
+        const centerAlong = (hash16(id2, "along") - 0.5) * 2.4, centerAcross = -0.2 + Math.pow(hash16(id2, "across"), 1.5) * (0.9 + deposit * 3.4);
+        const spread = 0.2 + hash16(id2, "spread") * 0.75, stretch = 1.15 + hash16(id2, "stretch") * 1.3, flowYaw = Math.atan2(-p2.fz, p2.fx);
         for (let slot = 0; slot < count2; slot++) {
-          const key3 = id2 + ":" + slot, radial = Math.sqrt(-2 * Math.log(1 - hash15(key3, "r") * 0.999)), angle = hash15(key3, "a") * TAU33;
+          const key3 = id2 + ":" + slot, radial = Math.sqrt(-2 * Math.log(1 - hash16(key3, "r") * 0.999)), angle = hash16(key3, "a") * TAU34;
           const along = centerAlong + radial * Math.cos(angle) * spread * stretch, offset = Math.max(-0.3, Math.min(L4.bankWidth, centerAcross + radial * Math.sin(angle) * spread));
           const x = bankX + p2.fx * along + normalX * offset, z = bankZ + p2.fz * along + normalZ * offset;
           if (Math.floor(x / 64) !== chunk.cx || Math.floor(z / 64) !== chunk.cz) continue;
           if (riverBankDepositAt(hydrology2, x, z, seed) < 0.3) continue;
-          const scale5 = Math.min(0.5, 0.08 / Math.pow(1 - hash15(key3, "size") * 0.985, 1 / 1.9) * (0.65 + coarse2 * 0.9));
-          const scaleY = Math.min(0.19, scale5 * (0.34 + hash15(key3, "flat") * 0.38)), scaleZ = scale5 * (0.56 + hash15(key3, "elongation") * 0.42);
-          const pick2 = hash15(key3, "yaw"), yaw2 = pick2 < 0.78 ? flowYaw + (pick2 < 0.42 ? 0 : Math.PI / 2) + (hash15(key3, "yawJitter") - 0.5) * 0.9 : hash15(key3, "yawFree") * TAU33;
+          const scale5 = Math.min(0.5, 0.08 / Math.pow(1 - hash16(key3, "size") * 0.985, 1 / 1.9) * (0.65 + coarse2 * 0.9));
+          const scaleY = Math.min(0.19, scale5 * (0.34 + hash16(key3, "flat") * 0.38)), scaleZ = scale5 * (0.56 + hash16(key3, "elongation") * 0.42);
+          const pick2 = hash16(key3, "yaw"), yaw2 = pick2 < 0.78 ? flowYaw + (pick2 < 0.42 ? 0 : Math.PI / 2) + (hash16(key3, "yawJitter") - 0.5) * 0.9 : hash16(key3, "yawFree") * TAU34;
           candidates.push({
             id: "river-cobble:" + key3,
             featureId: feature.id,
@@ -73116,12 +74551,12 @@ function planRiverCobbles({ hydrology: hydrology2, terrainFunctions: f15, chunk,
             scaleY,
             scaleZ,
             yaw: yaw2,
-            bury: 0.12 + hash15(key3, "bury") * 0.48,
-            lean: hash15(key3, "lean") * 0.36,
+            bury: 0.12 + hash16(key3, "bury") * 0.48,
+            lean: hash16(key3, "lean") * 0.36,
             flowX: p2.fx,
             flowZ: p2.fz,
-            rank: hash15(key3, "rank"),
-            tint: 0.76 + hash15(key3, "color") * 0.32,
+            rank: hash16(key3, "rank"),
+            tint: 0.76 + hash16(key3, "color") * 0.32,
             winter: false,
             marsh: false
           });
@@ -73201,7 +74636,7 @@ function createRiverCobbleGeometry(THREE2) {
 // water-stones.js
 var WATER_STONE_LIMITS = Object.freeze({ cell: 4, candidates: 128, chunk: 48, visible: 256, balanced: 128, low: 64, range: 64, balancedRange: 48, lowRange: 36, minDepth: 0.06, maxDepth: 4, maxGrade: 0.42, maxError: 0.055, nativeStep: 4 / 3, maxGridProbes: 25, unitEnvelope: 1.02, maxCrown: 0.45, maxWaterCrown: 0.18, edgeMargin: 0.04 });
 var EMPTY8 = Object.freeze([]);
-var TAU34 = Math.PI * 2;
+var TAU35 = Math.PI * 2;
 var finite14 = Number.isFinite;
 var intersects3 = (a, b) => a.minX <= b.maxX && a.maxX >= b.minX && a.minZ <= b.maxZ && a.maxZ >= b.minZ;
 function wetlandIds(h) {
@@ -73238,15 +74673,15 @@ function planWaterStones({ hydrology: h, terrainFunctions: f15, chunk, allowed =
   const L4 = WATER_STONE_LIMITS, x0 = chunk.cx * 64, z0 = chunk.cz * 64, bounds6 = { minX: x0, minZ: z0, maxX: x0 + 64, maxZ: z0 + 64 };
   const wetlands = wetlandIds(h), features = new Map(h.queryBounds(bounds6).filter((p2) => supportedFeature(p2, wetlands)).map((p2) => [p2.id, p2]));
   if (!features.size) return EMPTY8;
-  const hash15 = (id2, slot) => stableHash(seed, "water-stones-v1", id2, slot), candidates = [];
+  const hash16 = (id2, slot) => stableHash(seed, "water-stones-v1", id2, slot), candidates = [];
   for (let gz = chunk.cz * 16; gz < (chunk.cz + 1) * 16; gz++) for (let gx = chunk.cx * 16; gx < (chunk.cx + 1) * 16; gx++) {
-    const id2 = gx + "," + gz, x = (gx + 0.5) * 4 + (hash15(id2, "x") - 0.5) * 2.6, z = (gz + 0.5) * 4 + (hash15(id2, "z") - 0.5) * 2.6;
+    const id2 = gx + "," + gz, x = (gx + 0.5) * 4 + (hash16(id2, "x") - 0.5) * 2.6, z = (gz + 0.5) * 4 + (hash16(id2, "z") - 0.5) * 2.6;
     const deposit = riverBankPatchAt(seed, x, z);
-    if (deposit < 0.35 || hash15(id2, "admit") > (deposit - 0.2) * 1.6) continue;
+    if (deposit < 0.35 || hash16(id2, "admit") > (deposit - 0.2) * 1.6) continue;
     const surface4 = h.surfaceAt(x, z);
     if (!surface4 || !finite14(surface4.level) || !features.has(surface4.featureId) || !["stream", "lake", "pond"].includes(surface4.kind)) continue;
-    const broad = hash15(id2, "form") < 0.26, scale5 = broad ? 0.55 + hash15(id2, "size") * 0.4 : 0.18 + hash15(id2, "size") * 0.28;
-    candidates.push({ id: "water-stone:" + id2, featureId: surface4.featureId, bodyKind: surface4.kind, kind: "stone", waterStone: true, riverCobble: true, x, z, scale: scale5, scaleY: 0.1 + scale5 * 0.32, scaleZ: scale5 * (0.76 + hash15(id2, "elongation") * 0.2), yaw: hash15(id2, "yaw") * TAU34, rank: hash15(id2, "rank"), tint: 0.9 + hash15(id2, "tint") * 0.18, wet: true, surface: surface4 });
+    const broad = hash16(id2, "form") < 0.26, scale5 = broad ? 0.55 + hash16(id2, "size") * 0.4 : 0.18 + hash16(id2, "size") * 0.28;
+    candidates.push({ id: "water-stone:" + id2, featureId: surface4.featureId, bodyKind: surface4.kind, kind: "stone", waterStone: true, riverCobble: true, x, z, scale: scale5, scaleY: 0.1 + scale5 * 0.32, scaleZ: scale5 * (0.76 + hash16(id2, "elongation") * 0.2), yaw: hash16(id2, "yaw") * TAU35, rank: hash16(id2, "rank"), tint: 0.9 + hash16(id2, "tint") * 0.18, wet: true, surface: surface4 });
   }
   candidates.sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id));
   const records2 = [];
@@ -73392,16 +74827,16 @@ function createRiverCobbleCatalog(THREE2) {
 // river-gravel.js
 var GRAVEL_LIMITS = Object.freeze({ visible: 3500, balanced: 1400, low: 600, range: 32, balancedRange: 30, lowRange: 24, coreRange: 24, chunk: 3072, coreChunk: 2304, candidates: 3072, patchCell: 4, spacing: 0.22, maxDepth: 0.065, maxCrown: 0.12, triangles: 64 });
 var EMPTY9 = Object.freeze([]);
-var TAU35 = Math.PI * 2;
+var TAU36 = Math.PI * 2;
 var SQRT3 = Math.sqrt(3);
-var clamp48 = (n) => Math.max(0, Math.min(1, n));
+var clamp49 = (n) => Math.max(0, Math.min(1, n));
 var ease = (n) => {
-  const t = clamp48(n);
+  const t = clamp49(n);
   return t * t * (3 - 2 * t);
 };
 function* planRiverGravelSteps({ hydrology: hydrology2, terrainFunctions: f15, chunk, allowed = () => true, seed = hydrology2?.seed ?? 728194 }, cobbles = EMPTY9) {
   if (hydrology2?.generationMode !== "water-first" || !cobbles.length) return EMPTY9;
-  const hash15 = (id2, slot) => stableHash(seed, "river-gravel-v1", id2, slot), patches = /* @__PURE__ */ new Map(), largeCells = /* @__PURE__ */ new Map();
+  const hash16 = (id2, slot) => stableHash(seed, "river-gravel-v1", id2, slot), patches = /* @__PURE__ */ new Map(), largeCells = /* @__PURE__ */ new Map();
   const height2 = (x, z) => f15.height(x, z);
   for (const rock of cobbles) {
     if (!rock.riverCobble || !rock.bankNormal) continue;
@@ -73409,33 +74844,33 @@ function* planRiverGravelSteps({ hydrology: hydrology2, terrainFunctions: f15, c
     list.push(rock);
     largeCells.set(largeKey, list);
     const px = Math.floor(rock.x / GRAVEL_LIMITS.patchCell), pz = Math.floor(rock.z / GRAVEL_LIMITS.patchCell), key3 = rock.featureId + ":" + px + "," + pz;
-    const rank3 = hash15(key3, rock.id), previous = patches.get(key3);
-    if (!previous || rank3 < previous.anchorRank || rank3 === previous.anchorRank && rock.id < previous.rock.id) patches.set(key3, { id: key3, rock, anchorRank: rank3, rank: hash15(key3, "priority") });
+    const rank3 = hash16(key3, rock.id), previous = patches.get(key3);
+    if (!previous || rank3 < previous.anchorRank || rank3 === previous.anchorRank && rock.id < previous.rock.id) patches.set(key3, { id: key3, rock, anchorRank: rank3, rank: hash16(key3, "priority") });
   }
   const coreCandidates = [], extensionCandidates = [];
   for (const patch2 of [...patches.values()].sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id))) {
-    if (hash15(patch2.id, "quiet") < 0.09) continue;
+    if (hash16(patch2.id, "quiet") < 0.09) continue;
     yield "gravel:patch";
     const anchor = patch2.rock, channel2 = hydrology2.projectChannel?.(anchor.x, anchor.z, 12);
     if (!channel2 || channel2.featureId !== anchor.featureId) continue;
     const fx = channel2.flow.x, fz = channel2.flow.z, length = Math.hypot(fx, fz);
     if (length < 1e-3) continue;
     const tx = fx / length, tz = fz / length, nx = -tz, nz = tx;
-    const lengthHash = hash15(patch2.id, "length"), widthHash = hash15(patch2.id, "width"), coreAlong = 1.18 + lengthHash * 0.52, coreAcross = 0.65 + widthHash * 0.33;
+    const lengthHash = hash16(patch2.id, "length"), widthHash = hash16(patch2.id, "width"), coreAlong = 1.18 + lengthHash * 0.52, coreAcross = 0.65 + widthHash * 0.33;
     const along = 1.7 + lengthHash * 0.8, across2 = 0.94 + widthHash * 0.44;
-    const centerX = anchor.x + tx * (hash15(patch2.id, "center") - 0.5) * 0.35, centerZ = anchor.z + tz * (hash15(patch2.id, "center") - 0.5) * 0.35;
-    const phase1 = hash15(patch2.id, "outline1") * TAU35, phase2 = hash15(patch2.id, "outline2") * TAU35, grain = 0.6 + hash15(patch2.id, "grain") * 0.8;
+    const centerX = anchor.x + tx * (hash16(patch2.id, "center") - 0.5) * 0.35, centerZ = anchor.z + tz * (hash16(patch2.id, "center") - 0.5) * 0.35;
+    const phase1 = hash16(patch2.id, "outline1") * TAU36, phase2 = hash16(patch2.id, "outline2") * TAU36, grain = 0.6 + hash16(patch2.id, "grain") * 0.8;
     const rows = Math.ceil(across2 / (GRAVEL_LIMITS.spacing * SQRT3 * 0.5)), cols = Math.ceil(along / GRAVEL_LIMITS.spacing), coreRows = Math.ceil(coreAcross / (GRAVEL_LIMITS.spacing * SQRT3 * 0.5)), coreCols = Math.ceil(coreAlong / GRAVEL_LIMITS.spacing);
     for (let iz = -rows; iz <= rows; iz++) for (let ix = -cols; ix <= cols; ix++) {
-      const id2 = patch2.id + ":" + ix + "," + iz, u = (ix + (iz & 1) * 0.5) * GRAVEL_LIMITS.spacing + (hash15(id2, "jx") - 0.5) * GRAVEL_LIMITS.spacing * 0.9, v = iz * GRAVEL_LIMITS.spacing * SQRT3 * 0.5 + (hash15(id2, "jz") - 0.5) * GRAVEL_LIMITS.spacing * 0.8;
+      const id2 = patch2.id + ":" + ix + "," + iz, u = (ix + (iz & 1) * 0.5) * GRAVEL_LIMITS.spacing + (hash16(id2, "jx") - 0.5) * GRAVEL_LIMITS.spacing * 0.9, v = iz * GRAVEL_LIMITS.spacing * SQRT3 * 0.5 + (hash16(id2, "jz") - 0.5) * GRAVEL_LIMITS.spacing * 0.8;
       const theta = Math.atan2(v / across2, u / along), outline = 1 + 0.17 * Math.sin(3 * theta + phase1) + 0.09 * Math.sin(5 * theta + phase2);
-      const edge2 = hash15(id2, "edge"), radius = Math.hypot(u / along, v / across2) / outline;
+      const edge2 = hash16(id2, "edge"), radius = Math.hypot(u / along, v / across2) / outline;
       if (radius > 1.08 || edge2 > 1 - ease((radius - 0.8) / 0.28)) continue;
-      const cu = u / grain, cv = v / grain, ci = Math.floor(cu), cj = Math.floor(cv), fu = ease(cu - ci), fv = ease(cv - cj), cell = (a, b) => hash15(patch2.id + ":" + (ci + a) + "," + (cj + b), "density");
+      const cu = u / grain, cv = v / grain, ci = Math.floor(cu), cj = Math.floor(cv), fu = ease(cu - ci), fv = ease(cv - cj), cell = (a, b) => hash16(patch2.id + ":" + (ci + a) + "," + (cj + b), "density");
       const density = 0.45 + 0.6 * ((cell(0, 0) * (1 - fu) + cell(1, 0) * fu) * (1 - fv) + (cell(0, 1) * (1 - fu) + cell(1, 1) * fu) * fv);
-      if (hash15(id2, "thin") > density) continue;
+      if (hash16(id2, "thin") > density) continue;
       const coreRadius = Math.hypot(u / coreAlong, v / coreAcross), core = Math.abs(ix) <= coreCols && Math.abs(iz) <= coreRows && coreRadius <= 1.08 && edge2 <= 1 - ease((coreRadius - 0.8) / 0.28);
-      const x = centerX + tx * u + nx * v, z = centerZ + tz * u + nz * v, size = hash15(id2, "size"), scale5 = hash15(id2, "large") < 0.06 ? 0.13 + 0.06 * size : 0.03 + 0.11 * Math.pow(size, 1.6), scaleY = Math.min(0.085, scale5 * (0.45 + hash15(id2, "height") * 0.3)), scaleZ = scale5 * (0.6 + hash15(id2, "shape") * 0.4);
+      const x = centerX + tx * u + nx * v, z = centerZ + tz * u + nz * v, size = hash16(id2, "size"), scale5 = hash16(id2, "large") < 0.06 ? 0.13 + 0.06 * size : 0.03 + 0.11 * Math.pow(size, 1.6), scaleY = Math.min(0.085, scale5 * (0.45 + hash16(id2, "height") * 0.3)), scaleZ = scale5 * (0.6 + hash16(id2, "shape") * 0.4);
       let blocked = false;
       for (let bz = Math.floor((z - 0.65) / 2); bz <= Math.floor((z + 0.65) / 2) && !blocked; bz++) for (let bx = Math.floor((x - 0.65) / 2); bx <= Math.floor((x + 0.65) / 2) && !blocked; bx++) for (const rock of largeCells.get(bx + "," + bz) || EMPTY9) {
         const dx = x - rock.x, dz = z - rock.z, cs = Math.cos(rock.yaw), sn = Math.sin(rock.yaw), rx = (dx * cs - dz * sn) / ((rock.cobbleFootprint?.x ?? rock.scale) + scale5 * 0.55), rz = (dx * sn + dz * cs) / ((rock.cobbleFootprint?.z ?? rock.scaleZ) + scale5 * 0.55);
@@ -73457,10 +74892,10 @@ function* planRiverGravelSteps({ hydrology: hydrology2, terrainFunctions: f15, c
         scale: scale5,
         scaleY,
         scaleZ,
-        yaw: hash15(id2, "yaw") * TAU35,
-        rank: patch2.rank + hash15(id2, "priority") * 1e-4,
-        fadeRank: hash15(id2, "fade"),
-        tint: 0.73 + hash15(id2, "color") * 0.46
+        yaw: hash16(id2, "yaw") * TAU36,
+        rank: patch2.rank + hash16(id2, "priority") * 1e-4,
+        fadeRank: hash16(id2, "fade"),
+        tint: 0.73 + hash16(id2, "color") * 0.46
       });
     }
   }
@@ -73498,7 +74933,7 @@ function* planRiverGravelSteps({ hydrology: hydrology2, terrainFunctions: f15, c
       group.push(r);
       byPatch.set(r.patchId, group);
     }
-    const groups = [...byPatch.entries()].sort((a, b) => hash15(a[0], "priority") - hash15(b[0], "priority") || a[0].localeCompare(b[0])).map((entry) => entry[1]);
+    const groups = [...byPatch.entries()].sort((a, b) => hash16(a[0], "priority") - hash16(b[0], "priority") || a[0].localeCompare(b[0])).map((entry) => entry[1]);
     let round = 0, work4 = true;
     while (work4 && probes < GRAVEL_LIMITS.candidates && result.length < GRAVEL_LIMITS.chunk) {
       work4 = false;
@@ -74215,7 +75650,7 @@ function walkIndex(points) {
 }
 function boardwalkGeometry(points, salt, level) {
   const W4 = MARSH_FLORA.walk, out2 = buffers(), color3 = new Color(), plank2 = linear4(5983034), grey = linear4(8024166), dark = linear4(3024415), moss = linear4(4147750);
-  const box4 = (cx, cy, cz, ax, az, hx, hy, hz, tint4, tilt = 0) => {
+  const box5 = (cx, cy, cz, ax, az, hx, hy, hz, tint4, tilt = 0) => {
     const sx = -az, sz = ax, start2 = out2.position.length / 3, corners3 = [];
     for (const [u, v, w] of [[-1, -1, -1], [1, -1, -1], [1, -1, 1], [-1, -1, 1], [-1, 1, -1], [1, 1, -1], [1, 1, 1], [-1, 1, 1]]) {
       const y = cy + v * hy + w * hz * tilt;
@@ -74239,21 +75674,21 @@ function boardwalkGeometry(points, salt, level) {
     const a = points[i], b = points[i + 1], len3 = Math.hypot(b.x - a.x, b.z - a.z), ax = (b.x - a.x) / len3, az = (b.z - a.z) / len3, sx = -az, sz = ax;
     for (const side2 of [-1, 1]) {
       color3.copy(plank2).lerp(dark, 0.35);
-      box4((a.x + b.x) / 2 + sx * side2 * W4.width * 0.38, (a.y + b.y) / 2 - 0.09, (a.z + b.z) / 2 + sz * side2 * W4.width * 0.38, ax, az, len3 / 2 + 0.05, 0.045, 0.055, color3);
+      box5((a.x + b.x) / 2 + sx * side2 * W4.width * 0.38, (a.y + b.y) / 2 - 0.09, (a.z + b.z) / 2 + sz * side2 * W4.width * 0.38, ax, az, len3 / 2 + 0.05, 0.045, 0.055, color3);
       const post = 0.9 + 0.5 * hash11(i, side2, 403 + salt), py = a.y - 0.12 - post / 2;
       color3.copy(plank2).lerp(dark, 0.55).lerp(moss, 0.25);
-      box4(a.x + sx * side2 * W4.width * 0.42, py, a.z + sz * side2 * W4.width * 0.42, ax, az, 0.06, post / 2, 0.06, color3);
+      box5(a.x + sx * side2 * W4.width * 0.42, py, a.z + sz * side2 * W4.width * 0.42, ax, az, 0.06, post / 2, 0.06, color3);
     }
     const count2 = Math.round(len3 / 0.26);
     for (let k = 0; k < count2; k++) {
       const r = hash11(i * 64 + k, 7, 404 + salt);
       if (r < 0.045) continue;
       const t = (k + 0.5) / count2, x = a.x + (b.x - a.x) * t, z = a.z + (b.z - a.z) * t, y = a.y + (b.y - a.y) * t;
-      const shade3 = hash11(i * 64 + k, 8, 405 + salt);
-      color3.copy(plank2).lerp(grey, shade3 * 0.6).lerp(dark, hash11(i * 64 + k, 9, 406 + salt) * 0.25);
-      if (y - level < 0.5 && shade3 > 0.7) color3.lerp(moss, 0.35);
+      const shade4 = hash11(i * 64 + k, 8, 405 + salt);
+      color3.copy(plank2).lerp(grey, shade4 * 0.6).lerp(dark, hash11(i * 64 + k, 9, 406 + salt) * 0.25);
+      if (y - level < 0.5 && shade4 > 0.7) color3.lerp(moss, 0.35);
       const askew = r > 0.97 ? (hash11(i, k, 407 + salt) - 0.5) * 0.5 : (hash11(i, k, 408 + salt) - 0.5) * 0.05;
-      box4(x, y - 0.02, z, ax, az, 0.11, 0.02, W4.width / 2 * (0.92 + 0.08 * shade3), color3, askew);
+      box5(x, y - 0.02, z, ax, az, 0.11, 0.02, W4.width / 2 * (0.92 + 0.08 * shade4), color3, askew);
     }
     const h = W4.width / 2;
     colliders.push([[a.x - sx * h, a.y, a.z - sz * h], [b.x - sx * h, b.y, b.z - sz * h], [b.x + sx * h, b.y, b.z + sz * h], [a.x + sx * h, a.y, a.z + sz * h]]);
@@ -74583,8 +76018,8 @@ function placeDeadWood(state2) {
       if (counts[v] >= target.instanceMatrix.count) continue;
       const h = T2[i + 3], k = counts[v]++;
       put(target, k, T2[i], T2[i + 1], T2[i + 2], T2[i + 4], h * 0.72, h, h * 0.72, T2[i + 5], T2[i + 6]);
-      const shade3 = 0.8 + 0.35 * hash11(Math.floor(T2[i] * 10), Math.floor(T2[i + 2] * 10), 5);
-      target.instanceColor.array.fill(shade3, k * 3, k * 3 + 3);
+      const shade4 = 0.8 + 0.35 * hash11(Math.floor(T2[i] * 10), Math.floor(T2[i + 2] * 10), 5);
+      target.instanceColor.array.fill(shade4, k * 3, k * 3 + 3);
     }
   }
   commit(m.snag, snags);
@@ -74977,8 +76412,8 @@ function decorateChunk(world2, c2, options) {
 function* decorateChunkSteps(world2, c2, { deferSharedPublication = false } = {}) {
   if (!world2.nature || c2.natureDone) return;
   c2.natureDone = true;
-  const { height: height2, noise: noise8, hash: hash15, biome: biome2, slope: slope2 } = world2.terrainFunctions;
-  const x0 = c2.cx * 64, z0 = c2.cz * 64, b = biome2(x0 + 32, z0 + 32), rng4 = (i, n) => hash15(c2.cx * 229 + c2.cz * 733 + i * 13, n);
+  const { height: height2, noise: noise8, hash: hash16, biome: biome2, slope: slope2 } = world2.terrainFunctions;
+  const x0 = c2.cx * 64, z0 = c2.cz * 64, b = biome2(x0 + 32, z0 + 32), rng4 = (i, n) => hash16(c2.cx * 229 + c2.cz * 733 + i * 13, n);
   c2.trunk.visible = c2.leaves.visible = c2.grass.visible = c2.rockMesh.visible = false;
   if (world2.proceduralTrees) world2.proceduralTrees.attachChunk(c2);
   else {
@@ -74986,10 +76421,10 @@ function* decorateChunkSteps(world2, c2, { deferSharedPublication = false } = {}
     for (let ti = 0; ti < c2.trees.length; ti++) {
       if (ti && ti % 64 === 0) yield "nature:trees";
       const t = c2.trees[ti];
-      const tc = climate(world2, t.x, t.z, t.y), isBroad = vegetationSpecies(tc, hash15(t.x, t.z)) === "broadleaf", asset = world2.nature[isBroad ? "broadleaf" : "pine"], o = c2.objects.find((o2) => o2.id === t.id), width = t.width;
+      const tc = climate(world2, t.x, t.z, t.y), isBroad = vegetationSpecies(tc, hash16(t.x, t.z)) === "broadleaf", asset = world2.nature[isBroad ? "broadleaf" : "pine"], o = c2.objects.find((o2) => o2.id === t.id), width = t.width;
       o.collisionRadius = isBroad ? Math.max(0.7, t.h / asset.height * width * 0.95) : Math.max(0.42, t.h / asset.height * width * 0.32);
       invalidateNaturalCollisionBounds(c2);
-      (isBroad ? broad : pines).push({ x: t.x, y: t.y - (isBroad ? 0.35 : 0.22), z: t.z, sx: t.h / asset.height * width, sy: t.h / asset.height, sz: t.h / asset.height * width, rot: t.r * Math.PI * 2, rz: t.lean * 0.45, refs: o.refs, dry: tc.dry, leafless: vegetationLeafless(tc, hash15(t.x + 83, t.z - 47)), color: tc.winter > 0.7 ? 13884890 : tc.dry > 0.7 ? 11511179 : tc.swamp > 0.6 ? 12765609 : 16777215 });
+      (isBroad ? broad : pines).push({ x: t.x, y: t.y - (isBroad ? 0.35 : 0.22), z: t.z, sx: t.h / asset.height * width, sy: t.h / asset.height, sz: t.h / asset.height * width, rot: t.r * Math.PI * 2, rz: t.lean * 0.45, refs: o.refs, dry: tc.dry, leafless: vegetationLeafless(tc, hash16(t.x + 83, t.z - 47)), color: tc.winter > 0.7 ? 13884890 : tc.dry > 0.7 ? 11511179 : tc.swamp > 0.6 ? 12765609 : 16777215 });
     }
     const full = world2.quality === "high" || world2.quality === "ultra";
     for (const [name, trees] of [["pine", pines], ["broadleaf", broad]]) {
@@ -75206,14 +76641,14 @@ function fillChunkFerns(far, px, pz) {
     }
     mesh2.count = shown;
     mesh2.visible = shown > 0;
-    mesh2.instanceMatrix.needsUpdate = true;
-    if (colors && mesh2.instanceColor) mesh2.instanceColor.needsUpdate = true;
+    markShown(mesh2.instanceMatrix, shown, 16);
+    if (colors && mesh2.instanceColor) markShown(mesh2.instanceColor, shown, 3);
     installShadowPrefix(mesh2, shown);
   }
   far.count = farShown;
   far.visible = farShown > 0;
-  far.instanceMatrix.needsUpdate = true;
-  if (far.instanceColor) far.instanceColor.needsUpdate = true;
+  markShown(far.instanceMatrix, farShown, 16);
+  if (far.instanceColor) markShown(far.instanceColor, farShown, 3);
 }
 var NATURE_LOD_STEP = 3;
 var NATURE_LOD = Object.freeze({ budgetMs: 0.6 });
@@ -75382,8 +76817,8 @@ function natureLodMesh(world2, chunk, mesh2, job) {
   }
   mesh2.count = shown;
   mesh2.visible = shown > 0;
-  mesh2.instanceMatrix.needsUpdate = true;
-  if (colors) mesh2.instanceColor.needsUpdate = true;
+  markShown(mesh2.instanceMatrix, shown, 16);
+  if (colors) markShown(mesh2.instanceColor, shown, 3);
   if (shadowRadius) installShadowPrefix(mesh2, shadowCount);
   if (key3) cache2.meshes.set(mesh2, { key: key3, tick: tick2, matrixVersion: mesh2.instanceMatrix.version, colorVersion: mesh2.instanceColor?.version, count: mesh2.count, visible: mesh2.visible });
 }
@@ -75406,8 +76841,8 @@ function* addMeadowSteps(world2, c2, b, rng4, density, { deferSharedPublication 
       positions.push(x * Math.cos(a), y - 0.0233, x * Math.sin(a));
       normals.push(0, 0.85, 0);
       uvs.push(u * 0.5, v * 0.5);
-      const shade3 = 0.9 + y * 0.1;
-      colors.push(shade3, shade3, shade3);
+      const shade4 = 0.9 + y * 0.1;
+      colors.push(shade4, shade4, shade4);
     }
   }
   c2.reservePreparationBytes?.(4096);
@@ -75442,9 +76877,10 @@ function* addMeadowSteps(world2, c2, b, rng4, density, { deferSharedPublication 
       const x = c2.cx * 64 + rng4(i, 330) * 64, z = c2.cz * 64 + rng4(i, 331) * 64, patch2 = noise8(x * 0.14 + 4, z * 0.14);
       if (patch2 < 0.34 || world2.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear * 0.28)) continue;
       const y = height2(x, z);
-      if (y < 0.8 || world2.hydrology?.waterAt(x, z, y)) continue;
+      if (y < 0.8) continue;
       const local2 = climate(world2, x, z, y);
       if (rng4(i, 335) > vegetationCover(local2) / cap || patch2 < 0.34 + local2.dry * 0.22 || slope2(x, z) > 0.95) continue;
+      if (world2.hydrology?.waterAt(x, z, y)) continue;
       count2++;
     }
   } else {
@@ -76282,13 +77718,13 @@ function paintTextures(kind) {
 }
 
 // hand-tool-geometry.js
-var TAU36 = Math.PI * 2;
+var TAU37 = Math.PI * 2;
 var ARROW_LENGTH = 0.7;
 var TOOL_HEADS = Object.freeze({ axe: Object.freeze({ S: 1.75, T: 1.55, Y: 0.425 }), pickaxe: Object.freeze({ S: 1.45, T: 1.75, Y: 0.478 }) });
-var clamp49 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+var clamp50 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 var mix15 = (a, b, t) => a + (b - a) * t;
 var smooth35 = (a, b, x) => {
-  const t = clamp49((x - a) / (b - a));
+  const t = clamp50((x - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
 var add2 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -76302,7 +77738,7 @@ var norm = (a) => {
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 var hexRgb = (h) => [(h >> 16 & 255) / 255, (h >> 8 & 255) / 255, (h & 255) / 255].map((c2) => c2 <= 0.04045 ? c2 / 12.92 : ((c2 + 0.055) / 1.055) ** 2.4);
-function random6(seed) {
+function random7(seed) {
   let s = seed >>> 0;
   return () => {
     s = s + 1831565813 >>> 0;
@@ -76331,7 +77767,7 @@ function spline(points, n) {
   return out2;
 }
 function frames2(path, closed = false) {
-  const m = path.length, at = (i) => closed ? path[(i + m) % m] : path[clamp49(i, 0, m - 1)];
+  const m = path.length, at = (i) => closed ? path[(i + m) % m] : path[clamp50(i, 0, m - 1)];
   const tangents = path.map((p2, i) => norm(sub2(at(i + 1), at(i - 1))));
   let n = Math.abs(tangents[0][1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
   n = norm(cross7(cross7(tangents[0], n), tangents[0]));
@@ -76377,7 +77813,7 @@ function tube2(part2, path, radius, { sides = 8, uv, colour = () => [1, 1, 1], c
   for (let i = 0; i < path.length; i++) {
     const t = lengths2[i] / total, ring2 = [];
     for (let j = 0; j <= sides; j++) {
-      const a = j / sides * TAU36, r = radius(t, a) * (shape ? shape(t, a) : 1), dir = add2(scale3(f15[i].n, Math.cos(a)), scale3(f15[i].b, Math.sin(a)));
+      const a = j / sides * TAU37, r = radius(t, a) * (shape ? shape(t, a) : 1), dir = add2(scale3(f15[i].n, Math.cos(a)), scale3(f15[i].b, Math.sin(a)));
       ring2.push(part2.vertex(add2(path[i], scale3(dir, r)), dir, uv(t, j / sides, lengths2[i]), colour(t, a)));
     }
     rings3.push(ring2);
@@ -76388,7 +77824,7 @@ function tube2(part2, path, radius, { sides = 8, uv, colour = () => [1, 1, 1], c
     const dir = end ? f15[end].t : scale3(f15[end].t, -1), mid = add2(path[end], scale3(dir, radius(end ? 1 : 0, 0) * 0.06)), c2 = part2.vertex(mid, dir, cap[end ? 1 : 0](0.5, 0.5), colour(end ? 1 : 0, 0));
     const ring2 = [];
     for (let j = 0; j <= sides; j++) {
-      const a = j / sides * TAU36, d = add2(scale3(f15[end].n, Math.cos(a)), scale3(f15[end].b, Math.sin(a))), r = radius(end ? 1 : 0, a) * (shape ? shape(end ? 1 : 0, a) : 1);
+      const a = j / sides * TAU37, d = add2(scale3(f15[end].n, Math.cos(a)), scale3(f15[end].b, Math.sin(a))), r = radius(end ? 1 : 0, a) * (shape ? shape(end ? 1 : 0, a) : 1);
       ring2.push(part2.vertex(add2(path[end], scale3(d, r)), norm(add2(dir, scale3(d, 0.3))), cap[end ? 1 : 0](0.5 + Math.cos(a) * 0.47, 0.5 + Math.sin(a) * 0.47), colour(end ? 1 : 0, a)));
     }
     for (let j = 0; j < sides; j++) end ? part2.tri(c2, ring2[j], ring2[j + 1]) : part2.tri(c2, ring2[j + 1], ring2[j]);
@@ -76403,7 +77839,7 @@ function loop(part2, points, r, { sides = 6, colour = () => [1, 1, 1] } = {}) {
     if (i) length += len(sub2(points[k], points[i - 1]));
     const ring2 = [];
     for (let j = 0; j <= sides; j++) {
-      const a = j / sides * TAU36, dir = add2(scale3(f15[k].n, Math.cos(a)), scale3(f15[k].b, Math.sin(a)));
+      const a = j / sides * TAU37, dir = add2(scale3(f15[k].n, Math.cos(a)), scale3(f15[k].b, Math.sin(a)));
       ring2.push(part2.vertex(add2(points[k], scale3(dir, r)), dir, [j / sides, length / 0.02], colour(i / m)));
     }
     rings3.push(ring2);
@@ -76439,14 +77875,14 @@ function surface2(part2, rows, cols, at, { outward = null, flip = false } = {}) 
 function lathe(part2, profile, { sides = 14, at = [0, 0, 0], colour = () => [1, 1, 1], k = () => [0, 0], wobble = 0, seed = 1, outward = null } = {}) {
   const m = profile.length - 1, mid = (profile[0][1] + profile[m][1]) / 2;
   return surface2(part2, m, sides, (u, v) => {
-    const f15 = v * m, i = Math.min(m - 1, Math.floor(f15)), t = f15 - i, r0 = mix15(profile[i][0], profile[i + 1][0], t), y = mix15(profile[i][1], profile[i + 1][1], t), a = u * TAU36;
+    const f15 = v * m, i = Math.min(m - 1, Math.floor(f15)), t = f15 - i, r0 = mix15(profile[i][0], profile[i + 1][0], t), y = mix15(profile[i][1], profile[i + 1][1], t), a = u * TAU37;
     const r = r0 * (1 + wobble * (vnoise2(Math.cos(a) * 2 + 3, Math.sin(a) * 2, y * 40, seed) - 0.5));
     return { p: [at[0] + Math.cos(a) * r, at[1] + y, at[2] + Math.sin(a) * r], c: colour(v, a, y), k: k(v, a) };
   }, { outward: outward || ((p2) => [p2[0] - at[0], (p2[1] - at[1] - mid) * 0.35, p2[2] - at[2]]) });
 }
 function blob(part2, centre, radii, { rows = 10, cols = 16, colour = () => [1, 1, 1], k = () => [0, 0], lumps = 0, seed = 1 } = {}) {
   return surface2(part2, rows, cols, (u, v) => {
-    const a = u * TAU36, b = (v - 0.5) * Math.PI, dir = [Math.cos(b) * Math.cos(a), Math.sin(b), Math.cos(b) * Math.sin(a)];
+    const a = u * TAU37, b = (v - 0.5) * Math.PI, dir = [Math.cos(b) * Math.cos(a), Math.sin(b), Math.cos(b) * Math.sin(a)];
     const r = 1 + lumps * (vnoise2(dir[0] * 2.3 + 5, dir[1] * 2.3, dir[2] * 2.3, seed) - 0.5) * 2;
     const p2 = [centre[0] + dir[0] * radii[0] * r, centre[1] + dir[1] * radii[1] * r, centre[2] + dir[2] * radii[2] * r];
     return { p: p2, c: colour(dir, p2), k: k(dir) };
@@ -76455,7 +77891,7 @@ function blob(part2, centre, radii, { rows = 10, cols = 16, colour = () => [1, 1
 function roundedBox(part2, centre, half, { e = 0.25, rows = 10, cols = 16, colour = () => [1, 1, 1], k = () => [0, 0] } = {}) {
   const pw = (c2, x) => Math.sign(c2) * Math.abs(c2) ** x;
   return surface2(part2, rows, cols, (u, v) => {
-    const a = u * TAU36, b = (v - 0.5) * Math.PI, d = [pw(Math.cos(b), e) * pw(Math.cos(a), e), pw(Math.sin(b), e), pw(Math.cos(b), e) * pw(Math.sin(a), e)];
+    const a = u * TAU37, b = (v - 0.5) * Math.PI, d = [pw(Math.cos(b), e) * pw(Math.cos(a), e), pw(Math.sin(b), e), pw(Math.cos(b), e) * pw(Math.sin(a), e)];
     const p2 = [centre[0] + d[0] * half[0], centre[1] + d[1] * half[1], centre[2] + d[2] * half[2]];
     return { p: p2, c: colour(d, p2), k: k(d) };
   }, { outward: (p2) => sub2(p2, centre) });
@@ -76581,11 +78017,11 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
   metal.customProgramCacheKey = () => "hand-tool-metal-v110";
   const materials = { wood, cord, straw: straw2, stone, bowWood, item, metal };
   const HAFT = { bottom: -0.17 };
-  const haftUv = () => (t, u) => [u, 1 - (0.25 + 0.75 * clamp49(t))];
+  const haftUv = () => (t, u) => [u, 1 - (0.25 + 0.75 * clamp50(t))];
   const endUv = (u, v) => [u, 1 - v * 0.25];
   function haft(parts, top, { radius = 0.021, seed = 1, topRadius = 0.019, butt = true, topCap = true } = {}) {
-    const rand3 = random6(seed), path = spline([[0, HAFT.bottom, 0], [2e-3 * (rand3() - 0.5), 0.05, 1e-3], [4e-3 * (rand3() - 0.5), 0.2, 2e-3 * (rand3() - 0.5)], [0, top, 0]], 30);
-    const knots = [[0.62, rand3() * TAU36], [0.84, rand3() * TAU36]];
+    const rand3 = random7(seed), path = spline([[0, HAFT.bottom, 0], [2e-3 * (rand3() - 0.5), 0.05, 1e-3], [4e-3 * (rand3() - 0.5), 0.2, 2e-3 * (rand3() - 0.5)], [0, top, 0]], 30);
+    const knots = [[0.62, rand3() * TAU37], [0.84, rand3() * TAU37]];
     const base = (y) => y < -0.13 ? mix15(radius * 1.22, radius * 1.04, smooth35(-0.17, -0.13, y)) : y < 0.12 ? radius * (1.02 + 0.02 * Math.sin(y * 40)) : mix15(radius, topRadius, smooth35(0.12, top, y));
     const r = (t, a) => {
       let k = 1;
@@ -76594,12 +78030,12 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     };
     const oval = (t, a) => 1 - 0.07 * Math.cos(2 * a);
     tube2(parts.wood, path, r, { sides: 16, uv: haftUv(), shape: oval, cap: [butt ? endUv : null, topCap ? endUv : null] });
-    return (y, phi) => r(clamp49((y - HAFT.bottom) / (top - HAFT.bottom)), -phi) * oval(0, -phi);
+    return (y, phi) => r(clamp50((y - HAFT.bottom) / (top - HAFT.bottom)), -phi) * oval(0, -phi);
   }
   function windings(parts, y0, y1, radiusAt, { seed = 3, r = 21e-4 } = {}) {
     const pitch2 = r * 2.08, turns = Math.max(1, (y1 - y0 - 2 * r) / pitch2), n = Math.ceil(turns * 16), path = [];
     for (let i = 0; i <= n; i++) {
-      const t = i / n, phi = t * turns * TAU36 + seed, y = y0 + r + t * turns * pitch2, rr2 = radiusAt(y, phi) + r * 0.8;
+      const t = i / n, phi = t * turns * TAU37 + seed, y = y0 + r + t * turns * pitch2, rr2 = radiusAt(y, phi) + r * 0.8;
       path.push([Math.cos(phi) * rr2, y, Math.sin(phi) * rr2]);
     }
     tube2(parts.cord, path, () => r, { sides: 6, uv: (t, u, l) => [u, l / 0.02], colour: (t) => {
@@ -76616,12 +78052,12 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     tube2(parts.cord, path, () => r, { sides: 6, uv: (t, u, l) => [u, l / 0.02], colour: () => [0.9, 0.89, 0.87] });
   }
   function knapped(parts, { outline, thickness, cols = 76, rows = 28, seed = 7, flakes = 16, retouch = 28, retouchAt = () => 1, cortexAt = () => 0, size = 1, wobble = 8e-4 * size, crest = 21e-5 * size }) {
-    const rand3 = random6(seed);
+    const rand3 = random7(seed);
     const tones = [3814963, 4406327, 5063741, 5917503, 5261893, 4078135].map(hexRgb), base = hexRgb(4603705), edge2 = hexRgb(9864819), cortex = hexRgb(12432027), cortexDark = hexRgb(10195067);
-    const at = (u, v) => outline.point(clamp49(u), clamp49(v));
+    const at = (u, v) => outline.point(clamp50(u), clamp50(v));
     const scars = [];
     for (const side2 of [-1, 1]) {
-      const make = (kind) => {
+      const make2 = (kind) => {
         const pick2 = rand3(), endWeight = outline.ends ?? 0.25;
         let u, v, m;
         if (pick2 < endWeight) {
@@ -76638,20 +78074,20 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
         const [sx, sy] = at(u, v), reach = Math.hypot(m[0] - sx, m[1] - sy) || 0.01, turn = (rand3() - 0.5) * 0.5;
         const d0 = [(m[0] - sx) / reach, (m[1] - sy) / reach], d = [d0[0] * Math.cos(turn) - d0[1] * Math.sin(turn), d0[0] * Math.sin(turn) + d0[1] * Math.cos(turn)];
         const mid = Math.max(2e-3, thickness(m[0], m[1], m[2])), slope2 = mid / reach;
-        const tone = tones[Math.floor(rand3() * tones.length)], shade3 = 0.9 + rand3() * 0.2;
+        const tone = tones[Math.floor(rand3() * tones.length)], shade4 = 0.9 + rand3() * 0.2;
         if (kind === "flake") {
-          const w2 = clamp49((0.3 + 0.45 * rand3()) * reach, 7e-3 * size, 0.03 * size), s2 = slope2 * (0.55 + 0.33 * rand3());
-          return { side: side2, sx, sy, d, l: [-d[1], d[0]], s: s2, mu: 0.15 * s2 / reach, lambda: 0.5 * mid / (w2 * w2), z0: (rand3() - 0.6) * 5e-4 * size, colour: tone.map((c2) => c2 * shade3), rough: 0.34 + rand3() * 0.12 };
+          const w2 = clamp50((0.3 + 0.45 * rand3()) * reach, 7e-3 * size, 0.03 * size), s2 = slope2 * (0.55 + 0.33 * rand3());
+          return { side: side2, sx, sy, d, l: [-d[1], d[0]], s: s2, mu: 0.15 * s2 / reach, lambda: 0.5 * mid / (w2 * w2), z0: (rand3() - 0.6) * 5e-4 * size, colour: tone.map((c2) => c2 * shade4), rough: 0.34 + rand3() * 0.12 };
         }
         const w = (3e-3 + rand3() * 35e-4) * size, reachR = (4e-3 + rand3() * 5e-3) * size, s = slope2 * (0.4 + 0.2 * rand3());
-        return { side: side2, sx, sy, d, l: [-d[1], d[0]], s, mu: (slope2 * 1.05 - s) / reachR, lambda: 14e-4 * size / (w * w), z0: -1e-4 * size, colour: tone.map((c2) => c2 * shade3 * 1.04), rough: 0.32 + rand3() * 0.1 };
+        return { side: side2, sx, sy, d, l: [-d[1], d[0]], s, mu: (slope2 * 1.05 - s) / reachR, lambda: 14e-4 * size / (w * w), z0: -1e-4 * size, colour: tone.map((c2) => c2 * shade4 * 1.04), rough: 0.32 + rand3() * 0.1 };
       };
       for (let i = 0; i < flakes; i++) {
-        const s = make("flake");
+        const s = make2("flake");
         if (s) scars.push(s);
       }
       for (let i = 0; i < retouch; i++) {
-        const s = make("retouch");
+        const s = make2("retouch");
         if (s) scars.push(s);
       }
     }
@@ -76786,10 +78222,10 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       endBias: 0.8,
       // u along the blade (butt -> edge), v across (bottom -> top).
       point(u, v) {
-        const x = mix15(X0, X1, u), w = v * 2 - 1, scallop = 1 - 0.025 * (0.5 + 0.5 * Math.cos(u * TAU36 * 6.5 + (w > 0 ? 0 : 2.1)));
+        const x = mix15(X0, X1, u), w = v * 2 - 1, scallop = 1 - 0.025 * (0.5 + 0.5 * Math.cos(u * TAU37 * 6.5 + (w > 0 ? 0 : 2.1)));
         const butt = x < X0 + 0.016 ? Math.sqrt(Math.max(0.12, 1 - ((X0 + 0.016 - x) / 0.016) ** 2)) : 1;
         const half = mix15(0.017, 0.04, smooth35(-0.04, 0.15, x)) * (x > 0.118 ? 1 + 0.18 * (x - 0.118) / 0.032 : 1) * scallop * butt;
-        const curve = x > 0.105 ? -w * w * 0.017 * smooth35(0.105, X1, x) : 0, nib = 7e-4 * Math.cos(v * TAU36 * 5.5) * smooth35(0.12, X1, x);
+        const curve = x > 0.105 ? -w * w * 0.017 * smooth35(0.105, X1, x) : 0, nib = 7e-4 * Math.cos(v * TAU37 * 5.5) * smooth35(0.12, X1, x);
         return [(x + curve + nib) * S, Y2 + w * half * (1 - 0.1 * u) * S, Math.max(Math.abs(w), smooth35(0.1, X1, x), smooth35(-0.03, X0, x))];
       }
     };
@@ -76827,7 +78263,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       ends: 0.12,
       endBias: 0.5,
       point(u, v) {
-        const x = mix15(X0, X1, u), w = v * 2 - 1, point5 = smooth35(0.07, X1, x) ** 1.5, scallop = 1 - 0.03 * (0.5 + 0.5 * Math.cos(u * TAU36 * 8 + (w > 0 ? 0.7 : 2.6)));
+        const x = mix15(X0, X1, u), w = v * 2 - 1, point5 = smooth35(0.07, X1, x) ** 1.5, scallop = 1 - 0.03 * (0.5 + 0.5 * Math.cos(u * TAU37 * 8 + (w > 0 ? 0.7 : 2.6)));
         const half = mix15(0.022, 5e-3, point5) * (x < -0.06 ? 1 - 0.45 * smooth35(-0.06, X0, x) : 1) * scallop;
         return [x * S, Y2 + (bend(x) + w * half) * S, Math.max(Math.abs(w), smooth35(0.172, X1, x), smooth35(-0.066, X0, x))];
       }
@@ -76856,6 +78292,25 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       across2(parts, radiusAt, s * 0.85, 0.447, s * 2.3, 0.516);
     }
     finish3("pickaxe", parts);
+  }
+  {
+    const parts = buckets(), top = 0.5, radiusAt = haft(parts, top, { seed: 13 });
+    const grey = hexRgb(7301989), warm = hexRgb(8747886), pale = hexRgb(10130828);
+    blob(parts.item, [8e-3, 0.468, 0], [0.074, 0.043, 0.047], { rows: 12, cols: 20, lumps: 0.12, seed: 61, colour: (d, p2) => {
+      const n = vnoise2(p2[0] * 60, p2[1] * 60, p2[2] * 60, 62), m = vnoise2(p2[0] * 260, p2[1] * 260, p2[2] * 260, 63);
+      return grey.map((c2, k) => mix15(mix15(c2, warm[k], n), pale[k], smooth35(0.82, 0.97, Math.abs(d[0])) * 0.7) * (0.8 + 0.32 * m));
+    }, k: (d) => [mix15(0.88, 0.97, smooth35(0.82, 0.97, Math.abs(d[0]))), 0] });
+    for (const x of [-0.026, 0.026]) {
+      const pts = [];
+      for (let i = 0; i < 18; i++) {
+        const a = i / 18 * TAU37;
+        pts.push([x + Math.sin(a * 2) * 2e-3, 0.468 + Math.cos(a) * 0.046, Math.sin(a) * 0.05]);
+      }
+      loop(parts.cord, pts, 26e-4, { sides: 5 });
+    }
+    windings(parts, 0.398, 0.425, radiusAt, { seed: 7 });
+    for (const s of [1, -1]) across2(parts, radiusAt, s * 1.6, 0.425, s * 1.2, 0.44);
+    finish3("hammer", parts);
   }
   const METALS = { copper: { c: [0.8, 0.44, 0.22], dark: [0.42, 0.3, 0.2], k: 0.34 }, iron: { c: [0.46, 0.47, 0.5], dark: [0.2, 0.2, 0.22], k: 0.42 } };
   const metalColour = (m, p2, edge2) => {
@@ -76903,13 +78358,13 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     ring2(Y1 - 4e-3, Y1 + 0.02, 0.04, 0.03);
     lathe(parts.metal, [[0.03, Y1 + 0.02], [0.022, Y1 + 0.034], [6e-3, Y1 + 0.044], [0, Y1 + 0.046]], { sides: 16, colour: (v, a, y) => metalColour(cu, [Math.cos(a) * 0.02, y, Math.sin(a) * 0.02], 0), k: () => [0.3, 0] });
     for (let j = 0; j < 4; j++) {
-      const a = j / 4 * TAU36 + 0.4;
+      const a = j / 4 * TAU37 + 0.4;
       tube2(parts.metal, [[Math.cos(a) * 0.038, Y0 + 4e-3, Math.sin(a) * 0.038], [Math.cos(a) * 0.041, (Y0 + Y1) / 2, Math.sin(a) * 0.041], [Math.cos(a) * 0.038, Y1, Math.sin(a) * 0.038]], () => 32e-4, { sides: 6, uv: (t, u) => [u, t], colour: (t) => metalColour(cu, [Math.cos(a), t, Math.sin(a)], 0) });
     }
     for (let i = 0; i < parts.metal.k.length; i += 2) if (!parts.metal.k[i]) parts.metal.k[i] = 0.3;
     const blue = [0.55, 0.85, 1], white = [0.9, 0.98, 1];
     surface2(parts.item, 5, 6, (u, v) => {
-      const ang = u * TAU36, along = mix15(Y0 + 0.012, Y1 - 6e-3, v), rad = 0.016 * Math.sin(Math.PI * Math.pow(v, 0.9)) + 2e-3;
+      const ang = u * TAU37, along = mix15(Y0 + 0.012, Y1 - 6e-3, v), rad = 0.016 * Math.sin(Math.PI * Math.pow(v, 0.9)) + 2e-3;
       return { p: [Math.cos(ang) * rad, along, Math.sin(ang) * rad], c: blue.map((c2, i) => mix15(c2, white[i], Math.sin(Math.PI * v))), k: [0.15, 2.2] };
     }, { outward: (p2) => [p2[0], 0, p2[2]] });
     const group = finish3("lantern", parts);
@@ -76920,7 +78375,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
   }
   let rodTip2;
   {
-    const parts = buckets(), L4 = 1.12, rand3 = random6(23);
+    const parts = buckets(), L4 = 1.12, rand3 = random7(23);
     const path = spline([[0, HAFT.bottom, 0], [0, 0.15, 0], [4e-3, 0.5, -2e-3], [0.012, 0.85, -6e-3], [0.024, L4, -0.012]], 48);
     tube2(
       parts.wood,
@@ -76936,7 +78391,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     for (const u of [0.42, 0.64, 0.82, 0.95]) {
       const c2 = along(u), r = mix15(0.0185, 42e-4, Math.pow(u, 0.75)) + 6e-3, pts = [];
       for (let k = 0; k <= 10; k++) {
-        const a = k / 10 * TAU36;
+        const a = k / 10 * TAU37;
         pts.push([c2[0] + Math.cos(a) * 4e-3, c2[1] + Math.sin(a) * 4e-3 + r, c2[2] - 2e-3]);
       }
       tube2(parts.cord, pts, () => 11e-4, { sides: 4, uv: (t, u2) => [u2, t], colour: () => [0.9, 0.88, 0.82] });
@@ -76967,18 +78422,18 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     const parts = buckets(), top = 0.4, Y0 = 0.282, Y1 = 0.452, bands = [0.301, 0.368, 0.424];
     haft(parts, top, { seed: 13, radius: 0.0205, topRadius: 0.016, topCap: false });
     const profile = (y) => {
-      const t = clamp49((y - Y0) / (Y1 - Y0));
+      const t = clamp50((y - Y0) / (Y1 - Y0));
       let r = 0.0215 + 0.0105 * Math.sin(Math.PI * Math.min(1, t * 1.06)) ** 0.55;
       for (const b of bands) r -= 28e-4 * Math.exp(-(((y - b) / 65e-4) ** 2));
       return r * (y > 0.438 ? 1 - 0.22 * smooth35(0.438, 0.458, y) : 1);
     };
-    const rand3 = random6(31);
+    const rand3 = random7(31);
     {
       const coreRows = 12, sides = 16, core = [];
       for (let i = 0; i <= coreRows; i++) {
         const y = mix15(Y0, Y1 - 2e-3, i / coreRows), char = smooth35(0.425, 0.445, y), row2 = [];
         for (let j = 0; j <= sides; j++) {
-          const a = j / sides * TAU36, r = profile(y) * 0.93;
+          const a = j / sides * TAU37, r = profile(y) * 0.93;
           row2.push(parts.straw.vertex([Math.cos(a) * r, y, Math.sin(a) * r], [Math.cos(a), 0, Math.sin(a)], [j / sides, y / 0.16], [0.42, 0.37, 0.29].map((c2) => c2 * mix15(1, 0.16, char)), [char, 0]));
         }
         core.push(row2);
@@ -76988,7 +78443,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       for (let i = 1; i <= rings3; i++) {
         const f15 = i / rings3, row2 = [];
         for (let j = 0; j < sides; j++) {
-          const a = j / sides * TAU36, r = profile(yTop) * 0.93 * f15, y = yTop + 6e-3 * (1 - f15 * f15) + 25e-4 * (vnoise2(Math.cos(a) * 4 * f15, Math.sin(a) * 4 * f15, 0, 9) - 0.5);
+          const a = j / sides * TAU37, r = profile(yTop) * 0.93 * f15, y = yTop + 6e-3 * (1 - f15 * f15) + 25e-4 * (vnoise2(Math.cos(a) * 4 * f15, Math.sin(a) * 4 * f15, 0, 9) - 0.5);
           row2.push(parts.straw.vertex([Math.cos(a) * r, y, Math.sin(a) * r], norm([Math.cos(a) * f15 * 0.8, 1, Math.sin(a) * f15 * 0.8]), [0.5 + Math.cos(a) * f15 * 0.4, 0.5 + Math.sin(a) * f15 * 0.4], [0.07, 0.055, 0.045].map((c2) => c2 * (0.8 + 0.4 * rand3())), [1, 0]));
         }
         ring2.push(row2);
@@ -77001,7 +78456,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     }
     for (const [count2, layer, wMin, wMax, lift] of [[46, 0.972, 45e-4, 6e-3, -4e-3], [56, 1, 38e-4, 56e-4, 0]]) {
       for (let i = 0; i < count2; i++) {
-        const a0 = (i + (layer < 1 ? 0 : 0.5)) / count2 * TAU36 + (rand3() - 0.5) * 0.06, twist = (rand3() - 0.5) * 0.14, w = mix15(wMin, wMax, rand3());
+        const a0 = (i + (layer < 1 ? 0 : 0.5)) / count2 * TAU37 + (rand3() - 0.5) * 0.06, twist = (rand3() - 0.5) * 0.14, w = mix15(wMin, wMax, rand3());
         const ya = Y0 + rand3() * 5e-3, yb = 0.447 + rand3() * 0.013 + lift, tone = 0.78 + rand3() * 0.3, u0 = rand3(), rows = 10, ids2 = [];
         for (let r = 0; r <= rows; r++) {
           const s = r / rows, y = mix15(ya, yb, s), a = a0 + twist * s, out2 = [Math.cos(a), 0, Math.sin(a)], side2 = [-Math.sin(a), 0, Math.cos(a)];
@@ -77014,7 +78469,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       }
     }
     for (let i = 0; i < 8; i++) {
-      const a = rand3() * TAU36, y0 = 0.31 + rand3() * 0.1, lean = 0.18 + rand3() * 0.2, length = 0.014 + rand3() * 0.018, r0 = profile(y0) * 0.99, start2 = [Math.cos(a) * r0, y0, Math.sin(a) * r0];
+      const a = rand3() * TAU37, y0 = 0.31 + rand3() * 0.1, lean = 0.18 + rand3() * 0.2, length = 0.014 + rand3() * 0.018, r0 = profile(y0) * 0.99, start2 = [Math.cos(a) * r0, y0, Math.sin(a) * r0];
       const dir = norm([Math.cos(a) * Math.sin(lean), Math.cos(lean), Math.sin(a) * Math.sin(lean)]);
       const path = [start2, add2(start2, scale3(dir, length * 0.5)), add2(start2, scale3(add2(dir, [Math.cos(a) * 0.15, 0, Math.sin(a) * 0.15]), length))];
       tube2(parts.straw, path, (t) => 11e-4 * (1 - t * 0.5), { sides: 3, uv: (t, u) => [u * 0.05 + rand3() * 0.9, t * 0.2], colour: (t) => {
@@ -77034,20 +78489,20 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     tube2(parts.wood, shaft, () => 36e-4, { sides: 6, uv: (t, u) => [u * 0.25, 1 - (0.3 + 0.6 * t)] });
     const tip = x0 + length, base = tip - 0.045, flint = hexRgb(4866619), edge2 = hexRgb(9404784);
     surface2(parts.stone, 4, 8, (u, v) => {
-      const t = v, half = 85e-4 * Math.sin(Math.PI * Math.min(1, (1 - t) * 1.25)) * (t < 0.12 ? 0.7 + 2.5 * t : 1), a = u * TAU36, thick = 24e-4 * Math.sin(Math.PI * Math.min(1, (1 - t) * 1.1));
+      const t = v, half = 85e-4 * Math.sin(Math.PI * Math.min(1, (1 - t) * 1.25)) * (t < 0.12 ? 0.7 + 2.5 * t : 1), a = u * TAU37, thick = 24e-4 * Math.sin(Math.PI * Math.min(1, (1 - t) * 1.1));
       const p2 = [mix15(base, tip, t), y0 + Math.cos(a) * half, z0 + Math.sin(a) * thick];
       return { p: p2, c: flint.map((c2, k) => mix15(c2, edge2[k], smooth35(0.6, 1, Math.abs(Math.cos(a))) * 0.5)), k: [0.38, 0] };
     }, { outward: (p2) => [0, p2[1] - y0, p2[2] - z0] });
     for (const [cx, w] of [[base - 6e-3, 0.012], [x0 + 0.012, 0.01]]) {
       const ring2 = [];
       for (let i = 0; i <= 10; i++) {
-        const t = i / 10, a = t * 2.5 * TAU36;
+        const t = i / 10, a = t * 2.5 * TAU37;
         ring2.push([cx - w / 2 + t * w, y0 + Math.cos(a) * 46e-4, z0 + Math.sin(a) * 46e-4]);
       }
       tube2(parts.cord, ring2, () => 12e-4, { sides: 5, uv: (t, u, l) => [u, l / 0.02], colour: () => [0.6, 0.5, 0.38] });
     }
     for (let i = 0; i < 3; i++) {
-      const a = i / 3 * TAU36 + 0.5, out2 = [0, Math.cos(a), Math.sin(a)];
+      const a = i / 3 * TAU37 + 0.5, out2 = [0, Math.cos(a), Math.sin(a)];
       const start2 = [x0 + 0.025, y0 + out2[1] * 36e-4, z0 + out2[2] * 36e-4];
       blade2(parts.straw, start2, [1, 0, 0], [0, -out2[2], out2[1]], 0.085, 75e-4, { curl: 0, fold: 0, rows: 4, shape: (t) => Math.sin(Math.PI * Math.pow(t, 0.6)) * (1 - 0.3 * t), colour: () => [0.86, 0.8, 0.62] });
     }
@@ -77058,7 +78513,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     const parts = buckets(), { half, inner } = BOW;
     const s = (y) => Math.max(Math.abs(y) - inner, 0) / (half - inner);
     surface2(parts.bowWood, 34, 12, (u, v) => {
-      const y = (v - 0.5) * 2 * (half - 4e-3), q = s(y), a = u * TAU36;
+      const y = (v - 0.5) * 2 * (half - 4e-3), q = s(y), a = u * TAU37;
       const width = Math.abs(y) < inner ? 0.017 : mix15(0.0165, 62e-4, q ** 0.9), depth = Math.abs(y) < inner ? 0.015 : mix15(0.0105, 58e-4, q);
       const cx2 = BOW.restTip * q * q + (Math.abs(y) < inner ? 2e-3 : 0);
       return { p: [cx2 + Math.cos(a) * depth, y, Math.sin(a) * width], c: [1, 1, 1], uv: [u * 0.5, 1 - (0.32 + 0.5 * Math.abs(v - 0.5) * 2)] };
@@ -77069,7 +78524,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       blob(parts.bowWood, [cx(y), y, 0], [58e-4, 6e-3, 62e-4], { rows: 5, cols: 8 });
       const path = [];
       for (let i = 0; i <= 40; i++) {
-        const t = i / 40, yy = sign * (half - 0.03 + t * 0.018), a = t * 4 * TAU36;
+        const t = i / 40, yy = sign * (half - 0.03 + t * 0.018), a = t * 4 * TAU37;
         path.push([cx(yy) + Math.cos(a) * 68e-4, yy, Math.sin(a) * 74e-4]);
       }
       tube2(parts.bowWood, path, () => 14e-4, { sides: 5, uv: (t, u) => [u * 0.1, 0.55], colour: () => [0.42, 0.34, 0.25] });
@@ -77101,7 +78556,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
   const nockPoint = new THREE2.Vector3(), restPoint = new THREE2.Vector3(...BOW.rest), alongX = new THREE2.Vector3(1, 0, 0), arrowLine = new THREE2.Vector3();
   const arrowTipPoint = new THREE2.Vector3();
   function setBow({ draw = 0, arrow: showArrow = false, twang = 0 } = {}) {
-    draw = clamp49(draw);
+    draw = clamp50(draw);
     bowBend.value = BOW.bend * draw;
     const tipX = BOW.restTip - BOW.bend * draw, nockX = BOW.brace - BOW.drawLength * draw + twang, tipY = BOW.half - 0.012;
     nockPoint.set(nockX, BOW.nockY, 0);
@@ -77124,7 +78579,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
   const rgb = hexRgb, jitter = (c2, r, amount = 0.08) => c2.map((x) => x * (1 + (r() - 0.5) * amount));
   const itemBuilders = {
     twigs(parts) {
-      const r = random6(51);
+      const r = random7(51);
       for (let i = 0; i < 5; i++) {
         const lean = [(r() - 0.5) * 0.05, 0, (r() - 0.5) * 0.05], top = 0.2 + r() * 0.07, bottom = -0.07 - r() * 0.02, path = spline([[lean[0] * -0.3 + (r() - 0.5) * 0.012, bottom, (r() - 0.5) * 0.012], [(r() - 0.5) * 6e-3, 0.05, (r() - 0.5) * 6e-3], [lean[0], top, lean[2]]], 10);
         tube2(parts.wood, path, (t) => mix15(75e-4, 45e-4, t) * (0.85 + r() * 0.3), { sides: 7, uv: (t, u) => [u * 0.4 + i * 0.17, 1 - (0.3 + 0.55 * t)], cap: [endUv, endUv] });
@@ -77135,7 +78590,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       }
     },
     grass(parts) {
-      const r = random6(52), greens = [5603119, 6589750, 7903551, 9086025, 7309882].map(rgb), dry = rgb(12168546), cut = rgb(13095319), N = 26;
+      const r = random7(52), greens = [5603119, 6589750, 7903551, 9086025, 7309882].map(rgb), dry = rgb(12168546), cut = rgb(13095319), N = 26;
       for (let i = 0; i < N; i++) {
         const a = i * 2.39996 + r() * 0.4, ring2 = Math.sqrt((i + 0.5) / N), rr2 = 35e-4 + ring2 * 0.0105, cx = Math.cos(a), cz = Math.sin(a);
         const y0 = -0.056 + r() * 0.012, yb = 0.07 + r() * 0.012, lean = 0.1 + ring2 * (0.32 + r() * 0.3), L4 = 0.12 + r() * 0.13, droop = 0.35 + r() * 0.6;
@@ -77164,7 +78619,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       blob(parts.item, [0, 0.066, 0], [0.04, 0.034, 0.036], { rows: 10, cols: 16, lumps: 0.16, seed: 62, colour: (d) => grey.map((c2, k) => mix15(c2, warm[k], vnoise2(d[0] * 3, d[1] * 3, d[2] * 3, 63)) * (0.85 + 0.2 * vnoise2(d[0] * 9, d[1] * 9, d[2] * 9, 64))), k: () => [0.9, 0] });
     },
     log(parts) {
-      const path = spline([[0, -0.08, 0], [2e-3, 0.1, 1e-3], [0, 0.27, 0]], 12), r = random6(53);
+      const path = spline([[0, -0.08, 0], [2e-3, 0.1, 1e-3], [0, 0.27, 0]], 12), r = random7(53);
       tube2(parts.wood, path, (t, a) => 0.025 * (1 + 0.05 * Math.sin(a * 3 + t * 9)) * (Math.sin(a) < -0.55 ? 0.72 : 1), {
         sides: 16,
         uv: (t, u) => [u, 1 - (0.25 + 0.75 * (0.9 + 0.08 * t))],
@@ -77176,7 +78631,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       for (let k = 0; k < 4; k++) {
         const points = [], rr2 = 0.05 + k * 4e-3, tilt = (k - 1.5) * 0.12;
         for (let i = 0; i < 28; i++) {
-          const a = i / 28 * TAU36;
+          const a = i / 28 * TAU37;
           points.push([Math.sin(a) * rr2 * 0.85, 0.055 - Math.cos(a) * rr2, Math.sin(a) * tilt * 0.1 + (k - 1.5) * 7e-3]);
         }
         loop(parts.cord, points, 42e-4, { sides: 6, colour: () => [0.9 - k * 0.04, 0.87 - k * 0.04, 0.8 - k * 0.04] });
@@ -77196,12 +78651,12 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       for (const [dx, dy] of [[0, 0.17], [-0.016, 0.155], [0.016, 0.155]]) blob(parts.item, [dx, dy, 4e-3], [8e-3, 8e-3, 8e-3], { rows: 5, cols: 8, lumps: 0.3, seed: 65 + dx * 100, colour: () => rgb(14215679), k: () => [0.5, 0.55] });
     },
     crystal(parts) {
-      const r = random6(66), blue = rgb(6272472), light = rgb(12576501);
+      const r = random7(66), blue = rgb(6272472), light = rgb(12576501);
       for (let i = 0; i < 4; i++) {
         const a = i * 1.7 + r(), lean = [Math.cos(a) * (i ? 0.35 : 0.05), 1, Math.sin(a) * (i ? 0.35 : 0.05)], d = norm(lean), length = i ? 0.045 + r() * 0.02 : 0.08, w = i ? 9e-3 : 0.014, base = [Math.cos(a) * (i ? 0.012 : 0), 0.035, Math.sin(a) * (i ? 0.012 : 0)];
         const sideA = norm(cross7(d, [0, 0, 1])), sideB = cross7(d, sideA);
         surface2(parts.item, 3, 6, (u, v) => {
-          const ang = u * TAU36, rad = v < 0.75 ? w : w * (1 - (v - 0.75) / 0.25), along = v < 0.75 ? v / 0.75 * length : length + (v - 0.75) / 0.25 * w * 1.6;
+          const ang = u * TAU37, rad = v < 0.75 ? w : w * (1 - (v - 0.75) / 0.25), along = v < 0.75 ? v / 0.75 * length : length + (v - 0.75) / 0.25 * w * 1.6;
           const p2 = add2(add2(base, scale3(d, along)), add2(scale3(sideA, Math.cos(ang) * rad), scale3(sideB, Math.sin(ang) * rad)));
           return { p: p2, c: blue.map((c2, k) => mix15(c2, light[k], 0.35 * Math.abs(Math.cos(ang * 3)))), k: [0.18, 0.35] };
         }, { outward: (p2) => sub2(p2, add2(base, scale3(d, dot3(sub2(p2, base), d) * 0.6))) });
@@ -77210,11 +78665,11 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     shard(parts) {
       const gold = rgb(15320666), pale = rgb(16774084);
       surface2(parts.item, 1, 10, (u, v) => {
-        const a = u * TAU36, r = (Math.round(u * 10) % 2 ? 0.016 : 0.036) * (1 - v * 0.999), z = (1 - v) * 0 + v * 8e-3;
+        const a = u * TAU37, r = (Math.round(u * 10) % 2 ? 0.016 : 0.036) * (1 - v * 0.999), z = (1 - v) * 0 + v * 8e-3;
         return { p: [Math.sin(a) * r, 0.075 + Math.cos(a) * r, z], c: gold.map((c2, k) => mix15(c2, pale[k], v)), k: [0.25, 0.9] };
       }, { outward: () => [0, 0, 1] });
       surface2(parts.item, 1, 10, (u, v) => {
-        const a = u * TAU36, r = (Math.round(u * 10) % 2 ? 0.016 : 0.036) * (1 - v * 0.999);
+        const a = u * TAU37, r = (Math.round(u * 10) % 2 ? 0.016 : 0.036) * (1 - v * 0.999);
         return { p: [Math.sin(a) * r, 0.075 + Math.cos(a) * r, -v * 8e-3], c: gold, k: [0.25, 0.7] };
       }, { outward: () => [0, 0, -1] });
     },
@@ -77239,6 +78694,50 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     },
     meat_cooked(parts) {
       meat(parts, rgb(8274978), rgb(11037242), true);
+    },
+    // v143: the shore's creatures caught alive and their meat - a crab held by the back of its shell, its legs and claws
+    // spread; a frog held round its middle, its hind legs hanging below the fist; a crab's claw (raw dark olive, cooked
+    // red); a pair of frog's legs held by the hips; a live fish as the others, fresher.
+    crab(parts) {
+      crabHeld(parts);
+    },
+    frog(parts) {
+      frogHeld(parts);
+    },
+    fish_live(parts) {
+      fishShape(parts, rgb(4874834), rgb(15133666), 0);
+    },
+    crab_meat(parts) {
+      crabClaw(parts, rgb(5918784), rgb(12101252), false);
+    },
+    crab_cooked(parts) {
+      crabClaw(parts, rgb(13586214), rgb(15913648), true);
+    },
+    frog_meat(parts) {
+      frogLegs(parts, rgb(15321019), false);
+    },
+    frog_cooked(parts) {
+      frogLegs(parts, rgb(11891516), true);
+    },
+    // v144: a small bird held round its middle (its head up out of the fist, the tail below); a squirrel held round its
+    // chest (the tail hanging); a plucked bird on its legs; a squirrel's haunch.
+    bird(parts) {
+      birdHeld(parts);
+    },
+    squirrel(parts) {
+      squirrelHeld(parts);
+    },
+    bird_meat(parts) {
+      pluckedBird(parts, rgb(15382952), false);
+    },
+    bird_cooked(parts) {
+      pluckedBird(parts, rgb(11101487), true);
+    },
+    squirrel_meat(parts) {
+      haunch(parts, rgb(11027258), rgb(14857384), false);
+    },
+    squirrel_cooked(parts) {
+      haunch(parts, rgb(8012320), rgb(11037242), true);
     },
     mush_red(parts) {
       mushroom3(parts, rgb(13186862), rgb(16183264), false);
@@ -77284,7 +78783,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       for (let k = 0; k < 7; k++) {
         const points = [], rr2 = 0.036 + k * 25e-4, tilt = (k - 3) * 0.08;
         for (let i = 0; i < 30; i++) {
-          const a = i / 30 * TAU36;
+          const a = i / 30 * TAU37;
           points.push([Math.sin(a) * rr2, 0.07 - Math.cos(a) * rr2 * 0.8, Math.sin(a) * tilt * 0.1 + (k - 3) * 4e-3]);
         }
         loop(parts.cord, points, 26e-4, { sides: 5, colour: () => [1.25 - k * 0.02, 1.27 - k * 0.02, 1.35 - k * 0.02] });
@@ -77297,7 +78796,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     colossus_core(parts) {
       const blue = rgb(3968976), light = rgb(14219007);
       surface2(parts.item, 4, 6, (u, v) => {
-        const ang = u * TAU36, rad = 0.028 * Math.sin(Math.PI * Math.pow(v, 0.85)) + 1e-3;
+        const ang = u * TAU37, rad = 0.028 * Math.sin(Math.PI * Math.pow(v, 0.85)) + 1e-3;
         return { p: [Math.cos(ang) * rad, 0.03 + v * 0.1, Math.sin(ang) * rad], c: blue.map((c2, k) => mix15(c2, light[k], Math.sin(Math.PI * v) * 0.6)), k: [0.12, 1.6] };
       }, { outward: (p2) => [p2[0], 0, p2[2]] });
     },
@@ -77329,7 +78828,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       for (let k = 0; k < 9; k++) {
         const points = [], rr2 = 0.026 + k % 3 * 4e-3, tilt = (k - 4) * 0.2;
         for (let i = 0; i < 26; i++) {
-          const a = i / 26 * TAU36;
+          const a = i / 26 * TAU37;
           points.push([Math.cos(a) * rr2, 0.06 + Math.sin(a) * rr2 * Math.cos(tilt), Math.sin(a) * rr2 * Math.sin(tilt)]);
         }
         loop(parts.cord, points, 21e-4, { sides: 4, colour: () => [1.3, 1.32, 1.36] });
@@ -77346,7 +78845,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       fishShape(parts, rgb(7229492), rgb(12096614), 0);
     },
     jerky(parts) {
-      const r = random6(108), tones = [6169622, 7220764, 8009248].map(rgb);
+      const r = random7(108), tones = [6169622, 7220764, 8009248].map(rgb);
       for (let i = 0; i < 3; i++) {
         const a = i * 2.1 + 0.3, ox = Math.cos(a) * 6e-3, oz = Math.sin(a) * 6e-3, lean = (i - 1) * 0.1;
         const path = spline([[ox, -0.045, oz], [ox, 0.02, oz], [ox + Math.sin(lean) * 0.03, 0.1 + i * 0.012, oz + 4e-3], [ox + Math.sin(lean) * 0.06, 0.15 + i * 0.015, oz + (r() - 0.5) * 0.01]], 14), base = tones[i];
@@ -77375,7 +78874,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       for (let k = 0; k < 7; k++) {
         const a0 = k / 7 * Math.PI, pts = [];
         for (let i = 0; i < 26; i++) {
-          const b = i / 26 * TAU36, w = 1 + 0.06 * Math.sin(i * 1.7 + k);
+          const b = i / 26 * TAU37, w = 1 + 0.06 * Math.sin(i * 1.7 + k);
           pts.push([c2[0] + Math.cos(b) * Math.cos(a0) * R[0] * w, c2[1] + Math.sin(b) * R[1] * w, c2[2] + Math.cos(b) * Math.sin(a0) * R[2] * w]);
         }
         loop(parts.cord, pts, 16e-4, { sides: 4, colour: () => [1.12, 1.14, 1.2] });
@@ -77383,7 +78882,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       for (let k = 1; k < 6; k++) {
         const b = (k / 6 - 0.5) * Math.PI, pts = [];
         for (let i = 0; i < 26; i++) {
-          const a = i / 26 * TAU36, w = 1 + 0.06 * Math.sin(i * 2.3 + k);
+          const a = i / 26 * TAU37, w = 1 + 0.06 * Math.sin(i * 2.3 + k);
           pts.push([c2[0] + Math.cos(b) * Math.cos(a) * R[0] * w, c2[1] + Math.sin(b) * R[1], c2[2] + Math.cos(b) * Math.sin(a) * R[2] * w]);
         }
         loop(parts.cord, pts, 16e-4, { sides: 4, colour: () => [1.08, 1.1, 1.16] });
@@ -77399,7 +78898,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       cloth(parts, rgb(9264179), rgb(14270618), 104);
     },
     charcoal(parts) {
-      const r = random6(105), black = rgb(2499359), grey = rgb(6051922);
+      const r = random7(105), black = rgb(2499359), grey = rgb(6051922);
       for (const [x, y, z, s] of [[-0.012, 0.058, 4e-3, 1], [0.016, 0.066, -6e-3, 0.85], [2e-3, 0.088, 0.01, 0.7]])
         blob(parts.item, [x, y, z], [0.019 * s, 0.016 * s, 0.017 * s], { rows: 7, cols: 10, lumps: 0.3, seed: 106 + Math.round(s * 10), colour: (d) => black.map((c2, k) => mix15(c2, grey[k], 0.35 * smooth35(0.5, 1, vnoise2(d[0] * 7, d[1] * 7, d[2] * 7, 107)) + 0.15 * r())), k: () => [0.82, 0.05] });
     },
@@ -77409,7 +78908,7 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     serpent_charm(parts) {
       const points = [];
       for (let i = 0; i < 30; i++) {
-        const a = i / 30 * TAU36;
+        const a = i / 30 * TAU37;
         points.push([Math.sin(a) * 0.045, 0.1 - Math.cos(a) * 0.06, 0]);
       }
       loop(parts.cord, points, 22e-4, { sides: 5, colour: () => [0.95, 0.82, 0.55] });
@@ -77418,14 +78917,14 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     },
     raft(parts) {
       for (let i = 0; i < 3; i++) {
-        const a = i * TAU36 / 3 + 0.5, path = spline([[Math.cos(a) * 0.0105, -0.09, Math.sin(a) * 0.0105], [Math.cos(a) * 0.0105, 0.21 + i * 0.012, Math.sin(a) * 0.0105]], 6);
+        const a = i * TAU37 / 3 + 0.5, path = spline([[Math.cos(a) * 0.0105, -0.09, Math.sin(a) * 0.0105], [Math.cos(a) * 0.0105, 0.21 + i * 0.012, Math.sin(a) * 0.0105]], 6);
         tube2(parts.wood, path, () => 95e-4, { sides: 10, uv: (t, u) => [u, 1 - (0.25 + 0.75 * t)], cap: [endUv, endUv] });
       }
       for (const y of [-0.06, 0.07, 0.17]) windings(parts, y - 7e-3, y + 7e-3, () => 0.0205, { seed: 10 + y * 10, r: 19e-4 });
     },
     arrow(parts) {
       for (const [i, dz] of [[0, -6e-3], [1, 6e-3], [2, 0]]) {
-        const r = random6(70 + i), group = buckets();
+        const r = random7(70 + i), group = buckets();
         arrow(group, { at: [0, 0, 0], length: 0.62 });
         const turn = new THREE2.Matrix4().makeRotationZ(Math.PI / 2 + (i - 1) * 0.07).setPosition((i - 1) * 6e-3, -0.36, dz);
         for (const [key3, part2] of Object.entries(group)) appendTransformed(parts[key3], part2, turn);
@@ -77443,12 +78942,12 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       return PROFILE[PROFILE.length - 1][1];
     };
     surface2(parts.item, 16, 14, (u, v) => {
-      const a = u * TAU36, d = half(v), w = d * 0.56, y = y0 + v * L4, x = Math.cos(a) * d, z = Math.sin(a) * w;
-      const up7 = smooth35(-0.65, 0.6, -Math.cos(a)), mark = cooked ? Math.abs(Math.sin(y * 150 + x * 40)) ** 12 : 0;
+      const a = u * TAU37, d = half(v), w = d * 0.56, y = y0 + v * L4, x = Math.cos(a) * d, z = Math.sin(a) * w;
+      const up7 = smooth35(-0.65, 0.6, -Math.cos(a)), mark2 = cooked ? Math.abs(Math.sin(y * 150 + x * 40)) ** 12 : 0;
       let c2 = belly.map((b, k) => mix15(b, back[k], up7));
       c2 = c2.map((q) => q * (0.92 + 0.1 * vnoise2(x * 120, y * 120, z * 120, 133)));
       c2 = c2.map((q) => q * (1 - 0.22 * Math.exp(-(((v - 0.78 + 0.05 * Math.cos(a) ** 2) / 0.012) ** 2))));
-      if (cooked) c2 = c2.map((q, k) => mix15(q * (0.82 + 0.25 * vnoise2(x * 60, y * 60, 1, 134)), char[k], mark * 0.8));
+      if (cooked) c2 = c2.map((q, k) => mix15(q * (0.82 + 0.25 * vnoise2(x * 60, y * 60, 1, 134)), char[k], mark2 * 0.8));
       return { p: [x, y, z], c: c2, k: [cooked ? 0.7 : 0.32, glowing * (v > 0.2 && v < 0.85 ? smooth35(0.75, 0.9, vnoise2(x * 150, y * 150, z * 150, 132)) : 0)] };
     }, { outward: (p2) => [p2[0], 0, p2[2]] });
     const fin = back.map((c2) => c2 * (cooked ? 0.7 : 0.85));
@@ -77466,24 +78965,161 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
       blob(parts.item, [-d * 0.25, y0 + v * L4, z], [42e-4, 42e-4, 18e-4], { rows: 5, cols: 8, colour: () => cooked ? [0.85, 0.82, 0.7] : [0.04, 0.04, 0.04], k: () => [0.15, 0] });
     }
   }
+  function crabHeld(parts) {
+    const back = rgb(8142629), light = rgb(12150586), under = rgb(14926746), dark = rgb(2825494), uv = () => [0, 0];
+    const shell = (d, p2) => {
+      const n = vnoise2(p2[0] * 90, p2[1] * 90, p2[2] * 90, 141), top = smooth35(-0.35, 0.5, d[2]);
+      return under.map((u, k) => mix15(u, mix15(back[k], light[k], smooth35(0.4, 0.8, n) * 0.6), top) * (0.88 + 0.16 * n));
+    };
+    blob(parts.item, [0, 0.068, -2e-3], [0.046, 0.036, 0.0145], { rows: 12, cols: 22, lumps: 0.06, seed: 142, colour: shell, k: () => [0.42, 0] });
+    for (let i = -2; i <= 2; i++) blob(parts.item, [i * 0.011, 0.102 - Math.abs(i) * 4e-3, 1e-3], [45e-4, 4e-3, 35e-4], { rows: 4, cols: 6, colour: shell, k: () => [0.42, 0] });
+    for (const side2 of [-1, 1]) {
+      for (let i = 0; i < 4; i++) {
+        const y = 0.084 - i * 0.012, out2 = 0.043 + i * 2e-3, sweep2 = -6e-3 - i * 0.011;
+        const path = spline([[side2 * (out2 - 8e-3), y, -6e-3], [side2 * (out2 + 0.02), y + 0.012 - i * 4e-3, -4e-3], [side2 * (out2 + 0.038), y + sweep2 * 0.6, -0.012], [side2 * (out2 + 0.046), y + sweep2 - 0.014, -0.026]], 8);
+        tube2(parts.item, path, (t) => mix15(42e-4, 13e-4, t), { sides: 6, uv, colour: (t) => t > 0.86 ? dark : light.map((c2, k) => mix15(c2, back[k], 0.35 + 0.3 * Math.sin(t * 11 + i)) * (0.92 + 0.1 * Math.cos(t * 23))) });
+      }
+      const arm = spline([[side2 * 0.026, 0.094, -4e-3], [side2 * 0.04, 0.108, 2e-3], [side2 * 0.044, 0.122, 4e-3]], 6);
+      tube2(parts.item, arm, (t) => mix15(58e-4, 68e-4, t), { sides: 7, uv, colour: (t) => back.map((c2, k) => mix15(c2, light[k], 0.3 + 0.2 * t)) });
+      blob(parts.item, [side2 * 0.046, 0.136, 5e-3], [0.0115, 0.0165, 85e-4], { rows: 8, cols: 12, lumps: 0.08, seed: 143 + side2, colour: shell, k: () => [0.38, 0] });
+      tube2(parts.item, spline([[side2 * 0.041, 0.148, 5e-3], [side2 * 0.038, 0.162, 5e-3], [side2 * 0.041, 0.172, 4e-3]], 6), (t) => mix15(42e-4, 11e-4, t), { sides: 6, uv, colour: (t) => t > 0.6 ? dark : shell([0, 0, 1], [side2, 0.15, 0]) });
+      tube2(parts.item, spline([[side2 * 0.052, 0.147, 4e-3], [side2 * 0.056, 0.159, 4e-3], [side2 * 0.049, 0.168, 4e-3]], 6), (t) => mix15(38e-4, 1e-3, t), { sides: 6, uv, colour: (t) => t > 0.6 ? dark : shell([0, 0, 1], [side2, 0.16, 0]) });
+      tube2(parts.item, [[side2 * 7e-3, 0.101, 4e-3], [side2 * 9e-3, 0.108, 9e-3]], () => 16e-4, { sides: 5, uv, colour: () => light });
+      blob(parts.item, [side2 * 95e-4, 0.11, 0.01], [26e-4, 26e-4, 26e-4], { rows: 4, cols: 6, colour: () => [0.03, 0.03, 0.03], k: () => [0.12, 0] });
+    }
+  }
+  function frogHeld(parts) {
+    const green2 = rgb(6130746), olive = rgb(4086310), belly = rgb(15130542), uv = () => [0, 0];
+    const skin = (d, p2) => {
+      const n = vnoise2(p2[0] * 160, p2[1] * 160, p2[2] * 160, 151), top = smooth35(-0.4, 0.4, d[2]);
+      let c2 = belly.map((b, k) => mix15(b, green2[k], top));
+      if (top > 0.5) c2 = c2.map((x, k) => mix15(x, olive[k], smooth35(0.62, 0.75, n) * 0.8));
+      return c2.map((x) => x * (0.9 + 0.14 * n));
+    };
+    blob(parts.item, [0, 0.05, 2e-3], [0.0158, 0.046, 0.0148], { rows: 12, cols: 16, colour: skin, k: () => [0.3, 0] });
+    blob(parts.item, [0, 0.1, 5e-3], [0.0195, 0.016, 0.0128], { rows: 9, cols: 14, colour: skin, k: () => [0.3, 0] });
+    for (const side2 of [-1, 1]) {
+      blob(parts.item, [side2 * 0.0105, 0.106, 0.0135], [62e-4, 58e-4, 56e-4], { rows: 6, cols: 8, colour: (d) => d[2] > 0.55 ? [0.05, 0.04, 0.02] : [0.72, 0.62, 0.25], k: () => [0.12, 0] });
+      const arm = spline([[side2 * 0.012, 0.086, 8e-3], [side2 * 0.022, 0.078, 0.012], [side2 * 0.024, 0.062, 0.016]], 6);
+      tube2(parts.item, arm, (t) => mix15(42e-4, 28e-4, t), { sides: 6, uv, colour: () => green2 });
+      for (let f15 = -1; f15 <= 1; f15++) blade2(parts.item, [side2 * 0.024, 0.062, 0.016], [side2 * 0.3 + f15 * 0.35, -1, 0.1], [0, 0, 1], 0.011, 34e-4, { colour: () => green2, curl: 0.1, k: () => [0.35, 0] });
+      const leg = spline([[side2 * 8e-3, 6e-3, 0], [side2 * 0.02, -0.032, 6e-3], [side2 * 0.026, -0.046, 6e-3], [side2 * 0.015, -0.07, 4e-3], [side2 * 0.018, -0.088, 6e-3]], 10);
+      tube2(parts.item, leg, (t) => mix15(78e-4, 26e-4, smooth35(0, 1, t)), { sides: 8, uv, colour: (t, a) => skin([0, 0, Math.sin(a)], [side2 * t, t, a]) });
+      for (let f15 = -2; f15 <= 2; f15++) blade2(parts.item, [side2 * 0.018, -0.088, 6e-3], [side2 * 0.2 + f15 * 0.22, -1, 0.05], [0, 0, 1], 0.024, 7e-3, { colour: () => green2.map((c2) => c2 * 0.9), curl: 0.05, fold: 0.1, k: () => [0.35, 0] });
+    }
+  }
+  function crabClaw(parts, shellColour, paleColour, cooked) {
+    const dark = cooked ? rgb(3808272) : rgb(2235672), uv = () => [0, 0];
+    const tone = (d, p2) => {
+      const n = vnoise2(p2[0] * 120, p2[1] * 120, p2[2] * 120, cooked ? 161 : 162);
+      return paleColour.map((c2, k) => mix15(c2, shellColour[k], smooth35(-0.6, 0.3, d[2]))).map((x) => x * (0.86 + 0.2 * n));
+    };
+    lathe(parts.item, [[0, -0.05], [75e-4, -0.049], [88e-4, -0.035], [86e-4, 0], [92e-4, 0.03], [0.011, 0.05]], { sides: 12, wobble: 0.06, seed: 163, colour: (v, a, y) => tone([0, 0, Math.sin(a)], [Math.cos(a), y, Math.sin(a)]), k: () => [cooked ? 0.5 : 0.4, 0] });
+    surface2(parts.item, 14, 16, (u, v) => {
+      const a = u * TAU37, y = 0.046 + v * 0.062, w = (0.0105 + 0.011 * Math.sin(Math.PI * Math.pow(v, 0.75))) * (1 - 0.25 * smooth35(0.85, 1, v)), x = Math.cos(a) * w, z = Math.sin(a) * w * 0.64;
+      return { p: [x, y, z], c: tone([0, 0, Math.sin(a)], [x, y, z]), k: [cooked ? 0.5 : 0.38, 0] };
+    }, { outward: (p2) => [p2[0], 0, p2[2]] });
+    const finger = (pts, r0) => tube2(parts.item, spline(pts, 10), (t) => mix15(r0, 11e-4, Math.pow(t, 1.3)), { sides: 8, uv, cap: [null, () => [0, 0]], colour: (t, a) => t > 0.78 ? dark : shellColour.map((c2, k) => mix15(c2, paleColour[k], 0.18 + 0.25 * Math.max(0, Math.sin(a))) * (0.9 + 0.1 * Math.cos(a))) });
+    finger([[65e-4, 0.104, 0], [95e-4, 0.126, 0], [75e-4, 0.146, 0], [15e-4, 0.158, 0]], 68e-4);
+    finger([[-75e-4, 0.102, 0], [-0.012, 0.122, 0], [-95e-4, 0.142, 0], [-25e-4, 0.153, 0]], 6e-3);
+  }
+  function frogLegs(parts, flesh, cooked) {
+    const char = rgb(3809040), uv = () => [0, 0];
+    for (const side2 of [-1, 1]) {
+      const leg = spline([[side2 * 48e-4, -0.045, 0], [side2 * 62e-4, 0, 1e-3], [side2 * 0.015, 0.04, 3e-3], [side2 * 0.03, 0.084, 5e-3], [side2 * 0.024, 0.118, 4e-3], [side2 * 0.029, 0.15, 2e-3]], 16);
+      tube2(parts.item, leg, (t) => t < 0.57 ? 62e-4 + 82e-4 * Math.sin(Math.PI * smooth35(0.08, 0.57, t)) ** 0.7 : 42e-4 + 14e-4 * Math.sin(Math.PI * smooth35(0.6, 0.92, t)) - 12e-4 * smooth35(0.92, 1, t), {
+        sides: 12,
+        uv,
+        cap: [null, () => [0, 0]],
+        colour: (t, a) => {
+          const n = vnoise2(t * 30, a * 2, side2, 171);
+          let c2 = flesh.map((x) => x * (0.86 + 0.2 * n) * (t > 0.97 ? 0.8 : 1));
+          if (cooked) c2 = c2.map((x, k) => mix15(x, char[k], 0.5 * smooth35(0.6, 1, Math.sin(t * 40 + a * 2) ** 8)));
+          return c2;
+        }
+      });
+    }
+  }
+  function birdHeld(parts) {
+    const brown = rgb(6965802), streak = rgb(3810836), pale = rgb(14208440), uv = () => [0, 0];
+    const plumage = (d, p2) => {
+      const n = vnoise2(p2[0] * 220, p2[1] * 220, p2[2] * 220, 181), back = smooth35(-0.5, 0.4, d[2]);
+      return pale.map((c2, k) => mix15(c2, mix15(brown[k], streak[k], smooth35(0.55, 0.75, n) * 0.7), back)).map((x) => x * (0.9 + 0.15 * n));
+    };
+    blob(parts.item, [0, 0.058, 2e-3], [0.0185, 0.034, 0.0175], { rows: 10, cols: 14, colour: plumage, k: () => [0.85, 0] });
+    blob(parts.item, [4e-3, 0.1, 4e-3], [0.0145, 0.0145, 0.014], { rows: 8, cols: 12, colour: (d, p2) => d[1] > 0.55 ? rgb(5913122) : plumage(d, p2), k: () => [0.85, 0] });
+    tube2(parts.item, [[0.016, 0.101, 6e-3], [0.027, 0.099, 6e-3]], (t) => mix15(42e-4, 4e-4, t), { sides: 6, uv, colour: () => rgb(3813414) });
+    for (const z of [-1, 1]) blob(parts.item, [9e-3, 0.104, 4e-3 + z * 0.0118], [26e-4, 26e-4, 18e-4], { rows: 4, cols: 6, colour: () => [0.02, 0.02, 0.02], k: () => [0.1, 0] });
+    for (const x of [-1, 1]) blade2(parts.item, [x * 0.016, 0.075, 6e-3], [x * 0.1, -1, 0.15], [x, 0, 0.35], 0.052, 0.016, { colour: (t) => mix15(1, 0, t) > 0.3 ? brown.map((c2) => c2 * (0.8 + 0.3 * Math.sin(t * 20) ** 2)) : streak, curl: 0.05, fold: 0.1, k: () => [0.8, 0] });
+    for (let f15 = -2; f15 <= 2; f15++) blade2(parts.item, [0, 0.02, -4e-3], [f15 * 0.1, -1, -0.05], [0, 0, 1], 0.075, 0.013, { colour: () => streak.map((c2) => c2 * 1.3), curl: 0.04, fold: 0.05, k: () => [0.8, 0] });
+  }
+  function squirrelHeld(parts) {
+    const red = rgb(10112034), cream = rgb(15127218), uv = () => [0, 0];
+    const fur = (d, p2) => {
+      const n = vnoise2(p2[0] * 260, p2[1] * 260, p2[2] * 260, 191);
+      return cream.map((c2, k) => mix15(c2, red[k], smooth35(-0.3, 0.2, d[2]))).map((x) => x * (0.86 + 0.2 * n));
+    };
+    blob(parts.item, [0, 0.042, 2e-3], [0.0215, 0.05, 0.0195], { rows: 12, cols: 14, colour: fur, k: () => [0.9, 0] });
+    blob(parts.item, [0, 0.106, 9e-3], [0.021, 0.02, 0.025], { rows: 9, cols: 12, colour: (d, p2) => Math.abs(d[0]) > 0.55 && d[1] > -0.1 && d[1] < 0.45 && d[2] > 0.1 ? [0.02, 0.02, 0.02] : fur(d, p2), k: () => [0.9, 0] });
+    for (const x of [-1, 1]) {
+      tube2(parts.item, [[x * 0.012, 0.121, 3e-3], [x * 0.016, 0.138, 0]], (t) => mix15(6e-3, 15e-4, t), { sides: 5, uv, colour: () => red });
+      tube2(parts.item, spline([[x * 0.013, 0.082, 0.015], [x * 0.02, 0.072, 0.022], [x * 0.016, 0.064, 0.026]], 5), (t) => mix15(45e-4, 3e-3, t), { sides: 5, uv, colour: () => red });
+    }
+    for (const x of [-1, 1]) tube2(parts.item, spline([[x * 0.013, -0, 2e-3], [x * 0.02, -0.03, 0.01], [x * 0.015, -0.05, 0.014], [x * 0.018, -0.062, 0.022]], 8), (t) => mix15(9e-3, 3e-3, t), { sides: 6, uv, colour: (t, a) => fur([0, 0, Math.sin(a)], [x, t, a]) });
+    tube2(parts.item, spline([[0, 0, -0.014], [0.012, -0.04, -0.03], [0.03, -0.08, -0.034], [0.046, -0.115, -0.026], [0.054, -0.14, -0.012]], 14), (t) => 0.013 + 0.018 * Math.sin(Math.PI * Math.min(1, t * 1.05 + 0.12)) ** 0.5, {
+      sides: 10,
+      uv,
+      shape: (t, a) => 1 + 0.22 * (vnoise2(t * 30, a * 2.5, 0, 193) - 0.5),
+      colour: (t, a) => red.map((c2, k) => mix15(c2, cream[k], smooth35(0.82, 1, t) * 0.5) * (0.82 + 0.32 * vnoise2(t * 40, a * 3, 0, 192)))
+    });
+  }
+  function pluckedBird(parts, skin, cooked) {
+    const char = rgb(3020298), uv = () => [0, 0];
+    const tone = (d, p2) => {
+      const n = vnoise2(p2[0] * 150, p2[1] * 150, p2[2] * 150, cooked ? 171 : 172);
+      let c2 = skin.map((x) => x * (0.86 + 0.2 * n));
+      if (cooked) c2 = c2.map((x, k) => mix15(x, char[k], 0.55 * smooth35(0.62, 1, Math.sin(p2[1] * 220 + p2[0] * 90) ** 8)));
+      return c2;
+    };
+    for (const x of [-1, 1]) tube2(parts.item, [[x * 4e-3, -0.05, 0], [x * 5e-3, 0, 0], [x * 9e-3, 0.045, 2e-3]], (t) => mix15(34e-4, 52e-4, t), { sides: 6, uv, colour: () => cooked ? rgb(7223832) : rgb(14131344) });
+    blob(parts.item, [0, 0.075, 2e-3], [0.026, 0.032, 0.023], { rows: 12, cols: 16, lumps: 0.05, seed: 173, colour: tone, k: () => [cooked ? 0.55 : 0.4, 0] });
+    for (const x of [-1, 1]) blob(parts.item, [x * 0.025, 0.082, -2e-3], [7e-3, 0.016, 0.01], { rows: 6, cols: 8, colour: tone, k: () => [cooked ? 0.55 : 0.4, 0] });
+    tube2(parts.item, spline([[0, 0.104, 4e-3], [2e-3, 0.118, 6e-3], [4e-3, 0.126, 4e-3]], 5), (t) => mix15(8e-3, 55e-4, t), { sides: 7, uv, colour: () => tone([0, 0, 1], [0, 0.11, 0]) });
+  }
+  function haunch(parts, flesh, fat, cooked) {
+    lathe(parts.item, [[0, -0.05], [85e-4, -0.048], [9e-3, -0.036], [6e-3, -0.022], [58e-4, 0.015], [7e-3, 0.036]], { sides: 10, colour: () => rgb(15525072), k: () => [0.55, 0] });
+    const char = rgb(2758156);
+    lathe(parts.item, [[65e-4, 0.024], [0.012, 0.03], [0.02, 0.044], [0.027, 0.062], [0.029, 0.08], [0.026, 0.095], [0.018, 0.105], [8e-3, 0.11], [0, 0.111]], {
+      sides: 18,
+      wobble: 0.14,
+      seed: 183,
+      colour: (v, a, y) => {
+        const n = vnoise2(Math.cos(a) * 3 + 4, Math.sin(a) * 3, y * 60, 184), streak = smooth35(0.88, 0.97, Math.abs(Math.sin(y * 95 + a * 1.4 + 4 * n)));
+        let c2 = flesh.map((x, k) => mix15(x, fat[k], streak * (cooked ? 0.15 : 0.3)) * (0.84 + 0.24 * n));
+        if (cooked) c2 = c2.map((x, k) => mix15(x, char[k], Math.max(0, 1 - Math.abs((y - 0.05 + Math.cos(a) * 0.01) / 0.02 % 1 - 0.5) / 0.1) * smooth35(-0.3, 0.5, Math.sin(a)) * 0.75));
+        return c2;
+      },
+      k: () => [cooked ? 0.62 : 0.36, 0]
+    });
+  }
   function ingot(parts, m) {
     roundedBox(parts.metal, [0, 0.062, 0], [0.04, 0.016, 0.022], { e: 0.3, rows: 12, cols: 20, colour: (d) => metalColour(m, d.map((x) => x * 0.04), smooth35(0.6, 1, d[1])), k: () => [m.k, 0] });
   }
   function cloth(parts, base, edge2, seed) {
-    const r = random6(seed), twist = r() * TAU36, n = 7;
+    const r = random7(seed), twist = r() * TAU37, n = 7;
     const ys = [-0.088, -0.062, -0.04, 0, 0.045, 0.07, 0.095, 0.12], rx = [0.03, 0.022, 0.0138, 0.0133, 0.0158, 0.035, 0.052, 0.058], rz = [0.012, 0.0128, 0.0136, 0.0133, 0.0146, 0.0158, 0.0146, 0.011];
     const at = (list, f15) => {
       const i = Math.min(list.length - 2, Math.floor(f15)), t = f15 - i;
       return mix15(list[i], list[i + 1], t * t * (3 - 2 * t));
     };
     surface2(parts.item, 40, 36, (u, v) => {
-      const a = u * TAU36, f15 = v * (ys.length - 1), hem = Math.min(v, 1 - v), close = smooth35(0, 0.035, hem);
+      const a = u * TAU37, f15 = v * (ys.length - 1), hem = Math.min(v, 1 - v), close = smooth35(0, 0.035, hem);
       const open = smooth35(-0.035, 0.02, Math.abs(at(ys, f15) - 4e-3) - 0.045), pleat = Math.cos(n * a + twist + at(ys, f15) * 40) * mix15(19e-4, 62e-4, open);
       const wave = v > 0.5 ? 0.012 * Math.cos(3 * a + twist * 0.3) * smooth35(0.8, 1, v) : -7e-3 * Math.cos(2 * a + 1) * smooth35(0.2, 0, v);
       const y = at(ys, f15) + wave, X2 = (at(rx, f15) + pleat) * Math.cos(a), Z2 = (at(rz, f15) * close + pleat * 0.55) * Math.sin(a);
       const trim = Math.max(smooth35(0.075, 0.04, v), smooth35(0.915, 0.955, v)), valley = 0.5 - 0.5 * Math.cos(n * a + twist + at(ys, f15) * 40);
-      const shade3 = (0.7 + 0.36 * valley * (0.4 + 0.6 * open)) * (0.9 + 0.14 * vnoise2(X2 * 140, y * 140, Z2 * 140, seed));
-      return { p: [X2, y, Z2], c: base.map((c2, k) => mix15(c2, edge2[k], trim * 0.85) * shade3), k: [0.86, 0] };
+      const shade4 = (0.7 + 0.36 * valley * (0.4 + 0.6 * open)) * (0.9 + 0.14 * vnoise2(X2 * 140, y * 140, Z2 * 140, seed));
+      return { p: [X2, y, Z2], c: base.map((c2, k) => mix15(c2, edge2[k], trim * 0.85) * shade4), k: [0.86, 0] };
     }, { outward: (p2) => [p2[0], 0, p2[2]] });
   }
   function flower2(parts, petal2, centre, count2, size) {
@@ -77491,13 +79127,13 @@ diffuseColor.rgb *= .86 + .26 * tlHammer;`).replace("#include <roughnessmap_frag
     tube2(parts.item, stem, () => 26e-4, { sides: 5, uv: () => [0, 0], colour: () => rgb(5214010) });
     blade2(parts.item, stem[4], [0.8, 0.5, 0.3], [0, 0, 1], 0.04, 0.011, { colour: () => rgb(6265414), curl: 0.2 });
     for (let i = 0; i < count2; i++) {
-      const a = i / count2 * TAU36;
+      const a = i / count2 * TAU37;
       blade2(parts.item, head2, [Math.cos(a), Math.sin(a), 0.35], [0, 0, 1], size, size * 0.42, { colour: (t) => petal2.map((c2) => c2 * (0.85 + 0.2 * t)), curl: -0.08, fold: 0.1, k: () => [0.55, 0] });
     }
     blob(parts.item, add2(head2, [0, 0, 4e-3]), [6e-3, 6e-3, 4e-3], { rows: 5, cols: 8, colour: () => centre, k: () => [0.6, 0] });
   }
   function sprig(parts, berry, cooked) {
-    const r = random6(cooked ? 72 : 71), stem = spline([[0, -0.06, 0], [2e-3, 0.05, 0], [-3e-3, 0.12, 4e-3]], 10);
+    const r = random7(cooked ? 72 : 71), stem = spline([[0, -0.06, 0], [2e-3, 0.05, 0], [-3e-3, 0.12, 4e-3]], 10);
     tube2(parts.wood, stem, (t) => mix15(35e-4, 2e-3, t), { sides: 5, uv: (t, u) => [u * 0.2, 1 - (0.4 + 0.3 * t)] });
     if (!cooked) for (const [i, a] of [[3, 0.9], [6, -1.1]]) blade2(parts.item, stem[i], [Math.cos(a), 0.6, 0.3], [0, 0, 1], 0.038, 0.012, { colour: () => rgb(6265414), curl: 0.25, k: () => [0.6, 0] });
     for (let i = 0; i < 7; i++) {
@@ -77910,7 +79546,7 @@ var SLANT = { pickaxe: 0.5, axe: 0.5, club: 0.45, torch: 0.42 };
 var SHOULDER3 = [0.24, -0.3, 0.05];
 var TARGET = [0.065, -0.075, -1.11];
 var CONTACT_LEAN = 0.68;
-var clamp50 = (x) => Math.max(0, Math.min(1, x));
+var clamp51 = (x) => Math.max(0, Math.min(1, x));
 function track(points, times, loop2 = false) {
   const tangents = points.map(() => [0, 0, 0]);
   if (loop2) {
@@ -77929,7 +79565,7 @@ function sample(track2, t, out2) {
   const { points, times, tangents } = track2;
   let i = 0;
   while (i < points.length - 2 && t > times[i + 1]) i++;
-  const span = times[i + 1] - times[i], u = clamp50((t - times[i]) / span), u2 = u * u, u3 = u2 * u;
+  const span = times[i + 1] - times[i], u = clamp51((t - times[i]) / span), u2 = u * u, u3 = u2 * u;
   const a = 2 * u3 - 3 * u2 + 1, b = u3 - 2 * u2 + u, c2 = -2 * u3 + 3 * u2, d = u3 - u2;
   for (let k = 0; k < 3; k++) out2.setComponent(k, a * points[i][k] + b * span * tangents[i][k] + c2 * points[i + 1][k] + d * span * tangents[i + 1][k]);
 }
@@ -77998,7 +79634,7 @@ function createHandMotion(THREE2, { rightBaseQuaternion, leftBaseQuaternion, rig
         const { turns, times } = slant;
         let i = 0;
         while (i < times.length - 2 && phase2 > times[i + 1]) i++;
-        const u2 = clamp50((phase2 - times[i]) / (times[i + 1] - times[i])), w = i === 1 ? u2 * (2 - u2) : i === 2 ? u2 * u2 * (3 - 2 * u2) : smooth37(u2);
+        const u2 = clamp51((phase2 - times[i]) / (times[i + 1] - times[i])), w = i === 1 ? u2 * (2 - u2) : i === 2 ? u2 * u2 * (3 - 2 * u2) : smooth37(u2);
         quaternion2.copy(turns[i]).slerp(turns[i + 1], w);
         return;
       }
@@ -78013,7 +79649,7 @@ function createHandMotion(THREE2, { rightBaseQuaternion, leftBaseQuaternion, rig
       const frame3 = frames4[side2 === 1 ? 0 : 1];
       phase2 = ((phase2 + (side2 < 0 ? 0.5 : 0)) % 1 + 1) % 1;
       sample(frame3.positions, phase2, offset);
-      const amplitude = 0.48 + 0.52 * clamp50(effort);
+      const amplitude = 0.48 + 0.52 * clamp51(effort);
       offset.x = side2 * 0.25 + (offset.x - side2 * 0.25) * amplitude;
       offset.y = -0.35 + (offset.y + 0.35) * amplitude;
       offset.z = -0.59 + (offset.z + 0.59) * amplitude;
@@ -78036,14 +79672,16 @@ var HAND_WEAPONS = Object.freeze([
   // v110: the lantern of the colossus's core (lit as the torch is, a cold light).
   Object.freeze({ id: "lantern", label: "ランタン" }),
   // v110: the fishing rod (held up as the torch is; survival-fishing.js its line from its tip).
-  Object.freeze({ id: "rod", label: "釣り竿" })
+  Object.freeze({ id: "rod", label: "釣り竿" }),
+  // v145: the stone hammer (swung as the club is) that takes down what was built.
+  Object.freeze({ id: "hammer", label: "石のハンマー" })
 ]);
 var METAL_VARIANTS = Object.freeze({ axe: ["copper", "iron"], pickaxe: ["copper", "iron"] });
 var LIGHT_COLOURS = Object.freeze({ torch: { view: 16756584, world: 16754008 }, lantern: { view: 12577023, world: 11066623 } });
-var TAU37 = Math.PI * 2;
-var clamp51 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+var TAU38 = Math.PI * 2;
+var clamp52 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 var smooth38 = (x) => {
-  x = clamp51(x);
+  x = clamp52(x);
   return x * x * (3 - 2 * x);
 };
 var ACTIONS = Object.freeze({
@@ -78189,7 +79827,7 @@ function createHandTools(THREE2, meshes, options = {}) {
     return state2();
   };
   const heldId = (index2) => index2 < 0 ? "hand" : HAND_WEAPONS[index2].id;
-  const motionId = () => activeIndex < 0 || HAND_WEAPONS[activeIndex].id === "bow" ? "club" : HAND_WEAPONS[activeIndex].id === "lantern" || HAND_WEAPONS[activeIndex].id === "rod" ? "torch" : HAND_WEAPONS[activeIndex].id;
+  const motionId = () => activeIndex < 0 || HAND_WEAPONS[activeIndex].id === "bow" || HAND_WEAPONS[activeIndex].id === "hammer" ? "club" : HAND_WEAPONS[activeIndex].id === "lantern" || HAND_WEAPONS[activeIndex].id === "rod" ? "torch" : HAND_WEAPONS[activeIndex].id;
   const state2 = () => ({ weapon: heldId(activeIndex), item: heldItem, metal: activeMetal, label: activeIndex < 0 ? "素手" : HAND_WEAPONS[activeIndex].label, pendingWeapon: pending === null ? null : heldId(pending.index), torchVisible: root2.visible && (tools.torch.visible || tools.lantern.visible) && torchBlend > 0.015, torchBlend, attacking: !!lastMotion.attack, swimming: !!lastMotion.swimming, swimBlend, acting: action?.kind || null, switching: switchTime >= 0, contactPhase: lastMotion.combo === 0 || lastMotion.combo === 2 ? 0.6226 : 0.6364 });
   function update(dt, motion = {}, dayNightState, world2) {
     if (disposed) return;
@@ -78215,7 +79853,7 @@ function createHandTools(THREE2, meshes, options = {}) {
     swimBlend += ((motion.swimming ? 1 : 0) - swimBlend) * (1 - Math.exp(-dt * 7));
     const bareIdle = activeIndex < 0 && !heldItem && !pending && !motion.attack && !action && !motion.swimming && swimBlend < 0.02;
     stowBlend += ((bareIdle ? 1 : 0) - stowBlend) * (1 - Math.exp(-dt * (bareIdle ? 7 : 22)));
-    const moving2 = motion.grounded !== false && (motion.speed || 0) > 0.15, gait = (motion.gaitPhase || 0) * TAU37;
+    const moving2 = motion.grounded !== false && (motion.speed || 0) > 0.15, gait = (motion.gaitPhase || 0) * TAU38;
     const gaitWeight = 1 - Math.exp(-dt * 10), bobTarget = moving2 ? Math.sin(gait * 2) * (motion.sprint ? 35e-4 : 3e-3) : Math.sin(time * 1.7) * 15e-4;
     bob += (bobTarget - bob) * gaitWeight;
     gaitSide += ((moving2 ? Math.sin(gait) * 2e-3 : 0) - gaitSide) * gaitWeight;
@@ -78247,7 +79885,7 @@ function createHandTools(THREE2, meshes, options = {}) {
     }
     let swingTurn = 0;
     if (motion.attack) {
-      const phase2 = clamp51((motion.attackElapsed || 0) / (motion.attackDuration || 0.74));
+      const phase2 = clamp52((motion.attackElapsed || 0) / (motion.attackDuration || 0.74));
       const contact = motion.combo === 0 || motion.combo === 2 ? 0.6226 : 0.6364;
       swingTurn = phase2 <= contact ? Math.min(1, phase2 / (contact * 0.82)) : Math.max(0, 1 - (phase2 - contact) / (1 - contact));
       swingTurn = swingTurn * swingTurn * (3 - 2 * swingTurn);
@@ -78256,14 +79894,14 @@ function createHandTools(THREE2, meshes, options = {}) {
       right.position.add(poseOffset);
       rightTilt.multiply(poseQuaternion);
     } else if (motion.hurt > 0) {
-      const flinch = Math.sin(clamp51(1 - motion.hurt / 0.36) * Math.PI);
+      const flinch = Math.sin(clamp52(1 - motion.hurt / 0.36) * Math.PI);
       right.position.z += flinch * 0.045;
       right.position.y -= flinch * 0.025;
       rightTilt.multiply(nextQuaternion.setFromEuler(euler2.set(-flinch * 0.13, 0, flinch * 0.05)));
     }
     if (action) {
       action.time += dt;
-      const u = clamp51(action.time / action.duration), weight = Math.sin(Math.PI * Math.min(1, u * 1.12)) ** 2 * (u < 0.9 ? 1 : 1 - smooth38((u - 0.9) / 0.1));
+      const u = clamp52(action.time / action.duration), weight = Math.sin(Math.PI * Math.min(1, u * 1.12)) ** 2 * (u < 0.9 ? 1 : 1 - smooth38((u - 0.9) / 0.1));
       let pulse = 0;
       for (const at of action.bites || action.knocks || []) pulse += Math.exp(-(((u - at) / 0.035) ** 2));
       right.position.x += action.offset[0] * weight;
@@ -78289,7 +79927,7 @@ function createHandTools(THREE2, meshes, options = {}) {
     bowBlend += ((bowHeld && alive2 ? 1 : 0) - bowBlend) * (1 - Math.exp(-dt * 12));
     if (!bowHeld) bowBlend = 0;
     if (bowHeld) {
-      const aim = smooth38(motion.bowAim || 0), draw = clamp51(motion.bowDraw || 0);
+      const aim = smooth38(motion.bowAim || 0), draw = clamp52(motion.bowDraw || 0);
       if ((motion.bowShot || 0) !== lastShot) {
         lastShot = motion.bowShot || 0;
         shotTime = 0;
@@ -78316,12 +79954,12 @@ function createHandTools(THREE2, meshes, options = {}) {
       nockAt.copy(nock).applyQuaternion(bowQuaternion).add(bowGrip);
       arrowTipAt.copy(tools.arrowTip).applyQuaternion(bowQuaternion).add(bowGrip);
       arrowTipShown = !!motion.bowArrow && aim > 0.35;
-      const reach = smooth38(clamp51(aim * 1.25));
+      const reach = smooth38(clamp52(aim * 1.25));
       holdTurn(bowY, toBody.subVectors(BODY2.right, nockAt).normalize(), "right", drawQuaternion);
       right.position.y -= 0.45 * (1 - reach);
       scratch3.copy(nockAt);
       if (shotTime < RELEASE.back + RELEASE.home && Number.isFinite(releaseAt.x)) {
-        const out2 = Math.sin(Math.min(1, shotTime / RELEASE.back) * Math.PI / 2), home = smooth38(clamp51((shotTime - RELEASE.back) / RELEASE.home));
+        const out2 = Math.sin(Math.min(1, shotTime / RELEASE.back) * Math.PI / 2), home = smooth38(clamp52((shotTime - RELEASE.back) / RELEASE.home));
         toBody.copy(releaseAt);
         toBody.x += RELEASE.follow[0] * out2;
         toBody.y += RELEASE.follow[1] * out2;
@@ -78770,10 +80408,10 @@ var UNDERWORLD = Object.freeze({
   }),
   stamp: Object.freeze({ hide: 1.95 })
 });
-var TAU38 = Math.PI * 2;
-var clamp52 = (v, a, b) => v < a ? a : v > b ? b : v;
+var TAU39 = Math.PI * 2;
+var clamp53 = (v, a, b) => v < a ? a : v > b ? b : v;
 var smooth39 = (a, b, v) => {
-  const t = clamp52((v - a) / (b - a), 0, 1);
+  const t = clamp53((v - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
 };
 var MOUTH_NAMES = ["風穴", "苔の岩屋", "白岩の洞", "霧の洞", "鳴き岩の洞", "狐の穴", "岩窟", "黒岩の口", "雫の洞", "石の喉", "夕影の洞", "谷底の洞", "影の岩屋", "鷲岩の洞", "冷えた洞", "眠りの口"];
@@ -78782,7 +80420,7 @@ var OLD_ENTRANCES = Object.freeze({
   mine: Object.freeze({ width: 1.7, height: 2.6, at: -2.2, cut: 3.55, notch: 4.3, arch: 1.4, inner: 1.16, roof: 2.3, dark: -0.75, trigger: Object.freeze([-0.3, -0.65]), props: Object.freeze([["quarry-stone-pile", -3.4, 2.3, 0.5], ["miners-tools", 2.9, 2.7, -0.4]]) }),
   root: Object.freeze({ width: 2, height: 3.2, at: -2.2, cut: 3.95, notch: 4.8, arch: 1.7, inner: 1.46, roof: 2.3, dark: -0.75, trigger: Object.freeze([-0.3, -0.65]), props: Object.freeze([["split-log-stack", -3.6, 2.2, 1.2]]) })
 });
-function mouthSites({ island, height: height2, macro, waterAt, nearWater, marshDistance, seaLevel, reserved, random: random10, seed }) {
+function mouthSites({ island, height: height2, macro, waterAt, nearWater, marshDistance, seaLevel, reserved, random: random13, seed }) {
   const M2 = UNDERWORLD.mouths, b = island.landBounds, out2 = [];
   for (let z = b.minZ + M2.grid * 0.5; z < b.maxZ; z += M2.grid) for (let x = b.minX + M2.grid * 0.5; x < b.maxX; x += M2.grid) {
     const px = x + (hash2(Math.round(x), Math.round(z), seed ^ 20973) - 0.5) * M2.grid * 0.8, pz = z + (hash2(Math.round(z), Math.round(x), seed ^ 11130) - 0.5) * M2.grid * 0.8;
@@ -78813,7 +80451,7 @@ function mouthSites({ island, height: height2, macro, waterAt, nearWater, marshD
       }
     }
     if (wet) continue;
-    const score = -Math.abs(c2.grade - 0.85) * 1.6 + Math.min(1.5, rise22 / 16) - (Math.abs(sideL) + Math.abs(sideR)) * 0.12 + random10() * 0.35;
+    const score = -Math.abs(c2.grade - 0.85) * 1.6 + Math.min(1.5, rise22 / 16) - (Math.abs(sideL) + Math.abs(sideR)) * 0.12 + random13() * 0.35;
     fits.push({ ...c2, n0, D, T: T2, score, rise: rise14 });
   }
   return fits;
@@ -78821,7 +80459,7 @@ function mouthSites({ island, height: height2, macro, waterAt, nearWater, marshD
 function createUnderworldPlan({ seed, island, height: height2, macro, waterAt, nearWater, marshDistance = null, seaLevel = 0, reserved = [], biomeAt = null } = {}) {
   if (!Number.isSafeInteger(seed) || !island?.landBounds || typeof height2 !== "function" || typeof macro !== "function" || typeof waterAt !== "function" || typeof nearWater !== "function") throw new TypeError("The underworld needs the island, its heights and its water");
   const started = typeof performance !== "undefined" ? performance.now() : Date.now();
-  const planSeed = hashString(UNDERWORLD.revision + ":" + seed), random10 = randomSource(planSeed);
+  const planSeed = hashString(UNDERWORLD.revision + ":" + seed), random13 = randomSource(planSeed);
   const b = island.landBounds;
   const M2 = UNDERWORLD.mouths;
   let landArea = 0;
@@ -78829,8 +80467,8 @@ function createUnderworldPlan({ seed, island, height: height2, macro, waterAt, n
     const s = 64;
     for (let z = b.minZ; z < b.maxZ; z += s) for (let x = b.minX; x < b.maxX; x += s) if (island.isLandExtent(x, z)) landArea += s * s;
   }
-  const want = clamp52(Math.round(landArea / 1e6 * M2.perKm2), M2.min, M2.max);
-  const sites = mouthSites({ island, height: height2, macro, waterAt, nearWater, marshDistance, seaLevel, reserved, random: random10, seed: planSeed });
+  const want = clamp53(Math.round(landArea / 1e6 * M2.perKm2), M2.min, M2.max);
+  const sites = mouthSites({ island, height: height2, macro, waterAt, nearWater, marshDistance, seaLevel, reserved, random: random13, seed: planSeed });
   sites.sort((p2, q) => q.score - p2.score);
   const camp = reserved.find((r) => r.id === "camp") || { x: -6, z: 11 };
   const mouths = [];
@@ -78869,7 +80507,7 @@ function createUnderworldPlan({ seed, island, height: height2, macro, waterAt, n
     if (style === "cave" || style === "gate") style = biome2 === 0 || biome2 === 4 ? "root" : "mine";
     const model = OLD_ENTRANCES[style];
     ({ width, height: tall } = model);
-    const cut = model.cut, y0 = m.n0 - cut, apron = Math.max(clamp52(cut / m.grade + 1.5, 5, 13), -model.at + 3.5);
+    const cut = model.cut, y0 = m.n0 - cut, apron = Math.max(clamp53(cut / m.grade + 1.5, 5, 13), -model.at + 3.5);
     return {
       id: "mouth:" + index2,
       index: index2,
@@ -79023,7 +80661,7 @@ async function writeMouthRock(key3, result) {
 var GRID5 = 4 / 3;
 var PHOTO_METERS = 2.2;
 var mix16 = MathUtils.lerp;
-var clamp53 = MathUtils.clamp;
+var clamp54 = MathUtils.clamp;
 var rand = (n, s = 0) => {
   const f15 = Math.sin(n * 127.1 + s * 311.7 + 728194 * 0.013) * 43758.5453;
   return f15 - Math.floor(f15);
@@ -79102,7 +80740,7 @@ function outerShell(rocks, profiles, contour, front, backCenter, height2, origin
   const profileAt = (z) => {
     let k = 0;
     while (k < profiles.length - 2 && z < profiles[k + 1].z) k++;
-    const a = profiles[k], b = profiles[k + 1], t = clamp53((z - a.z) / (b.z - a.z), 0, 1);
+    const a = profiles[k], b = profiles[k + 1], t = clamp54((z - a.z) / (b.z - a.z), 0, 1);
     return { cx: mix16(a.cx, b.cx, t), w: mix16(a.w, b.w, t), h: mix16(a.h, b.h, t) };
   };
   const fine = [];
@@ -79448,6 +81086,10 @@ function lidTriangles(position3, index2, seam = CHEST_SPLIT.seam) {
   for (let t = 0; t < mask.length; t++) mask[t] = low.get(piece[index2[t * 3]]) > seam ? 1 : 0;
   return mask;
 }
+function lidMask(geometry3, seam) {
+  const position3 = geometry3.attributes.position, index2 = geometry3.index?.array ?? Uint32Array.from({ length: position3.count }, (_, i) => i);
+  return lidTriangles(position3, index2, seam);
+}
 function splitChestLid(THREE2, root2, { seam = CHEST_SPLIT.seam, hinge = CHEST_SPLIT.hinge } = {}) {
   if (!root2) return null;
   const done2 = root2.getObjectByName(CHEST_LID);
@@ -79468,7 +81110,7 @@ function splitChestLid(THREE2, root2, { seam = CHEST_SPLIT.seam, hinge = CHEST_S
     const body2 = [], lid = [];
     for (let t = 0; t < mask.length; t++) (mask[t] ? lid : body2).push(index2[t * 3], index2[t * 3 + 1], index2[t * 3 + 2]);
     if (!lid.length) continue;
-    const make = (list) => {
+    const make2 = (list) => {
       const out2 = new THREE2.BufferGeometry();
       for (const [name, a] of Object.entries(g.attributes)) out2.setAttribute(name, a);
       out2.setIndex(list);
@@ -79476,8 +81118,8 @@ function splitChestLid(THREE2, root2, { seam = CHEST_SPLIT.seam, hinge = CHEST_S
       out2.computeBoundingBox();
       return out2;
     };
-    mesh2.geometry = make(body2);
-    const part2 = new THREE2.Mesh(make(lid), mesh2.material);
+    mesh2.geometry = make2(body2);
+    const part2 = new THREE2.Mesh(make2(lid), mesh2.material);
     part2.name = (mesh2.name || "chest") + ":lid";
     part2.castShadow = mesh2.castShadow;
     part2.receiveShadow = mesh2.receiveShadow;
@@ -79612,7 +81254,7 @@ function buildMoonveilEntrance(world2, g, { height: height2 = () => 0, origin = 
   return { mouth, glow };
 }
 function buildRuin(world2, o) {
-  const { height: height2, hash: hash15 } = world2.terrainFunctions;
+  const { height: height2, hash: hash16 } = world2.terrainFunctions;
   const g = o.mesh;
   g.clear();
   const boss = o.type === "boss", radius = boss ? 13 : 6.5;
@@ -79620,7 +81262,7 @@ function buildRuin(world2, o) {
   const count2 = boss ? 10 : 6, pieces = [];
   for (let i = 0; i < count2; i++) {
     const a = (i / count2 + 0.05) * Math.PI * 2, x = Math.sin(a) * (radius - 0.5), z = Math.cos(a) * (radius - 0.5), y = height2(x + o.x, z + o.z) - o.y;
-    const pillar = placed(i % 4 === 2 ? world2.ruins.stump : world2.ruins.pillar, g, x, y - 0.02, z, 0.85 + hash15(i, 33) * 0.3, a);
+    const pillar = placed(i % 4 === 2 ? world2.ruins.stump : world2.ruins.pillar, g, x, y - 0.02, z, 0.85 + hash16(i, 33) * 0.3, a);
     pieces.push(pillar);
     if (i % 4 === 2) {
       pillar.rotation.z = 0.065;
@@ -79629,10 +81271,10 @@ function buildRuin(world2, o) {
   }
   pieces.push(placed(world2.ruins.arch, g, 0, 0.03, -radius + 0.3, boss ? 1.1 : 0.72, 0));
   for (let i = 0; i < (boss ? 36 : 19); i++) {
-    const a = hash15(i, 410) * 6.28, r = radius * 0.55 + hash15(i, 411) * radius * 0.8, x = Math.sin(a) * r, z = Math.cos(a) * r, y = height2(x + o.x, z + o.z) - o.y;
-    const m = placed(world2.ruins["rubble" + i % 3], g, x, y - 0.035, z, 0.65 + hash15(i, 412) * 0.9, a);
-    m.rotation.x = (hash15(i, 415) - 0.5) * 0.15;
-    m.rotation.z = (hash15(i, 416) - 0.5) * 0.15;
+    const a = hash16(i, 410) * 6.28, r = radius * 0.55 + hash16(i, 411) * radius * 0.8, x = Math.sin(a) * r, z = Math.cos(a) * r, y = height2(x + o.x, z + o.z) - o.y;
+    const m = placed(world2.ruins["rubble" + i % 3], g, x, y - 0.035, z, 0.65 + hash16(i, 412) * 0.9, a);
+    m.rotation.x = (hash16(i, 415) - 0.5) * 0.15;
+    m.rotation.z = (hash16(i, 416) - 0.5) * 0.15;
     pieces.push(m);
   }
   if (!boss) {
@@ -79754,9 +81396,9 @@ function placeCollider(local2, matrix6, yaw2, id2) {
 function moonveilColliders() {
   const E3 = MOONVEIL_ENTRANCE, s = E3.arch.scale, out2 = [], wall = { type: "Stone", support: false, ceiling: false, solid: true };
   for (const side2 of [-1, 1]) out2.push({ slot: "pier-" + (side2 < 0 ? "l" : "r"), shape: "obb", x: side2 * (3.9 + 5.3) / 2 * s, z: E3.arch.z, yaw: 0, halfX: (5.3 - 3.9) / 2 * s, halfZ: 0.6 * s, minY: E3.arch.y, maxY: E3.arch.y + 7 * s, ...wall });
-  const box4 = { "rock-1": [1.12, 1.47, 1.68], "rock-4": [1.06, 1.77, 0.98] };
+  const box5 = { "rock-1": [1.12, 1.47, 1.68], "rock-4": [1.06, 1.77, 0.98] };
   E3.boulders.forEach((b, i) => {
-    const [hx, hy, hz] = box4[b.variant];
+    const [hx, hy, hz] = box5[b.variant];
     out2.push({ slot: "boulder-" + i, shape: "obb", x: b.x, z: b.z, yaw: -b.yaw, halfX: hx * b.scale[0] * 0.92, halfZ: hz * b.scale[2] * 0.92, minY: b.y, maxY: b.y + hy * b.scale[1], ...wall });
   });
   const rows = [[-0.7, -3.35, 3.35], [-2.1, -3.14, 2.9], [-3.85, -2.24, 2.72], [-5.75, -1.48, 2.72]];
@@ -80094,9 +81736,9 @@ function createCaveMouths(world2, plan2, builder7, { natural, lips = [] }) {
       out2.push(mesh2);
     };
     if (rock) {
-      const box4 = new BoxGeometry(1, 1, 1), g = new BufferGeometry();
-      for (const name of ["position", "normal", "uv"]) g.setAttribute(name, box4.attributes[name]);
-      g.setIndex(box4.index);
+      const box5 = new BoxGeometry(1, 1, 1), g = new BufferGeometry();
+      for (const name of ["position", "normal", "uv"]) g.setAttribute(name, box5.attributes[name]);
+      g.setIndex(box5.index);
       const m = new InstancedMesh(g, rock, 1);
       m.setMatrixAt(0, new Matrix4());
       m.castShadow = m.receiveShadow = true;
@@ -80186,7 +81828,7 @@ function createCampfire(THREE2, options = {}) {
   const owned = /* @__PURE__ */ new Set();
   const keep = (value) => (owned.add(value), value);
   const time = { value: 0 };
-  const random10 = (n) => {
+  const random13 = (n) => {
     const v = Math.sin((n + seed) * 12.9898) * 43758.5453;
     return v - Math.floor(v);
   };
@@ -80288,19 +81930,19 @@ function createCampfire(THREE2, options = {}) {
   coals.castShadow = coals.receiveShadow = true;
   const dummy6 = new THREE2.Object3D();
   for (let i = 0; i < 24; i++) {
-    const a = i * 2.39996, r = 0.46 * Math.sqrt(random10(i + 11));
-    dummy6.position.set(Math.cos(a) * r, 0.035 + random10(i + 61) * 0.035, Math.sin(a) * r);
-    dummy6.rotation.set(random10(i + 31) * 2, random10(i + 32) * 6, random10(i + 33) * 2);
-    dummy6.scale.set(0.055 + random10(i + 41) * 0.07, 0.025 + random10(i + 42) * 0.025, 0.05 + random10(i + 43) * 0.07);
+    const a = i * 2.39996, r = 0.46 * Math.sqrt(random13(i + 11));
+    dummy6.position.set(Math.cos(a) * r, 0.035 + random13(i + 61) * 0.035, Math.sin(a) * r);
+    dummy6.rotation.set(random13(i + 31) * 2, random13(i + 32) * 6, random13(i + 33) * 2);
+    dummy6.scale.set(0.055 + random13(i + 41) * 0.07, 0.025 + random13(i + 42) * 0.025, 0.05 + random13(i + 43) * 0.07);
     dummy6.updateMatrix();
     coals.setMatrixAt(i, dummy6.matrix);
   }
   group.add(coals);
   const noiseBytes = new Uint8Array(128 * 128 * 4);
   for (let i = 0; i < 128 * 128; i++) {
-    noiseBytes[i * 4] = random10(i + 1e3) * 255;
-    noiseBytes[i * 4 + 1] = random10(i + 17001) * 255;
-    noiseBytes[i * 4 + 2] = random10(i + 37001) * 255;
+    noiseBytes[i * 4] = random13(i + 1e3) * 255;
+    noiseBytes[i * 4 + 1] = random13(i + 17001) * 255;
+    noiseBytes[i * 4 + 2] = random13(i + 37001) * 255;
     noiseBytes[i * 4 + 3] = 255;
   }
   const noise8 = keep(new THREE2.DataTexture(noiseBytes, 128, 128, THREE2.RGBAFormat));
@@ -80416,7 +82058,7 @@ function createCampfire(THREE2, options = {}) {
     for (const [x, y] of [[-0.5, 0], [0.5, 0], [-0.5, 1], [0.5, 1]]) {
       ep.push(x, y, 0);
       eu.push(x + 0.5, y);
-      es.push(random10(i + 901), random10(i + 1901), random10(i + 2901), random10(i + 3901));
+      es.push(random13(i + 901), random13(i + 1901), random13(i + 2901), random13(i + 3901));
     }
     ei.push(b, b + 1, b + 2, b + 1, b + 3, b + 2);
   }
@@ -80517,7 +82159,7 @@ function createCampfire(THREE2, options = {}) {
 }
 
 // camp-stone-ring.js
-var TAU39 = Math.PI * 2;
+var TAU40 = Math.PI * 2;
 function hash12(i, j, k, s) {
   let n = i * 374761393 + j * 668265263 + k * 1440662683 + s * 1013904223 | 0;
   n = Math.imul(n ^ n >>> 13, 1274126177);
@@ -80542,7 +82184,7 @@ function createCampStoneRingGeometry({ seed = 11, radius = 0.74, count: count2 =
     return r / 233280;
   };
   for (let i = 0; i < count2; i++) {
-    const a = i / count2 * TAU39 + (rand3() - 0.5) * 0.22, ring2 = radius * (1 + (rand3() - 0.5) * 0.1);
+    const a = i / count2 * TAU40 + (rand3() - 0.5) * 0.22, ring2 = radius * (1 + (rand3() - 0.5) * 0.1);
     const sx = 0.15 + rand3() * 0.1, sy = 0.09 + rand3() * 0.06, sz = 0.12 + rand3() * 0.07, s = seed * 31 + i;
     const stone = source2.clone(), p2 = stone.attributes.position;
     for (let k = 0; k < p2.count; k++) {
@@ -80586,7 +82228,7 @@ function createFireAshGeometry({ seed = 11, radius = 0.6, heightAt = null } = {}
   for (let i = 1; i <= rings3; i++) {
     const f15 = i / rings3;
     for (let j = 0; j < sides; j++) {
-      const a = j / sides * TAU39, rr2 = radius * f15 * (1 + 0.26 * (noise32(Math.cos(a) * 2.2, Math.sin(a) * 2.2, 1, seed) - 0.5) * f15), lump = noise32(Math.cos(a) * rr2 * 14, Math.sin(a) * rr2 * 14, 3, seed + 1), h = 0.022 - 0.02 * f15 * f15 + 0.016 * Math.max(0, lump - 0.55) * (1 - f15) + 4e-3 * (lump - 0.5);
+      const a = j / sides * TAU40, rr2 = radius * f15 * (1 + 0.26 * (noise32(Math.cos(a) * 2.2, Math.sin(a) * 2.2, 1, seed) - 0.5) * f15), lump = noise32(Math.cos(a) * rr2 * 14, Math.sin(a) * rr2 * 14, 3, seed + 1), h = 0.022 - 0.02 * f15 * f15 + 0.016 * Math.max(0, lump - 0.55) * (1 - f15) + 4e-3 * (lump - 0.5);
       positions.push(Math.cos(a) * rr2, ground(Math.cos(a) * rr2, Math.sin(a) * rr2) + h + 4e-3, Math.sin(a) * rr2);
       const n = noise32(Math.cos(a) * rr2 * 7 + 3, Math.sin(a) * rr2 * 7, 1, seed + 2);
       c2.copy(char).lerp(ash, Math.min(1, Math.max(0, (f15 - 0.3) * 1.7 + (n - 0.5) * 1.1)));
@@ -80678,8 +82320,8 @@ function rollPointLightLoop(THREE2) {
 rollPointLightLoop(three_module_exports);
 var SEED = ISLAND_BIOME_SEED;
 var CHUNK5 = 64;
-var TAU40 = Math.PI * 2;
-var clamp54 = MathUtils.clamp;
+var TAU41 = Math.PI * 2;
+var clamp55 = MathUtils.clamp;
 var mix17 = MathUtils.lerp;
 var batchPlace = new Matrix4();
 var batchHidden = new Matrix4().makeScale(0, 0, 0);
@@ -81515,6 +83157,7 @@ var World = class {
     this.forestUnderstory = createForestUnderstory(this);
     this.forestLife = createForestLife(this, { seed: worldModel?.seed ?? 1 });
     this.islandFish = createIslandFish(this, { seed: worldModel?.seed ?? 1 });
+    this.shoreLife = createShoreLife(this, { seed: worldModel?.seed ?? 1 });
   }
   getFoliage(b) {
     if (this.foliage.has(b.id)) return this.foliage.get(b.id);
@@ -81591,7 +83234,7 @@ var World = class {
       if (i && i % 64 === 0) yield { phase: "tree-instances", completedUnits: i, totalUnits: trees.length };
       let t = trees[i], treeBiome = biome(t.x, t.z, t.y).id;
       chunkDummy.position.set(t.x, t.y + t.h * 0.45, t.z);
-      chunkDummy.rotation.set(0, t.r * TAU40, t.lean);
+      chunkDummy.rotation.set(0, t.r * TAU41, t.lean);
       chunkDummy.scale.set(t.h * 0.024, t.h * 0.9, t.h * 0.024);
       chunkDummy.updateMatrix();
       trunk.setMatrixAt(i, chunkDummy.matrix);
@@ -81599,7 +83242,7 @@ var World = class {
       for (let j = 0; j < 8; j++) {
         let ratio = j / 8, branchPresent = !(t.r > 0.64 && j < 2);
         chunkDummy.position.set(t.x + t.lean * t.h * (0.26 + ratio * 0.72) + Math.sin(j * 2 + t.r * 5) * t.h * 0.018, t.y + t.h * (0.26 + ratio * 0.72), t.z + Math.cos(j * 2 + t.r * 5) * t.h * 0.018);
-        chunkDummy.rotation.set(0, t.r * TAU40 + j, 0);
+        chunkDummy.rotation.set(0, t.r * TAU41 + j, 0);
         chunkDummy.scale.set(t.h * (0.21 - ratio * 0.185) * (1 + Math.sin(j * 7 + t.r) * 0.2) * t.width, t.h * (0.24 - ratio * 0.13), t.h * (0.22 - ratio * 0.19) * t.width);
         if (!branchPresent) chunkDummy.scale.setScalar(0);
         chunkDummy.updateMatrix();
@@ -81625,7 +83268,7 @@ var World = class {
       if (i && i % 64 === 0) yield { phase: "rock-instances", completedUnits: i, totalUnits: rocks.length };
       let r = rocks[i], placementSlot = legacyPlacementSlot(r, i);
       chunkDummy.position.set(r.x, r.y + r.r * 0.15, r.z);
-      chunkDummy.rotation.set(rng4(placementSlot, 12), rng4(placementSlot, 13) * TAU40, rng4(placementSlot, 14) * 0.5);
+      chunkDummy.rotation.set(rng4(placementSlot, 12), rng4(placementSlot, 13) * TAU41, rng4(placementSlot, 14) * 0.5);
       chunkDummy.scale.set(r.r, r.r * 0.68, r.r * 0.83);
       chunkDummy.updateMatrix();
       rockMesh.setMatrixAt(i, chunkDummy.matrix);
@@ -81633,7 +83276,7 @@ var World = class {
     }
     group.add(rockMesh);
     yield { phase: "rock-instances", completedUnits: rocks.length, totalUnits: rocks.length };
-    const vegetationWeight = clamp54(hydrologyEnvironment.environmentAt(x0 + CHUNK5 / 2, z0 + CHUNK5 / 2).vegetationWeight, 1, 1.55);
+    const vegetationWeight = clamp55(hydrologyEnvironment.environmentAt(x0 + CHUNK5 / 2, z0 + CHUNK5 / 2).vegetationWeight, 1, 1.55);
     const grassCount = this.nature ? 0 : Math.floor((b.id === 3 ? 700 : b.id === 2 || b.id === 4 ? 2400 : 9500) * (this.quality === "low" ? 0.22 : this.quality === "balanced" ? 0.48 : 1) * vegetationWeight), grassGeo = ownGeo(new BufferGeometry()), verts = [], norms = [], grassColors = [];
     for (let a = 0; a < 6; a++) {
       let angle = a * 2.399;
@@ -81667,7 +83310,7 @@ var World = class {
       const patch2 = noise6(x * 0.17, z * 0.17);
       if (h < 0.7 || hydrology.waterAt(x, z, h) || patch2 < 0.18 || !reservationAllows(contentReservations, "groundcover", x, z, 0.08)) continue;
       chunkDummy.position.set(x, h - 0.025, z);
-      chunkDummy.rotation.set(0, rng4(i, 22) * TAU40, 0);
+      chunkDummy.rotation.set(0, rng4(i, 22) * TAU41, 0);
       let s = 0.55 + rng4(i, 23) * 1.2;
       chunkDummy.scale.set(s, s * (b.id === 1 ? 1.6 : 0.7 + patch2 * 0.8), s);
       chunkDummy.updateMatrix();
@@ -81692,7 +83335,7 @@ var World = class {
       let fs = 0.85 + rng4(i, 67) * 1.4;
       chunkDummy.position.set(x, y, z);
       chunkDummy.scale.set(fs, fs, fs);
-      chunkDummy.rotation.set((rng4(i, 69) - 0.5) * 0.2, rng4(i, 68) * TAU40, (rng4(i, 70) - 0.5) * 0.2);
+      chunkDummy.rotation.set((rng4(i, 69) - 0.5) * 0.2, rng4(i, 68) * TAU41, (rng4(i, 70) - 0.5) * 0.2);
       chunkDummy.updateMatrix();
       ferns.setMatrixAt(fi++, chunkDummy.matrix);
     }
@@ -81715,7 +83358,7 @@ var World = class {
           continue;
         }
         chunkDummy.position.set(x, y + 0.23, z);
-        chunkDummy.rotation.set(Math.PI / 2, 0, rng4(i, 73) * TAU40);
+        chunkDummy.rotation.set(Math.PI / 2, 0, rng4(i, 73) * TAU41);
         chunkDummy.scale.set(0.3, 4 + rng4(i, 74) * 3, 0.3);
         if (y < 1 || this.removed.has(id2)) chunkDummy.scale.setScalar(0);
         chunkDummy.updateMatrix();
@@ -81762,7 +83405,7 @@ var World = class {
         if (height(x, z) < 1 || hydrology.waterAt(x, z, height(x, z)) || this.landmarks.some((l) => Math.hypot(x - l.x, z - l.z) < l.clear)) continue;
         if (!reservationAllows(contentReservations, "occupied", x, z, 0.8)) continue;
         const type = "deer", id2 = key3 + ":fauna:" + i;
-        c2.deerSpot = { id: id2, type, x, z, phase: rng4(i, 44) * TAU40 };
+        c2.deerSpot = { id: id2, type, x, z, phase: rng4(i, 44) * TAU41 };
         if (this.removed.has(id2) || this.faunaAway?.(id2)) continue;
         reserve(16384);
         let mesh2 = this.faunaTemplates ? createFauna(type, this.faunaTemplates) : makeAnimal(type);
@@ -81906,7 +83549,7 @@ var World = class {
     const g = new Group();
     if (type === "herb") {
       for (let j = 0; j < 5; j++) {
-        let a = j / 5 * TAU40;
+        let a = j / 5 * TAU41;
         let leaf = part(g, new SphereGeometry(1, 6, 4), this.mats.herb, Math.sin(a) * 0.16, 0.18, Math.cos(a) * 0.16, 0.075, 0.26, 0.04);
         leaf.rotation.z = Math.sin(a) * 0.75;
         leaf.rotation.x = Math.cos(a) * 0.75;
@@ -81951,7 +83594,7 @@ var World = class {
     part(g, cylinder, this.stone, 0, -0.1, 0, 7, 0.5, 7);
     part(g, cylinder, this.stone, 0, 0.22, 0, 5.5, 0.3, 5.5);
     for (let i = 0; i < 8; i++) {
-      let a = i / 8 * TAU40, x = Math.cos(a) * 5, z = Math.sin(a) * 5;
+      let a = i / 8 * TAU41, x = Math.cos(a) * 5, z = Math.sin(a) * 5;
       const pillar = part(g, cylinder, this.stone, x, 1.8, z, 0.45, 3.4 + i % 3 * 0.5, 0.45);
       pillar.rotation.z = (hash13(i, 3) - 0.5) * 0.15;
       part(g, box3, this.stone, x, 3.7, z, 1, 0.45, 1);
@@ -81965,7 +83608,7 @@ var World = class {
     const boss = add4("boss", "朽ちた王庭", landmarkPlan.byType.boss.x, landmarkPlan.byType.boss.z, landmarkPlan.byType.boss.clear);
     part(boss.mesh, cylinder, this.stone, 0, -0.1, 0, 14, 0.4, 14);
     for (let i = 0; i < 12; i++) {
-      let a = i / 12 * TAU40;
+      let a = i / 12 * TAU41;
       let x = Math.sin(a) * 13, z = Math.cos(a) * 13;
       part(boss.mesh, cylinder, this.stone, x, 2.2, z, 0.6, 4.4, 0.6);
       part(boss.mesh, box3, this.stone, x, 4.5, z, 1.7, 0.5, 1.7);
@@ -81978,7 +83621,7 @@ var World = class {
     }
     const memorySite = landmarkPlan.byType.memory;
     for (let i = 0; i < 10; i++) {
-      const angle = hash13(i, 9201) * TAU40, radius = 5 + hash13(i, 9202) * 5, x = memorySite.x + Math.cos(angle) * radius, z = memorySite.z + Math.sin(angle) * radius, y = height(x, z), id2 = "landmark-resource:" + i;
+      const angle = hash13(i, 9201) * TAU41, radius = 5 + hash13(i, 9202) * 5, x = memorySite.x + Math.cos(angle) * radius, z = memorySite.z + Math.sin(angle) * radius, y = height(x, z), id2 = "landmark-resource:" + i;
       if (this.removed.has(id2) || hydrology.waterAt(x, z, y)) continue;
       const type = i % 3 === 0 ? "crystal" : "herb", mesh2 = this.makeResource(type);
       mesh2.position.set(x, y, z);
@@ -82069,8 +83712,8 @@ var World = class {
     const animal = e.mesh.userData.fauna?.model;
     if (animal && !this.inDungeon) {
       const yaw2 = e.mesh.rotation.y, fx = Math.sin(yaw2), fz = Math.cos(yaw2), rx = Math.cos(yaw2), rz = -Math.sin(yaw2), pitch2 = -Math.atan2(height(e.x + fx * 0.7, e.z + fz * 0.7) - height(e.x - fx * 0.7, e.z - fz * 0.7), 1.4), roll = Math.atan2(height(e.x + rx * 0.25, e.z + rz * 0.25) - height(e.x - rx * 0.25, e.z - rz * 0.25), 0.5);
-      animal.rotation.x = MathUtils.lerp(animal.rotation.x, clamp54(pitch2, -0.3, 0.3), 1 - Math.exp(-dt * 7));
-      animal.rotation.z = MathUtils.lerp(animal.rotation.z, clamp54(roll, -0.2, 0.2), 1 - Math.exp(-dt * 7));
+      animal.rotation.x = MathUtils.lerp(animal.rotation.x, clamp55(pitch2, -0.3, 0.3), 1 - Math.exp(-dt * 7));
+      animal.rotation.z = MathUtils.lerp(animal.rotation.z, clamp55(roll, -0.2, 0.2), 1 - Math.exp(-dt * 7));
     }
     const shadow = e.mesh.userData.contactShadow;
     if (shadow) {
@@ -82235,6 +83878,7 @@ var World = class {
     this.forestUnderstory?.update(dt, player);
     this.forestLife?.update(dt, player);
     this.islandFish?.update(dt, player);
+    this.shoreLife?.update(dt, player);
     const camp = this.landmarks[0];
     camp.fire.update(t, this.dayNight?.state?.daylight ?? 0, camp.fireLevel ?? 1, camp.fireIntensity);
     this.bursts?.update(dt);
@@ -82250,7 +83894,7 @@ var World = class {
       this.camera.position.copy(this.cameraOverride.position);
       this.camera.lookAt(this.cameraOverride.target);
     }
-    const fov = clamp54((this.fieldOfView || 68) * zoom2, 48, 92);
+    const fov = clamp55((this.fieldOfView || 68) * zoom2, 48, 92);
     if (this.camera.fov !== fov) {
       this.camera.fov = fov;
       this.camera.updateProjectionMatrix();
@@ -83158,7 +84802,7 @@ function startDistantTreeContent(THREE2, world2) {
 
 // prop-geometry.js
 var V3 = Vector3;
-var TAU41 = Math.PI * 2;
+var TAU42 = Math.PI * 2;
 var hash14 = (i, s = 0) => {
   const a = Math.sin(i * 127.1 + s * 311.7) * 43758.5453;
   return a - Math.floor(a);
@@ -83265,7 +84909,7 @@ function tube3(points, radii, { sides = 8, twist = 0, cap = true, name = "tapere
     const tangent = path[Math.min(i + 1, path.length - 1)].clone().sub(path[Math.max(i - 1, 0)]).normalize(), ref = Math.abs(tangent.y) > 0.85 ? new V3(1, 0, 0) : new V3(0, 1, 0), u = new V3().crossVectors(tangent, ref).normalize(), v = new V3().crossVectors(tangent, u).normalize(), r = Array.isArray(radii) ? radii[i] : radii;
     const ring2 = [];
     for (let j = 0; j < sides; j++) {
-      const a = j / sides * TAU41 + twist * i;
+      const a = j / sides * TAU42 + twist * i;
       ring2.push(path[i].clone().addScaledVector(u, Math.cos(a) * r).addScaledVector(v, Math.sin(a) * r).toArray());
     }
     rings3.push(ring2);
@@ -83284,7 +84928,7 @@ function tube3(points, radii, { sides = 8, twist = 0, cap = true, name = "tapere
 function ring(radius, width, depth, { segments = 36, seed = 1, name = "closed-rim" } = {}) {
   const b = new Draft();
   for (let i = 0; i < segments; i++) {
-    const a = i / segments * TAU41, z = (i + 1) / segments * TAU41, shape = (t) => {
+    const a = i / segments * TAU42, z = (i + 1) / segments * TAU42, shape = (t) => {
       const wobble = Math.sin(t * 7 + seed) * 4e-3;
       return [[Math.cos(t) * (radius - width / 2 + wobble), Math.sin(t) * (radius - width / 2 + wobble), -depth / 2], [Math.cos(t) * (radius + width / 2 + wobble), Math.sin(t) * (radius + width / 2 + wobble), -depth / 2], [Math.cos(t) * (radius + width / 2 + wobble), Math.sin(t) * (radius + width / 2 + wobble), depth / 2], [Math.cos(t) * (radius - width / 2 + wobble), Math.sin(t) * (radius - width / 2 + wobble), depth / 2]];
     }, left = shape(a), right = shape(z);
@@ -83297,7 +84941,7 @@ function ring(radius, width, depth, { segments = 36, seed = 1, name = "closed-ri
 }
 function lathe2(profile, { segments = 16, seed = 1, irregular = 0.025, name = "formed-vessel" } = {}) {
   const b = new Draft(), rings3 = profile.map(([r, y], i) => Array.from({ length: segments }, (_, j) => {
-    const a = j / segments * TAU41, scale5 = 1 + Math.sin(a * 5 + seed) * irregular + Math.sin(a * 11 + seed * 3) * irregular * 0.35;
+    const a = j / segments * TAU42, scale5 = 1 + Math.sin(a * 5 + seed) * irregular + Math.sin(a * 11 + seed * 3) * irregular * 0.35;
     return [Math.cos(a) * r * scale5, y, Math.sin(a) * r * scale5];
   }));
   for (let i = 1; i < rings3.length; i++) for (let j = 0; j < segments; j++) {
@@ -83357,7 +85001,7 @@ function proceduralMaterial(name, color3, kind) {
 }
 function clothPanel(seed = 1, torn = true) {
   const b = new Draft(), NX = 8, NZ = 16, half = 1.8, depth = 3.2, height2 = 2.35, point5 = (side2, u, v) => {
-    const z = (v - 0.5) * depth, x = side2 * (u * half + Math.sin(v * TAU41 * 2 + seed) * 0.026 * u), sag = Math.sin(v * Math.PI) * 0.115 * (1 - u), fold2 = Math.sin(v * TAU41 * 4 + u * 6 + seed) * 0.019 * u * (1 - u), y = height2 * (1 - u) + 0.075 * u - sag + fold2;
+    const z = (v - 0.5) * depth, x = side2 * (u * half + Math.sin(v * TAU42 * 2 + seed) * 0.026 * u), sag = Math.sin(v * Math.PI) * 0.115 * (1 - u), fold2 = Math.sin(v * TAU42 * 4 + u * 6 + seed) * 0.019 * u * (1 - u), y = height2 * (1 - u) + 0.075 * u - sag + fold2;
     return [x, y, z];
   };
   for (const side2 of [-1, 1]) for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) {
@@ -83372,7 +85016,7 @@ function clothPanel(seed = 1, torn = true) {
 }
 function clothRear() {
   const b = new Draft(), N = 12, point5 = (u, v) => {
-    const x = (u * 2 - 1) * 1.8 * (1 - v), y = 0.075 + v * 2.275, z = -1.6 + Math.sin(u * TAU41 * 3) * Math.sin(v * Math.PI) * 0.022;
+    const x = (u * 2 - 1) * 1.8 * (1 - v), y = 0.075 + v * 2.275, z = -1.6 + Math.sin(u * TAU42 * 3) * Math.sin(v * Math.PI) * 0.022;
     return [x, y, z];
   };
   for (let j = 0; j < N; j++) for (let i = 0; i < N - j; i++) {
@@ -83488,7 +85132,7 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
       add4(tube3([[0, 0, -0.12], [0, 0, 0.14]], [0.1, 0.092], { sides: 12 }), materials.wood);
       add4(ring(0.11, 0.03, 0.145, { segments: 20, seed }), materials.iron);
       for (let i = 0; i < 10; i++) {
-        const a = i / 10 * TAU41 + 0.06;
+        const a = i / 10 * TAU42 + 0.06;
         add4(tube3([[Math.cos(a) * 0.075, Math.sin(a) * 0.075, 0], [Math.cos(a) * 0.465, Math.sin(a) * 0.465, 0]], [0.035, 0.027], { sides: 6 }), materials.wood);
       }
       b.anchor("wheel-contact-" + seed, ...foot);
@@ -83533,6 +85177,7 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
         for (const a of input.anchors) b.anchor(a.id, a.position[0] * k, a.position[1] * k - bound.min.y, a.position[2] * k);
       }
       const result = b.finish();
+      result.borrowed = { scale: scale5 * (input.baseScale ?? 1), lift: -bound.min.y };
       if (solid2) {
         const body2 = { slot: "body", shape: "obb", x: (result.bounds.min[0] + result.bounds.max[0]) / 2, z: (result.bounds.min[2] + result.bounds.max[2]) / 2, yaw: 0, halfX: result.bounds.size[0] / 2, halfZ: result.bounds.size[2] / 2, minY: 0, maxY: result.bounds.max[1], type: surface4, support: false, ceiling: true, solid: true, supportGroup: id2 + "-surface" };
         result.colliders.push(body2);
@@ -83571,7 +85216,7 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
       if (!verts.length) return;
       const result = [], seen = /* @__PURE__ */ new Set();
       for (let i = 0; i < 8; i++) {
-        const dx = Math.cos(i * TAU41 / 8), dz = Math.sin(i * TAU41 / 8), p2 = verts.reduce((a, b) => b[0] * dx + b[2] * dz > a[0] * dx + a[2] * dz ? b : a), key3 = p2.map((v) => v.toFixed(5)).join(",");
+        const dx = Math.cos(i * TAU42 / 8), dz = Math.sin(i * TAU42 / 8), p2 = verts.reduce((a, b) => b[0] * dx + b[2] * dz > a[0] * dx + a[2] * dz ? b : a), key3 = p2.map((v) => v.toFixed(5)).join(",");
         if (!seen.has(key3)) {
           seen.add(key3);
           result.push({ id: "source-foot-" + i, position: p2 });
@@ -83655,7 +85300,7 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
       crate(b, [0, 0, 0], 78, 1, true);
       sack(b, [0.57, 0, -0.08], 0.85, 5);
       sack(b, [-0.43, 0, 0.42], 0.68, 11);
-      for (let i = 0; i < 5; i++) b.board("splinter-" + i, 0.26 + hash14(i, 8) * 0.38, 0.07, 0.018, [(hash14(i, 3) - 0.5) * 1.6, 0.025, (hash14(i, 7) - 0.5) * 1.2], [0, hash14(i, 9) * TAU41, 0.04], i + 69, true);
+      for (let i = 0; i < 5; i++) b.board("splinter-" + i, 0.26 + hash14(i, 8) * 0.38, 0.07, 0.018, [(hash14(i, 3) - 0.5) * 1.6, 0.025, (hash14(i, 7) - 0.5) * 1.2], [0, hash14(i, 9) * TAU42, 0.04], i + 69, true);
       b.finish();
     }
     {
@@ -83690,7 +85335,7 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
     {
       const b = create("old-bones", "Stone");
       for (let i = 0; i < 4; i++) {
-        const x = (hash14(i, 1) - 0.5) * 0.65, z = (hash14(i, 2) - 0.5) * 0.45, a = hash14(i, 3) * TAU41, dir = new V4(Math.sin(a), 0, Math.cos(a)), p2 = new V4(x, 0.025, z), points = [p2.clone().addScaledVector(dir, -0.17).toArray(), p2.clone().addScaledVector(dir, -0.125).add(new V4(0, 0.025, 0)).toArray(), p2.clone().add(new V4(0, 8e-3, 0)).toArray(), p2.clone().addScaledVector(dir, 0.13).toArray(), p2.clone().addScaledVector(dir, 0.18).add(new V4(0, 0.012, 0)).toArray()];
+        const x = (hash14(i, 1) - 0.5) * 0.65, z = (hash14(i, 2) - 0.5) * 0.45, a = hash14(i, 3) * TAU42, dir = new V4(Math.sin(a), 0, Math.cos(a)), p2 = new V4(x, 0.025, z), points = [p2.clone().addScaledVector(dir, -0.17).toArray(), p2.clone().addScaledVector(dir, -0.125).add(new V4(0, 0.025, 0)).toArray(), p2.clone().add(new V4(0, 8e-3, 0)).toArray(), p2.clone().addScaledVector(dir, 0.13).toArray(), p2.clone().addScaledVector(dir, 0.18).add(new V4(0, 0.012, 0)).toArray()];
         b.member(points, [0.033, 0.025, 0.014, 0.02, 0.03], bone2, 9);
       }
       for (let i = 0; i < 5; i++) {
@@ -83706,18 +85351,18 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
     {
       const b = create("cold-firepit", "Stone");
       for (let i = 0; i < 10; i++) {
-        const a = i / 10 * TAU41, r = 0.66 + hash14(i, 18) * 0.025, profile = Array.from({ length: 7 }, (_, j) => {
-          const angle = j / 7 * TAU41;
+        const a = i / 10 * TAU42, r = 0.66 + hash14(i, 18) * 0.025, profile = Array.from({ length: 7 }, (_, j) => {
+          const angle = j / 7 * TAU42;
           return [Math.cos(angle) * (0.12 + hash14(j, i) * 0.05), Math.sin(angle) * (0.1 + hash14(j + 9, i) * 0.06)];
         });
         b.anchor("ring-stone-" + i, Math.cos(a) * r, 0.015, Math.sin(a) * r);
         b.add(polygonSolid(profile, 0.13 + hash14(i, 21) * 0.05, { bevel: 0.025, seed: i, stoneUV: true }), materials.stone, [Math.cos(a) * r, 0.015, Math.sin(a) * r], [0, a, 0.04]);
       }
       for (let i = 0; i < 7; i++) {
-        const x = (hash14(i, 24) - 0.5) * 0.75, z = (hash14(i, 30) - 0.5) * 0.6, a = hash14(i, 31) * TAU41;
+        const x = (hash14(i, 24) - 0.5) * 0.75, z = (hash14(i, 30) - 0.5) * 0.6, a = hash14(i, 31) * TAU42;
         b.add(tube3([[-0.3, 0, 0], [0, 0.012, 0.01], [0.33, 0.015, -0.01]], [0.045, 0.052, 0.025], { sides: 9, name: "split-charred-branch" }), char, [x, 0.075, z], [0, a, 0.03]);
       }
-      const ash = polygonSolid(Array.from({ length: 15 }, (_, j) => [Math.cos(j / 15 * TAU41) * (0.48 + hash14(j, 71) * 0.05), Math.sin(j / 15 * TAU41) * (0.48 + hash14(j, 71) * 0.05)]), 0.014, { bevel: 3e-3, name: "cold-ash-bed" });
+      const ash = polygonSolid(Array.from({ length: 15 }, (_, j) => [Math.cos(j / 15 * TAU42) * (0.48 + hash14(j, 71) * 0.05), Math.sin(j / 15 * TAU42) * (0.48 + hash14(j, 71) * 0.05)]), 0.014, { bevel: 3e-3, name: "cold-ash-bed" });
       b.add(ash, char, [0, 4e-3, 0]);
       b.finish();
     }
@@ -83725,8 +85370,8 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
       const id2 = defaced ? "defaced-grave" : "weathered-grave", b = create(id2, "Stone");
       const g = graveGeometry(defaced ? 9 : 4, defaced);
       b.add(g.clone(), materials.masonry);
-      const box4 = g.boundingBox;
-      b.colliders.push({ slot: "headstone", shape: "obb", x: 0, z: 0, yaw: 0, halfX: 0.345, halfZ: 0.105, minY: 0, maxY: box4.max.y, type: "Stone", support: false, ceiling: false, solid: true });
+      const box5 = g.boundingBox;
+      b.colliders.push({ slot: "headstone", shape: "obb", x: 0, z: 0, yaw: 0, halfX: 0.345, halfZ: 0.105, minY: 0, maxY: box5.max.y, type: "Stone", support: false, ceiling: false, solid: true });
       g.dispose();
       for (const x of [-0.24, 0.24]) for (const z of [-0.06, 0.06]) b.anchor("foot-" + x + "-" + z, x, 0, z);
       b.finish();
@@ -83761,6 +85406,11 @@ function createPOIArtKit({ materials, templates: source2 = {} } = {}) {
     const chest = borrowed("small-chest", source2.chest, { scale: 0.78, surface: "Wood" });
     chest.anchors = [];
     for (const x of [-0.554, 0.554]) for (const z of [-0.307, 0.307]) chest.anchors.push({ id: "oak-foot-" + x + "-" + z, position: [x * 0.78, 0, z * 0.78] });
+    if (source2.chestLidded) {
+      const { scale: scale5, lift } = chest.borrowed;
+      chest.lidded = { model: source2.chestLidded, scale: scale5, lift };
+      for (const part2 of chest.parts) part2.lidMask = lidMask(part2.geometry, CHEST_SPLIT.seam * scale5 + lift);
+    }
     borrowed("weathered-pillar", source2.pillar, { scale: 0.62 });
     borrowed("broken-pillar", source2.brokenPillar, { scale: 0.72 });
     const dead = borrowed("dead-tree", source2.deadTree, { scale: 0.85, surface: "Wood", solid: false });
@@ -83892,16 +85542,19 @@ function createStoryBuilder({ kit, height: height2, createGuard, batcher, seed =
         node2.position.set(prop2.x, fit2.baseY, prop2.z);
         node2.rotation.y = prop2.yaw;
         node2.updateMatrix();
+        const ranges = template3.lidded?.model ? [] : null;
         for (const part2 of template3.parts) {
           const geometry3 = (part2.geometry.index ? part2.geometry.toNonIndexed() : part2.geometry.clone()).applyMatrix4(node2.matrix);
           const attributes = Object.entries(geometry3.attributes).map(([name, a]) => name + ":" + a.itemSize + ":" + a.normalized + ":" + a.array.constructor.name).sort().join("|");
           const key3 = [part2.material.uuid, part2.castShadow !== false, part2.receiveShadow !== false, attributes].join("/");
           let batch = batches.get(key3);
-          if (!batch) batches.set(key3, batch = { parts: [], material: part2.material, castShadow: part2.castShadow !== false, receiveShadow: part2.receiveShadow !== false });
+          if (!batch) batches.set(key3, batch = { parts: [], count: 0, material: part2.material, castShadow: part2.castShadow !== false, receiveShadow: part2.receiveShadow !== false });
+          if (ranges && part2.lidMask?.length * 3 === geometry3.attributes.position.count) ranges.push({ batch, start: batch.count, mask: part2.lidMask });
           batch.parts.push(geometry3);
+          batch.count += geometry3.attributes.position.count;
         }
         group.add(node2);
-        props.set(prop2.name, { node: node2, template: template3, fit: fit2, prop: prop2 });
+        props.set(prop2.name, { node: node2, template: template3, fit: fit2, prop: prop2, ranges: ranges?.length ? ranges : null, live: null });
         fittings.push({ id: prop2.id, ...fit2 });
         for (let i = 0; i < (template3.colliders || []).length; i++) colliders.push(transformCollider(template3.colliders[i], node2.matrix, prop2.yaw, ownerId, prop2.id, i));
       }
@@ -83917,6 +85570,11 @@ function createStoryBuilder({ kit, height: height2, createGuard, batcher, seed =
         mesh2.castShadow = batch.castShadow;
         mesh2.receiveShadow = batch.receiveShadow;
         group.add(mesh2);
+        batch.mesh = mesh2;
+      }
+      for (const p2 of props.values()) for (const r of p2.ranges || []) {
+        r.mesh = r.batch.mesh;
+        delete r.batch;
       }
     } catch (error) {
       for (const g of ownedGeometry) g.dispose();
@@ -83927,9 +85585,63 @@ function createStoryBuilder({ kit, height: height2, createGuard, batcher, seed =
       for (const batch of batches.values()) for (const g of batch.parts) g.dispose();
       batches.clear();
     }
+    let disposed = false, attached = false;
+    const refresh = (r, count2) => {
+      const position3 = r.mesh.geometry.attributes.position;
+      position3.addUpdateRange(r.start * 3, count2 * 3);
+      position3.needsUpdate = true;
+      batcher?.refresh?.(r.mesh.geometry, r.start, count2);
+    };
+    function openLid(p2) {
+      if (disposed || !p2.ranges) return null;
+      if (p2.live) return p2.live.pivot;
+      const source2 = p2.template.lidded.model.getObjectByName(CHEST_LID);
+      if (!source2) return null;
+      for (const r of p2.ranges) {
+        const a = r.mesh.geometry.attributes.position.array, count2 = r.mask.length * 3;
+        r.saved = a.slice(r.start * 3, (r.start + count2) * 3);
+        for (let t = 0; t < r.mask.length; t++) if (r.mask[t]) {
+          const v = (r.start + t * 3) * 3;
+          for (let k = 1; k < 3; k++) {
+            a[v + k * 3] = a[v];
+            a[v + k * 3 + 1] = a[v + 1];
+            a[v + k * 3 + 2] = a[v + 2];
+          }
+        }
+        refresh(r, count2);
+      }
+      const { scale: scale5, lift } = p2.template.lidded, holder = new Group();
+      holder.name = "story-chest-lid:" + p2.prop.id;
+      holder.matrixAutoUpdate = false;
+      holder.matrix.copy(p2.node.matrix).multiply(new Matrix4().makeTranslation(0, lift, 0)).multiply(new Matrix4().makeScale(scale5, scale5, scale5));
+      const pivot = source2.clone(true);
+      pivot.rotation.set(0, 0, 0);
+      pivot.userData = { onShut: () => shutLid(p2) };
+      holder.add(pivot);
+      group.add(holder);
+      holder.updateMatrixWorld(true);
+      p2.live = { holder, pivot };
+      return pivot;
+    }
+    function shutLid(p2) {
+      const live2 = p2.live;
+      if (!live2) return false;
+      p2.live = null;
+      live2.holder.removeFromParent();
+      if (disposed) return false;
+      for (const r of p2.ranges) {
+        if (!r.saved) continue;
+        r.mesh.geometry.attributes.position.array.set(r.saved, r.start * 3);
+        refresh(r, r.saved.length / 3);
+        r.saved = null;
+      }
+      return true;
+    }
+    const chests = [...props.values()].filter((p2) => p2.ranges);
     const interactions = plan2.interactions.map((o) => {
       const near = [...props.values()].sort((a, b) => Math.hypot(a.prop.x - o.x, a.prop.z - o.z) - Math.hypot(b.prop.x - o.x, b.prop.z - o.z))[0];
-      return { ...o, y: height2(o.x, o.z), mesh: near?.node };
+      const chest = o.action !== "loot" ? null : chests.map((p2) => [p2, Math.hypot(p2.prop.x - o.x, p2.prop.z - o.z)]).filter(([, d]) => d < 2.4).sort((a, b) => a[1] - b[1])[0]?.[0];
+      return { ...o, y: height2(o.x, o.z), mesh: near?.node, ...chest ? { openLid: () => openLid(chest) } : {} };
     });
     try {
       for (const spec of plan2.guards) {
@@ -83945,7 +85657,6 @@ function createStoryBuilder({ kit, height: height2, createGuard, batcher, seed =
       group.clear();
       throw error;
     }
-    let disposed = false, attached = false;
     return {
       group,
       name: plan2.name,
@@ -84065,6 +85776,13 @@ function createStoryBatches({ parent, maxStories = 8, maxDraws = 24, maxTriangle
         merged.castShadow = mesh2.castShadow;
         merged.receiveShadow = mesh2.receiveShadow;
         next.push(merged);
+        const sources = /* @__PURE__ */ new Map();
+        let at = 0;
+        for (const g of geometries2) {
+          sources.set(g, at);
+          at += g.attributes.position.count;
+        }
+        merged.userData.sources = sources;
       }
     } catch (error) {
       for (const m of next) m.geometry.dispose();
@@ -84084,6 +85802,21 @@ function createStoryBatches({ parent, maxStories = 8, maxDraws = 24, maxTriangle
     unregister,
     flush,
     stats: () => ({ stories: entries.size, draws: group.children.length, triangles: group.children.reduce((n, m) => n + m.geometry.attributes.position.count / 3, 0), dirty, revision }),
+    // v142: a story's surface changed in place (positions start..start+count: a chest's lid hidden while a lifted one is
+    // shown, story-builder.js), copied into the batch it is drawn in.
+    refresh(source2, start2, count2) {
+      let done2 = 0;
+      for (const mesh2 of group.children) {
+        const at = mesh2.userData.sources?.get(source2);
+        if (at === void 0) continue;
+        const into = mesh2.geometry.attributes.position;
+        into.array.set(source2.attributes.position.array.subarray(start2 * 3, (start2 + count2) * 3), (at + start2) * 3);
+        into.addUpdateRange((at + start2) * 3, count2 * 3);
+        into.needsUpdate = true;
+        done2++;
+      }
+      return done2;
+    },
     dispose() {
       if (disposed) return;
       disposed = true;
@@ -84187,7 +85920,15 @@ async function prepareWorldStories(world2, { createGuard, seed = 728194 }) {
       if (material2.name === "Forged iron | mottled oxidation") iron = material2;
     }
   });
-  const kit = createPOIArtKit({ materials: { wood, iron, stone: world2.ecology?.contacts?.chipMaterial || world2.stone, masonry: world2.masonry, bark: world2.bark }, templates: { chest: world2.ruins.chest, pillar: world2.ruins.pillar, brokenPillar: world2.ruins.stump, deadTree: naturalKit.templates.get("snag-pine"), flowers: naturalKit.templates.get("flowers-a") } });
+  const kit = createPOIArtKit({ materials: { wood, iron, stone: world2.ecology?.contacts?.chipMaterial || world2.stone, masonry: world2.masonry, bark: world2.bark }, templates: {
+    chest: world2.ruins.chest,
+    /* v142 */
+    chestLidded: world2.ruins.chestLidded,
+    pillar: world2.ruins.pillar,
+    brokenPillar: world2.ruins.stump,
+    deadTree: naturalKit.templates.get("snag-pine"),
+    flowers: naturalKit.templates.get("flowers-a")
+  } });
   let batcher, builder7;
   try {
     const tent = kit.get("torn-tent");
@@ -84255,7 +85996,7 @@ function createDistantLandmarkExteriors({
   root2.name = "distant-landmark-exteriors";
   root2.visible = false;
   root2.matrixAutoUpdate = false;
-  const sites = [], props = [], seen = /* @__PURE__ */ new Set(), view = {}, metrics = {}, reflected = {}, box4 = new Box3(), center2 = new Vector3(), occlusionSphere = new Sphere();
+  const sites = [], props = [], seen = /* @__PURE__ */ new Set(), view = {}, metrics = {}, reflected = {}, box5 = new Box3(), center2 = new Vector3(), occlusionSphere = new Sphere();
   let disposed = false, draws = 0, triangles2 = 0, visibleProps = 0, visibleDraws = 0, visibleTriangles = 0, occludedProps = 0;
   const owned = [];
   try {
@@ -84284,12 +86025,12 @@ function createDistantLandmarkExteriors({
         node2.updateMatrix();
         node2.matrixAutoUpdate = false;
         node2.visible = false;
-        box4.makeEmpty();
+        box5.makeEmpty();
         let propDraws = 0, propTriangles = 0;
         for (const part2 of template3.parts) {
           if (!part2.geometry?.isBufferGeometry || !part2.material?.isMaterial) throw new TypeError("Unsupported original exterior part");
           if (!part2.geometry.boundingBox) part2.geometry.computeBoundingBox();
-          box4.union(part2.geometry.boundingBox);
+          box5.union(part2.geometry.boundingBox);
           const mesh2 = new Mesh(part2.geometry, part2.material);
           mesh2.name = "distant-exterior:" + prop2.model;
           mesh2.castShadow = false;
@@ -84300,10 +86041,10 @@ function createDistantLandmarkExteriors({
           propDraws++;
           propTriangles += countTriangles(part2.geometry);
         }
-        if (box4.isEmpty()) throw new TypeError("Empty original exterior geometry");
-        box4.applyMatrix4(node2.matrix);
-        box4.getCenter(center2);
-        const record2 = { id: prop2.id, model: prop2.model, node: node2, x: center2.x, y: center2.y, z: center2.z, radius: box4.getSize(new Vector3()).length() / 2, draws: propDraws, triangles: propTriangles, visible: false, policyVisible: false };
+        if (box5.isEmpty()) throw new TypeError("Empty original exterior geometry");
+        box5.applyMatrix4(node2.matrix);
+        box5.getCenter(center2);
+        const record2 = { id: prop2.id, model: prop2.model, node: node2, x: center2.x, y: center2.y, z: center2.z, radius: box5.getSize(new Vector3()).length() / 2, draws: propDraws, triangles: propTriangles, visible: false, policyVisible: false };
         draws += propDraws;
         triangles2 += propTriangles;
         props.push(record2);
@@ -84669,7 +86410,7 @@ var MASONRY_UV_PER_METRE = 0.42;
 function chippedStone(original, seed, { rough = false, support = true } = {}) {
   const source2 = original.index ? original.toNonIndexed() : original;
   source2.computeBoundingBox();
-  const box4 = source2.boundingBox, center2 = box4.getCenter(new Vector3()), size = box4.getSize(new Vector3()), p2 = source2.attributes.position;
+  const box5 = source2.boundingBox, center2 = box5.getCenter(new Vector3()), size = box5.getSize(new Vector3()), p2 = source2.attributes.position;
   const key3 = (v) => v.map((x) => Math.round(x * 1e6)).join(","), locked = /* @__PURE__ */ new Set(), supportFaces = [], V5 = Vector3;
   const a = new V5(), b = new V5(), c2 = new V5(), normal4 = new V5();
   if (support) for (let i = 0; i < p2.count; i += 3) {
@@ -84701,7 +86442,7 @@ function chippedStone(original, seed, { rough = false, support = true } = {}) {
     cache2.set(id2, q);
     return q;
   };
-  const shade3 = 0.94 + hash14(seed, 613) * 0.055, offset = [hash14(seed, 619) * 7, hash14(seed, 631) * 7];
+  const shade4 = 0.94 + hash14(seed, 613) * 0.055, offset = [hash14(seed, 619) * 7, hash14(seed, 631) * 7];
   for (let i = 0; i < p2.count; i += 3) {
     const corners3 = [0, 1, 2].map((j) => [p2.getX(i + j), p2.getY(i + j), p2.getZ(i + j)]);
     a.fromArray(corners3[0]);
@@ -84714,7 +86455,7 @@ function chippedStone(original, seed, { rough = false, support = true } = {}) {
     const emit = (points) => {
       const q = points.map((v) => shape(v, keep));
       const grain = q.map((v) => {
-        const f15 = shade3 * (0.965 + 0.035 * Math.sin(v[0] * 2.1 + v[1] * 1.7 + v[2] * 3.3 + seed));
+        const f15 = shade4 * (0.965 + 0.035 * Math.sin(v[0] * 2.1 + v[1] * 1.7 + v[2] * 3.3 + seed));
         return [f15, f15 * 0.99, f15 * 0.96];
       });
       draft.tri(...q, points.map(uv), grain);
@@ -84730,7 +86471,7 @@ function chippedStone(original, seed, { rough = false, support = true } = {}) {
   }
   const geometry3 = draft.finish(rough ? "jointed-cut-bedrock" : "individually-chipped-dressed-stone");
   geometry3.userData.rigidCollisionGeometry = original;
-  geometry3.userData.masonry = { uvPerMetre: MASONRY_UV_PER_METRE, rough, supportFacetsRetained: support, sourceBounds: { min: box4.min.toArray(), max: box4.max.toArray() }, size: size.toArray() };
+  geometry3.userData.masonry = { uvPerMetre: MASONRY_UV_PER_METRE, rough, supportFacetsRetained: support, sourceBounds: { min: box5.min.toArray(), max: box5.max.toArray() }, size: size.toArray() };
   if (source2 !== original) source2.dispose();
   return geometry3;
 }
@@ -84770,7 +86511,7 @@ function cutRockPortal({ radius, y, depth, thickness, seed, z = 0, buried = fals
 
 // landmark-detail.js
 function incisedMonolith(original, seed = 37) {
-  const p2 = original.attributes.position, box4 = original.boundingBox, center2 = box4.getCenter(new Vector3()), d = new Draft(), V5 = Vector3;
+  const p2 = original.attributes.position, box5 = original.boundingBox, center2 = box5.getCenter(new Vector3()), d = new Draft(), V5 = Vector3;
   const supports = [], a = new V5(), b = new V5(), c2 = new V5(), closest2 = new V5(), point5 = new V5(), normal4 = new V5(), cache2 = /* @__PURE__ */ new Map();
   for (let i = 0; i < p2.count; i += 3) {
     a.fromBufferAttribute(p2, i);
@@ -84779,7 +86520,7 @@ function incisedMonolith(original, seed = 37) {
     normal4.crossVectors(b.clone().sub(a), c2.clone().sub(a)).normalize();
     if (normal4.y > 0.42) supports.push(new Triangle(a.clone(), b.clone(), c2.clone()));
   }
-  const scars = Array.from({ length: 7 }, (_, i) => ({ a: hash14(i, seed + 2) * TAU41, y: 0.18 + hash14(i, seed + 9) * 1.8, w: 0.13 + hash14(i, seed + 31) * 0.2, h: 0.08 + hash14(i, seed + 6) * 0.18, d: 0.019 + hash14(i, seed + 8) * 0.035 }));
+  const scars = Array.from({ length: 7 }, (_, i) => ({ a: hash14(i, seed + 2) * TAU42, y: 0.18 + hash14(i, seed + 9) * 1.8, w: 0.13 + hash14(i, seed + 31) * 0.2, h: 0.08 + hash14(i, seed + 6) * 0.18, d: 0.019 + hash14(i, seed + 8) * 0.035 }));
   const shape = (v, keep) => {
     const key3 = v.map((x2) => Math.round(x2 * 1e6)).join(",");
     if (cache2.has(key3)) return cache2.get(key3);
@@ -84794,7 +86535,7 @@ function incisedMonolith(original, seed = 37) {
       const da = Math.atan2(Math.sin(angle - s.a), Math.cos(angle - s.a)) * rad;
       depth += s.d * Math.exp(-Math.pow(da / s.w, 2) - Math.pow((y - s.y) / s.h, 2));
     }
-    const chart2 = (angle / TAU41 + 1) % 1, u = chart2 * 7 % 1 - 0.5;
+    const chart2 = (angle / TAU42 + 1) % 1, u = chart2 * 7 % 1 - 0.5;
     for (let row2 = 0; row2 < 5; row2++) {
       const cy = 0.52 + row2 * 0.235, stroke = cy + 0.095 * Math.abs(u * 2), fade = Math.max(0, 1 - Math.max(0, Math.abs(u) - 0.26) / 0.075), notch = Math.max(0, 1 - Math.abs(y - stroke) / 0.045);
       depth += 0.018 * notch * fade;
@@ -84837,8 +86578,8 @@ function metricStone(original, seed = 0) {
     const n = b.sub(a).cross(c2.sub(a)).normalize(), axis2 = Math.abs(n.y) > 0.6 ? 1 : Math.abs(n.x) > Math.abs(n.z) ? 0 : 2, s = Math.sign(n.getComponent(axis2)) || 1;
     const uv = (v) => axis2 === 1 ? [v[0] * 0.42, -v[2] * s * 0.42] : axis2 === 0 ? [-v[2] * s * 0.42 + hash14(seed, 17) * 4, v[1] * 0.42] : [v[0] * s * 0.42 + hash14(seed, 17) * 4, v[1] * 0.42];
     d.tri(...q, q.map(uv), q.map((v) => {
-      const shade3 = 0.95 + 0.04 * Math.sin(v[0] * 1.7 + v[2] * 2.3 + seed);
-      return [shade3, shade3, shade3 * 0.985];
+      const shade4 = 0.95 + 0.04 * Math.sin(v[0] * 1.7 + v[2] * 2.3 + seed);
+      return [shade4, shade4, shade4 * 0.985];
     }));
   }
   const g = d.finish("metric-cut-astrolabe-stone");
@@ -85124,7 +86865,7 @@ function createSmallLandmarkKit(base) {
   }
   function rock(b, p2, s, seed, refine = false) {
     const n = 7, profile = Array.from({ length: n }, (_, i) => {
-      const a = i / n * TAU41, r = 0.83 + hash14(i, seed) * 0.17;
+      const a = i / n * TAU42, r = 0.83 + hash14(i, seed) * 0.17;
       return [Math.cos(a) * s[0] * r, Math.sin(a) * s[2] * r];
     });
     const g = polygonSolid(profile, s[1], { bevel: Math.min(0.19, s[1] * 0.09), seed, stoneUV: true, name: "fractured-bedrock" });
@@ -85185,8 +86926,8 @@ function createSmallLandmarkKit(base) {
           const g = forms[family].clone();
           g.rotateY(yaw2);
           g.computeBoundingBox();
-          const box4 = g.boundingBox.clone(), size = box4.getSize(new Vector3());
-          g.translate(-box4.min.x, -box4.min.y, -box4.min.z);
+          const box5 = g.boundingBox.clone(), size = box5.getSize(new Vector3());
+          g.translate(-box5.min.x, -box5.min.y, -box5.min.z);
           g.scale((max[0] - min[0]) / size.x, (max[1] - min[1]) / size.y, (max[2] - min[2]) / size.z);
           g.translate(...min);
           g.name = "root-hollow-integrated-fractured-rock";
@@ -85274,9 +87015,9 @@ function createSmallLandmarkKit(base) {
       for (let row2 = 0; row2 < 6; row2++) {
         const r = 1.9 - row2 * 0.18, y = row2 * 0.34, N = 16 - row2;
         for (let i = 0; i < N; i++) {
-          const a = (i + row2 % 2 * 0.5) / N * TAU41;
+          const a = (i + row2 % 2 * 0.5) / N * TAU42;
           if (row2 < 3 && Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) < 0.36) continue;
-          const width = TAU41 * r / N * 0.88, g = polygonSolid([[-width / 2, -0.22], [width / 2, -0.24], [width / 2, 0.23], [-width / 2, 0.22]], 0.3, { bevel: 0.04, seed: i + row2 * 31, stoneUV: true });
+          const width = TAU42 * r / N * 0.88, g = polygonSolid([[-width / 2, -0.22], [width / 2, -0.24], [width / 2, 0.23], [-width / 2, 0.22]], 0.3, { bevel: 0.04, seed: i + row2 * 31, stoneUV: true });
           b.solid(g, row2 < 3 ? stone : masonry, [Math.cos(a) * r, y, Math.sin(a) * r], [0, Math.PI / 2 - a, 0], false);
           if (row2 === 0) b.anchor(Math.cos(a) * r, Math.sin(a) * r);
         }
@@ -85304,7 +87045,7 @@ function createSmallLandmarkKit(base) {
     {
       const b = draft("dry-well", 0.22);
       for (let row2 = 0; row2 < 3; row2++) for (let i = 0; i < 12; i++) {
-        const a = (i + row2 % 2 * 0.5) / 12 * TAU41, g = polygonSolid([[-0.24, -0.17], [0.24, -0.17], [0.24, 0.17], [-0.24, 0.17]], 0.275, { bevel: 0.032, seed: i + row2 * 20, stoneUV: true });
+        const a = (i + row2 % 2 * 0.5) / 12 * TAU42, g = polygonSolid([[-0.24, -0.17], [0.24, -0.17], [0.24, 0.17], [-0.24, 0.17]], 0.275, { bevel: 0.032, seed: i + row2 * 20, stoneUV: true });
         b.solid(chippedStone(g, 140 + row2 * 12 + i, { rough: row2 < 2, support: true }), dressedStone, [Math.cos(a) * 0.94, row2 * 0.285, Math.sin(a) * 0.94], [0, Math.PI / 2 - a, 0]);
         if (row2 === 0) b.anchor(Math.cos(a) * 0.94, Math.sin(a) * 0.94);
       }
@@ -85319,13 +87060,13 @@ function createSmallLandmarkKit(base) {
       {
         const hemp = material2("torn-tent", /hemp/), coil = [];
         for (let j = 0; j <= 160; j++) {
-          const a = j / 160 * TAU41 * 10;
+          const a = j / 160 * TAU42 * 10;
           coil.push([-0.3 + j / 160 * 0.6, 2.4 + Math.sin(a) * 0.137, Math.cos(a) * 0.137]);
         }
         b.add(tube3(coil, 9e-3, { sides: 5, name: "cut-hemp-windlass-winding" }), hemp);
         for (const x of [-1.38, 1.38]) b.add(ring(0.115, 0.018, 0.055, { segments: 20, name: "forged-windlass-bearing" }), iron, [x, 2.4, 0], [0, Math.PI / 2, 0]);
         for (let j = 0; j < 5; j++) {
-          const a = j / 5 * TAU41;
+          const a = j / 5 * TAU42;
           b.add(tube3([[0.025, 1.48, 0.055], [0.025 + Math.cos(a) * 0.012, 1.45, 0.055 + Math.sin(a) * 0.01]], [3e-3, 8e-4], { sides: 4, name: "frayed-rope-tail" }), hemp);
         }
       }
@@ -85379,7 +87120,7 @@ function createSmallLandmarkKit(base) {
     {
       const b = draft("watch-beacon", 0.23);
       for (let row2 = 0; row2 < 3; row2++) for (let i = 0; i < 8; i++) {
-        const a = (i + row2 * 0.5) / 8 * TAU41, r = 0.96 - row2 * 0.12;
+        const a = (i + row2 * 0.5) / 8 * TAU42, r = 0.96 - row2 * 0.12;
         const g = polygonSolid([[-0.31, -0.25], [0.31, -0.25], [0.32, 0.25], [-0.31, 0.25]], 0.38, { bevel: 0.05, seed: 30 + i, stoneUV: true });
         b.solid(g, masonry, [Math.cos(a) * r, row2 * 0.39, Math.sin(a) * r], [0, Math.PI / 2 - a, 0]);
         if (!row2) b.anchor(Math.cos(a) * r, Math.sin(a) * r);
@@ -85397,7 +87138,7 @@ function createSmallLandmarkKit(base) {
       b.capsule(0, 0, 1.02, 0, 1.02);
       for (const r of [0.22, 0.48, 0.75]) b.add(ring(r, 0.017, 0.01, { segments: 48 }), patina, [0, 1.027, 0], [Math.PI / 2, 0, 0]);
       for (let i = 0; i < 12; i++) {
-        const a = i / 12 * TAU41;
+        const a = i / 12 * TAU42;
         b.beam([Math.cos(a) * 0.62, 1.03, Math.sin(a) * 0.62], [Math.cos(a) * 0.82, 1.03, Math.sin(a) * 0.82], 9e-3, patina);
       }
       for (const x of [-0.65, 0.65]) for (const z of [-0.65, 0.65]) b.anchor(x, z);
@@ -85490,7 +87231,7 @@ function createSmallLandmarkContent({ world: world2, kit: base, createGuard, bat
     }
     return { targets: [], biomes: preset.biomes };
   }
-  function make(preset, e, yaw2) {
+  function make2(preset, e, yaw2) {
     const id2 = `worldgen-v1:${seed}:landmark:${preset.key}`, anchor = { x: e.x, y: e.y, z: e.z }, foot = rectangle(anchor, yaw2, preset.radius * 2, preset.radius * 2), approach = point5(anchor, yaw2, 0, preset.radius + 5), entrance = point5(anchor, yaw2, 0, 3.5);
     const sockets = preset.sockets.map(([name, x, z]) => ({ id: id2 + "/socket/" + name, name, ...point5(anchor, yaw2, x, z) }));
     const reservations2 = [{ id: id2 + "/reserve/gross", ownerId: id2, shape: "polygon", points: foot, layers: ["trees", "rocks"], bounds: boundsOf(foot) }];
@@ -85545,7 +87286,7 @@ function createSmallLandmarkContent({ world: world2, kit: base, createGuard, bat
           const baseYaw = stableHash(seed, preset.key, "arrival-yaw") * Math.PI * 2;
           for (const offset of [0, Math.PI / 2, -Math.PI / 2, Math.PI]) {
             precise++;
-            const d = make(preset, c2.e, baseYaw + offset);
+            const d = make2(preset, c2.e, baseYaw + offset);
             if (placementFits(d, preset)) {
               selected = d;
               break;
@@ -85560,7 +87301,7 @@ function createSmallLandmarkContent({ world: world2, kit: base, createGuard, bat
           fallbackTargets++;
           for (const offset of [0, Math.PI / 2, -Math.PI / 2, Math.PI]) {
             precise++;
-            const d = make(preset, e, baseYaw + offset);
+            const d = make2(preset, e, baseYaw + offset);
             if (placementFits(d, preset)) {
               selected = d;
               break;
@@ -85681,8 +87422,8 @@ function createBridgeRegistry(THREE2, world2, { planner, buildBridge = createSto
   }
   function validateInstance(e, instance2) {
     if (!instance2?.group || instance2.ownerId !== e.id || !Array.isArray(instance2.colliders) || typeof instance2.dispose !== "function" || !Number.isInteger(instance2.stats?.colorDraws) || instance2.stats.colorDraws < 1 || instance2.stats.colorDraws > 3 || !Number.isFinite(instance2.stats?.triangles) || instance2.stats.triangles > 5e4) throw new Error("Bridge builder contract or geometry budget failed: " + e.id);
-    const box4 = new THREE2.Box3().setFromObject(instance2.group, true), b = e.descriptor.bounds, tolerance = 0.025;
-    if (box4.min.x < b.minX - tolerance || box4.max.x > b.maxX + tolerance || box4.min.z < b.minZ - tolerance || box4.max.z > b.maxZ + tolerance) throw new Error("Bridge geometry escapes retained descriptor bounds: " + e.id);
+    const box5 = new THREE2.Box3().setFromObject(instance2.group, true), b = e.descriptor.bounds, tolerance = 0.025;
+    if (box5.min.x < b.minX - tolerance || box5.max.x > b.maxX + tolerance || box5.min.z < b.minZ - tolerance || box5.max.z > b.maxZ + tolerance) throw new Error("Bridge geometry escapes retained descriptor bounds: " + e.id);
     for (const r of instance2.colliders) if (!r.id.startsWith(e.id + "/")) throw new Error("Bridge collision owner mismatch: " + r.id);
   }
   function activate(e) {
@@ -85985,10 +87726,10 @@ function createBridgeRuntime(THREE2, world2, { seed = 728194, builtKinds = [], a
 }
 
 // guard-navigation.js
-var clamp55 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp56 = (x, a, b) => Math.max(a, Math.min(b, x));
 var EPS7 = 1e-8;
 function distanceSegment3(x, z, a, b) {
-  const dx = b.x - a.x, dz = b.z - a.z, t = clamp55(((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz || 1), 0, 1);
+  const dx = b.x - a.x, dz = b.z - a.z, t = clamp56(((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz || 1), 0, 1);
   return { distance: Math.hypot(x - a.x - dx * t, z - a.z - dz * t), t };
 }
 function visible(mesh2) {
@@ -86145,8 +87886,8 @@ function createGuardNavigation(THREE2, world2, { terrainHeight, createPlayerColl
         if (hull3(object2, x, z, radius, feetY, height2)) return object2.id;
         continue;
       }
-      const box4 = geometry3.bounds;
-      if (x < box4.min.x - radius || x > box4.max.x + radius || z < box4.min.z - radius || z > box4.max.z + radius || low >= box4.max.y || high <= box4.min.y) continue;
+      const box5 = geometry3.bounds;
+      if (x < box5.min.x - radius || x > box5.max.x + radius || z < box5.min.z - radius || z > box5.max.z + radius || low >= box5.max.y || high <= box5.min.y) continue;
       for (const index2 of triangleCandidates(geometry3, x - radius, z - radius, x + radius, z + radius)) {
         const t = geometry3.triangles[index2];
         if (Math.max(t[1], t[4], t[7]) <= low || Math.min(t[1], t[4], t[7]) >= high) continue;
@@ -86425,8 +88166,8 @@ function bounds4(points) {
   return { min, max };
 }
 function footprint3(points, margin) {
-  const box4 = bounds4(points);
-  return { polygon: hull2(points), minX: box4.min[0], minZ: box4.min[2], maxX: box4.max[0], maxZ: box4.max[2], minY: box4.min[1], maxY: box4.max[1], margin };
+  const box5 = bounds4(points);
+  return { polygon: hull2(points), minX: box5.min[0], minZ: box5.min[2], maxX: box5.max[0], maxZ: box5.max[2], minY: box5.min[1], maxY: box5.max[1], margin };
 }
 function runtimeMetadata(family) {
   const positions = [], triangles2 = [], leaf = [];
@@ -86486,10 +88227,10 @@ function createTreeFootprintResolver({ seed, families = null }) {
 }
 
 // colossal-behavior.js
-var TAU42 = Math.PI * 2;
-var clamp56 = (x, a, b) => Math.max(a, Math.min(b, x));
+var TAU43 = Math.PI * 2;
+var clamp57 = (x, a, b) => Math.max(a, Math.min(b, x));
 var mix18 = (a, b, t) => a + (b - a) * t;
-function random7(seed, salt, index2 = 0) {
+function random8(seed, salt, index2 = 0) {
   let h = (seed ^ Math.imul(salt, 2654435761) ^ Math.imul(index2, 73244475)) >>> 0;
   h = Math.imul(h ^ h >>> 16, 2146121005);
   h = Math.imul(h ^ h >>> 15, 2221713035);
@@ -86543,15 +88284,15 @@ function createColossalPlan({ terrain, seed = 728194, blocked = () => false, isL
     const gladeRadius = Math.max(rx2, rz2) + routeHalfWidth + 0.3;
     if (blocked(x, z, gladeRadius)) return null;
     for (let i = 0; i < 16; i++) {
-      const a = i / 16 * TAU42, u = Math.cos(a) * rx2, v = Math.sin(a) * rz2, px = x + u * c2 - v * s, pz = z + u * s + v * c2, y = h(px, pz);
+      const a = i / 16 * TAU43, u = Math.cos(a) * rx2, v = Math.sin(a) * rz2, px = x + u * c2 - v * s, pz = z + u * s + v * c2, y = h(px, pz);
       if (!safe(px, pz, y, routeHalfWidth)) return null;
     }
     for (let i = 0; i <= steps; i++) {
-      const a = i / steps * TAU42, u = Math.cos(a) * rx2, v = Math.sin(a) * rz2, px = x + u * c2 - v * s, pz = z + u * s + v * c2, y = h(px, pz);
+      const a = i / steps * TAU43, u = Math.cos(a) * rx2, v = Math.sin(a) * rz2, px = x + u * c2 - v * s, pz = z + u * s + v * c2, y = h(px, pz);
       if (!safe(px, pz, y, routeHalfWidth)) return null;
       let low = y, high = y;
       for (let j = 0; j < 8; j++) {
-        const q = j / 8 * TAU42, fx = px + Math.cos(q) * footprint4, fz = pz + Math.sin(q) * footprint4, fy = h(fx, fz);
+        const q = j / 8 * TAU43, fx = px + Math.cos(q) * footprint4, fz = pz + Math.sin(q) * footprint4, fy = h(fx, fz);
         if (!safe(fx, fz, fy, 0) || Math.abs(fy - y) > 1.32) return null;
         low = Math.min(low, fy);
         high = Math.max(high, fy);
@@ -86562,36 +88303,36 @@ function createColossalPlan({ terrain, seed = 728194, blocked = () => false, isL
     for (let i = 1; i < points2.length; i++) if (Math.abs(points2[i].y - points2[i - 1].y) / Math.hypot(points2[i].x - points2[i - 1].x, points2[i].z - points2[i - 1].z) > 0.42) return null;
     const length = addRouteDistances(points2), gladePoints = [];
     const rr2 = gladeRadius / Math.cos(Math.PI / 32);
-    for (let j = 0; j < 32; j++) gladePoints.push({ x: x + Math.cos(j / 32 * TAU42) * rr2, z: z + Math.sin(j / 32 * TAU42) * rr2 });
+    for (let j = 0; j < 32; j++) gladePoints.push({ x: x + Math.cos(j / 32 * TAU43) * rr2, z: z + Math.sin(j / 32 * TAU43) * rr2 });
     const reservation = { id: id2 + ":glade", ownerId: id2, shape: "polygon", points: gladePoints, layers: ["trees", "rocks", "decor"], bounds: bounds5(gladePoints) };
     return { points: points2, length, reservation };
   }
   for (let slot = 0; slot < GIANT_SITES.length; slot++) {
     const site = GIANT_SITES[slot], id2 = `island-megafauna-v1:${seed}:colossus:${site.key}`;
-    const siteAngle = random7(seed, 320 + slot) * TAU42, siteDistance = site.distance * (0.88 + random7(seed, 330 + slot) * 0.24);
+    const siteAngle = random8(seed, 320 + slot) * TAU43, siteDistance = site.distance * (0.88 + random8(seed, 330 + slot) * 0.24);
     const siteX = -4 + Math.cos(siteAngle) * siteDistance, siteZ = 20 + Math.sin(siteAngle) * siteDistance;
     for (let i = 0; i < 128; i++) {
       metrics.candidateProbes++;
-      const a = i * 2.399963229728653 + random7(seed, 40 + slot) * TAU42, r = i ? site.radius * Math.sqrt(i / 127) : 0, x = siteX + Math.cos(a) * r, z = siteZ + Math.sin(a) * r, y = h(x, z);
+      const a = i * 2.399963229728653 + random8(seed, 40 + slot) * TAU43, r = i ? site.radius * Math.sqrt(i / 127) : 0, x = siteX + Math.cos(a) * r, z = siteZ + Math.sin(a) * r, y = h(x, z);
       if (site.nearSpawn && (Math.hypot(x + 4, z - 20) < 82 || Math.hypot(x + 4, z - 20) > 148)) continue;
       if (!safe(x, z, y, routeHalfWidth) || giants.some((g) => Math.hypot(g.homeX - x, g.homeZ - z) < 160)) continue;
-      const rx2 = 8 + random7(seed, 80 + slot, i) * 3, rz2 = 6 + random7(seed, 90 + slot, i) * 2, yaw2 = random7(seed, 100 + slot, i) * TAU42, route = fit(x, z, rx2, rz2, yaw2, id2);
+      const rx2 = 8 + random8(seed, 80 + slot, i) * 3, rz2 = 6 + random8(seed, 90 + slot, i) * 2, yaw2 = random8(seed, 100 + slot, i) * TAU43, route = fit(x, z, rx2, rz2, yaw2, id2);
       if (!route) {
         metrics.fitRejected++;
         continue;
       }
-      const phase2 = random7(seed, 110 + slot) * route.length;
-      giants.push({ id: id2, type: "forest-colossus", name: "古森の巨獣", homeX: x, homeZ: z, bodyHeight: 16 + random7(seed, 120 + slot) * 1.8, bodyRadius: footprint4, hp: 720, maxHp: 720, speed: 1.05 + random7(seed, 130 + slot) * 0.28, phase: phase2, points: route.points, length: route.length, bounds: route.reservation.bounds });
+      const phase2 = random8(seed, 110 + slot) * route.length;
+      giants.push({ id: id2, type: "forest-colossus", name: "古森の巨獣", homeX: x, homeZ: z, bodyHeight: 16 + random8(seed, 120 + slot) * 1.8, bodyRadius: footprint4, hp: 720, maxHp: 720, speed: 1.05 + random8(seed, 130 + slot) * 0.28, phase: phase2, points: route.points, length: route.length, bounds: route.reservation.bounds });
       reservations.push(route.reservation);
       break;
     }
   }
-  const dx = -25 + (random7(seed, 201) - 0.5) * 55, dz = -95 + (random7(seed, 202) - 0.5) * 65, rx = 430, rz = 340, n = 384, points = [], raw = [];
+  const dx = -25 + (random8(seed, 201) - 0.5) * 55, dz = -95 + (random8(seed, 202) - 0.5) * 65, rx = 430, rz = 340, n = 384, points = [], raw = [];
   for (let i = 0; i < n; i++) {
-    const a = i / n * TAU42, x = dx + Math.cos(a) * rx, z = dz + Math.sin(a) * rz;
+    const a = i / n * TAU43, x = dx + Math.cos(a) * rx, z = dz + Math.sin(a) * rz;
     let ground = -Infinity;
     for (let j = 0; j < 9; j++) {
-      const q = j / 8 * TAU42, r = j ? 32 : 0, g = terrain.height(x + Math.cos(q) * r, z + Math.sin(q) * r);
+      const q = j / 8 * TAU43, r = j ? 32 : 0, g = terrain.height(x + Math.cos(q) * r, z + Math.sin(q) * r);
       metrics.dragonGroundSamples++;
       if (Number.isFinite(g)) ground = Math.max(ground, g);
     }
@@ -86601,7 +88342,7 @@ function createColossalPlan({ terrain, seed = 728194, blocked = () => false, isL
   for (let i = 0; i < n; i++) {
     let safeHeight = raw[i];
     for (let j = -22; j <= 22; j++) safeHeight = Math.max(safeHeight, raw[(i + j + n) % n] - Math.abs(j) * 1.35);
-    points[i].y = safeHeight + 6 + 4 * Math.sin(i / n * TAU42 * 2 + 0.3);
+    points[i].y = safeHeight + 6 + 4 * Math.sin(i / n * TAU43 * 2 + 0.3);
   }
   points.push({ ...points[0] });
   const dragon2 = { id: `island-megafauna-v1:${seed}:dragon:skywarden`, type: "sky-dragon", name: "蒼穹の竜", homeX: dx, homeZ: dz, bodyHeight: 9, bodyRadius: 9, wingspan: 46, hp: 1600, maxHp: 1600, speed: 23, phase: 0.64 * addRouteDistances(points), points, length: points.at(-1).distance, bounds: bounds5(points, 32) };
@@ -86671,7 +88412,7 @@ function advanceCreatureMotion(s, dt, player, { active: active2 = true, groundHe
   if (s.speed > 0) {
     const step = s.speed * dt;
     s.travel += step;
-    s.gait += step / (flying ? 50 : 8) * TAU42;
+    s.gait += step / (flying ? 50 : 8) * TAU43;
     s.stepTravel += step;
     sampleRoute(s);
     if (!flying && s.stepTravel >= 4) {
@@ -86698,13 +88439,13 @@ function advanceCreatureMotion(s, dt, player, { active: active2 = true, groundHe
   }
   const desired = !flying && s.windup > 0 ? Math.atan2(dx, dz) : s.routeYaw;
   s.yaw += angleDelta(desired, s.yaw) * (1 - Math.exp(-dt * (flying ? 2.4 : 1.65)));
-  s.bank = flying ? Math.sin(s.age * 0.13 + s.descriptor.phase) * 0.085 + clamp56(angleDelta(s.routeYaw, s.yaw) * 1.5, -0.22, 0.22) : 0;
+  s.bank = flying ? Math.sin(s.age * 0.13 + s.descriptor.phase) * 0.085 + clamp57(angleDelta(s.routeYaw, s.yaw) * 1.5, -0.22, 0.22) : 0;
   return s;
 }
 
 // forest-colossus.js
-var TAU43 = Math.PI * 2;
-var clamp57 = (v, a, b) => Math.max(a, Math.min(b, v));
+var TAU44 = Math.PI * 2;
+var clamp58 = (v, a, b) => Math.max(a, Math.min(b, v));
 var noise7 = (x, seed = 1) => {
   const n = Math.sin(x * 127.13 + seed * 311.71) * 43758.5453123;
   return n - Math.floor(n);
@@ -86721,7 +88462,7 @@ function vertex2(b, x, y, z, u, v, color3) {
   return i;
 }
 function spline2(path, t, out2) {
-  const u = clamp57(t, 0, 1) * (path.length - 1), k = Math.min(path.length - 2, Math.floor(u)), f15 = u - k;
+  const u = clamp58(t, 0, 1) * (path.length - 1), k = Math.min(path.length - 2, Math.floor(u)), f15 = u - k;
   const a = path[Math.max(0, k - 1)], b = path[k], c2 = path[k + 1], d = path[Math.min(path.length - 1, k + 2)];
   for (let j = 0; j < 5; j++) out2[j] = 0.5 * (2 * b[j] + (-a[j] + c2[j]) * f15 + (2 * a[j] - 5 * b[j] + 4 * c2[j] - d[j]) * f15 * f15 + (-a[j] + 3 * b[j] - 3 * c2[j] + d[j]) * f15 * f15 * f15);
 }
@@ -86755,11 +88496,11 @@ function sweep(b, path, { sides = 12, steps = 22, seed = 1, color: color3 = [0.7
     lastY = p2[1];
     lastZ = p2[2];
     for (let j = 0; j <= sides; j++) {
-      const angle = j / sides * TAU43;
+      const angle = j / sides * TAU44;
       const furrow = Math.pow(0.5 + 0.5 * Math.sin(angle * 7 + seed * 0.031 + 0.52 * Math.sin(t * 4.1 + seed)), 5);
       const ridge = sculpt ? 1 + grooves * 0.45 * Math.sin(angle * 3 + seed + t * 1.8) + sculpt * 0.3 * Math.cos(angle * 2 - t * 1.5 + seed) - sculpt * furrow * (0.85 + 0.15 * Math.cos(t * 13 + angle * 3)) : 1 + grooves * Math.sin(angle * 5 + seed + t * 2.3) + grooves * 0.42 * Math.cos(angle * 9 - t * 3.1 + seed);
       const rx = Math.max(5e-3, p2[3]) * Math.cos(angle) * ridge, rz = Math.max(5e-3, p2[4]) * Math.sin(angle) * ridge;
-      const shade3 = sculpt ? 0.98 + 0.04 * Math.sin(angle * 3 + seed) + 0.026 * Math.sin(t * 25 + angle * 7) - furrow * 0.17 : 0.89 + 0.1 * Math.sin(angle * 3 + seed) + 0.035 * Math.sin(t * 25 + angle * 7);
+      const shade4 = sculpt ? 0.98 + 0.04 * Math.sin(angle * 3 + seed) + 0.026 * Math.sin(t * 25 + angle * 7) - furrow * 0.17 : 0.89 + 0.1 * Math.sin(angle * 3 + seed) + 0.035 * Math.sin(t * 25 + angle * 7);
       vertex2(
         b,
         p2[0] + nx * rx + bx * rz,
@@ -86767,7 +88508,7 @@ function sweep(b, path, { sides = 12, steps = 22, seed = 1, color: color3 = [0.7
         p2[2] + nz * rx + bz * rz,
         j / sides * uvScale,
         arc * 0.19 * uvScale,
-        [color3[0] * shade3, color3[1] * shade3, color3[2] * shade3]
+        [color3[0] * shade4, color3[1] * shade4, color3[2] * shade4]
       );
     }
     b.seams.push(start2 + k * (sides + 1), start2 + k * (sides + 1) + sides);
@@ -86800,10 +88541,10 @@ function plate(b, { x = 0, y = 0, z = 0, rx = 1, ry = 1, depth = 0.22, normal: n
   for (let ring2 = 0; ring2 <= 3; ring2++) {
     const r = ring2 === 0 ? 0.055 : ring2 / 3;
     for (let j = 0; j <= sides; j++) {
-      const theta = j / sides * TAU43, edge2 = 1 + 0.13 * Math.sin(theta * 3 + seed) + 0.075 * Math.cos(theta * 7 + seed * 2);
+      const theta = j / sides * TAU44, edge2 = 1 + 0.13 * Math.sin(theta * 3 + seed) + 0.075 * Math.cos(theta * 7 + seed * 2);
       const px = Math.cos(theta) * rx * r * edge2, py = Math.sin(theta) * ry * r * edge2;
       const pz = depth * (Math.pow(1 - r, 0.6) + 0.08 * Math.sin(theta * 5 + seed) * r);
-      const shade3 = 0.9 + 0.1 * noise7(j % sides + ring2 * 0.42, seed);
+      const shade4 = 0.9 + 0.1 * noise7(j % sides + ring2 * 0.42, seed);
       vertex2(
         b,
         x + ux * px + vx * py + nx * pz,
@@ -86811,7 +88552,7 @@ function plate(b, { x = 0, y = 0, z = 0, rx = 1, ry = 1, depth = 0.22, normal: n
         z + uz * px + vz * py + nz * pz,
         px * 0.34,
         py * 0.34,
-        [color3[0] * shade3, color3[1] * shade3, color3[2] * shade3]
+        [color3[0] * shade4, color3[1] * shade4, color3[2] * shade4]
       );
     }
     b.seams.push(start2 + ring2 * (sides + 1), start2 + ring2 * (sides + 1) + sides);
@@ -86892,7 +88633,7 @@ function createForestColossus(THREE2, { bark, stone, moss, seed = 728194 } = {})
   const b = bucket();
   sweep(b, [[0, -0.55, -0.08, 0.83, 0.65], [0.04, -0.12, -0.04, 1.28, 0.82], [0, 0.3, -0.04, 1.49, 0.87], [-0.06, 0.68, -0.07, 1.35, 0.8], [0, 1.04, -0.1, 1.11, 0.7]], { seed, sides: 32, steps: 18, sculpt: 0.15, color: [0.75, 0.7, 0.6] });
   for (let i = 0; i < 7; i++) {
-    const a = i / 7 * TAU43;
+    const a = i / 7 * TAU44;
     sweep(b, [[Math.sin(a) * 0.92, 0.8, Math.cos(a) * 0.6, 0.21, 0.15], [Math.sin(a + 0.18) * 1.35, -0.12, Math.cos(a + 0.18) * 0.76, 0.22, 0.15], [Math.sin(a + 0.3) * 1.17, -0.96 - 0.33 * noise7(i, seed), Math.cos(a + 0.3) * 0.7, 0.025, 0.025]], { seed: seed + i, sides: 9, steps: 12, sculpt: 0.06, color: [0.68, 0.63, 0.52] });
   }
   mesh(THREE2, hips, b, barkMat, "rooted-pelvis-bark", owned);
@@ -86943,7 +88684,7 @@ function createForestColossus(THREE2, { bark, stone, moss, seed = 728194 } = {})
     const upper = bucket(), lower = bucket(), armor = bucket();
     sweep(upper, [[-s * 0.2, 0.42, -0.05, 0.48, 0.5], [s * 0.06, 0.02, -0.05, 0.77, 0.72], [s * 0.25, -0.7, -0.05, 0.66, 0.62], [s * 0.3, -1.42, 0.03, 0.5, 0.49], [s * 0.23, -2.2, 0.06, 0.38, 0.37], [s * 0.27, -2.8, 0.04, 0.45, 0.42]], { sides: 32, steps: 24, seed: seed + s, sculpt: 0.16, color: [0.78, 0.73, 0.64] });
     for (let i = 0; i < 3; i++) {
-      const a = i / 3 * TAU43 + 0.25;
+      const a = i / 3 * TAU44 + 0.25;
       sweep(upper, [[-s * 0.12 + Math.cos(a) * 0.47, 0.26, Math.sin(a) * 0.44, 0.1, 0.08], [s * 0.25 + Math.cos(a + 0.28) * 0.61, -0.8, Math.sin(a + 0.28) * 0.57, 0.13, 0.09], [s * 0.3 + Math.cos(a + 0.65) * 0.45, -1.65, Math.sin(a + 0.65) * 0.45, 0.095, 0.08], [s * 0.27 + Math.cos(a + 0.9) * 0.35, -2.6, Math.sin(a + 0.9) * 0.35, 0.025, 0.025]], { sides: 8, steps: 15, seed: i + seed, sculpt: 0.05, color: [0.71, 0.65, 0.54] });
     }
     sweep(lower, [[0, 0.2, 0, 0.46, 0.43], [s * 0.09, -0.42, 0.1, 0.59, 0.51], [s * 0.19, -0.95, 0.15, 0.63, 0.51], [s * 0.17, -1.69, 0.23, 0.43, 0.39], [s * 0.1, -2.15, 0.3, 0.4, 0.31], [s * 0.03, -2.62, 0.4, 0.52, 0.29], [0, -2.91, 0.52, 0.41, 0.18]], { sides: 32, steps: 24, seed: seed + 50 + s, sculpt: 0.14, color: [0.79, 0.74, 0.64] });
@@ -86964,7 +88705,7 @@ function createForestColossus(THREE2, { bark, stone, moss, seed = 728194 } = {})
     sweep(thighWood, [[-s * 0.12, 0.43, -0.02, 0.76, 0.73], [s * 0.1, -0.19, 0.02, 0.94, 0.82], [s * 0.11, -0.91, 0.03, 0.79, 0.72], [-s * 0.02, -1.82, 0.08, 0.53, 0.53], [0, -2.3, 0.06, 0.52, 0.53], [0, -2.7, 0, 0.57, 0.56]], { sides: 32, steps: 25, seed: seed + 130 + s, sculpt: 0.16, color: [0.78, 0.73, 0.63] });
     sweep(shinWood, [[0, 0.2, 0, 0.59, 0.59], [-s * 0.08, -0.4, -0.03, 0.66, 0.61], [-s * 0.02, -1.12, -0.12, 0.55, 0.52], [s * 0.05, -1.86, -0.15, 0.48, 0.49], [0, -2.6, 0, 0.74, 0.71]], { sides: 32, steps: 23, seed: seed + 143 + s, sculpt: 0.17, color: [0.75, 0.7, 0.59] });
     for (let i = 0; i < 3; i++) {
-      const a = i / 3 * TAU43;
+      const a = i / 3 * TAU44;
       sweep(shinWood, [[Math.sin(a) * 0.48, -0.2, Math.cos(a) * 0.49, 0.16, 0.15], [Math.sin(a + 0.45) * 0.53, -1.2, Math.cos(a + 0.45) * 0.53, 0.17, 0.14], [Math.sin(a + 0.75) * 0.75, -2.8, Math.cos(a + 0.75) * 0.7, 0.09, 0.1]], { sides: 8, steps: 17, seed: i + seed });
     }
     for (let i = 0; i < 3; i++) plate(shinStone, { x: s * (0.08 + 0.06 * Math.sin(i * 2)), y: -0.26 - i * 0.59, z: 0.51 - i * 0.045, rx: 0.32 - i * 0.045, ry: 0.46 - i * 0.05, depth: 0.1, normal: [-s * 0.14, 0.05, 1], seed: seed + 150 + i, color: [0.79, 0.8, 0.67], sides: 15 });
@@ -86990,21 +88731,21 @@ function createForestColossus(THREE2, { bark, stone, moss, seed = 728194 } = {})
 function animateForestColossus(root2, { time = 0, dt = 1 / 60, speed = 0, attack: attack2 = 0, dead = false, groundLeft = 0, groundRight = 0, groundPitchLeft = 0, groundPitchRight = 0, groundRollLeft = 0, groundRollRight = 0 } = {}) {
   const data = root2?.userData?.forestColossus;
   if (!data || data.owned.disposed) return;
-  const r = data.rig, delta = clamp57(Number.isFinite(dt) ? dt : 0, 0, 0.15), targetSpeed = clamp57(Math.abs(speed) / 0.2, 0, 1);
+  const r = data.rig, delta = clamp58(Number.isFinite(dt) ? dt : 0, 0, 0.15), targetSpeed = clamp58(Math.abs(speed) / 0.2, 0, 1);
   r.walk += (targetSpeed - r.walk) * (1 - Math.exp(-delta * 3.5));
   r.dead += ((dead ? 1 : 0) - r.dead) * (1 - Math.exp(-delta * 1.9));
   const alive2 = 1 - r.dead;
-  r.phase += Math.abs(speed) * delta * TAU43 / (1.8 * r.modelScale / 0.63);
-  const phase2 = r.phase, gait = r.walk * alive2, breathe = Math.sin(time * 0.68), attackPhase = clamp57(attack2, 0, 1);
+  r.phase += Math.abs(speed) * delta * TAU44 / (1.8 * r.modelScale / 0.63);
+  const phase2 = r.phase, gait = r.walk * alive2, breathe = Math.sin(time * 0.68), attackPhase = clamp58(attack2, 0, 1);
   const windup = attackPhase > 0 && attackPhase < 0.52 ? Math.sin(attackPhase / 0.52 * Math.PI * 0.5) : attackPhase >= 0.52 ? Math.max(0, 1 - (attackPhase - 0.52) / 0.15) : 0;
-  const strike = attackPhase > 0.52 ? Math.sin(clamp57((attackPhase - 0.52) / 0.48, 0, 1) * Math.PI) : 0;
-  const leftGround = clamp57(groundLeft / r.modelScale, -0.75, 0.75), rightGround = clamp57(groundRight / r.modelScale, -0.75, 0.75);
+  const strike = attackPhase > 0.52 ? Math.sin(clamp58((attackPhase - 0.52) / 0.48, 0, 1) * Math.PI) : 0;
+  const leftGround = clamp58(groundLeft / r.modelScale, -0.75, 0.75), rightGround = clamp58(groundRight / r.modelScale, -0.75, 0.75);
   r.hips.position.y = 5.72 + Math.min(0, leftGround, rightGround) * 0.95 + Math.cos(phase2 * 2) * 0.05 * gait + breathe * 0.024 * alive2 - r.dead * 3.65;
   r.hips.rotation.set(0, 0, r.dead * 0.03);
   r.body.rotation.set(0.035 + 0.05 * gait + strike * 0.24 - windup * 0.16 + r.dead * 1.18, Math.sin(phase2) * 0.035 * gait, Math.sin(phase2) * -0.035 * gait);
   r.head.rotation.set(-0.07 + breathe * 0.016 - windup * 0.12 + strike * 0.13 + r.dead * 0.43, Math.sin(time * 0.17) * 0.08 * alive2, Math.sin(time * 0.26) * 0.025 * alive2);
   for (let i = 0; i < 2; i++) {
-    const leg = r.legs[i], p2 = ((phase2 / TAU43 + i * 0.5) % 1 + 1) % 1;
+    const leg = r.legs[i], p2 = ((phase2 / TAU44 + i * 0.5) % 1 + 1) % 1;
     let z, lift;
     if (p2 < 0.63) {
       z = 0.9 - p2 / 0.63 * 1.8;
@@ -87016,11 +88757,11 @@ function animateForestColossus(root2, { time = 0, dt = 1 / 60, speed = 0, attack
     }
     const ground = i === 0 ? leftGround : rightGround;
     const dy = 0.442 + lift * gait + ground - (r.hips.position.y - 0.2), dz = z * gait;
-    const L1 = 2.7, L22 = 2.6, d = clamp57(Math.hypot(dy, dz), 1, L1 + L22 - 0.015);
-    const a = Math.atan2(-dz, -dy), b = Math.acos(clamp57((L1 * L1 + d * d - L22 * L22) / (2 * L1 * d), -1, 1));
+    const L1 = 2.7, L22 = 2.6, d = clamp58(Math.hypot(dy, dz), 1, L1 + L22 - 0.015);
+    const a = Math.atan2(-dz, -dy), b = Math.acos(clamp58((L1 * L1 + d * d - L22 * L22) / (2 * L1 * d), -1, 1));
     leg.thigh.rotation.x = a - b;
-    leg.knee.rotation.x = Math.PI - Math.acos(clamp57((L1 * L1 + L22 * L22 - d * d) / (2 * L1 * L22), -1, 1));
-    const footPitch = clamp57(i === 0 ? groundPitchLeft : groundPitchRight, -0.45, 0.45), footRoll = clamp57(i === 0 ? groundRollLeft : groundRollRight, -0.45, 0.45);
+    leg.knee.rotation.x = Math.PI - Math.acos(clamp58((L1 * L1 + L22 * L22 - d * d) / (2 * L1 * L22), -1, 1));
+    const footPitch = clamp58(i === 0 ? groundPitchLeft : groundPitchRight, -0.45, 0.45), footRoll = clamp58(i === 0 ? groundRollLeft : groundRollRight, -0.45, 0.45);
     leg.foot.rotation.x = -leg.thigh.rotation.x - leg.knee.rotation.x + footPitch;
     leg.foot.rotation.z = footRoll;
     const arm = r.arms[i];
@@ -87038,8 +88779,8 @@ function disposeForestColossus(root2) {
 }
 
 // sky-dragon.js
-var TAU44 = Math.PI * 2;
-var clamp58 = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+var TAU45 = Math.PI * 2;
+var clamp59 = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 var mix19 = (a, b, t) => a + (b - a) * t;
 var cat = (a, b, c2, d, t) => 0.5 * (2 * b + (-a + c2) * t + (2 * a - 5 * b + 4 * c2 - d) * t * t + (-a + 3 * b - 3 * c2 + d) * t * t * t);
 function makeGeometryTools(T2) {
@@ -87057,14 +88798,14 @@ function makeGeometryTools(T2) {
       else cross10.normalize();
       normal4.crossVectors(tangent, cross10).normalize();
       const f15 = t * (points.length - 1), k = Math.min(points.length - 2, Math.floor(f15)), q = Math.min(1, f15 - k);
-      const at = (n, axis2) => points[clamp58(n, 0, points.length - 1)][axis2];
+      const at = (n, axis2) => points[clamp59(n, 0, points.length - 1)][axis2];
       const rx = Math.max(2e-3, cat(at(k - 1, 3), at(k, 3), at(k + 1, 3), at(k + 2, 3), q));
       const ry = Math.max(2e-3, cat(at(k - 1, 4), at(k, 4), at(k + 1, 4), at(k + 2, 4), q));
       if (last2) length += center2.distanceTo(last2);
       else last2 = new T2.Vector3();
       last2.copy(center2);
       for (let i = 0; i <= sides; i++) {
-        const angle = i / sides * TAU44, a = Math.cos(angle) * rx, b = Math.sin(angle) * ry;
+        const angle = i / sides * TAU45, a = Math.cos(angle) * rx, b = Math.sin(angle) * ry;
         positions.push(center2.x + cross10.x * a + normal4.x * b, center2.y + cross10.y * a + normal4.y * b, center2.z + cross10.z * a + normal4.z * b);
         uvs.push(i / sides * Math.max(0.4, textureScale), length * 0.45);
         if (j < segments && i < sides) {
@@ -87089,7 +88830,7 @@ function makeGeometryTools(T2) {
     g.computeVertexNormals();
     return g;
   }
-  function merge(list) {
+  function merge4(list) {
     const p2 = [], n = [], uv = [], ix = [];
     let offset = 0;
     for (const g2 of list) {
@@ -87116,22 +88857,22 @@ function makeGeometryTools(T2) {
   function horn(points, radius = 0.16, segments = 12) {
     return sweep2(points.map((p2, i) => [...p2, radius * (1 - i / (points.length - 1)) + 3e-3, radius * (1 - i / (points.length - 1)) + 3e-3]), segments, 9, 0.35);
   }
-  return { sweep: sweep2, merge, ellipsoid: ellipsoid2, horn };
+  return { sweep: sweep2, merge: merge4, ellipsoid: ellipsoid2, horn };
 }
 function scaleTextures(T2, seed) {
   const size = 256, color3 = new Uint8Array(size * size * 4), normal4 = new Uint8Array(size * size * 4), heights = new Float32Array(size * size);
-  const hash15 = (x, y) => {
+  const hash16 = (x, y) => {
     const n = Math.sin(x * 127.1 + y * 311.7 + seed * 0.131) * 43758.5453;
     return n - Math.floor(n);
   };
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const row2 = Math.floor(y / 32), fx = ((x / 32 + row2 % 2 * 0.5) % 1 - 0.5) * 2, fy = y % 32 / 32;
-    const width = Math.sqrt(Math.max(0, 1 - Math.pow((fy - 0.38) / 0.76, 2))), edge2 = clamp58((width - Math.abs(fx)) * 7, 0, 1);
+    const width = Math.sqrt(Math.max(0, 1 - Math.pow((fy - 0.38) / 0.76, 2))), edge2 = clamp59((width - Math.abs(fx)) * 7, 0, 1);
     const ridge = Math.pow(Math.max(0, 1 - Math.abs(fx)), 3) * Math.sin(Math.PI * fy);
-    const seam = clamp58(fy * 10, 0, 1) * clamp58((1 - fy) * 7, 0, 1);
-    const h2 = edge2 * seam * (0.42 + 0.32 * ridge) + 0.035 * hash15(x, y);
+    const seam = clamp59(fy * 10, 0, 1) * clamp59((1 - fy) * 7, 0, 1);
+    const h2 = edge2 * seam * (0.42 + 0.32 * ridge) + 0.035 * hash16(x, y);
     heights[y * size + x] = h2;
-    const tone = 0.6 + 0.24 * edge2 * seam + 0.095 * ridge + 0.07 * hash15(Math.floor(x / 32 + row2 % 2 * 0.5), row2) + 0.018 * hash15(x, y), i = (y * size + x) * 4;
+    const tone = 0.6 + 0.24 * edge2 * seam + 0.095 * ridge + 0.07 * hash16(Math.floor(x / 32 + row2 % 2 * 0.5), row2) + 0.018 * hash16(x, y), i = (y * size + x) * 4;
     color3[i] = Math.round(187 * tone);
     color3[i + 1] = Math.round(186 * tone);
     color3[i + 2] = Math.round(158 * tone);
@@ -87161,11 +88902,11 @@ function membraneTextures(T2, seed) {
   const size = 256, pixels = new Uint8Array(size * size * 4), normals = new Uint8Array(size * size * 4), heights = new Float32Array(size * size);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const u = x / size, v = y / size;
-    const wander = 0.024 * Math.sin(v * TAU44) + 0.013 * Math.sin(v * TAU44 * 3 + 1.1);
-    const vein = Math.exp(-Math.pow(Math.sin((u * 4 + wander) * TAU44) / 0.047, 2));
-    const branch = Math.exp(-Math.pow(Math.sin((u * 7 + v + 0.045 * Math.sin(v * TAU44)) * TAU44) / 0.03, 2));
-    const broad = 0.024 * Math.sin(u * TAU44 * 2 + 0.8 * Math.sin(v * TAU44)) + 0.016 * Math.sin(v * TAU44 * 3 + 1.4 * Math.sin(u * TAU44));
-    const hash15 = Math.sin(x * 127.1 + y * 311.7 + seed * 0.19) * 43758.5453, grain = (hash15 - Math.floor(hash15) - 0.5) * 0.014;
+    const wander = 0.024 * Math.sin(v * TAU45) + 0.013 * Math.sin(v * TAU45 * 3 + 1.1);
+    const vein = Math.exp(-Math.pow(Math.sin((u * 4 + wander) * TAU45) / 0.047, 2));
+    const branch = Math.exp(-Math.pow(Math.sin((u * 7 + v + 0.045 * Math.sin(v * TAU45)) * TAU45) / 0.03, 2));
+    const broad = 0.024 * Math.sin(u * TAU45 * 2 + 0.8 * Math.sin(v * TAU45)) + 0.016 * Math.sin(v * TAU45 * 3 + 1.4 * Math.sin(u * TAU45));
+    const hash16 = Math.sin(x * 127.1 + y * 311.7 + seed * 0.19) * 43758.5453, grain = (hash16 - Math.floor(hash16) - 0.5) * 0.014;
     const tone = 0.91 + broad + grain - vein * 0.065 - branch * 0.016, i = (y * size + x) * 4;
     pixels[i] = Math.round(199 * tone);
     pixels[i + 1] = Math.round(188 * tone);
@@ -87351,7 +89092,7 @@ function createSkyDragon(THREE2, options = {}) {
   const tailSkeleton = new T2.Skeleton(tailBones);
   skeletons.push(tailSkeleton);
   const tailWeight = (x, y, z) => {
-    const f15 = clamp58(-z / 2, 0, 3.999), a = Math.floor(f15);
+    const f15 = clamp59(-z / 2, 0, 3.999), a = Math.floor(f15);
     return [a, a + 1, f15 - a];
   };
   const tailGeometry = G2.sweep([[0, 0, 0, 0.55, 0.52], [0, -0.12, -1.4, 0.45, 0.42], [0, -0.29, -3, 0.28, 0.3], [0, -0.22, -4.6, 0.17, 0.2], [0, 0.1, -6.2, 0.095, 0.125], [0, 0.42, -8.1, 0.012, 0.018]], 52, 15, 2);
@@ -87384,7 +89125,7 @@ function createSkyDragon(THREE2, options = {}) {
     skeletons.push(skeleton);
     const weight = (x, y, z) => {
       const a = Math.abs(x);
-      return a < 2.75 ? [0, 1, clamp58((a - 1.15) / 1.6, 0, 1)] : [1, 2, clamp58((a - 2.75) / 2.4, 0, 1)];
+      return a < 2.75 ? [0, 1, clamp59((a - 1.15) / 1.6, 0, 1)] : [1, 2, clamp59((a - 2.75) / 2.4, 0, 1)];
     };
     const wrist = [5.8, 0.42, 1.37];
     const tips = [[12.2, 0.02, -1.05], [10.85, -0.17, -4.5], [8.1, -0.25, -6], [4.7, -0.19, -5.52], [0.28, -0.02, -3.23]];
@@ -87443,7 +89184,7 @@ function createSkyDragon(THREE2, options = {}) {
       triangles2 += object2.geometry.index ? object2.geometry.index.count / 3 : object2.geometry.attributes.position.count / 3;
     }
   });
-  const rig = { neck, head: head2, jaw, wings: wings2, tailBones, limbs, phase: seed % 997 / 997 * TAU44 };
+  const rig = { neck, head: head2, jaw, wings: wings2, tailBones, limbs, phase: seed % 997 / 997 * TAU45 };
   root2.userData.skyDragon = rig;
   root2.userData.dragonMetrics = { triangles: triangles2, drawCalls, wingspan: 26.44, length: 19.3, textureBytes: 256 * 256 * 4 * 4, ownsAllResources: true, flightBounds: { min: [-15, -10, -13], max: [15, 11, 9], horizontalRadius: 20 } };
   root2.userData.dispose = () => {
@@ -87461,10 +89202,10 @@ function createSkyDragon(THREE2, options = {}) {
 function animateSkyDragon(group, { time = 0, dt = 0, speed = 16, bank = 0, flap = 1, attack: attack2 = 0, dead = false } = {}) {
   const rig = group.userData.skyDragon;
   if (!rig) return;
-  const effort = dead ? 0 : clamp58(flap, 0, 1), forward = clamp58(speed / 25, 0, 1), phase2 = time * (1.35 + forward * 0.33) + rig.phase;
+  const effort = dead ? 0 : clamp59(flap, 0, 1), forward = clamp59(speed / 25, 0, 1), phase2 = time * (1.35 + forward * 0.33) + rig.phase;
   const wave = Math.sin(phase2), stroke = 0.08 + wave * 0.38 * effort, fold2 = Math.max(0, wave) * 0.15 * effort;
   for (let i = 0; i < 2; i++) {
-    const w = rig.wings[i], turn = clamp58(bank, -0.65, 0.65) * w.side;
+    const w = rig.wings[i], turn = clamp59(bank, -0.65, 0.65) * w.side;
     w.group.rotation.z = w.side * (stroke + turn * 0.1 + (dead ? -0.72 : 0));
     w.group.rotation.x = 0.025 + Math.cos(phase2) * 0.07 * effort;
     w.bones[1].rotation.z = w.side * (0.045 + fold2);
@@ -87476,7 +89217,7 @@ function animateSkyDragon(group, { time = 0, dt = 0, speed = 16, bank = 0, flap 
   rig.neck.rotation.x = -0.025 + Math.cos(phase2 - 0.25) * 0.018 * effort - attack2 * 0.045;
   rig.head.rotation.y = -rig.neck.rotation.y * 0.52;
   rig.head.rotation.x = 0.016 + Math.sin(time * 0.49) * 0.018;
-  rig.jaw.rotation.x = dead ? 0.16 : clamp58(attack2, 0, 1) * 0.34 + 0.018;
+  rig.jaw.rotation.x = dead ? 0.16 : clamp59(attack2, 0, 1) * 0.34 + 0.018;
   for (let i = 0; i < rig.tailBones.length; i++) {
     const b = rig.tailBones[i];
     b.rotation.y = bank * (0.07 + i * 0.014) + Math.sin(time * 0.67 - i * 0.63 + rig.phase) * (0.019 + i * 0.014);
@@ -87818,7 +89559,7 @@ var DRAGON_SITE = Object.freeze({
   // Preference by biome: forest, meadow, mountains, ash, fen.
   biome: Object.freeze([0.15, 0.75, 0.55, 1, 0])
 });
-var TAU45 = Math.PI * 2;
+var TAU46 = Math.PI * 2;
 function reservationBlocker(world2, planner) {
   const chunks = /* @__PURE__ */ new Map(), fixed = world2?.fixedReservations || [];
   return (x, z, pad2) => {
@@ -87839,7 +89580,7 @@ function reservationBlocker(world2, planner) {
 function survey(x, z, radius, { height: height2, isLand, isWet, seaLevel }) {
   let low = Infinity, high = -Infinity;
   for (const r of [0, radius * 0.35, radius * 0.7, radius]) for (let i = 0; i < (r ? 12 : 1); i++) {
-    const a = i / 12 * TAU45, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r, y = height2(px, pz);
+    const a = i / 12 * TAU46, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r, y = height2(px, pz);
     if (!Number.isFinite(y) || !isLand(px, pz) || y < seaLevel + 2 || isWet(px, pz, y)) return null;
     low = Math.min(low, y);
     high = Math.max(high, y);
@@ -88067,7 +89808,7 @@ async function initializeGeneratedContent(THREE2, world2, { discovered, remember
 }
 
 // content-save-restore.js
-var clamp59 = (v, a, b) => Math.max(a, Math.min(b, v));
+var clamp60 = (v, a, b) => Math.max(a, Math.min(b, v));
 function check(signal) {
   if (signal?.aborted) throw new DOMException("Saved-position preparation cancelled", "AbortError");
 }
@@ -88098,7 +89839,7 @@ function readSavedCave(cave) {
 function readSavedPosition(saved2) {
   const p2 = saved2?.version >= 1 && saved2?.version <= 4 ? saved2.position : null;
   if (!p2 || !Number.isFinite(p2.x) || !Number.isFinite(p2.z)) return null;
-  return Object.freeze({ mode: p2.inDungeon === true ? "dungeon" : "outdoor", x: clamp59(p2.x, -1e6, 1e6), z: clamp59(p2.z, -1e6, 1e6), savedY: Number.isFinite(p2.y) ? p2.y : null, dungeon: readSavedCave(p2.dungeon) });
+  return Object.freeze({ mode: p2.inDungeon === true ? "dungeon" : "outdoor", x: clamp60(p2.x, -1e6, 1e6), z: clamp60(p2.z, -1e6, 1e6), savedY: Number.isFinite(p2.y) ? p2.y : null, dungeon: readSavedCave(p2.dungeon) });
 }
 function stageSavedOutdoorPosition(world2, position3, savedPosition, terrainHeight) {
   if (savedPosition?.mode === "dungeon" && savedPosition.dungeon?.returnPose) {
@@ -88149,7 +89890,7 @@ function restoreContentMarkers(value) {
 }
 
 // poi-guards.js
-var clamp60 = (v, a, b) => Math.max(a, Math.min(b, v));
+var clamp61 = (v, a, b) => Math.max(a, Math.min(b, v));
 function stableSide(id2) {
   let h = 0;
   for (const c2 of id2) h = Math.imul(h, 31) + c2.charCodeAt(0) | 0;
@@ -88158,7 +89899,7 @@ function stableSide(id2) {
 function advanceContentGuard(e, { player, dt, collision, terrainHeight, navigation = null, waterAt = null }) {
   const movement = navigation ?? collision;
   navigation?.begin(e);
-  dt = clamp60(dt, 0, 0.05);
+  dt = clamp61(dt, 0, 0.05);
   const radius = 0.42, bodyHeight = e.mesh.userData?.combatHeight ?? 2.62, range = 3.5, speed = 2.1, homeDistance = Math.hypot(e.x - e.homeX, e.z - e.homeZ), playerHome = Math.hypot(player.x - e.homeX, player.z - e.homeZ), distance4 = Math.hypot(player.x - e.x, player.z - e.z), leash = e.leashRadius ?? 22;
   e.contentReturn = e.contentReturn ? homeDistance > 1.2 : homeDistance > leash || playerHome > leash + 4;
   const chase = !e.contentReturn && playerHome <= leash + 4 && (distance4 < 19 || (e.aggressive || 0) > 0);
@@ -88264,7 +90005,7 @@ var DEER_BEHAVIOR = Object.freeze({
 });
 var OFFSETS = [0, 0.4, -0.4, 0.8, -0.8, 1.2, -1.2, 1.65, -1.65, 2.15, -2.15, 2.7, -2.7];
 var FINE = Array.from({ length: 35 }, (_, i) => (i % 2 ? 1 : -1) * Math.ceil(i / 2) * Math.PI / 18).concat(Math.PI);
-var wrap8 = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+var wrap9 = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 var NONE = Object.freeze([]);
 function deerCircle(x, z, r, source2 = null) {
   return { shape: "circle", x, z, r, cx: x, cz: z, R: r, source: source2 };
@@ -88393,7 +90134,7 @@ function routeOpen(e, heading, list, far, inside3, way = 0, swing = true) {
     if (!far && d > B2.near) break;
     if (!pointClear(list, e.x + sx * d, e.z + sz * d, inside3)) return 0;
   }
-  const short = wrap8(heading - e.heading);
+  const short = wrap9(heading - e.heading);
   if (Math.abs(short) < 1e-6) return way || 1;
   if (!swing) return way || Math.sign(short);
   for (const sign of way ? [way] : [Math.sign(short), -Math.sign(short)]) {
@@ -88489,7 +90230,7 @@ function advanceDeer(e, { player, dt, isWet, obstacles: obstacles2 }) {
     e.steerTime = (e.steerTime || 0) - dt;
     const inside3 = list.length ? standingIn(list, e.x, e.z) : null, swing = !(e.squeezeTime > 0);
     e.squeezeTime = Math.max(0, (e.squeezeTime || 0) - dt);
-    if (e.steerTime <= 0 || e.course === void 0 || Math.abs(wrap8(want - e.courseWant)) > 0.6 || e.course !== null && !(routeDry(e, e.course, isWet) && (!list.length || routeOpen(e, e.course, list, e.courseFar, inside3, e.courseTurn, swing)))) {
+    if (e.steerTime <= 0 || e.course === void 0 || Math.abs(wrap9(want - e.courseWant)) > 0.6 || e.course !== null && !(routeDry(e, e.course, isWet) && (!list.length || routeOpen(e, e.course, list, e.courseFar, inside3, e.courseTurn, swing)))) {
       e.steerTime = B2.replan;
       e.courseWant = want;
       const side2 = e.steerSide || 1, dry = [];
@@ -88548,9 +90289,9 @@ function advanceDeer(e, { player, dt, isWet, obstacles: obstacles2 }) {
       }
     } else {
       const turn = (fleeing ? B2.fleeTurn : B2.walkTurn) * dt;
-      let delta = wrap8(e.course - e.heading);
+      let delta = wrap9(e.course - e.heading);
       if (e.courseTurn && delta * e.courseTurn < 0 && Math.abs(delta) > 1e-6) delta += e.courseTurn * 2 * Math.PI;
-      const heading = wrap8(e.heading + Math.max(-turn, Math.min(turn, delta)));
+      const heading = wrap9(e.heading + Math.max(-turn, Math.min(turn, delta)));
       if (list.length && swing && swingIntrudes(e, list, heading, inside3)) e.steerTime = 0;
       else e.heading = heading;
       target *= 0.35 + 0.65 * Math.max(0, Math.cos(delta));
@@ -88558,7 +90299,7 @@ function advanceDeer(e, { player, dt, isWet, obstacles: obstacles2 }) {
   } else {
     e.course = void 0;
     if (watch) {
-      const delta = wrap8(Math.atan2(player.x - e.x, player.z - e.z) - e.heading), turn = B2.watchTurn * dt, heading = wrap8(e.heading + Math.max(-turn, Math.min(turn, delta)));
+      const delta = wrap9(Math.atan2(player.x - e.x, player.z - e.z) - e.heading), turn = B2.watchTurn * dt, heading = wrap9(e.heading + Math.max(-turn, Math.min(turn, delta)));
       if (!(list.length && swingIntrudes(e, list, heading, standingIn(list, e.x, e.z)))) e.heading = heading;
     }
   }
@@ -88685,7 +90426,7 @@ var SURVIVAL_DAY = Object.freeze({
 });
 var PHASE_LABELS = Object.freeze({ day: "昼", dusk: "夕方", night: "夜" });
 var MOON = Object.freeze({ days: 12, startPhase: 8e-3, safeIllumination: 0.95 });
-var wrap9 = (x, n) => (x % n + n) % n;
+var wrap10 = (x, n) => (x % n + n) % n;
 function survivalClock(t, out2 = {}) {
   const time = Number.isFinite(t) ? Math.max(0, t) : 0;
   const day = Math.floor(time / SURVIVAL_DAY.seconds) + 1;
@@ -88703,7 +90444,7 @@ function survivalClock(t, out2 = {}) {
   out2.phase = phase2.name;
   out2.phaseProgress = into / phase2.seconds;
   out2.progress = s / SURVIVAL_DAY.seconds;
-  out2.minute = wrap9(phase2.from + out2.phaseProgress * phase2.minutes, 1440);
+  out2.minute = wrap10(phase2.from + out2.phaseProgress * phase2.minutes, 1440);
   out2.secondsToNight = phase2.name === "night" ? 0 : SURVIVAL_DAY.seconds - SURVIVAL_DAY.phases[2].seconds - s;
   out2.moonPhase = moonPhase(time);
   out2.moonIllumination = moonIllumination(out2.moonPhase);
@@ -88712,7 +90453,7 @@ function survivalClock(t, out2 = {}) {
 }
 function moonPhase(t) {
   const time = Number.isFinite(t) ? Math.max(0, t) : 0;
-  return wrap9(MOON.startPhase + time / (MOON.days * SURVIVAL_DAY.seconds), 1);
+  return wrap10(MOON.startPhase + time / (MOON.days * SURVIVAL_DAY.seconds), 1);
 }
 function moonIllumination(phase2) {
   return (1 - Math.cos(phase2 * Math.PI * 2)) * 0.5;
@@ -88722,8 +90463,8 @@ function moonlightScale(illumination) {
   return 0.1 + 0.9 * k * k * (3 - 2 * k);
 }
 function daySecondsAt(minute) {
-  const m = wrap9(Math.floor(Number(minute) || 0), 1440), [day, dusk, night] = SURVIVAL_DAY.phases;
-  const s = m >= day.from && m < dusk.from ? (m - day.from) / day.minutes * day.seconds : m >= dusk.from && m < night.from ? day.seconds + (m - dusk.from) / dusk.minutes * dusk.seconds : day.seconds + dusk.seconds + wrap9(m - night.from, 1440) / night.minutes * night.seconds;
+  const m = wrap10(Math.floor(Number(minute) || 0), 1440), [day, dusk, night] = SURVIVAL_DAY.phases;
+  const s = m >= day.from && m < dusk.from ? (m - day.from) / day.minutes * day.seconds : m >= dusk.from && m < night.from ? day.seconds + (m - dusk.from) / dusk.minutes * dusk.seconds : day.seconds + dusk.seconds + wrap10(m - night.from, 1440) / night.minutes * night.seconds;
   return Math.min(SURVIVAL_DAY.seconds - 1e-3, s);
 }
 
@@ -88776,17 +90517,17 @@ function playerNoise({ speed = 0, sprint = false, swimming: swimming2 = false } 
   if (speed < W3.slow) return W3.hear.slow;
   return W3.hear.walk;
 }
-function schedule(e, what, random10) {
+function schedule(e, what, random13) {
   if (e.pending === "bolt" || what === "look" && e.pending) return;
   e.pending = what;
-  e.react = between(what === "look" ? W3.look : e.watching > 0 ? W3.boltWatching : W3.bolt, random10());
+  e.react = between(what === "look" ? W3.look : e.watching > 0 ? W3.boltWatching : W3.bolt, random13());
 }
-function boltDeer(e, { hurt = false, random: random10 = Math.random } = {}) {
+function boltDeer(e, { hurt = false, random: random13 = Math.random } = {}) {
   if (!alive(e)) return false;
   e.pending = null;
   e.watching = 0;
   e.wary = W3.waryTime;
-  e.fleeTime = Math.max(e.fleeTime || 0, hurt ? W3.hurt : between(W3.flee, random10()));
+  e.fleeTime = Math.max(e.fleeTime || 0, hurt ? W3.hurt : between(W3.flee, random13()));
   e.fleeFar = Math.max(e.fleeFar || 0, W3.far);
   return true;
 }
@@ -88794,10 +90535,10 @@ function look(e, d) {
   e.watching = W3.watch;
   e.watchFrom = d;
 }
-function startleDeer(e, { random: random10 = Math.random } = {}) {
-  if (alive(e) && !(e.fleeTime > 0)) schedule(e, "bolt", random10);
+function startleDeer(e, { random: random13 = Math.random } = {}) {
+  if (alive(e) && !(e.fleeTime > 0)) schedule(e, "bolt", random13);
 }
-function senseDeer(e, { player, noise: noise8, sprint = false, bow: bow2 = false, dt, random: random10 = Math.random }) {
+function senseDeer(e, { player, noise: noise8, sprint = false, bow: bow2 = false, dt, random: random13 = Math.random }) {
   if (!alive(e)) return null;
   dt = Number.isFinite(dt) ? Math.min(Math.max(dt, 0), 0.25) : 0;
   const d = Math.hypot(e.x - player.x, e.z - player.z);
@@ -88810,7 +90551,7 @@ function senseDeer(e, { player, noise: noise8, sprint = false, bow: bow2 = false
     const what = e.pending;
     e.pending = null;
     if (what === "bolt") {
-      boltDeer(e, { random: random10 });
+      boltDeer(e, { random: random13 });
       return "bolt";
     }
     if (!(e.fleeTime > 0)) {
@@ -88823,26 +90564,26 @@ function senseDeer(e, { player, noise: noise8, sprint = false, bow: bow2 = false
     return event;
   }
   if (e.watching > 0) {
-    if (d < W3.startle * k || d < e.watchFrom - W3.approach || sprint && d < hear || bow2 && d < W3.bowSeen * k) schedule(e, "bolt", random10);
+    if (d < W3.startle * k || d < e.watchFrom - W3.approach || sprint && d < hear || bow2 && d < W3.bowSeen * k) schedule(e, "bolt", random13);
     else {
       if (noise8 <= W3.hear.still || d > hear) e.watching -= dt;
       else e.watching = W3.watch;
       e.watchFrom = Math.max(e.watchFrom, d);
     }
-  } else if (d < hear || bow2 && d < W3.bowHeard * k) schedule(e, "look", random10);
+  } else if (d < hear || bow2 && d < W3.bowHeard * k) schedule(e, "look", random13);
   return event;
 }
-function scareDeer(list, x, z, radii, { random: random10 = Math.random } = {}) {
+function scareDeer(list, x, z, radii, { random: random13 = Math.random } = {}) {
   let n = 0;
   for (const e of list) {
     if (!alive(e)) continue;
     const d = Math.hypot(e.x - x, e.z - z), k = e.wary > 0 ? W3.wary : 1;
     if (d < radii[0] * k || e.watching > 0 && d < radii[1] * k) {
       if (!(e.fleeTime > W3.flee[0] * 0.5)) {
-        schedule(e, "bolt", random10);
+        schedule(e, "bolt", random13);
         n++;
       }
-    } else if (d < radii[2] * k && !(e.watching > 0) && !(e.fleeTime > 0)) schedule(e, "look", random10);
+    } else if (d < radii[2] * k && !(e.watching > 0) && !(e.fleeTime > 0)) schedule(e, "look", random13);
   }
   return n;
 }
@@ -88888,13 +90629,13 @@ function createDeerReturns({ world: world2, clock: clock2, player }) {
 }
 
 // undead-kit.js
-var clamp61 = (x, a, b) => x < a ? a : x > b ? b : x;
+var clamp62 = (x, a, b) => x < a ? a : x > b ? b : x;
 var lerp5 = (a, b, t) => a + (b - a) * t;
 var sstep = (a, b, x) => {
-  const t = clamp61((x - a) / (b - a), 0, 1);
+  const t = clamp62((x - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
 };
-var TAU46 = Math.PI * 2;
+var TAU47 = Math.PI * 2;
 var DEG2 = Math.PI / 180;
 function mulberry323(a) {
   return function() {
@@ -89944,7 +91685,7 @@ function piecesCollapse(e, ix, iz, instant) {
     const p0 = [mm[12], mm[13], mm[14]];
     const info = PIECE_INFO[b];
     const qa = Q.fromTo(Q.create(), info.up[0], info.up[1], info.up[2], 0, 1, 0);
-    const qy = Q.axisAngle(Q.create(), 0, 1, 0, rr(0, TAU46));
+    const qy = Q.axisAngle(Q.create(), 0, 1, 0, rr(0, TAU47));
     let qt = Q.mul(Q.create(), qy, qa);
     const cw = Q.rot([0, 0, 0], q, info.c[0], info.c[1], info.c[2]);
     const scatter = b === BI.head ? 0.45 : 0.22;
@@ -89971,7 +91712,7 @@ function piecesApply(e, force) {
     let k;
     if (asm) {
       const order = PIECE_ORDER[b];
-      const u = clamp61((e.stT - order * 0.09) / 0.55, 0, 1);
+      const u = clamp62((e.stT - order * 0.09) / 0.55, 0, 1);
       k = ease2(u);
       const inv = e._inv || (e._inv = M4.create());
       M4.inv(inv, e.model);
@@ -89983,7 +91724,7 @@ function piecesApply(e, force) {
       pc.p[1] = lerp5(pc.p1[1], mm[13], k) + lift;
       pc.p[2] = lerp5(pc.p1[2], mm[14], k);
     } else {
-      const u = clamp61((pc.t - pc.delay) / pc.dur, 0, 1);
+      const u = clamp62((pc.t - pc.delay) / pc.dur, 0, 1);
       k = easeIn(u);
       Q.slerp(pc.q, pc.q0, pc.q1, Math.min(1, u * 1.2));
       pc.p[0] = lerp5(pc.p0[0], pc.p1[0], u);
@@ -90011,9 +91752,9 @@ var _gPa = [0, 0, 0];
 var _gTl = [0, 0];
 var _frac = (x) => x - Math.floor(x);
 var _angd = (a, b) => {
-  let d = (b - a) % TAU46;
-  if (d > Math.PI) d -= TAU46;
-  else if (d < -Math.PI) d += TAU46;
+  let d = (b - a) % TAU47;
+  if (d > Math.PI) d -= TAU47;
+  else if (d < -Math.PI) d += TAU47;
   return d;
 };
 var _h01 = (s, k) => _frac(Math.sin(s * 12.9898 + k * 78.233) * 43758.5453);
@@ -90347,7 +92088,7 @@ function gaitInit(e) {
 }
 function gaitTarget(e, g, k, remT, stT, out2, lead) {
   const P = g.P, side2 = LEGS[k].side;
-  const yawL = e.yaw + clamp61(g.yawRate * remT, -0.8, 0.8);
+  const yawL = e.yaw + clamp62(g.yawRate * remT, -0.8, 0.8);
   const c2 = Math.cos(yawL), s = Math.sin(yawL);
   const qx = g.qx ?? g.vx, qz = g.qz ?? g.vz;
   const bx = e.x + qx * remT, bz = e.z + qz * remT;
@@ -90460,8 +92201,8 @@ function gaitUpdate(e, dt) {
   const v = Math.hypot(g.qx, g.qz);
   g.ib = Math.min(1, g.ib + dt / 0.3);
   g.sb = Math.min(1, g.sb + dt / 0.22);
-  const SL = zom ? clamp61(P.sl0 + P.sl1 * v, P.sl0 + 0.02, 0.6) : clamp61(0.3 + 0.15 * v, 0.3, 0.65);
-  const Db = zom ? P.D : lerp5(0.4, 0.46, clamp61((v - 1) / 1.3, 0, 1));
+  const SL = zom ? clamp62(P.sl0 + P.sl1 * v, P.sl0 + 0.02, 0.6) : clamp62(0.3 + 0.15 * v, 0.3, 0.65);
+  const Db = zom ? P.D : lerp5(0.4, 0.46, clamp62((v - 1) / 1.3, 0, 1));
   const Dk = g.Dk;
   Dk[0] = Dk[1] = Db;
   if (P.bad >= 0) {
@@ -90541,7 +92282,7 @@ function gaitUpdate(e, dt) {
       f15.tx = _gt.x;
       f15.tz = _gt.z;
       f15.tyaw = _gt.yaw;
-      const s = f15.drag ? u * u * u * (u * (u * 6 - 15) + 10) : zom ? u * u * (3 - 2 * u) : u - Math.sin(TAU46 * u) / TAU46;
+      const s = f15.drag ? u * u * u * (u * (u * 6 - 15) + 10) : zom ? u * u * (3 - 2 * u) : u - Math.sin(TAU47 * u) / TAU47;
       const pl = f15.drag ? P.dragLand : f15.stumble ? 0.1 : P.landP;
       pivotAnkle(_gPa, f15.tx, f15.tz, f15.tyaw, pl, pl > 0 ? TIP_F : -HEEL_B);
       let gC = 0, gpC = 0;
@@ -90589,7 +92330,7 @@ function gaitUpdate(e, dt) {
         f15.z = hz + (f15.z - hz) * 0.52 / sd;
       }
       const behind = g.rootZ - (sy * (f15.x - e.x) + cy * (f15.z - e.z));
-      const th = P.offP * clamp61(0.35 + v / (zom ? 1.6 : 2.2), 0, 1) * sstep(P.h0, P.h1, behind) * clamp61(1 - Math.abs(f15.ts) * 8, 0, 1);
+      const th = P.offP * clamp62(0.35 + v / (zom ? 1.6 : 2.2), 0, 1) * sstep(P.h0, P.h1, behind) * clamp62(1 - Math.abs(f15.ts) * 8, 0, 1);
       f15.th += (th - f15.th) * (1 - Math.exp(-dt / 0.05));
       const fw = ANKLE_H * Math.sin(f15.ts) + f15.piv * (1 - Math.cos(f15.ts)) + ANKLE_H * Math.sin(f15.th) + TIP_F * (1 - Math.cos(f15.th));
       f15.ay = f15.gy + ANKLE_H * Math.cos(f15.ts) + f15.piv * Math.sin(f15.ts) + ANKLE_H * Math.cos(f15.th) + TIP_F * Math.sin(f15.th) - ANKLE_H;
@@ -90626,7 +92367,7 @@ function gaitBlendStart(e, p2) {
   const k = ease2(g.ib), f15 = g.from;
   for (let i = 0; i < NP; i++) p2[i] = f15[i] + (p2[i] - f15[i]) * k;
 }
-function gaitPelvis(e, p2, dt, drop) {
+function gaitPelvis(e, p2, dt, drop2) {
   const g = e.gait, P = g.P, F3 = g.feet, ey = e.y || 0;
   const bL = F3[0].sw ? Math.sin(Math.PI * F3[0].u) : 0, bR = F3[1].sw ? Math.sin(Math.PI * F3[1].u) : 0;
   let latT = P.lat * (bR - bL), rollT = P.roll * (bR - bL);
@@ -90646,10 +92387,10 @@ function gaitPelvis(e, p2, dt, drop) {
   g.rootZ = p2[56];
   g.bv += (-g.by * P.bobW * P.bobW - g.bv * 2 * P.bobZ * P.bobW) * dt;
   g.by += g.bv * dt;
-  let y = p2[55] - P.crouch - 0.018 * Math.min(g.speed, 2) + g.by - (drop || 0);
+  let y = p2[55] - P.crouch - 0.018 * Math.min(g.speed, 2) + g.by - (drop2 || 0);
   if (P.bad >= 0 && !F3[P.bad].sw) y -= 0.02 * (P.bad === 0 ? bR : bL);
   const swU = F3[0].sw ? F3[0].u : F3[1].sw ? F3[1].u : -1;
-  y -= P.bobA * clamp61(g.speed / 0.6, 0, 1) * (swU >= 0 ? (1 + Math.cos(TAU46 * swU)) * 0.5 : 1);
+  y -= P.bobA * clamp62(g.speed / 0.6, 0, 1) * (swU >= 0 ? (1 + Math.cos(TAU47 * swU)) * 0.5 : 1);
   m3Q(_gRh, Q.euler(_gq, p2[0], p2[1], p2[2]));
   const cy = Math.cos(e.yaw), sy = Math.sin(e.yaw);
   let lim = 1;
@@ -90692,7 +92433,7 @@ function gaitLegs(e, p2) {
     const dx = cy * wx - sy * wz - hx, dy = f15.ay - ey - hy, dz = sy * wx + cy * wz - hz;
     let d = Math.hypot(dx, dy, dz) || 1e-4;
     const nx = dx / d, ny = dy / d, nz = dz / d;
-    d = clamp61(d, Math.abs(L1 - L22) + 0.02, (L1 + L22) * 0.9995);
+    d = clamp62(d, Math.abs(L1 - L22) + 0.02, (L1 + L22) * 0.9995);
     const fy = f15.cyaw - e.yaw, cf = Math.cos(fy), sf = Math.sin(fy);
     let mx = sf + Lg.side * P.kneeOut * cf, my = 0, mz = cf - Lg.side * P.kneeOut * sf;
     const dp = mx * nx + my * ny + mz * nz;
@@ -90703,7 +92444,7 @@ function gaitLegs(e, p2) {
     mx /= ml;
     my /= ml;
     mz /= ml;
-    const ca = clamp61((L1 * L1 + d * d - L22 * L22) / (2 * L1 * d), -1, 1), sa = Math.sqrt(1 - ca * ca);
+    const ca = clamp62((L1 * L1 + d * d - L22 * L22) / (2 * L1 * d), -1, 1), sa = Math.sqrt(1 - ca * ca);
     const tx = ca * nx + sa * mx, ty = ca * ny + sa * my, tz = ca * nz + sa * mz;
     m3Frame(_gFr, -tx, -ty, -tz, -sa * nx + ca * mx, -sa * ny + ca * my, -sa * nz + ca * mz);
     m3MulBt(_gRt, _gFr, Lg.r0t);
@@ -91282,7 +93023,7 @@ function _detect(R) {
         else _addC(R, s, 0, 0, 1, z1 + 0.07, 0.6, 0.5);
         continue;
       }
-      const cx = clamp61(x, x0, x1), cz = clamp61(z, z0, z1), dx = x - cx, dz = z - cz, d = Math.hypot(dx, dz);
+      const cx = clamp62(x, x0, x1), cz = clamp62(z, z0, z1), dx = x - cx, dz = z - cz, d = Math.hypot(dx, dz);
       if (d >= m || d < 1e-9) continue;
       const nx = dx / d, nz = dz / d;
       _addC(R, s, nx, 0, nz, nx * cx + nz * cz + 0.07, 0.6, 0.5);
@@ -91292,7 +93033,7 @@ function _detect(R) {
       if (y - r >= top + 0.03) continue;
       if (ob.hx) {
         const x0 = ob.x - ob.hx, x1 = ob.x + ob.hx, z0 = ob.z - ob.hz, z1 = ob.z + ob.hz;
-        const cx = clamp61(x, x0, x1), cy = clamp61(y, ob.y0 ?? 0, top), cz = clamp61(z, z0, z1), dx = x - cx, dy = y - cy, dz = z - cz, d = Math.hypot(dx, dy, dz);
+        const cx = clamp62(x, x0, x1), cy = clamp62(y, ob.y0 ?? 0, top), cz = clamp62(z, z0, z1), dx = x - cx, dy = y - cy, dz = z - cz, d = Math.hypot(dx, dy, dz);
         if (d > 1e-9) {
           if (d < r + 0.03) _addC(R, s, dx / d, dy / d, dz / d, (dx * cx + dy * cy + dz * cz) / d, 0.8, 0.6);
           continue;
@@ -91305,7 +93046,7 @@ function _detect(R) {
         else _addC(R, s, 0, 0, 1, z1, 0.8, 0.6);
       } else {
         const ex = x - ob.x, ez = z - ob.z, el2 = Math.hypot(ex, ez), ux = el2 > 1e-9 ? ex / el2 : 1, uz = el2 > 1e-9 ? ez / el2 : 0;
-        const rad = Math.min(el2, ob.r), cx = ob.x + ux * rad, cy = clamp61(y, ob.y0 ?? 0, top), cz = ob.z + uz * rad, dx = x - cx, dy = y - cy, dz = z - cz, d = Math.hypot(dx, dy, dz);
+        const rad = Math.min(el2, ob.r), cx = ob.x + ux * rad, cy = clamp62(y, ob.y0 ?? 0, top), cz = ob.z + uz * rad, dx = x - cx, dy = y - cy, dz = z - cz, d = Math.hypot(dx, dy, dz);
         if (d > 1e-9) {
           if (d < r + 0.03) _addC(R, s, dx / d, dy / d, dz / d, (dx * cx + dy * cy + dz * cz) / d, 0.8, 0.6);
           continue;
@@ -91812,7 +93553,7 @@ function ragStep(e, dt) {
   R.t += dt;
   if (R.t > R.tw && R.t < 5) {
     const k = Math.floor(FX() * 9), s = RS_TW[k], i = RS_B[s];
-    const a = FX() * TAU46, sp = R.twAmp * (0.5 + 0.6 * FX()) * (1 - R.t / 5.5) * (k === 8 ? 0.45 : 1);
+    const a = FX() * TAU47, sp = R.twAmp * (0.5 + 0.6 * FX()) * (1 - R.t / 5.5) * (k === 8 ? 0.45 : 1);
     _rot(R.q, 4 * i, RS_L[3 * s], RS_L[3 * s + 1], RS_L[3 * s + 2], _gC);
     _velPt(R, i, _gC[0], _gC[1], _gC[2], Math.cos(a) * sp, (0.25 + 0.4 * FX()) * sp, Math.sin(a) * sp);
     R.tw = R.t + 0.25 + FX() * (R.t < 2 ? 0.6 : 1.3);
@@ -91913,7 +93654,7 @@ function poseKeyed(p2, A3, u, t, sp, side2, zom) {
   let i = 0;
   while (i < K.length - 2 && u > K[i + 1][0]) i++;
   const a = K[i], b = K[i + 1];
-  const s = _ease[b[1]](clamp61((u - a[0]) / (b[0] - a[0]), 0, 1));
+  const s = _ease[b[1]](clamp62((u - a[0]) / (b[0] - a[0]), 0, 1));
   for (const n of A3.J) {
     if (n === "root") {
       const va2 = a[2].root, vb2 = b[2].root;
@@ -92043,14 +93784,14 @@ function startAttack(e, A3) {
 }
 var angDiff = (a, b) => {
   let d = b - a;
-  while (d > Math.PI) d -= TAU46;
-  while (d < -Math.PI) d += TAU46;
+  while (d > Math.PI) d -= TAU47;
+  while (d < -Math.PI) d += TAU47;
   return d;
 };
 function steer(e, tx, tz, speed, dt, turn) {
   const dx = tx - e.x, dz = tz - e.z;
   const d = Math.hypot(dx, dz);
-  if (d > 1e-3) e.yaw += clamp61(angDiff(e.yaw, Math.atan2(dx, dz)), -turn * dt, turn * dt);
+  if (d > 1e-3) e.yaw += clamp62(angDiff(e.yaw, Math.atan2(dx, dz)), -turn * dt, turn * dt);
   const align = Math.max(0, Math.cos(angDiff(e.yaw, Math.atan2(dx, dz))));
   const sp = speed * (0.25 + 0.75 * align);
   const k = Math.min(1, dt * 5);
@@ -92077,7 +93818,7 @@ function animateEnemy(e, dt, dist2, moveSpeed) {
     else poseSkeletonGait(p2, e, dt, chasing);
     if (chasing && dist2 < 14) {
       const L4 = animLook(e);
-      const look2 = clamp61(angDiff(e.yaw, Math.atan2(L4.x - e.x, L4.z - e.z)), -0.9, 0.9);
+      const look2 = clamp62(angDiff(e.yaw, Math.atan2(L4.x - e.x, L4.z - e.z)), -0.9, 0.9);
       addJ(p2, BI.neck, 0, look2 * 0.4, 0);
       addJ(p2, BI.head, -0.1, look2 * 0.5, 0);
     }
@@ -92152,8 +93893,8 @@ function animateEnemy(e, dt, dist2, moveSpeed) {
   }
   if (gait) {
     gaitBlendUpper(e, p2);
-    const drop = e.state === "stagger" ? (zom ? 0.05 : 0.03) * (1 - clamp61(e.stT / (e.stagT || 0.4), 0, 1)) : 0;
-    gaitPelvis(e, p2, dt, drop);
+    const drop2 = e.state === "stagger" ? (zom ? 0.05 : 0.03) * (1 - clamp62(e.stT / (e.stagT || 0.4), 0, 1)) : 0;
+    gaitPelvis(e, p2, dt, drop2);
     gaitLegs(e, p2);
     gaitBlendStart(e, p2);
   }
@@ -92329,7 +94070,7 @@ function udHeightFromMeshes(meshes) {
   const cnt = new Int32Array(nx * nz + 1);
   const span = (t, f15) => {
     const o = t * 9, ax = Math.min(T2[o], T2[o + 3], T2[o + 6]), bx = Math.max(T2[o], T2[o + 3], T2[o + 6]), az = Math.min(T2[o + 2], T2[o + 5], T2[o + 8]), bz = Math.max(T2[o + 2], T2[o + 5], T2[o + 8]);
-    const i0 = clamp61(Math.floor((ax - x0) / cell), 0, nx - 1), i1 = clamp61(Math.floor((bx - x0) / cell), 0, nx - 1), j0 = clamp61(Math.floor((az - z0) / cell), 0, nz - 1), j1 = clamp61(Math.floor((bz - z0) / cell), 0, nz - 1);
+    const i0 = clamp62(Math.floor((ax - x0) / cell), 0, nx - 1), i1 = clamp62(Math.floor((bx - x0) / cell), 0, nx - 1), j0 = clamp62(Math.floor((az - z0) / cell), 0, nz - 1), j1 = clamp62(Math.floor((bz - z0) / cell), 0, nz - 1);
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) f15(i + j * nx);
   };
   for (let t = 0; t < nt; t++) span(t, (c2) => cnt[c2 + 1]++);
@@ -92339,7 +94080,7 @@ function udHeightFromMeshes(meshes) {
     list[fill[c2]++] = t;
   });
   const near = (x, z) => {
-    const i0 = clamp61(Math.floor((x - x0) / cell), 0, nx - 1), j0 = clamp61(Math.floor((z - z0) / cell), 0, nz - 1);
+    const i0 = clamp62(Math.floor((x - x0) / cell), 0, nx - 1), j0 = clamp62(Math.floor((z - z0) / cell), 0, nz - 1);
     for (let r = 0; r < 4; r++) {
       let bd = Infinity, by = 0;
       for (let j = j0 - r; j <= j0 + r; j++) for (let i = i0 - r; i <= i0 + r; i++) {
@@ -92763,7 +94504,7 @@ var UdActor = class {
     this.x = p2.x;
     this.z = p2.z;
     this.y = kit.ground.h(p2.x, p2.z);
-    const rYaw = rr(0, TAU46);
+    const rYaw = rr(0, TAU47);
     this.yaw = o.yaw ?? rYaw;
     this.vx = 0;
     this.vz = 0;
@@ -92783,7 +94524,7 @@ var UdActor = class {
     this.sp = { seed: rr(0, 10), hunch: zom ? rr(0.15, 0.45) : rr(0, 0.12), tilt: rr(-0.25, 0.25), limp: zom && chance(0.45) ? chance(0.5) ? 1 : -1 : 0, reach: zom ? chance(0.5) ? 1 : 0 : 0, hand: chance(0.5) ? 1 : -1 };
     this.speedOpt = Math.max(0, +(o.speed ?? 1));
     this.speedMul = (zom ? rr(0.85, 1.15) * (chance(0.18) ? 1.45 : 1) : rr(0.9, 1.1)) * this.speedOpt;
-    this.phase = rr(0, TAU46);
+    this.phase = rr(0, TAU47);
     this.anim = 0;
     this.alert = 0;
     this.lastX = this.x;
@@ -93090,7 +94831,7 @@ var UdActor = class {
         const A3 = this.atk || (this.atk = ATTACKS[zom ? "zombie" : "skeleton"][0], this.atkSide = 1, this.hitI = 0, this.atk);
         const t = this.stT;
         const tr = t < A3.wind ? zom ? 2.5 : 4 : t < A3.wind + A3.strike ? 0.6 : 1.2;
-        if (tg) this.yaw += clamp61(angDiff(this.yaw, Math.atan2(dx, dz)), -dt * tr, dt * tr);
+        if (tg) this.yaw += clamp62(angDiff(this.yaw, Math.atan2(dx, dz)), -dt * tr, dt * tr);
         while ((this.hitI || 0) < A3.hits.length && t > A3.wind + A3.hits[this.hitI || 0] * A3.strike) {
           this.hitI = (this.hitI || 0) + 1;
           const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw);
@@ -93225,7 +94966,7 @@ var UdActor = class {
     return this.losV;
   }
   turnTo(x, z, turn, dt) {
-    this.yaw += clamp61(angDiff(this.yaw, Math.atan2(x - this.x, z - this.z)), -turn * dt, turn * dt);
+    this.yaw += clamp62(angDiff(this.yaw, Math.atan2(x - this.x, z - this.z)), -turn * dt, turn * dt);
   }
   steerTo(tx, tz, speed, dt, turn) {
     if (speed > 0) {
@@ -93253,7 +94994,7 @@ var UdActor = class {
   pickWander() {
     const H = this.home, K = this.kit, dh = Math.hypot(this.x - H.x, this.z - H.z), back = dh > H.radius;
     let a = back ? Math.atan2(H.x - this.x, H.z - this.z) + rr(-0.4, 0.4) : (this.wdir ?? this.yaw) + rr(-1.1, 1.1);
-    if (!back && chance(0.25)) a = rr(0, TAU46);
+    if (!back && chance(0.25)) a = rr(0, TAU47);
     for (let k = 0; k < 8; k++) {
       const r = back ? Math.min(dh - H.radius * 0.4, rr(3, 7)) : rr(2, 6);
       const x = this.x + Math.sin(a) * r, z = this.z + Math.cos(a) * r;
@@ -93707,7 +95448,7 @@ var Undead = class {
     const a = this._a, A3 = udArr(p0), B2 = udArr(p1), ex = B2[0] - A3[0], ey = B2[1] - A3[1], ez = B2[2] - A3[2], L22 = ex * ex + ey * ey + ez * ez || 1e-9;
     let best = null;
     for (const s of a.spheres(_udL)) {
-      const t = clamp61(((s.x - A3[0]) * ex + (s.y - A3[1]) * ey + (s.z - A3[2]) * ez) / L22, 0, 1);
+      const t = clamp62(((s.x - A3[0]) * ex + (s.y - A3[1]) * ey + (s.z - A3[2]) * ez) / L22, 0, 1);
       const cx = A3[0] + ex * t, cy = A3[1] + ey * t, cz = A3[2] + ez * t, dd = Math.hypot(cx - s.x, cy - s.y, cz - s.z);
       if (dd > s.r + radius || best && t >= best.t) continue;
       const k = dd > 1e-6 ? s.r / dd : 0;
@@ -93931,7 +95672,7 @@ var UndeadKit = class {
     this.setObstacles(o.obstacles || []);
     this.isWalkable = typeof o.isWalkable === "function" ? o.isWalkable : null;
     this.lineOfSight = typeof o.lineOfSight === "function" ? o.lineOfSight : null;
-    this.maxSlopeTan = Math.tan(clamp61(o.maxSlope ?? 40, 5, 89) * Math.PI / 180);
+    this.maxSlopeTan = Math.tan(clamp62(o.maxSlope ?? 40, 5, 89) * Math.PI / 180);
     this.attackPower = Math.max(0, +(o.attackPower ?? 1));
     this.reassemble = o.reassemble !== false;
     this.sight = o.sight;
@@ -94017,7 +95758,7 @@ var UndeadKit = class {
     this.targetSpec = t || null;
   }
   setVolume(v) {
-    this.audio.setVolume(clamp61(+v, 0, 1));
+    this.audio.setVolume(clamp62(+v, 0, 1));
   }
   enableAudio() {
     this.audioOn = true;
@@ -94282,9 +96023,9 @@ var UndeadKit = class {
       else if (o.isDirectionalLight) c2.add(t.copy(o.color).multiplyScalar(0.5 * o.intensity));
     });
     c2.multiplyScalar(1 / Math.PI);
-    c2.r = clamp61(c2.r, 0.03, 4);
-    c2.g = clamp61(c2.g, 0.03, 4);
-    c2.b = clamp61(c2.b, 0.03, 4);
+    c2.r = clamp62(c2.r, 0.03, 4);
+    c2.g = clamp62(c2.g, 0.03, 4);
+    c2.b = clamp62(c2.b, 0.03, 4);
     this.fx.setLight(c2);
   }
   // ---- hitting any of them ----
@@ -94476,15 +96217,15 @@ async function createUndeadIsland({ world: world2, height: height2, waterAt, pla
     nearPlaces();
     return fireList;
   };
-  const box4 = { minX: 0, maxX: 0, minZ: 0, maxZ: 0 };
+  const box5 = { minX: 0, maxX: 0, minZ: 0, maxZ: 0 };
   const built = (x, z, g, pad2 = 0) => {
     const c2 = world2.contentCollision;
     if (!c2?.query) return false;
-    box4.minX = x - pad2;
-    box4.maxX = x + pad2;
-    box4.minZ = z - pad2;
-    box4.maxZ = z + pad2;
-    for (const r of c2.query(box4)) if (r.solid !== false && (!Number.isFinite(r.maxY) || r.maxY > g + 0.45)) return true;
+    box5.minX = x - pad2;
+    box5.maxX = x + pad2;
+    box5.minZ = z - pad2;
+    box5.maxZ = z + pad2;
+    for (const r of c2.query(box5)) if (r.solid !== false && (!Number.isFinite(r.maxY) || r.maxY > g + 0.45)) return true;
     return false;
   };
   const isWalkable = (x, z) => {
@@ -94727,10 +96468,10 @@ async function createUndeadIsland({ world: world2, height: height2, waterAt, pla
     const S = UNDEAD.swing;
     let best = null, bestD = Infinity;
     for (let i = 0; i < S.steps; i++) {
-      const u = i / (S.steps - 1), ang = yaw2 + side2 * (S.arc * 0.5 - S.arc * u), fx = -Math.sin(ang), fz = -Math.cos(ang), drop = Math.tan(pitch2);
+      const u = i / (S.steps - 1), ang = yaw2 + side2 * (S.arc * 0.5 - S.arc * u), fx = -Math.sin(ang), fz = -Math.cos(ang), drop2 = Math.tan(pitch2);
       const at = (d) => {
         const x = eye.x + fx * d, z = eye.z + fz * d, g = height2(x, z);
-        return [x, Math.max(g + 0.08, eye.y - 0.25 - drop * d), z];
+        return [x, Math.max(g + 0.08, eye.y - 0.25 - drop2 * d), z];
       };
       a.set(...at(S.from));
       b.set(...at(S.reach));
@@ -95006,7 +96747,7 @@ function geometries() {
     g.translate(x, y, z);
     return g;
   };
-  const ball = (r, x, y, z, [sx, sy, sz] = [1, 1, 1]) => {
+  const ball2 = (r, x, y, z, [sx, sy, sz] = [1, 1, 1]) => {
     const g = new SphereGeometry(r, 12, 8);
     g.scale(sx, sy, sz);
     g.translate(x, y, z);
@@ -95018,8 +96759,8 @@ function geometries() {
     // (the spine's own frame: the hips at 0) the body, the bar of the shoulders, the neck
     torso: mergeGeometries([cap(0.15, 0.5, 0, 0.42, 0, [1.25, 1, 0.66]), cap(0.064, 0.4, 0, 0.8, 0, [1, 1, 1], Math.PI / 2), cap(0.048, 0.14, 0, 0.92, 0)]),
     // (the neck's frame) a long head
-    head: ball(0.13, 0, 0.15, 0.015, [0.82, 1.34, 0.95]),
-    eyes: mergeGeometries([ball(0.017, -0.044, 0.172, 0.131), ball(0.017, 0.043, 0.166, 0.131)]),
+    head: ball2(0.13, 0, 0.15, 0.015, [0.82, 1.34, 0.95]),
+    eyes: mergeGeometries([ball2(0.017, -0.044, 0.172, 0.131), ball2(0.017, 0.043, 0.166, 0.131)]),
     // (the shoulder's frame) upper arm, forearm, long fingers
     arm: mergeGeometries([cap(0.042, 0.62, 0, -0.36, 0), cap(0.034, 0.42, 0, -0.95, 0.02), cap(0.022, 0.2, 0, -1.28, 0.035)])
   };
@@ -95115,11 +96856,11 @@ function createSanityHorror({
   prepare: prepare2 = null,
   note = () => {
   },
-  random: random10 = Math.random,
+  random: random13 = Math.random,
   /* v129: the health, 0-1 (the heart quickens as it falls) */
   health = () => 1
 }) {
-  const rr2 = ([a, b]) => a + random10() * (b - a);
+  const rr2 = ([a, b]) => a + random13() * (b - a);
   const rigs = [], figures = [], queue = [];
   const s = {
     t: 0,
@@ -95202,7 +96943,7 @@ function createSanityHorror({
       return false;
     }
   };
-  const behindPlayer = () => around(Math.PI + (random10() - 0.5) * 0.5, rr2(HORROR.figures.behind));
+  const behindPlayer = () => around(Math.PI + (random13() - 0.5) * 0.5, rr2(HORROR.figures.behind));
   function emit(name, x, y, z, options = {}) {
     sound2(name, { position: { x, y, z }, ...options });
   }
@@ -95212,38 +96953,38 @@ function createSanityHorror({
   }
   const PHANTOMS = {
     whisper: () => {
-      const p2 = around(Math.PI + (random10() - 0.5) * 1.4, 2.4);
-      pemit("whisper", p2.x, eye.y, p2.z, { gain: 0.55, rate: 0.82 + random10() * 0.14, range: 20, refDistance: 2, force: true });
+      const p2 = around(Math.PI + (random13() - 0.5) * 1.4, 2.4);
+      pemit("whisper", p2.x, eye.y, p2.z, { gain: 0.55, rate: 0.82 + random13() * 0.14, range: 20, refDistance: 2, force: true });
     },
     steps: () => {
-      const a = Math.PI + (random10() - 0.5) * 0.6, n = 3 + Math.floor(random10() * 3), surface4 = random10() < 0.5 ? "stepGrass" : "stepDirt";
-      for (let i = 0; i < n; i++) later(i * (0.46 + random10() * 0.06), () => {
+      const a = Math.PI + (random13() - 0.5) * 0.6, n = 3 + Math.floor(random13() * 3), surface4 = random13() < 0.5 ? "stepGrass" : "stepDirt";
+      for (let i = 0; i < n; i++) later(i * (0.46 + random13() * 0.06), () => {
         const p2 = around(a, 7.5 - i * 1.1);
         pemit(surface4, p2.x, eye.y - 1.6, p2.z, { gain: 0.62, rate: 0.9, range: 24, refDistance: 3, force: true, variant: i % 2 });
       });
     },
     twig: () => {
-      const p2 = around((random10() < 0.5 ? 1 : -1) * (1.2 + random10() * 0.8), 9 + random10() * 5);
+      const p2 = around((random13() < 0.5 ? 1 : -1) * (1.2 + random13() * 0.8), 9 + random13() * 5);
       pemit("branchSnap", p2.x, eye.y - 1.5, p2.z, { gain: 0.85, rate: 0.88, range: 30, refDistance: 4, force: true });
     },
     creak: () => {
-      const p2 = around(Math.PI + (random10() - 0.5) * 1.2, 6 + random10() * 4);
+      const p2 = around(Math.PI + (random13() - 0.5) * 1.2, 6 + random13() * 4);
       pemit("woodCreak", p2.x, eye.y, p2.z, { gain: 0.6, rate: 0.7, range: 26, refDistance: 3, force: true });
     },
     knock: () => {
-      const p2 = around((random10() - 0.5) * 2.4 + Math.PI, 11 + random10() * 6);
+      const p2 = around((random13() - 0.5) * 2.4 + Math.PI, 11 + random13() * 6);
       for (let i = 0; i < 3; i++) later(i * 0.42, () => pemit("knockWood", p2.x, eye.y - 0.4, p2.z, { gain: 0.7, rate: 0.78, range: 34, refDistance: 4, force: true }));
     },
     skitter: () => {
-      const p2 = around(Math.PI + (random10() - 0.5), 4);
+      const p2 = around(Math.PI + (random13() - 0.5), 4);
       pemit("spiderSkitter", p2.x, eye.y - 1.5, p2.z, { gain: 0.42, rate: 0.72, range: 18, refDistance: 2, force: true });
     },
     scream: () => {
-      const p2 = around(random10() * Math.PI * 2, 70 + random10() * 25);
+      const p2 = around(random13() * Math.PI * 2, 70 + random13() * 25);
       pemit("queenScreech", p2.x, eye.y + 4, p2.z, { gain: 0.38, rate: 0.52, range: 160, refDistance: 40, force: true });
     },
     breath: () => {
-      const p2 = around(Math.PI + (random10() - 0.5) * 0.4, 0.7);
+      const p2 = around(Math.PI + (random13() - 0.5) * 0.4, 0.7);
       pemit("whisper", p2.x, eye.y, p2.z, { gain: 0.38, rate: 0.55, range: 8, refDistance: 1, force: true });
     }
   };
@@ -95251,7 +96992,7 @@ function createSanityHorror({
   function phantom(kind = null) {
     if (!kind) {
       const v = sanity(), list = WEIGHTS.filter((w) => v < w[2]), total = list.reduce((n, w) => n + w[1], 0);
-      let pick2 = random10() * total;
+      let pick2 = random13() * total;
       kind = list.find((w) => (pick2 -= w[1]) < 0)?.[0] || "whisper";
     }
     PHANTOMS[kind]?.();
@@ -95260,9 +97001,9 @@ function createSanityHorror({
   }
   function whisperSwarm(gain, spread) {
     const sides = [Math.PI * 0.5, -Math.PI * 0.5, Math.PI, Math.PI * 0.25, -Math.PI * 0.75];
-    sides.forEach((a, k) => later(k === 0 ? 0 : random10() * spread, () => {
-      const p2 = around(a + (random10() - 0.5) * 0.5, 0.45 + random10() * 0.3);
-      emit(k < 3 ? "horrorWhispers" : "whisper", p2.x, eye.y + (random10() - 0.5) * 0.2, p2.z, { gain: gain * (k < 3 ? 1 : 0.8), rate: k < 3 ? 0.9 + random10() * 0.3 : 1.1 + random10() * 0.4, range: 10, refDistance: 1, variant: k % 3, force: true });
+    sides.forEach((a, k) => later(k === 0 ? 0 : random13() * spread, () => {
+      const p2 = around(a + (random13() - 0.5) * 0.5, 0.45 + random13() * 0.3);
+      emit(k < 3 ? "horrorWhispers" : "whisper", p2.x, eye.y + (random13() - 0.5) * 0.2, p2.z, { gain: gain * (k < 3 ? 1 : 0.8), rate: k < 3 ? 0.9 + random13() * 0.3 : 1.1 + random13() * 0.4, range: 10, refDistance: 1, variant: k % 3, force: true });
     }));
   }
   function crackle(x, y, z, gain, rate) {
@@ -95272,14 +97013,14 @@ function createSanityHorror({
   function noise8(f15, burst2) {
     const G2 = HORROR.glitch, x = f15.x, y = (f15.y || 0) + 1.4, z = f15.z;
     if (!burst2) {
-      crackle(x, y, z, G2.sound, 0.9 + random10() * 0.3);
+      crackle(x, y, z, G2.sound, 0.9 + random13() * 0.3);
       return;
     }
-    crackle(x, y, z, G2.sound, 0.68 + random10() * 0.1);
-    later(0.1 + random10() * 0.06, () => crackle(x, y, z, G2.sound * 0.8, 0.95 + random10() * 0.2));
+    crackle(x, y, z, G2.sound, 0.68 + random13() * 0.1);
+    later(0.1 + random13() * 0.06, () => crackle(x, y, z, G2.sound * 0.8, 0.95 + random13() * 0.2));
   }
   function warble(f15, gain) {
-    emit("horrorWarble", f15.x, (f15.y || 0) + 1.9, f15.z, { gain, rate: 0.85 + random10() * 0.3, range: HORROR.voice.heard, refDistance: 3, variant: Math.floor(random10() * 3), force: true });
+    emit("horrorWarble", f15.x, (f15.y || 0) + 1.9, f15.z, { gain, rate: 0.85 + random13() * 0.3, range: HORROR.voice.heard, refDistance: 3, variant: Math.floor(random13() * 3), force: true });
   }
   function figure(kind, x, z, extra = {}) {
     const r = rig(), f15 = {
@@ -95295,10 +97036,10 @@ function createSanityHorror({
       life: rr2(HORROR.figures.life),
       seenAt: -1,
       linger: rr2(HORROR.figures.linger),
-      tilt: (random10() - 0.5) * 0.5,
+      tilt: (random13() - 0.5) * 0.5,
       tiltTo: 0,
       twitchIn: rr2([0.8, 3]),
-      phase: random10() * 10,
+      phase: random13() * 10,
       hp: 0,
       attack: null,
       cooldown: 0,
@@ -95323,7 +97064,7 @@ function createSanityHorror({
     else r.root.rotation.set(0, Math.atan2(eye.x - f15.x, eye.z - f15.z), 0);
     f15.twitchIn -= dt;
     if (f15.twitchIn <= 0) {
-      f15.tiltTo = (random10() - 0.5) * (f15.kind === "stalker" ? 1.3 : 0.9);
+      f15.tiltTo = (random13() - 0.5) * (f15.kind === "stalker" ? 1.3 : 0.9);
       f15.twitchIn = f15.kind === "stalker" && f15.watched ? rr2([0.25, 0.9]) : f15.kind === "scare" ? rr2([0.12, 0.3]) : rr2([1.2, 3.5]);
     }
     f15.tilt += (f15.tiltTo - f15.tilt) * Math.min(1, dt * 28);
@@ -95342,13 +97083,13 @@ function createSanityHorror({
     if (f15.glitchIn <= 0 && f15.kind !== "scare") {
       f15.glitchLeft = rr2(G2.length);
       f15.glitchIn = rr2(f15.kind === "stalker" ? G2.stalker : G2.every);
-      f15.glitchSeed = random10();
-      if (f15.fade > 0.3 && flat(f15.x, f15.z) < G2.heard) emit("horrorStatic", f15.x, y + 1.4, f15.z, { gain: G2.sound, rate: 0.85 + random10() * 0.4, range: G2.heard + 5, refDistance: 3, force: true });
+      f15.glitchSeed = random13();
+      if (f15.fade > 0.3 && flat(f15.x, f15.z) < G2.heard) emit("horrorStatic", f15.x, y + 1.4, f15.z, { gain: G2.sound, rate: 0.85 + random13() * 0.4, range: G2.heard + 5, refDistance: 3, force: true });
     }
     const tearing = f15.glitchLeft > 0 || f15.kind === "scare" && (f15.age < HORROR.scare.snap || f15.age > HORROR.scare.hold);
-    r.u.uGlitch.value = tearing ? 0.55 + 0.45 * random10() : 0;
+    r.u.uGlitch.value = tearing ? 0.55 + 0.45 * random13() : 0;
     if (tearing) r.u.uSeed.value = (f15.glitchSeed + Math.floor(s.t * 30) * 0.3713) % 1;
-    const shimmer = f15.hush > 0 ? 0.15 : 1, eyesOn = tearing && random10() < 0.45 ? 0.15 : 1;
+    const shimmer = f15.hush > 0 ? 0.15 : 1, eyesOn = tearing && random13() < 0.45 ? 0.15 : 1;
     r.body.opacity = f15.fade * shimmer;
     r.haze.opacity = f15.fade * shimmer;
     r.eyes.opacity = Math.min(1, f15.fade * 1.15) * shimmer * eyesOn;
@@ -95373,16 +97114,16 @@ function createSanityHorror({
         if (d < F3.near[0] || d > F3.near[1]) continue;
         const c2 = offView(o.x, eye.y, o.z);
         if (c2 > Math.cos(F3.side[0]) || c2 < Math.cos(F3.side[1])) continue;
-        const side2 = random10() < 0.5 ? 1 : -1, px = (o.z - eye.z) / d * side2, pz = -(o.x - eye.x) / d * side2, r = (o.collisionRadius || 0.45) + 0.55;
+        const side2 = random13() < 0.5 ? 1 : -1, px = (o.z - eye.z) / d * side2, pz = -(o.x - eye.x) / d * side2, r = (o.collisionRadius || 0.45) + 0.55;
         const x = o.x + px * r + (o.x - eye.x) / d * 0.4, z = o.z + pz * r + (o.z - eye.z) / d * 0.4;
         if (!open(x, z)) continue;
         best = { x, z };
-        if (random10() < 0.5) break;
+        if (random13() < 0.5) break;
       }
     } catch {
     }
     if (!best) for (let i = 0; i < 10 && !best; i++) {
-      const p2 = around((random10() < 0.5 ? 1 : -1) * rr2(F3.side), rr2(F3.near));
+      const p2 = around((random13() < 0.5 ? 1 : -1) * rr2(F3.side), rr2(F3.near));
       if (open(p2.x, p2.z)) best = p2;
     }
     if (!best) return null;
@@ -95395,7 +97136,7 @@ function createSanityHorror({
       const p2 = behindPlayer();
       if (!open(p2.x, p2.z)) continue;
       emit("whisper", p2.x, eye.y, p2.z, { gain: 0.42, rate: 0.55, range: 10, refDistance: 1, force: true });
-      emit("horrorWarble", p2.x, eye.y, p2.z, { gain: 0.55, rate: 0.9, range: 20, refDistance: 2, variant: Math.floor(random10() * 3), force: true });
+      emit("horrorWarble", p2.x, eye.y, p2.z, { gain: 0.55, rate: 0.9, range: 20, refDistance: 2, variant: Math.floor(random13() * 3), force: true });
       s.counts.apparitions++;
       note("正気: 後ろの影");
       return figure("behind", p2.x, p2.z, { life: 7 });
@@ -95405,7 +97146,7 @@ function createSanityHorror({
   function spawnStalker() {
     const S = HORROR.stalkers;
     for (let i = 0; i < 14; i++) {
-      const p2 = around((random10() < 0.5 ? 1 : -1) * (1.3 + random10() * 1.8), rr2(S.spawn));
+      const p2 = around((random13() < 0.5 ? 1 : -1) * (1.3 + random13() * 1.8), rr2(S.spawn));
       if (!open(p2.x, p2.z)) continue;
       s.counts.stalkers++;
       note("正気: 影が現れた");
@@ -95507,8 +97248,8 @@ function createSanityHorror({
       }
     }
     if (f15.watched) {
-      f15.x += (random10() - 0.5) * 0.05;
-      f15.z += (random10() - 0.5) * 0.05;
+      f15.x += (random13() - 0.5) * 0.05;
+      f15.z += (random13() - 0.5) * 0.05;
     } else if (d > 7) {
       f15.blinkIn -= dt;
       if (f15.blinkIn <= 0) {
@@ -95518,8 +97259,8 @@ function createSanityHorror({
           f15.x = nx;
           f15.z = nz;
           f15.hush = 0.07;
-          if (random10() < HORROR.voice.warp) noise8(f15, false);
-          else if (random10() < 0.5) emit("spiderSkitter", f15.x, f15.y + 0.3, f15.z, { gain: 0.35, rate: 0.6, range: 26, refDistance: 3, force: true });
+          if (random13() < HORROR.voice.warp) noise8(f15, false);
+          else if (random13() < 0.5) emit("spiderSkitter", f15.x, f15.y + 0.3, f15.z, { gain: 0.35, rate: 0.6, range: 26, refDistance: 3, force: true });
         }
       }
     }
@@ -95595,7 +97336,7 @@ function createSanityHorror({
         s.lineIn -= dt;
         if (s.lineIn <= 0) {
           s.lineIn = rr2(HORROR.lines.every);
-          let i = Math.floor(random10() * LINES.length);
+          let i = Math.floor(random13() * LINES.length);
           if (i === s.lastLine) i = (i + 1) % LINES.length;
           s.lastLine = i;
           toast2(LINES[i], "正気");
@@ -95609,7 +97350,7 @@ function createSanityHorror({
       if (v < St.shadows) {
         s.figureIn -= dt;
         if (s.figureIn <= 0 && !figures.some((f15) => f15.kind === "watcher" || f15.kind === "behind")) {
-          if (random10() < HORROR.figures.behindShare) spawnBehind();
+          if (random13() < HORROR.figures.behindShare) spawnBehind();
           else spawnWatcher();
           s.figureIn = rr2(HORROR.figures.every) * (0.55 + 0.45 * Math.max(0, v) / St.shadows);
         }
@@ -95637,7 +97378,7 @@ function createSanityHorror({
         s.flickerIn -= dt;
         if (s.flickerIn <= 0) {
           flick(rr2(HORROR.flicker.strength), rr2(HORROR.flicker.length));
-          if (random10() < 0.3) later(0.22, () => flick(rr2(HORROR.flicker.strength) * 0.8, 0.07));
+          if (random13() < 0.3) later(0.22, () => flick(rr2(HORROR.flicker.strength) * 0.8, 0.07));
           s.flickerIn = rr2(HORROR.flicker.every) * (0.5 + v / St.form);
         }
       }
@@ -95706,7 +97447,7 @@ function createSanityHorror({
         f15.voiceIn -= dt;
         if (f15.voiceIn <= 0) {
           const V5 = HORROR.voice, staring = f15.kind === "stalker" && f15.watched;
-          if (staring || (f15.kind === "watcher" || f15.kind === "stalker") && random10() < V5.idleShare) warble(f15, V5.gain * (staring ? 1 : 0.7));
+          if (staring || (f15.kind === "watcher" || f15.kind === "stalker") && random13() < V5.idleShare) warble(f15, V5.gain * (staring ? 1 : 0.7));
           f15.voiceIn = rr2(staring ? V5.stare : V5.idle);
         }
       }
@@ -96327,9 +98068,9 @@ var FEATURE_BEDS = Object.freeze({
 });
 
 // soundscape.js
-var clamp62 = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n));
+var clamp63 = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n));
 var smooth012 = (x) => {
-  x = clamp62(x);
+  x = clamp63(x);
   return x * x * (3 - 2 * x);
 };
 var nightChorus = (minute) => {
@@ -96352,15 +98093,15 @@ function blendProfile(name, own, base, baseName) {
 }
 var distance3 = (a, b) => Math.hypot(a.x - b.x, (a.y || 0) - (b.y || 0), a.z - b.z);
 var Soundscape = class {
-  constructor(audio2, random10 = Math.random) {
+  constructor(audio2, random13 = Math.random) {
     this.audio = audio2;
-    this.random = random10;
+    this.random = random13;
     this.loops = /* @__PURE__ */ new Map();
     this.clocks = /* @__PURE__ */ new Map();
     this.clock = 0;
     this.nextEvent = 0;
     this.quietUntil = 0;
-    this.nextQuiet = 90 + random10() * 80;
+    this.nextQuiet = 90 + random13() * 80;
     this.phase = "day";
     this.profile = "forest";
     this.stats = { events: 0, culled: 0, quietWindows: 0 };
@@ -96380,7 +98121,7 @@ var Soundscape = class {
       if (this.loops.size || this.clocks.size) this.stop();
       return;
     }
-    const dt = clamp62(env.dt || 0, 0, 0.25);
+    const dt = clamp63(env.dt || 0, 0, 0.25);
     this.clock += dt;
     if (this.scene !== void 0 && this.scene !== !!env.dungeon) {
       this.audio.stopCategory("ambienceEvent");
@@ -96391,7 +98132,7 @@ var Soundscape = class {
     this.phase = dayPhase(env.minuteOfDay);
     this.profile = env.dungeon ? env.location === "sunwell" ? "sunwell" : "cave" : PROFILES3[env.location] ? env.location : BIOME_PROFILES[env.biome] || "forest";
     const baseName = BIOME_PROFILES[env.biome] || "forest", phase2 = DAY_PHASES[this.phase], profile = blendProfile(this.profile, PROFILES3[this.profile], PROFILES3[baseName], baseName), weather = env.weather?.kind || "clear";
-    const rain = clamp62(env.weather?.rain ?? (weather === "rain" || weather === "storm" ? env.weather?.intensity ?? 1 : 0)), snow = clamp62(env.weather?.snow || 0), wind = clamp62(env.weather?.wind || 0), blizzard = clamp62(env.weather?.blizzard || 0);
+    const rain = clamp63(env.weather?.rain ?? (weather === "rain" || weather === "storm" ? env.weather?.intensity ?? 1 : 0)), snow = clamp63(env.weather?.snow || 0), wind = clamp63(env.weather?.wind || 0), blizzard = clamp63(env.weather?.blizzard || 0);
     const exposed = env.dungeon ? 0 : env.underwater ? 0.08 : env.weather?.sheltered ? 0.22 : 1;
     const minute = ((env.minuteOfDay ?? 720) % 1440 + 1440) % 1440, lateNight = minute < 270;
     if (lateNight && this.clock > this.nextQuiet) {
@@ -96417,12 +98158,12 @@ var Soundscape = class {
     }
     if (exposed && rain > 0.01) {
       const def = BEDS.rain;
-      desired.set("bed:rain", { ...def, level: def.gain * rain * (1 + 1.15 * clamp62(env.weather?.storm || 0)) * exposed, category: "bed" });
+      desired.set("bed:rain", { ...def, level: def.gain * rain * (1 + 1.15 * clamp63(env.weather?.storm || 0)) * exposed, category: "bed" });
     }
     const nearby2 = (env.features || []).filter((f15) => FEATURE_BEDS[f15.kind] && distance3(env, f15) < (f15.range || FEATURE_BEDS[f15.kind].range)).sort((a, b) => distance3(env, a) - distance3(env, b)).slice(0, SOUNDSCAPE_LIMITS.features);
     for (const f15 of nearby2) {
       const def = FEATURE_BEDS[f15.kind], range = f15.range || def.range, d = distance3(env, f15);
-      desired.set("feature:" + f15.id, { ...def, sound: f15.sound || def.sound, rate: f15.rate, position: f15, range, level: def.gain * (f15.gain ?? 1) * clamp62((range - d) / Math.min(10, range * 0.4)), category: "feature" });
+      desired.set("feature:" + f15.id, { ...def, sound: f15.sound || def.sound, rate: f15.rate, position: f15, range, level: def.gain * (f15.gain ?? 1) * clamp63((range - d) / Math.min(10, range * 0.4)), category: "feature" });
     }
     for (const [key3, voice] of this.loops) {
       const def = desired.get(key3);
@@ -96445,7 +98186,7 @@ var Soundscape = class {
     }
     const thunder = env.weather?.thunder;
     if (!env.dungeon && !env.underwater && thunder) for (let i = 0; i < Math.min(3, thunder.length); i++) {
-      const event = thunder[i], voice = this.audio.playSample("thunderDistant", { fallback: "thunder", bus: "ambience", category: "ambienceEvent", gain: clamp62(event.gain ?? 0.45, 0, 1.5) * (env.weather?.sheltered ? 0.2 : 1), rate: clamp62(event.rate ?? 1, 0.7, 1.2), position: event, range: clamp62(event.range ?? 2400, 100, 6e3), refDistance: clamp62(event.refDistance ?? 180, 12, 500), wet: 0.12 });
+      const event = thunder[i], voice = this.audio.playSample("thunderDistant", { fallback: "thunder", bus: "ambience", category: "ambienceEvent", gain: clamp63(event.gain ?? 0.45, 0, 1.5) * (env.weather?.sheltered ? 0.2 : 1), rate: clamp63(event.rate ?? 1, 0.7, 1.2), position: event, range: clamp63(event.range ?? 2400, 100, 6e3), refDistance: clamp63(event.refDistance ?? 180, 12, 500), wet: 0.12 });
       if (voice) this.stats.events++;
     }
     const weights = { ...profile.events, creak: 1, ruin: 1, enemy: 1, thunder: env.weather?.externalWeather ? 0 : 1 };
@@ -96676,7 +98417,7 @@ function makeFallback(context, kind, variant = 0, loop2 = false) {
 }
 
 // audio.js
-var clamp63 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+var clamp64 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 var hidden2 = () => typeof document !== "undefined" && document.hidden;
 var set = (param, value, time) => param.setValueAtTime(value, time);
 var hold = (param, time) => {
@@ -96835,10 +98576,10 @@ var GameAudio = class {
     this.settings = settings2;
     if (!this.context) return;
     const t = this.context.currentTime;
-    this.master.gain.setTargetAtTime(clamp63(Number(settings2.volume) || 0), t, 0.035);
+    this.master.gain.setTargetAtTime(clamp64(Number(settings2.volume) || 0), t, 0.035);
     for (const [name, g] of Object.entries(this.buses)) {
       const value = name === "ui" ? settings2.effects : settings2[name];
-      g.gain.setTargetAtTime(clamp63(value ?? 0.8), t, 0.08);
+      g.gain.setTargetAtTime(clamp64(value ?? 0.8), t, 0.08);
     }
     if (!this.isAudible("ambience")) this.soundscape.stop();
     if (!this.isAudible("effects")) this.stopCategory("effects");
@@ -96929,7 +98670,7 @@ var GameAudio = class {
     const sample2 = this.bufferFor(name, fallback, variant, loop2), source2 = c2.createBufferSource(), now = c2.currentTime, target = gain * sample2.gain;
     source2.buffer = sample2.buffer;
     source2.loop = loop2;
-    source2.playbackRate.value = clamp63(rate, 0.4, 2);
+    source2.playbackRate.value = clamp64(rate, 0.4, 2);
     source2.connect(graph.filter);
     graph.filter.connect(graph.gain);
     let out2 = graph.gain;
@@ -97056,14 +98797,14 @@ var GameAudio = class {
       l.setPosition(x, y, z);
       l.setOrientation(fx, fy, fz, 0, 1, 0);
     }
-    const ac = env.dungeon ? env.acoustics : null, size = ac ? clamp63(ac.size) : 0, echo = ac ? clamp63(ac.echo) : 0, R = this.reverbs;
+    const ac = env.dungeon ? env.acoustics : null, size = ac ? clamp64(ac.size) : 0, echo = ac ? clamp64(ac.echo) : 0, R = this.reverbs;
     R.effects.wet.gain.setTargetAtTime(env.dungeon ? 0.35 * (1 - size * 0.55) : 0.09, t, 0.6);
     R.ambience.wet.gain.setTargetAtTime(env.dungeon ? 0.42 * (1 - size * 0.5) : 0.055, t, 0.8);
     R.effects.hallWet.gain.setTargetAtTime(0.5 * size, t, 0.8);
     R.ambience.hallWet.gain.setTargetAtTime(0.45 * size, t, 1);
     R.effects.echo.gain.setTargetAtTime(0.32 * echo, t, 0.5);
     R.effects.feedback.gain.setTargetAtTime(0.22 + 0.2 * echo, t, 0.5);
-    if (ac) R.effects.delay.delayTime.setTargetAtTime(clamp63(ac.delay, 0.12, 0.7), t, 0.4);
+    if (ac) R.effects.delay.delayTime.setTargetAtTime(clamp64(ac.delay, 0.12, 0.7), t, 0.4);
     this.filterClock = (this.filterClock || 0) + (env.dt || 0);
     const filterUpdate = this.filterClock >= 0.5;
     if (filterUpdate) this.filterClock = 0;
@@ -97079,7 +98820,7 @@ var GameAudio = class {
     const now = this.context.currentTime;
     if (now - (this.lastSwimStroke ?? -10) < 0.42) return;
     this.lastSwimStroke = now;
-    this.emit("swimStroke", { gain: (0.22 + 0.44 * clamp63(effort)) * (underwater ? 0.45 : 1), rate: underwater ? 0.82 : 0.95, jitter: 0.04, reverbSend: 0.08, variant: (this.swimStrokes = (this.swimStrokes || 0) + 1) % 2 });
+    this.emit("swimStroke", { gain: (0.22 + 0.44 * clamp64(effort)) * (underwater ? 0.45 : 1), rate: underwater ? 0.82 : 0.95, jitter: 0.04, reverbSend: 0.08, variant: (this.swimStrokes = (this.swimStrokes || 0) + 1) % 2 });
   }
   // Contacts come from actual grounded travel. Alternate two small recording
   // pools for the left/right foot, with subtle pitch and level variation.
@@ -97106,8 +98847,8 @@ var GameAudio = class {
     this.lastPlayerLand = now;
     this.lastPlayerStep = now;
     this.lastStepGear = now;
-    this.emit("land" + surface4, { gain: 0.7 + clamp63(impact) * 0.45, rate: 0.88, jitter: 0.018, reverbSend: 0.55, force: true });
-    this.emit("armor", { gain: 0.1 + clamp63(impact) * 0.12, rate: 0.96, jitter: 0.025, reverbSend: 0.35 });
+    this.emit("land" + surface4, { gain: 0.7 + clamp64(impact) * 0.45, rate: 0.88, jitter: 0.018, reverbSend: 0.55, force: true });
+    this.emit("armor", { gain: 0.1 + clamp64(impact) * 0.12, rate: 0.96, jitter: 0.025, reverbSend: 0.35 });
     return true;
   }
   diagnostics() {
@@ -97156,9 +98897,9 @@ var SANITY = Object.freeze({
   hostile: -0.1
 });
 var DARKNESS = Object.freeze({ warn: 0.6, strike: 2.2, interval: 2.8, damage: 25, recover: 2.5 });
-var clamp64 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp65 = (x, a, b) => Math.max(a, Math.min(b, x));
 function createVitals(saved2 = null) {
-  const value = (key3) => Number.isFinite(saved2?.[key3]) ? clamp64(saved2[key3], 0, VITALS.max) : VITALS.max;
+  const value = (key3) => Number.isFinite(saved2?.[key3]) ? clamp65(saved2[key3], 0, VITALS.max) : VITALS.max;
   return { health: value("health"), hunger: value("hunger"), sanity: value("sanity") };
 }
 function advanceVitals(v, dt, env = {}) {
@@ -97169,13 +98910,13 @@ function advanceVitals(v, dt, env = {}) {
   let healthRate = 0;
   if (v.hunger <= 0) healthRate -= VITALS.starve;
   if (v.sanity <= 0) healthRate -= VITALS.madness;
-  v.hunger = clamp64(v.hunger + hungerRate * dt, 0, VITALS.max);
-  v.sanity = clamp64(v.sanity + sanityRate * dt, 0, VITALS.max);
-  v.health = clamp64(v.health + healthRate * dt, 0, VITALS.max);
+  v.hunger = clamp65(v.hunger + hungerRate * dt, 0, VITALS.max);
+  v.sanity = clamp65(v.sanity + sanityRate * dt, 0, VITALS.max);
+  v.health = clamp65(v.health + healthRate * dt, 0, VITALS.max);
   return { health: healthRate, hunger: hungerRate, sanity: sanityRate };
 }
 function applyEffect(v, effect = {}) {
-  for (const key3 of ["health", "hunger", "sanity"]) if (Number.isFinite(effect[key3])) v[key3] = clamp64(v[key3] + effect[key3], 0, VITALS.max);
+  for (const key3 of ["health", "hunger", "sanity"]) if (Number.isFinite(effect[key3])) v[key3] = clamp65(v[key3] + effect[key3], 0, VITALS.max);
   return v;
 }
 function isDark({ phase: phase2, inCave = false, fullMoon = false, lit = false }) {
@@ -97209,7 +98950,7 @@ function advanceDarkness(d, dt, dark) {
   return null;
 }
 function darknessShade(d) {
-  const t = clamp64(d.time / DARKNESS.strike, 0, 1);
+  const t = clamp65(d.time / DARKNESS.strike, 0, 1);
   return t * t * (3 - 2 * t);
 }
 
@@ -97293,6 +99034,30 @@ var ICONS2 = Object.freeze({
   rack: svg('<path d="M8 42 16 8M24 42 16 8M24 42 32 8M40 42 32 8" stroke="#8a6038" stroke-width="3"/><path d="M12 11h24" stroke="#6d4a2a" stroke-width="3.4"/><g fill="#9e3a2c"><rect x="14" y="13" width="4" height="13" rx="1.5"/><rect x="22" y="13" width="4" height="15" rx="1.5"/><rect x="30" y="13" width="4" height="12" rx="1.5"/></g><path d="M10 30h28" stroke="#6d4a2a" stroke-width="2.4"/>'),
   jerky: svg('<path d="M10 38c2-10 6-20 12-28 3 2 4 4 3 7-4 7-6 14-7 22z" fill="#6e2e1c"/><path d="M22 40c1-9 5-18 11-26 3 2 4 4 3 7-4 6-6 13-6 20z" fill="#7a3620"/><path d="M14 30l4-8M26 32l4-8" fill="none" stroke="#b56a48" stroke-width="1.4"/>'),
   dried_fish: svg('<path d="M6 24c6-6 15-9 24-7l10-5-2 12 2 12-10-5c-9 2-18-1-24-7z" fill="#8a6440"/><path d="M14 24h16M18 20l3 8M24 19l3 10" fill="none" stroke="#5a3e22" stroke-width="1.6"/><circle cx="11" cy="23" r="1.6" fill="#1d1a14" stroke="none"/><path d="M28 6v10" stroke="#c8a467" stroke-width="2"/>'),
+  // v143: crabs, frogs and fish caught alive, what they give, and the tub they are kept in.
+  crab: svg('<path d="M14 27l-7-5M14 31H6M15 34l-6 5M34 27l7-5M34 31h8M33 34l6 5" stroke="#b5643a" stroke-width="2.4" stroke-linecap="round"/><ellipse cx="24" cy="30" rx="11" ry="7.5" fill="#9a4a2c"/><path d="M17 24c-5-7-10-8-12-4 2 0 5 2 7 5zM31 24c5-7 10-8 12-4-2 0-5 2-7 5z" fill="#c06a3c"/><path d="M19 25l-1-4M29 25l1-4" stroke="#9a4a2c" stroke-width="1.8"/><circle cx="18" cy="20.5" r="1.9" fill="#1a1410"/><circle cx="30" cy="20.5" r="1.9" fill="#1a1410"/><path d="M17 31c4 2 10 2 14 0" fill="none" stroke="#c97a52" stroke-width="1.4"/>'),
+  crab_meat: svg('<path d="M9 31c2-8 10-12 18-11s13 6 11 12-10 9-17 8-13-3-12-9z" fill="#f2e6dc"/><path d="M15 27c4-2 10-2 15 1M14 32c5-1 11 0 15 2" fill="none" stroke="#e8a59a" stroke-width="2"/><path d="M29 13c6 0 10 3 10 8l-7-2z" fill="#b5502e"/>'),
+  crab_cooked: svg(`${steam}<path d="M14 30l-7-4M14 34H6M15 37l-6 4M34 30l7-4M34 34h8M33 37l6 4" stroke="#e0603a" stroke-width="2.4" stroke-linecap="round"/><ellipse cx="24" cy="33" rx="11" ry="7" fill="#d8452a"/><path d="M17 28c-5-6-10-7-12-3 2 0 5 2 7 4zM31 28c5-6 10-7 12-3-2 0-5 2-7 4z" fill="#e8673e"/>`),
+  frog: svg('<path d="M16 33c-6 1-9 5-9 9M32 33c6 1 9 5 9 9M16 23l-6-3M32 23l6-3" stroke="#4d7a30" stroke-width="3.2" stroke-linecap="round" fill="none"/><ellipse cx="24" cy="28" rx="9.5" ry="11" fill="#5c8a3a"/><circle cx="19" cy="18" r="3.6" fill="#6f9c45"/><circle cx="29" cy="18" r="3.6" fill="#6f9c45"/><circle cx="19" cy="18" r="1.6" fill="#1a1a10"/><circle cx="29" cy="18" r="1.6" fill="#1a1a10"/><g fill="#3e6426"><circle cx="21" cy="29" r="1.6"/><circle cx="27" cy="32" r="1.4"/><circle cx="25" cy="25" r="1.2"/></g>'),
+  frog_meat: svg('<path d="M13 38c4-10 8-17 11-19 3 2 7 9 11 19" fill="none" stroke="#e9b8a8" stroke-width="5" stroke-linecap="round"/><circle cx="24" cy="16" r="5.5" fill="#efc6b6"/><path d="M10 40h6M32 40h6" stroke="#d99a88" stroke-width="2.4" stroke-linecap="round"/>'),
+  frog_cooked: svg(`${steam}<path d="M13 40c4-9 8-15 11-17 3 2 7 8 11 17" fill="none" stroke="#b07a44" stroke-width="5" stroke-linecap="round"/><circle cx="24" cy="21" r="5.5" fill="#a46a3a"/>`),
+  fish_live: svg('<path d="M6 26c6-8 16-11 25-8l9-6-2 14 2 14-9-6c-9 3-19 0-25-8z" fill="#7ea8b8"/><path d="M14 26c4-3 9-4 14-3" fill="none" stroke="#e2f0f4" stroke-width="1.6"/><circle cx="12" cy="24" r="1.6" fill="#1d1a14"/><g fill="#9fd6e8"><circle cx="35" cy="9" r="2"/><circle cx="41" cy="13" r="1.5"/><circle cx="30" cy="6" r="1.3"/></g>'),
+  // v144: the forest's small birds and squirrels (caught alive in traps, kept in a cage), their meat; the traps, the cage.
+  bird: svg('<path d="M9 27c3-8 11-12 19-10 4-6 12-5 13 1l5 2-5 2c-1 9-9 15-19 15-6 0-11-3-13-10z" fill="#8a6440"/><path d="M14 30c5 4 13 4 19-1" fill="none" stroke="#e2d2b8" stroke-width="3"/><path d="M17 23c4-2 9-2 12 1" fill="none" stroke="#5a3e24" stroke-width="2"/><circle cx="36" cy="17" r="1.7" fill="#14100c"/><path d="M8 26l-4-3M8 29l-5 1" stroke="#5a3e24" stroke-width="2"/><path d="M22 41v4M27 41v4" stroke="#6a5446" stroke-width="1.6"/>'),
+  squirrel: svg('<path d="M14 40c-8-4-9-16-3-24 4-5 11-4 12 2-5 1-8 7-6 13" fill="#a8542a"/><ellipse cx="27" cy="33" rx="9" ry="8" fill="#b45f2e"/><circle cx="33" cy="22" r="6" fill="#b45f2e"/><path d="M30 17l1-5 3 5M35 17l2-4 1 5" fill="#b45f2e"/><circle cx="35" cy="21" r="1.4" fill="#14100c"/><path d="M24 36c3 2 7 2 10 0" fill="none" stroke="#e8d6b8" stroke-width="2.4"/><path d="M33 39l3 3M26 40l-1 3" stroke="#7a3c1c" stroke-width="2"/>'),
+  bird_meat: svg('<ellipse cx="24" cy="25" rx="11" ry="9" fill="#efc2b2"/><path d="M17 23c4-3 10-3 14 0" fill="none" stroke="#f6dcd2" stroke-width="2"/><path d="M19 33l-3 9M28 33l3 9" stroke="#e8b098" stroke-width="3.4"/><path d="M14 42h5M29 42h5" stroke="#d99a88" stroke-width="2"/>'),
+  bird_cooked: svg(`${steam}<ellipse cx="24" cy="27" rx="11" ry="9" fill="#a8622e"/><path d="M16 25l12 7M20 21l11 6" stroke="#5a2e12" stroke-width="2.2"/><path d="M19 35l-3 8M28 35l3 8" stroke="#8a4a22" stroke-width="3.4"/>`),
+  squirrel_meat: svg('<path d="M11 26c0-8 8-12 16-10s12 8 10 15-11 10-17 8-9-6-9-13z" fill="#b8473e"/><path d="M17 23c4-2 9-2 13 1" fill="none" stroke="#e8a9a0" stroke-width="2.2"/><path d="M34 31l7 7" stroke="#ece4d0" stroke-width="4"/><circle cx="42" cy="39" r="2.6" fill="#ece4d0"/>'),
+  squirrel_cooked: svg(`${steam}<path d="M11 29c0-7 8-11 16-9s12 7 9 13-11 9-16 7-9-5-9-11z" fill="#7c4220"/><path d="M15 27l13 7M19 22l12 7" stroke="#3e1e0c" stroke-width="2.4"/><path d="M34 33l6 6" stroke="#ece4d0" stroke-width="4"/>`),
+  birdtrap: svg('<path d="M6 40h36" stroke="#6b5a3a" stroke-width="2.4"/><path d="M10 40l9-18 22 6-4 12z" fill="none" stroke="#8a6438" stroke-width="2.6"/><path d="M14 32l23 4M17 26l21 5M12 36l25 3" stroke="#a87a48" stroke-width="2"/><path d="M33 40l-5-12" stroke="#c9a46a" stroke-width="2.2"/><circle cx="25" cy="38" r="1.6" fill="#c4283a"/>'),
+  squirreltrap: svg('<path d="M5 38h36l4-4V22H9l-4 4z" fill="#a8783e"/><path d="M5 26h36v12M41 26l4-4" fill="none" stroke="#6a4a24" stroke-width="2"/><path d="M11 26v12M17 26v12M23 26v12M29 26v12M35 26v12" stroke="#6a4a24" stroke-width="1.6"/><path d="M5 26V12h5v14" fill="#c9a46a"/><path d="M7 12V6" stroke="#6a4a24" stroke-width="2"/>'),
+  cage: svg('<path d="M10 42h28" stroke="#6b5a3a" stroke-width="3"/><path d="M12 42V22c0-9 5-14 12-14s12 5 12 14v20" fill="none" stroke="#a87a48" stroke-width="2.4"/><path d="M18 42V14M24 42V8M30 42V14" stroke="#a87a48" stroke-width="2"/><path d="M12 24h24M12 33h24" stroke="#c9a46a" stroke-width="2"/><path d="M24 4v4" stroke="#6a4a24" stroke-width="2.4"/><path d="M15 30h18" stroke="#6a4a24" stroke-width="1.6"/>'),
+  // v145: the piles (wood, stones, twigs) and the stone hammer that takes down what was built.
+  logpile: svg('<path d="M8 12v30M40 12v30" stroke="#5a4028" stroke-width="2.6"/><g fill="#8a5a32" stroke="#4a3018" stroke-width="1.4"><circle cx="14" cy="37" r="4.6"/><circle cx="24" cy="37" r="4.6"/><circle cx="34" cy="37" r="4.6"/><circle cx="19" cy="28.5" r="4.6"/><circle cx="29" cy="28.5" r="4.6"/><circle cx="24" cy="20" r="4.6"/></g><g fill="#d8b47a" stroke="none"><circle cx="14" cy="37" r="2.2"/><circle cx="24" cy="37" r="2.2"/><circle cx="34" cy="37" r="2.2"/><circle cx="19" cy="28.5" r="2.2"/><circle cx="29" cy="28.5" r="2.2"/><circle cx="24" cy="20" r="2.2"/></g>'),
+  rockpile: svg('<path d="M5 41h38" stroke="#5a5650" stroke-width="2"/><g fill="#9a978f"><ellipse cx="13" cy="37" rx="7" ry="4.5"/><ellipse cx="26" cy="38" rx="8" ry="4.5"/><ellipse cx="37" cy="37" rx="6" ry="4"/><ellipse cx="19" cy="30" rx="7" ry="4.5"/><ellipse cx="31" cy="30" rx="7" ry="4.5"/><ellipse cx="25" cy="22" rx="7" ry="4.5"/></g><path d="M20 21c3-1 6-1 9 0M14 29c3-1 6-1 9 0" stroke="#d2cfc6" stroke-width="1.4" fill="none"/>'),
+  twigpile: svg('<path d="M8 40l32-6M8 34l32-6M8 28l32-6" stroke="#7a5532" stroke-width="2.8"/><path d="M10 41l30-7M10 35l30-7M10 29l30-7" stroke="#a87a48" stroke-width="1.4"/><path d="M17 26v14M31 23v14" stroke="#c9b27a" stroke-width="3"/>'),
+  hammer: svg('<path d="M24 44V20" stroke="#8a6038" stroke-width="5"/><path d="M24 44V20" fill="none" stroke-width="1"/><ellipse cx="24" cy="14" rx="15" ry="8" fill="#7d7a72"/><path d="M13 12c6-3 16-3 22 0" fill="none" stroke="#b8b4aa" stroke-width="1.8"/><path d="M19 7v14M29 7v14" stroke="#c9b27a" stroke-width="2.2"/>'),
+  livewell: svg('<path d="M8 18h32l-3 23H11z" fill="#9a6a3c"/><path d="M13 18l1 23M20 18v23M28 18v23M35 18l-1 23" stroke="#7a5230" stroke-width="1.4"/><path d="M9 25h30M10 35h28" stroke="#c9b27a" stroke-width="2.6"/><ellipse cx="24" cy="18" rx="16" ry="3.6" fill="#5fa6c0"/><path d="M17 17c3-2 7-2 10 0" stroke="#e8f4f8" stroke-width="1.4" fill="none"/>'),
   hand: svg('<path d="M14 26V14c0-2 3-2 3 0v10V10c0-2 3-2 3 0v14V9c0-2 3-2 3 0v15V12c0-2 3-2 3 0v16l3-4c2-2 4 0 3 2l-6 10c-2 4-5 6-10 6-5 0-8-4-8-9v-7c0-2 3-2 3 0z" fill="#d9b48c"/>')
 });
 var food = (hunger, health, sanity, spoilDays, extra = {}) => ({ kind: "food", stack: 20, food: Object.freeze({ hunger, health, sanity }), spoilDays, ...extra });
@@ -97326,6 +99091,9 @@ var ITEMS = Object.freeze(Object.fromEntries(Object.entries({
   mush_blue_cooked: food(0, -3, 10, 10, { name: "焼いた青いきのこ", desc: "心が落ち着く。" }),
   mush_wood: food(5, 0, -2, 6, { name: "森のきのこ", cooked: "mush_wood_cooked", desc: "倒木や切り株のそばに生える茶色いきのこ。生では少し腹にもたれる。焼くとおいしい。" }),
   mush_wood_cooked: food(10, 2, 2, 4, { name: "焼いた森のきのこ", desc: "香ばしく焼けたきのこ。体も心も少し温まる。" }),
+  // v145 (the user: a hammer to take down what was built): a hammerstone bound to a haft. Three blows at a thing set down
+  // take it down (survival-game.js hammerStrike): its makings back, what was in it into the bag.
+  hammer: { name: "石のハンマー", kind: "tool", stack: 1, tool: Object.freeze({ action: "hammer", hand: "hammer", damage: 14, uses: 80 }), desc: "作って置いた物（作業台・収納箱・テント・窯・置き場・わな・焚き火など）を 3 回叩いて壊す。材料が戻り、中の物も手に入る。" },
   axe: { name: "斧", kind: "tool", stack: 1, tool: Object.freeze({ action: "chop", hand: "axe", damage: 20, uses: 100 }), desc: "木を切り倒す。" },
   pickaxe: { name: "つるはし", kind: "tool", stack: 1, tool: Object.freeze({ action: "mine", hand: "pickaxe", damage: 20, uses: 100 }), desc: "岩を砕いて石を取る。" },
   bow: { name: "弓", kind: "tool", stack: 1, tool: Object.freeze({ action: "shoot", hand: "bow", damage: 6, uses: 150 }), desc: "矢を放つ。左クリックを押したまま引き絞り、離して放つ。" },
@@ -97363,6 +99131,23 @@ var ITEMS = Object.freeze(Object.fromEntries(Object.entries({
   dried_fish: food(14, 2, 2, 30, { name: "干し魚", desc: "乾燥棚で干した魚。日持ちがする（約 30 日）。", find: "川魚を乾燥棚に掛けて干す" }),
   glowfish: food(14, 2, -6, 3, { name: "光る魚", cooked: "glowfish_cooked", desc: "地下の水に棲む、体に光の粒を持つ魚。", find: "地下の湖や川で釣る" }),
   glowfish_cooked: food(20, 8, 4, 4, { name: "焼いた光る魚", desc: "滋養がある。体の芯から温まる。" }),
+  // v143 (the user: crabs and frogs - struck down for food, caught alive by hand; fish too; kept in a tub): what they
+  // are alive (they weaken out of the water: at the end of their time they die - survival-critters.js - and are their
+  // meat; in a tub they live on), their meat raw and cooked.
+  crab: { name: "生きたカニ", kind: "live", stack: 10, spoilDays: 0.5, live: Object.freeze({ creature: "crab", into: "crab_meat" }), desc: "手でつかまえたカニ。持っていると弱っていく（右クリック / F でしめてカニの身に。Q で放す）。生け簀に入れておけばずっと生きている。", find: "海辺や川辺のカニに、そっと近づいて E でつかまえる" },
+  frog: { name: "生きたカエル", kind: "live", stack: 10, spoilDays: 0.5, live: Object.freeze({ creature: "frog", into: "frog_meat" }), desc: "手でつかまえたカエル。持っていると弱っていく（右クリック / F でしめて肉に。Q で放す）。生け簀に入れておけばずっと生きている。", find: "池や沼、川辺のカエルに、そっと近づいて E でつかまえる" },
+  fish_live: { name: "生きた魚", kind: "live", stack: 10, spoilDays: 0.2, live: Object.freeze({ creature: "fish", into: "fish" }), desc: "手でつかまえた魚。水の外ではすぐ弱る（右クリック / F でしめて川魚に。水辺で Q で放す）。生け簀に入れておけばずっと生きている。", find: "浅い水の魚に、じっと待つかそっと近づいて E でつかまえる" },
+  crab_meat: food(8, 0, -3, 2, { name: "カニの身", cooked: "crab_cooked", desc: "生では少し気が滅入る。焼こう。", find: "倒したカニを拾う（E）" }),
+  crab_cooked: food(14, 3, 4, 3, { name: "焼きガニ", desc: "香ばしく焼けたカニ。心も和む。" }),
+  frog_meat: food(7, 0, -5, 2, { name: "カエルの肉", cooked: "frog_cooked", desc: "生ではとても食べる気がしない。焼こう。", find: "倒したカエルを拾う（E）" }),
+  frog_cooked: food(12, 2, 1, 3, { name: "焼いたカエル", desc: "鶏肉のような味がする。" }),
+  // v144: the forest's small birds and squirrels: caught alive in their traps, kept in a cage; struck down (an arrow), their meat.
+  bird: { name: "生きた小鳥", kind: "live", stack: 10, spoilDays: 0.3, live: Object.freeze({ creature: "bird", into: "bird_meat" }), desc: "わなで生け捕りにした小鳥。持っていると弱っていく（右クリック / F でしめて肉に。Q で放す）。かごに入れておけばずっと生きている。", find: "森の木のそばに鳥のわなを仕掛けておく" },
+  squirrel: { name: "生きたリス", kind: "live", stack: 10, spoilDays: 0.4, live: Object.freeze({ creature: "squirrel", into: "squirrel_meat" }), desc: "わなで生け捕りにしたリス。持っていると弱っていく（右クリック / F でしめて肉に。Q で放す）。かごに入れておけばずっと生きている。", find: "森の大きな木のそばにリスのわなを仕掛けておく" },
+  bird_meat: food(6, 0, -3, 2, { name: "小鳥の肉", cooked: "bird_cooked", desc: "羽をむしった小鳥。生では少し気が滅入る。焼こう。", find: "弓で射た小鳥を拾う（E）" }),
+  bird_cooked: food(11, 2, 3, 3, { name: "焼き鳥", desc: "小さいが、香ばしい。" }),
+  squirrel_meat: food(10, 0, -4, 2, { name: "リスの肉", cooked: "squirrel_cooked", desc: "生ではとても食べる気がしない。焼こう。", find: "弓で射たリスを拾う（E）" }),
+  squirrel_cooked: food(15, 3, 2, 3, { name: "焼いたリスの肉", desc: "脂がのって、腹持ちがいい。" }),
   raft: { name: "いかだ", kind: "raft", stack: 1, desc: "水辺で水の方を向いて 右クリック / F で浮かべて乗る。W A S D で漕ぎ、岸で E で降りる（いかだは畳んで持ち歩ける）。" }
 }).map(([id2, def]) => [id2, Object.freeze({ id: id2, icon: ICONS2[id2], ...def })])));
 var RECIPE_GROUPS = Object.freeze([
@@ -97385,11 +99170,15 @@ var RECIPES = Object.freeze([
   { id: "axe_iron", group: "tools", makes: "axe_iron", needs: { twigs: 2, iron: 2, rope: 1 }, station: "workbench", time: 2 },
   { id: "pickaxe_iron", group: "tools", makes: "pickaxe_iron", needs: { twigs: 2, iron: 3, rope: 1 }, station: "workbench", time: 2.1 },
   { id: "bow", group: "hunt", makes: "bow", needs: { twigs: 3, silk: 2 }, station: "workbench", time: 1.6 },
+  { id: "hammer", group: "tools", makes: "hammer", needs: { twigs: 2, rocks: 2, rope: 1 }, time: 1 },
   { id: "arrow", group: "hunt", makes: "arrow", count: 4, needs: { twigs: 2, crystal: 1, grass: 1 }, time: 0.8 },
   // v123: the same arrows with a point of bone in place of the crystal.
   { id: "arrow_bone", group: "hunt", makes: "arrow", count: 4, needs: { twigs: 2, bone: 1, grass: 1 }, time: 0.8, name: "矢（骨の矢じり）", desc: "骨を削った矢じりの矢。蒼輝石の代わりに骨を使う。" },
   { id: "rod", group: "hunt", makes: "rod", needs: { twigs: 3, silk: 2, crystal: 1 }, station: "workbench", time: 1.5 },
   { id: "net", group: "hunt", makes: "net", count: 3, needs: { queen_silk: 2, rope: 1 }, station: "workbench", time: 1.4 },
+  // v144 (the user: traps for the small birds and the squirrels, to catch them alive; a cage to keep them in).
+  { id: "birdtrap", group: "hunt", place: "birdtrap", name: "鳥のわな", icon: ICONS2.birdtrap, needs: { twigs: 6, rope: 1 }, desc: "小枝を組んだ籠を、つっかえ棒で持ち上げておくわな。森の木のそばに置いておくと、しばらくして小鳥が生きたままかかる（E で取り出す）。", time: 0.8 },
+  { id: "squirreltrap", group: "hunt", place: "squirreltrap", name: "リスのわな", icon: ICONS2.squirreltrap, needs: { log: 1, twigs: 4, rope: 1 }, desc: "入ると戸が落ちる木の箱。森の大きな木のそばに置いておくと、しばらくしてリスが生きたままかかる（E で取り出す）。", time: 0.9 },
   { id: "torch", group: "light", makes: "torch", needs: { twigs: 2, grass: 2 }, time: 0.7 },
   { id: "campfire", group: "light", place: "campfire", name: "焚き火", icon: ICONS2.campfire, needs: { grass: 3, log: 2 }, desc: "地面に置いて火を起こす。燃え尽きると消える。", time: 0.6 },
   { id: "firepit", group: "light", place: "firepit", name: "石のかまど", icon: ICONS2.firepit, needs: { log: 2, rocks: 8 }, desc: "長く燃える。火が消えても残り、燃料を足すとまた燃える。鉱石を溶かせる。", time: 0.6 },
@@ -97400,12 +99189,20 @@ var RECIPES = Object.freeze([
   // v138 (the user: a tarp, tied to three or four trees near by; dry under it): its trees chosen as it is set up.
   { id: "tarp", group: "survival", place: "tarp", name: "タープ", icon: ICONS2.tarp, needs: { hide: 2, rope: 3 }, desc: "近くの木を 3〜4 本選んで張る、皮の屋根。下にいれば雨に濡れず、地面も濡れない（張った木を切り倒すと外れる）。", time: 1.2 },
   // v138 (the user: a drying rack to keep meat long).
+  // v143: a tub of water to keep crabs, frogs and fish alive in.
+  // v144: a cage of bent twigs to keep birds and squirrels alive in.
+  { id: "cage", group: "survival", place: "cage", name: "かご", icon: ICONS2.cage, needs: { twigs: 10, rope: 2 }, desc: "小枝を曲げて編んだかご。生きた小鳥やリスを入れておくと、ずっと生きている（6 枠）。E で開ける。", time: 0.9 },
+  { id: "livewell", group: "survival", place: "livewell", name: "生け簀", icon: ICONS2.livewell, needs: { log: 3, rope: 2 }, desc: "水を張った木の桶。生きたカニ・カエル・魚を入れておくと、ずっと生きている（8 枠）。E で開ける。", time: 0.8 },
   { id: "rack", group: "survival", place: "rack", name: "乾燥棚", icon: ICONS2.rack, needs: { log: 2, twigs: 4, rope: 2 }, desc: "生肉や川魚を掛けて干す棚（6 つまで）。干し肉・干し魚はずっと日持ちがする。雨の中では乾かない（タープの下なら乾く）。火のそばだと早く乾く。", time: 1 },
   { id: "salve", group: "survival", makes: "salve", needs: { herb: 2, rocks: 1 }, time: 0.9 },
   { id: "raft", group: "survival", makes: "raft", needs: { log: 6, rope: 3 }, station: "workbench", time: 2.2 },
   { id: "workbench", group: "build", place: "workbench", name: "作業台", icon: ICONS2.workbench, needs: { log: 3, twigs: 4, rocks: 2 }, desc: "置いた作業台のそばでは、手だけでは作れない道具や装備が作れる。", time: 0.6 },
   // v138 (the user: a charcoal kiln to make charcoal of wood, as at the ruined kiln of the landmark).
   { id: "kiln", group: "build", place: "kiln", name: "炭焼きの窯", icon: ICONS2.kiln, needs: { rocks: 12, log: 2 }, desc: "石を積んだ窯。木材を入れて E で火を入れると、しばらくして炭になる（一度に 6 本まで。1 本で炭 1 つ）。", time: 0.8 },
+  // v145 (the user: a place of its own to stack each of the wood, the stones and the twigs gathered).
+  { id: "logpile", group: "build", place: "logpile", name: "木材置き場", icon: ICONS2.logpile, needs: { log: 2, twigs: 4 }, desc: "木材を積んでおく置き場（80 本まで）。木材を持って E で積み、木材を持っていない時に E で開ける。積んだだけ高くなる。", time: 0.8 },
+  { id: "rockpile", group: "build", place: "rockpile", name: "石置き場", icon: ICONS2.rockpile, needs: { rocks: 10 }, desc: "石を積んでおく置き場（120 個まで）。石を持って E で積み、石を持っていない時に E で開ける。積んだだけ山になる。", time: 0.7 },
+  { id: "twigpile", group: "build", place: "twigpile", name: "枝置き場", icon: ICONS2.twigpile, needs: { twigs: 6, rope: 1 }, desc: "小枝を束ねて積んでおく置き場（120 本まで）。小枝を持って E で積み、小枝を持っていない時に E で開ける。", time: 0.7 },
   { id: "chest", group: "build", place: "chest", name: "収納箱", icon: ICONS2.chest, needs: { log: 4, rope: 2 }, station: "workbench", desc: "物をしまっておける箱（16 枠）。E で開ける。", time: 0.6 },
   { id: "smelt_copper", group: "smelt", makes: "copper", needs: { ore_copper: 1 }, station: "firepit", fuel: 10, time: 1.4, desc: "銅の鉱石を溶かして銅にする（かまどの燃料を少し使う）。" },
   { id: "smelt_iron", group: "smelt", makes: "iron", needs: { ore_iron: 1 }, station: "firepit", fuel: 14, time: 1.8, desc: "鉄の鉱石を溶かして鉄にする（かまどの燃料を少し使う）。" },
@@ -97435,7 +99232,7 @@ function charmsIn(inv) {
 
 // survival-inventory.js
 var SLOT_COUNT = 15;
-var clamp65 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp66 = (x, a, b) => Math.max(a, Math.min(b, x));
 function createInventory(size = SLOT_COUNT) {
   return { slots: Array.from({ length: size }, () => null), selected: 0 };
 }
@@ -97446,13 +99243,13 @@ function spoilSpan(id2) {
 function freshness(slot, now) {
   const span = spoilSpan(slot?.id);
   if (!span || !Number.isFinite(slot.spoilAt)) return null;
-  return clamp65((slot.spoilAt - now) / span, 0, 1);
+  return clamp66((slot.spoilAt - now) / span, 0, 1);
 }
 function wear(slot) {
   const tool = ITEMS[slot?.id]?.tool;
   if (!tool) return null;
-  if (tool.burn) return clamp65((slot.burn ?? tool.burn) / tool.burn, 0, 1);
-  if (tool.uses) return clamp65((slot.uses ?? tool.uses) / tool.uses, 0, 1);
+  if (tool.burn) return clamp66((slot.burn ?? tool.burn) / tool.burn, 0, 1);
+  if (tool.uses) return clamp66((slot.uses ?? tool.uses) / tool.uses, 0, 1);
   return null;
 }
 function newSlot(id2, count2, now, extra = {}) {
@@ -97545,6 +99342,7 @@ function spoilItems(inv, now) {
   for (let i = 0; i < inv.slots.length; i++) {
     const slot = inv.slots[i];
     if (!slot || !Number.isFinite(slot.spoilAt) || slot.spoilAt > now) continue;
+    if (ITEMS[slot.id]?.kind === "live") continue;
     turned2.push({ id: slot.id, count: slot.count });
     inv.slots[i] = { id: "rot", count: slot.count };
   }
@@ -97576,8 +99374,8 @@ function restoreInventory(data, size = SLOT_COUNT) {
     const s = data.slots[i], def = ITEMS[s?.id];
     if (!def || !Number.isFinite(s.count) || s.count < 1) continue;
     const slot = { id: s.id, count: Math.min(def.stack, Math.floor(s.count)) };
-    if (def.tool?.uses) slot.uses = clamp65(Number.isFinite(s.uses) ? s.uses : def.tool.uses, 1, def.tool.uses);
-    if (def.tool?.burn) slot.burn = clamp65(Number.isFinite(s.burn) ? s.burn : def.tool.burn, 0.5, def.tool.burn);
+    if (def.tool?.uses) slot.uses = clamp66(Number.isFinite(s.uses) ? s.uses : def.tool.uses, 1, def.tool.uses);
+    if (def.tool?.burn) slot.burn = clamp66(Number.isFinite(s.burn) ? s.burn : def.tool.burn, 0.5, def.tool.burn);
     if (def.spoilDays && Number.isFinite(s.spoilAt)) slot.spoilAt = s.spoilAt;
     else if (def.spoilDays) slot.spoilAt = spoilSpan(s.id);
     inv.slots[i] = slot;
@@ -97587,15 +99385,15 @@ function restoreInventory(data, size = SLOT_COUNT) {
 }
 
 // survival-pickable-meshes.js
-var TAU47 = Math.PI * 2;
+var TAU48 = Math.PI * 2;
 var BERRY_RADIUS = 6e-3;
-var clamp66 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+var clamp67 = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 var smooth41 = (a, b, x) => {
-  const t = clamp66((x - a) / (b - a));
+  const t = clamp67((x - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
 var mix20 = (a, b, t) => a + (b - a) * t;
-function random8(seed) {
+function random9(seed) {
   let s = seed >>> 0;
   return () => {
     s = s + 1831565813 >>> 0;
@@ -97608,7 +99406,7 @@ function random8(seed) {
 var hexRgb2 = (h) => [(h >> 16 & 255) / 255, (h >> 8 & 255) / 255, (h & 255) / 255].map((c2) => c2 <= 0.04045 ? c2 / 12.92 : ((c2 + 0.055) / 1.055) ** 2.4);
 function regionUv(region, u, v) {
   const [x, y, w, h] = ATLAS[region], inset = 1.5;
-  return [(x + inset + clamp66(u) * (w - 2 * inset)) / ATLAS_SIZE, 1 - (y + inset + clamp66(v) * (h - 2 * inset)) / ATLAS_SIZE];
+  return [(x + inset + clamp67(u) * (w - 2 * inset)) / ATLAS_SIZE, 1 - (y + inset + clamp67(v) * (h - 2 * inset)) / ATLAS_SIZE];
 }
 var fold = (v) => {
   const m = (v % 2 + 2) % 2;
@@ -97722,13 +99520,13 @@ function frames3(path) {
   return out2;
 }
 function tube4(b, path, radius, { sides = 6, region = "bark", vPerMetre = 2, colour, pk, start: start2 = null, end = null, jitter = 0, seed = 1 }) {
-  const f15 = frames3(path), rand3 = random8(seed), lengths2 = [0];
+  const f15 = frames3(path), rand3 = random9(seed), lengths2 = [0];
   for (let i = 1; i < path.length; i++) lengths2.push(lengths2[i - 1] + len2(sub3(path[i], path[i - 1])));
   const total = lengths2.at(-1) || 1, rings3 = [];
   for (let i = 0; i < path.length; i++) {
     const t = lengths2[i] / total, r = radius(t), ring2 = [], wob = jitter ? 1 + (rand3() - 0.5) * jitter : 1;
     for (let j = 0; j <= sides; j++) {
-      const a = j / sides * TAU47, dir = add3(scale4(f15[i].n, Math.cos(a)), scale4(f15[i].b, Math.sin(a))), p2 = add3(path[i], scale4(dir, r * wob));
+      const a = j / sides * TAU48, dir = add3(scale4(f15[i].n, Math.cos(a)), scale4(f15[i].b, Math.sin(a))), p2 = add3(path[i], scale4(dir, r * wob));
       ring2.push(b.vertex(p2, dir, regionUv(region, j / sides, fold(lengths2[i] * vPerMetre)), colour(t, a), pk(t, p2)));
     }
     rings3.push(ring2);
@@ -97744,7 +99542,7 @@ function tube4(b, path, radius, { sides = 6, region = "bark", vPerMetre = 2, col
     }
     const centre = b.vertex(add3(c2, scale4(dir, r * 0.25)), dir, regionUv("wood", 0.5, 0.5), kind === "wood" ? [1, 1, 1] : colour(t, 0), pk(t, c2)), cap = [];
     for (let j = 0; j <= sides; j++) {
-      const a = j / sides * TAU47, d = add3(scale4(f15[which].n, Math.cos(a)), scale4(f15[which].b, Math.sin(a))), jag = kind === "wood" ? 1 + 0.25 * Math.sin(a * 3 + seed) : 1;
+      const a = j / sides * TAU48, d = add3(scale4(f15[which].n, Math.cos(a)), scale4(f15[which].b, Math.sin(a))), jag = kind === "wood" ? 1 + 0.25 * Math.sin(a * 3 + seed) : 1;
       cap.push(b.vertex(add3(add3(c2, scale4(d, r)), scale4(dir, r * 0.35 * (jag - 1))), norm2(add3(dir, scale4(d, 0.3))), regionUv("wood", 0.5 + Math.cos(a) * 0.48, 0.5 + Math.sin(a) * 0.48), kind === "wood" ? [1, 1, 1] : colour(t, a), pk(t, c2)));
     }
     for (let j = 0; j < sides; j++) which ? b.tri(centre, cap[j], cap[j + 1]) : b.tri(centre, cap[j + 1], cap[j]);
@@ -97763,7 +99561,7 @@ function lathe3(b, profile, { segments = 16, region, colour, pk, at = [0, 0, 0],
     const [r, y, v] = profile[i], prev = profile[Math.max(0, i - 1)], next = profile[Math.min(profile.length - 1, i + 1)];
     const dr = next[0] - prev[0], dy = next[1] - prev[1], nl = Math.hypot(dr, dy) || 1, row2 = [];
     for (let j = 0; j <= segments; j++) {
-      const a = j / segments * TAU47, w = wobble ? wobble(a, i / (profile.length - 1)) : 1, ca = Math.cos(a), sa = Math.sin(a);
+      const a = j / segments * TAU48, w = wobble ? wobble(a, i / (profile.length - 1)) : 1, ca = Math.cos(a), sa = Math.sin(a);
       let n = [dy / nl * ca, -dr / nl, dy / nl * sa];
       if (flip) n = scale4(n, -1);
       const local2 = [ca * r * w, y, sa * r * w];
@@ -97816,7 +99614,7 @@ function blob2(THREE2, b, { at, radii, detail = 2, displace = null, colour, pk, 
     for (const k of [a, c2, d]) normals[k] = add3(normals[k], n);
   }
   const ids2 = moved.map((p2, i) => {
-    const n = norm2(normals[i]), u = verts[i], uv = region === "berry" ? regionUv(region, 0.5 + Math.atan2(u[2], u[0]) / TAU47 * 0.98, 0.5 - u[1] * 0.48) : regionUv(region, 0.5 + u[0] * 0.45, 0.5 + u[2] * 0.45);
+    const n = norm2(normals[i]), u = verts[i], uv = region === "berry" ? regionUv(region, 0.5 + Math.atan2(u[2], u[0]) / TAU48 * 0.98, 0.5 - u[1] * 0.48) : regionUv(region, 0.5 + u[0] * 0.45, 0.5 + u[2] * 0.45);
     return b.vertex(add3(at, p2), n, uv, colour(u, p2, n), pk(u, p2));
   });
   for (let i = 0; i < faces.length; i += 3) b.tri(ids2[faces[i]], ids2[faces[i + 1]], ids2[faces[i + 2]]);
@@ -97835,7 +99633,7 @@ function vnoise3(x, y, z, seed = 0) {
 var groundShade = (y, reach = 0.12, floor = 0.5) => mix20(floor, 1, smooth41(0, reach, y));
 var tint3 = (rgb, k) => rgb.map((v) => v * k);
 function fallenBranch(THREE2) {
-  const b = new Builder2(), rand3 = random8(31), barkTint2 = [[1, 0.96, 0.92], [0.86, 0.84, 0.8], [1.05, 0.98, 0.9]];
+  const b = new Builder2(), rand3 = random9(31), barkTint2 = [[1, 0.96, 0.92], [0.86, 0.84, 0.8], [1.05, 0.98, 0.9]];
   const still = () => [0.9, 0.3, 0, 0.25];
   const L4 = 0.98, main = spline3([[-L4 / 2, 0.028, 0.02], [-L4 * 0.2, 0.036, -0.03], [L4 * 0.12, 0.04, 0.02], [L4 * 0.38, 0.03, -0.015], [L4 / 2, 0.02, 0.01]], 9);
   const mainR = (t) => mix20(0.028, 0.012, t) * (1 + 0.12 * Math.sin(t * 17));
@@ -97857,11 +99655,11 @@ function fallenBranch(THREE2) {
   return b;
 }
 function grassTuft(THREE2) {
-  const b = new Builder2(), rand3 = random8(202), H = 1;
+  const b = new Builder2(), rand3 = random9(202), H = 1;
   const base = hexRgb2(4867622), straw2 = hexRgb2(13217130), pale = hexRgb2(15128230), green2 = hexRgb2(7043642);
   const sway = (p2) => 0.1 * H * smooth41(0, H, p2[1]) ** 2;
   for (let i = 0; i < 74; i++) {
-    const a = rand3() * TAU47, r = Math.sqrt(rand3()) * 0.07, h = 0.45 + rand3() * 0.55, lean = 0.2 + rand3() * 0.7, w = 0.011 + rand3() * 0.01, twist = (rand3() - 0.5) * 0.8;
+    const a = rand3() * TAU48, r = Math.sqrt(rand3()) * 0.07, h = 0.45 + rand3() * 0.55, lean = 0.2 + rand3() * 0.7, w = 0.011 + rand3() * 0.01, twist = (rand3() - 0.5) * 0.8;
     const fresh = rand3() < 0.28, tipC = fresh ? straw2.map((c2, k) => mix20(c2, green2[k], 0.5)) : rand3() < 0.4 ? pale : straw2, root2 = [Math.cos(a) * r, 0, Math.sin(a) * r];
     const outward = [Math.cos(a), 0, Math.sin(a)], side2 = [-Math.sin(a + twist), 0, Math.cos(a + twist)];
     const spine = (t) => add3(root2, add3(scale4(outward, lean * h * t * t * 0.85), [0, h * t * (1 - 0.3 * lean * t * t), 0]));
@@ -97880,7 +99678,7 @@ function grassTuft(THREE2) {
     });
   }
   for (let i = 0; i < 10; i++) {
-    const a = rand3() * TAU47, lean = 0.1 + rand3() * 0.3, h = 0.95 + rand3() * 0.35, root2 = [Math.cos(a) * 0.03, 0, Math.sin(a) * 0.03], outward = [Math.cos(a), 0, Math.sin(a)];
+    const a = rand3() * TAU48, lean = 0.1 + rand3() * 0.3, h = 0.95 + rand3() * 0.35, root2 = [Math.cos(a) * 0.03, 0, Math.sin(a) * 0.03], outward = [Math.cos(a), 0, Math.sin(a)];
     const path = spline3([root2, add3(root2, add3(scale4(outward, lean * 0.3), [0, h * 0.5, 0])), add3(root2, add3(scale4(outward, lean), [0, h * 0.97, 0]))], 7);
     tube4(b, path, (t) => mix20(3e-3, 16e-4, t), { sides: 4, region: "blade", vPerMetre: 1, colour: (t) => tint3(straw2, groundShade(t * h, 0.2, 0.5)), pk: (t, p2) => [0.75, 0.3, sway(p2), 0] });
     const top = path.at(-1), up7 = norm2(sub3(path.at(-1), path.at(-3))), plumeLen = 0.22 + rand3() * 0.07;
@@ -97901,7 +99699,7 @@ function grassTuft(THREE2) {
   return b;
 }
 function berries(THREE2, anchors, size) {
-  const b = new Builder2(), rand3 = random8(505);
+  const b = new Builder2(), rand3 = random9(505);
   for (const anchor of anchors) {
     const count2 = 2 + Math.floor(rand3() * 3);
     for (let k = 0; k < count2; k++) {
@@ -97922,7 +99720,7 @@ function berries(THREE2, anchors, size) {
   return b;
 }
 function carrot(THREE2) {
-  const b = new Builder2(), rand3 = random8(606), orange = hexRgb2(14181406), orangeDark = hexRgb2(10305298), stalk = hexRgb2(7313990), stalkBase = hexRgb2(12042378);
+  const b = new Builder2(), rand3 = random9(606), orange = hexRgb2(14181406), orangeDark = hexRgb2(10305298), stalk = hexRgb2(7313990), stalkBase = hexRgb2(12042378);
   lathe3(b, [[0, -0.05, 1], [0.012, -0.048, 0.9], [0.019, -0.03, 0.7], [0.022, -5e-3, 0.5], [0.021, 6e-3, 0.3], [0.016, 0.014, 0.15], [6e-3, 0.018, 0]], {
     segments: 14,
     region: "white",
@@ -97933,7 +99731,7 @@ function carrot(THREE2) {
     pk: () => [0.6, 0, 0, 0.3]
   });
   for (let i = 0; i < 8; i++) {
-    const a = i / 8 * TAU47 + rand3() * 0.4, h = 0.2 + rand3() * 0.14, reach = 0.1 + rand3() * 0.1, out2 = [Math.cos(a), 0, Math.sin(a)];
+    const a = i / 8 * TAU48 + rand3() * 0.4, h = 0.2 + rand3() * 0.14, reach = 0.1 + rand3() * 0.1, out2 = [Math.cos(a), 0, Math.sin(a)];
     const root2 = [Math.cos(a) * 6e-3, 0.016, Math.sin(a) * 6e-3], path = spline3([root2, add3(root2, add3(scale4(out2, reach * 0.25), [0, h * 0.55, 0])), add3(root2, add3(scale4(out2, reach * 0.75), [0, h * 0.92, 0])), add3(root2, add3(scale4(out2, reach * 1.15), [0, h * 0.8, 0]))], 8);
     const swayAt = (p2) => 0.07 * smooth41(0, 0.35, p2[1]) ** 2 * 0.35;
     tube4(b, path, (t) => mix20(28e-4, 12e-4, t), { sides: 4, region: "white", colour: (t) => stalkBase.map((c2, k) => mix20(c2, stalk[k], smooth41(0, 0.4, t))), pk: (t, p2) => [0.6, 0.3, swayAt(p2), 0.1] });
@@ -97987,7 +99785,7 @@ function mushroom2(b, { at = [0, 0, 0], tilt = [0, 0], height: height2, stemR, c
   lathe3(b, under, { segments: segs, region: "gills", at, tilt, wobble: wob, flip: false, colour: () => gillColour, pk: () => [0.85, glowPk(1), 0, 0.04] });
 }
 function mushrooms(THREE2, kind) {
-  const b = new Builder2(), rand3 = random8(kind === "red" ? 11 : kind === "green" ? 12 : 13);
+  const b = new Builder2(), rand3 = random9(kind === "red" ? 11 : kind === "green" ? 12 : 13);
   if (kind === "red") {
     const stem = hexRgb2(15854558), gill = hexRgb2(16052194);
     mushroom2(b, { at: [0, 0, 0], tilt: [0.06, -0.08], height: 0.15, stemR: 0.012, capR: 0.075, capH: 0.03, dome: 0.45, region: "capRed", ring: 0.74, bulb: 0.012, stemColour: stem, capColour: [1, 1, 1], gillColour: gill, capRough: 0.42, seed: 2 });
@@ -98009,11 +99807,11 @@ function mushrooms(THREE2, kind) {
   return b;
 }
 function flowerParts(THREE2) {
-  const plant = new Builder2(), petals = new Builder2(), rand3 = random8(707);
+  const plant = new Builder2(), petals = new Builder2(), rand3 = random9(707);
   const green2 = hexRgb2(5143090), greenDark = hexRgb2(3496484);
   const sway = (p2) => 0.06 * smooth41(0, 0.45, p2[1]) ** 2 * 0.45;
   for (let i = 0; i < 9; i++) {
-    const a = i / 9 * TAU47 + rand3() * 0.5, length = 0.12 + rand3() * 0.06, w = 0.036 + rand3() * 0.014, out2 = [Math.cos(a), 0, Math.sin(a)], side2 = [-Math.sin(a), 0, Math.cos(a)];
+    const a = i / 9 * TAU48 + rand3() * 0.5, length = 0.12 + rand3() * 0.06, w = 0.036 + rand3() * 0.014, out2 = [Math.cos(a), 0, Math.sin(a)], side2 = [-Math.sin(a), 0, Math.cos(a)];
     card(plant, (s, t) => add3(add3(scale4(out2, t * length), [0, 0.012 + Math.sin(t * Math.PI * 0.8) * 0.03 - t * t * 0.02, 0]), add3(scale4(side2, s * w * 0.5), [0, -Math.abs(s) * w * 0.15, 0])), {
       cols: 2,
       rows: 4,
@@ -98035,7 +99833,7 @@ function flowerParts(THREE2) {
     const headPk = (p2) => [0.5, 0.65, sway(p2), 0];
     const petalsN = 6, petalLen = 0.04 + rand3() * 8e-3;
     for (let k = 0; k < petalsN; k++) {
-      const pa = k / petalsN * TAU47 + rand3() * 0.2, dir = add3(scale4(x, Math.cos(pa)), scale4(z, Math.sin(pa))), across2 = cross9(up7, dir);
+      const pa = k / petalsN * TAU48 + rand3() * 0.2, dir = add3(scale4(x, Math.cos(pa)), scale4(z, Math.sin(pa))), across2 = cross9(up7, dir);
       card(
         petals,
         (s, t) => add3(add3(top, scale4(dir, 4e-3 + t * petalLen)), add3(scale4(across2, s * petalLen * 0.33 * (0.35 + 0.65 * Math.sin(Math.PI * Math.min(1, t * 0.75 + 0.2)))), scale4(up7, Math.sin(t * Math.PI * 0.6) * 0.012 - t * t * 8e-3 + s * s * 3e-3))),
@@ -98043,7 +99841,7 @@ function flowerParts(THREE2) {
       );
     }
     for (let k = 0; k < 5; k++) {
-      const pa = k / 5 * TAU47 + 0.3, dir = add3(scale4(x, Math.cos(pa)), scale4(z, Math.sin(pa)));
+      const pa = k / 5 * TAU48 + 0.3, dir = add3(scale4(x, Math.cos(pa)), scale4(z, Math.sin(pa)));
       card(plant, (s, t) => add3(add3(top, scale4(dir, t * 0.012)), add3(scale4(cross9(up7, dir), s * 3e-3), scale4(up7, -2e-3 - t * 4e-3))), { cols: 2, rows: 1, region: "white", uvAt: () => [0.5, 0.5], colour: () => green2, pk: (s, t, p2) => [0.6, 0.4, sway(p2), 0] });
     }
     const discRows = [[1e-4, 55e-4, 0], [5e-3, 5e-3, 0.35], [9e-3, 34e-4, 0.7], [0.011, 6e-4, 0.95]];
@@ -98052,7 +99850,7 @@ function flowerParts(THREE2) {
     for (const [r2, y, v] of discRows) {
       const row2 = [];
       for (let j = 0; j <= 12; j++) {
-        const pa = j / 12 * TAU47, local2 = [Math.cos(pa) * r2, y, Math.sin(pa) * r2], p2 = discAt(local2);
+        const pa = j / 12 * TAU48, local2 = [Math.cos(pa) * r2, y, Math.sin(pa) * r2], p2 = discAt(local2);
         row2.push(plant.vertex(p2, norm2(add3(up7, add3(scale4(x, Math.cos(pa) * v * 0.6), scale4(z, Math.sin(pa) * v * 0.6)))), regionUv("disc", 0.5 + Math.cos(pa) * v * 0.48, 0.5 + Math.sin(pa) * v * 0.48), [1, 1, 1], [0.6, 0.2, sway(p2), 0]));
       }
       rows.push(row2);
@@ -98062,16 +99860,16 @@ function flowerParts(THREE2) {
   return { plant, petals };
 }
 function bundle(THREE2) {
-  const b = new Builder2(), rand3 = random8(909), segs = 30;
+  const b = new Builder2(), rand3 = random9(909), segs = 30;
   const profile = [[0, 0], [4e-3, 0.07], [0.02, 0.115], [0.06, 0.135], [0.1, 0.13], [0.14, 0.105], [0.175, 0.062], [0.195, 0.034], [0.205, 0.03], [0.215, 0.036], [0.235, 0.055], [0.25, 0.066]];
-  const lumps = Array.from({ length: 4 }, () => [rand3() * TAU47, 0.03 + rand3() * 0.1, 0.05 + rand3() * 0.05]);
+  const lumps = Array.from({ length: 4 }, () => [rand3() * TAU48, 0.03 + rand3() * 0.1, 0.05 + rand3() * 0.05]);
   const neck = 0.2, rows = [];
   for (let i = 0; i < profile.length; i++) {
     const [y0, r0] = profile[i], gather = smooth41(0.11, 0.19, y0) * (1 - smooth41(0.22, 0.25, y0) * 0.4), ruffle = smooth41(0.205, 0.25, y0), row2 = [];
     for (let j = 0; j <= segs; j++) {
-      const a = j / segs * TAU47;
+      const a = j / segs * TAU48;
       let r = r0 * (1 + 0.2 * gather * Math.sin(a * 11 + Math.sin(a * 3) * 1.5) + 0.05 * (vnoise3(a * 2, y0 * 30, 0, 5) - 0.5));
-      for (const [la2, ly, amount] of lumps) r += amount * Math.exp(-(((a - la2 + Math.PI) % TAU47 - Math.PI) ** 2) * 3 - ((y0 - ly) / 0.05) ** 2) * (1 - gather) * 0.35;
+      for (const [la2, ly, amount] of lumps) r += amount * Math.exp(-(((a - la2 + Math.PI) % TAU48 - Math.PI) ** 2) * 3 - ((y0 - ly) / 0.05) ** 2) * (1 - gather) * 0.35;
       const y = y0 + ruffle * 0.012 * Math.sin(a * 7 + 1.3) + ruffle * 5e-3 * Math.sin(a * 13);
       row2.push([Math.cos(a) * r, y, Math.sin(a) * r]);
     }
@@ -98081,12 +99879,12 @@ function bundle(THREE2) {
     const prev = rows[Math.max(0, i - 1)][j], next = rows[Math.min(rows.length - 1, i + 1)][j], left = row2[(j + segs - 1) % segs], right = row2[(j + 1) % segs];
     let n = norm2(cross9(sub3(next, prev), sub3(right, left)));
     if (!Number.isFinite(n[0]) || len2(n) < 0.5) n = [0, -1, 0];
-    const crease = 1 - 0.25 * smooth41(0.11, 0.19, p2[1]) * (0.5 - 0.5 * Math.sin(j / segs * TAU47 * 11));
+    const crease = 1 - 0.25 * smooth41(0.11, 0.19, p2[1]) * (0.5 - 0.5 * Math.sin(j / segs * TAU48 * 11));
     return b.vertex(p2, n, regionUv("cloth", fold(j / segs * 4), fold(i / (rows.length - 1) * 4)), [1, 1, 1].map((c2) => c2 * groundShade(p2[1], 0.04, 0.6) * crease), [0.95, 0, 0, 0.12]);
   }));
   for (let i = 0; i < rows.length - 1; i++) for (let j = 0; j < segs; j++) b.quad(ids2[i][j], ids2[i + 1][j], ids2[i + 1][j + 1], ids2[i][j + 1]);
   const cord = hexRgb2(9073744), ring2 = Array.from({ length: 25 }, (_, k) => {
-    const a = k / 24 * TAU47;
+    const a = k / 24 * TAU48;
     return [Math.cos(a) * 0.036, neck + 4e-3 * Math.sin(a * 3), Math.sin(a) * 0.036];
   });
   tube4(b, ring2, () => 42e-4, { sides: 5, region: "white", colour: () => cord, pk: () => [0.9, 0, 0, 0.5] });
@@ -98105,7 +99903,7 @@ function arrowShape() {
   tube4(b, spline3([[-0.036, 0, 0], [-L4, 0, 0]], 5), () => 37e-4, { sides: 6, region: "white", vPerMetre: 1, colour: (t) => shaft.map((c2) => c2 * (0.92 + 0.08 * Math.sin(t * 40))), pk: wood, end: "wood" });
   const head2 = [];
   for (let i = 0; i <= 8; i++) {
-    const a = i / 8 * TAU47, y = Math.cos(a) * 92e-4, z = Math.sin(a) * 26e-4, n = norm2([0.35, Math.cos(a), Math.sin(a) * 2.5]);
+    const a = i / 8 * TAU48, y = Math.cos(a) * 92e-4, z = Math.sin(a) * 26e-4, n = norm2([0.35, Math.cos(a), Math.sin(a) * 2.5]);
     head2.push(
       b.vertex([-0.042, y, z], norm2([-0.2, Math.cos(a), Math.sin(a) * 2.5]), regionUv("white", 0.5, 0.5), stone.map((c2, k) => mix20(c2, edge2[k], Math.abs(Math.cos(a)) ** 4 * 0.6)), [0.38, 0, 0, 0]),
       b.vertex([-0.012, y * 1.12, z * 1.1], n, regionUv("white", 0.5, 0.5), stone.map((c2, k) => mix20(c2, edge2[k], Math.abs(Math.cos(a)) ** 4 * 0.7)), [0.36, 0, 0, 0])
@@ -98120,13 +99918,13 @@ function arrowShape() {
   for (const [x, w] of [[-0.044, 0.011], [-L4 + 0.02, 0.012]]) {
     const path = [];
     for (let i = 0; i <= 12; i++) {
-      const t = i / 12, a = t * 3 * TAU47;
+      const t = i / 12, a = t * 3 * TAU48;
       path.push([x - t * w, Math.cos(a) * 46e-4, Math.sin(a) * 46e-4]);
     }
     tube4(b, path, () => 12e-4, { sides: 4, region: "white", colour: () => cord, pk: none });
   }
   for (let i = 0; i < 3; i++) {
-    const a = i / 3 * TAU47 + 0.5, out2 = [0, Math.cos(a), Math.sin(a)];
+    const a = i / 3 * TAU48 + 0.5, out2 = [0, Math.cos(a), Math.sin(a)];
     card(
       b,
       (s2, t) => {
@@ -98167,7 +99965,7 @@ if (pk.z > 0.) {
   return material2;
 }
 function atlasTexture(THREE2, material2) {
-  const make = (data, width, height2) => {
+  const make2 = (data, width, height2) => {
     const texture = new THREE2.DataTexture(data, width, height2, THREE2.RGBAFormat, THREE2.UnsignedByteType);
     texture.colorSpace = THREE2.SRGBColorSpace;
     texture.flipY = false;
@@ -98178,10 +99976,10 @@ function atlasTexture(THREE2, material2) {
     texture.needsUpdate = true;
     return texture;
   };
-  const holder = { texture: make(new Uint8Array([255, 255, 255, 255]), 1, 1) };
+  const holder = { texture: make2(new Uint8Array([255, 255, 255, 255]), 1, 1) };
   holder.texture.minFilter = THREE2.LinearFilter;
   holder.ready = paintTextures("pickables").then((levels) => {
-    const texture = make(levels[0].data, levels[0].width, levels[0].height);
+    const texture = make2(levels[0].data, levels[0].width, levels[0].height);
     texture.mipmaps = levels;
     holder.texture.dispose();
     holder.texture = texture;
@@ -98265,59 +100063,6 @@ function createPickableShapes(THREE2, { world: world2 = null, wind = true } = {}
   };
 }
 
-// aim-target.js
-var AIM = Object.freeze({ pad: 0.1, slack: 0.06, nearer: 0.08 });
-function viewRay(camera, out2 = { ox: 0, oy: 0, oz: 0, dx: 0, dy: 0, dz: -1 }) {
-  const p2 = camera.position, q = camera.quaternion, x = q.x, y = q.y, z = q.z, w = q.w;
-  out2.ox = p2.x;
-  out2.oy = p2.y;
-  out2.oz = p2.z;
-  let dx = -2 * (x * z + w * y), dy = -2 * (y * z - w * x), dz = -(1 - 2 * (x * x + y * y));
-  const n = Math.hypot(dx, dy, dz) || 1;
-  out2.dx = dx / n;
-  out2.dy = dy / n;
-  out2.dz = dz / n;
-  return out2;
-}
-function aimScore(ray3, x, y0, y1, z, half, settings2 = AIM) {
-  const wx = ray3.ox - x, wz = ray3.oz - z, dy = ray3.dy;
-  const along0 = ray3.dx * wx + dy * ray3.oy + ray3.dz * wz, denom = 1 - dy * dy;
-  let s = denom > 1e-6 ? (ray3.oy - dy * along0) / denom : ray3.oy;
-  if (s < y0) s = y0;
-  else if (s > y1) s = y1;
-  const vx = -wx, vy = s - ray3.oy, vz = -wz;
-  const along = vx * ray3.dx + vy * dy + vz * ray3.dz;
-  if (!(along > 0)) return -1;
-  const dist2 = vx * vx + vy * vy + vz * vz, miss = Math.sqrt(Math.max(0, dist2 - along * along));
-  const allow = half + settings2.pad + settings2.slack * along;
-  if (miss > allow) return -1;
-  return miss / allow + settings2.nearer * Math.sqrt(dist2);
-}
-var SHAPES = Object.freeze({
-  herb: [0, 0.78, 0.3],
-  crystal: [0, 0.95, 0.42],
-  mushroom: [0, 0.4, 0.2],
-  chest: [0, 1, 0.62],
-  memory: [0, 2.6, 0.75],
-  tree: [0, 6, 0.55],
-  content: [0, 1.4, 0.7]
-});
-function aimShape(o) {
-  if (o.type === "rock") {
-    const r = o.r || 1;
-    return [0, r * 0.85, r * 0.9];
-  }
-  if (o.type === "content") return o.action === "enter-cave" ? null : SHAPES.content;
-  if (o.type === "cave" || o.type === "pit" || o.type === "exit" || o.type === "shrine" || o.type === "boss") return null;
-  return SHAPES[o.type] || [0, 1.2, 0.5];
-}
-function aimAtObject(ray3, o, settings2 = AIM) {
-  const shape = aimShape(o);
-  if (!shape) return -1;
-  const y = Number.isFinite(o.y) ? o.y : ray3.oy - 1.66;
-  return aimScore(ray3, o.x, y + shape[0], y + shape[1], o.z, shape[2], settings2);
-}
-
 // survival-pickables.js
 var PICKABLES = Object.freeze({
   branch: Object.freeze({ name: "落ちた枝", verb: "拾う", gives: { twigs: 2 }, regrowDays: 3, sound: "pickTwig" }),
@@ -98356,7 +100101,7 @@ var MOVE_REBUILD = 6;
 var FLOWER_COLORS = [16052714, 15913546, 11897560, 15634352, 9417968];
 var REACH = 2.1;
 var CHUNK6 = 64;
-var TAU48 = Math.PI * 2;
+var TAU49 = Math.PI * 2;
 var PICK_SHAPES = Object.freeze({
   branch: [-0.05, 0.22, 0.45],
   deadbranch: [-0.05, 0.25, 0.45],
@@ -98379,7 +100124,7 @@ function hashSeed(...values) {
   }
   return h >>> 0;
 }
-function random9(seed) {
+function random10(seed) {
   let s = seed >>> 0;
   return () => {
     s = s + 1831565813 >>> 0;
@@ -98437,9 +100182,9 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
   const day = SURVIVAL_DAY.seconds;
   function startCandidates() {
     if (!camp) return [];
-    const rand3 = random9(hashSeed(seed, 9917)), list2 = [];
+    const rand3 = random10(hashSeed(seed, 9917)), list2 = [];
     for (const [type, n] of Object.entries(START_SET)) for (let i = 0; i < n; i++) {
-      const a = rand3() * TAU48, r = 4.5 + rand3() * 12;
+      const a = rand3() * TAU49, r = 4.5 + rand3() * 12;
       list2.push({ id: `start:${type}:${i}`, type, x: camp.x + Math.cos(a) * r, z: camp.z + Math.sin(a) * r, rand: rand3() });
     }
     return list2;
@@ -98458,7 +100203,7 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
   function addItem2(key3, c2, id2, type, x, z, rand3) {
     const y = height2(x, z);
     if (!clearOf(c2, x, z, y)) return;
-    const item = { id: id2, type, def: PICKABLES[type], x, y, z, chunk: key3, yaw: rand3() * TAU48, scale: 0.85 + rand3() * 0.35, color: FLOWER_COLORS[Math.floor(rand3() * FLOWER_COLORS.length)], variant: variantOf(type, id2) };
+    const item = { id: id2, type, def: PICKABLES[type], x, y, z, chunk: key3, yaw: rand3() * TAU49, scale: 0.85 + rand3() * 0.35, color: FLOWER_COLORS[Math.floor(rand3() * FLOWER_COLORS.length)], variant: variantOf(type, id2) };
     if (shapes2[type]?.[0]?.ground) item.tilt = groundTilt2(x, z);
     items.set(id2, item);
     byChunk.get(key3).push(id2);
@@ -98467,7 +100212,7 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
     const [cx, cz] = key3.split(",").map(Number), x0 = cx * CHUNK6, z0 = cz * CHUNK6;
     byChunk.set(key3, []);
     for (const [type, density] of Object.entries(PICKABLE_DENSITY)) {
-      const attempts = Math.max(...density), rand3 = random9(hashSeed(seed, cx, cz, type.length * 131 + type.charCodeAt(0) * 7 + type.charCodeAt(type.length - 1)));
+      const attempts = Math.max(...density), rand3 = random10(hashSeed(seed, cx, cz, type.length * 131 + type.charCodeAt(0) * 7 + type.charCodeAt(type.length - 1)));
       for (let i = 0; i < attempts; i++) {
         const x = x0 + rand3() * CHUNK6, z = z0 + rand3() * CHUNK6, accept = rand3(), y = height2(x, z);
         if (!Number.isFinite(y) || y < 1.2) continue;
@@ -98476,13 +100221,13 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
         if (PATCHY.has(type)) {
           const extra = 1 + Math.floor(rand3() * 2.6);
           for (let j = 0; j < extra; j++) {
-            const a = rand3() * TAU48, r = 0.8 + rand3() * 2.2;
+            const a = rand3() * TAU49, r = 0.8 + rand3() * 2.2;
             addItem2(key3, c2, `p:${key3}:${type}:${i}.${j}`, type, x + Math.cos(a) * r, z + Math.sin(a) * r, rand3);
           }
         }
       }
     }
-    for (const s of starts) if (Math.floor(s.x / CHUNK6) === cx && Math.floor(s.z / CHUNK6) === cz) addItem2(key3, c2, s.id, s.type, s.x, s.z, random9(hashSeed(seed, s.x * 100, s.z * 100)));
+    for (const s of starts) if (Math.floor(s.x / CHUNK6) === cx && Math.floor(s.z / CHUNK6) === cz) addItem2(key3, c2, s.id, s.type, s.x, s.z, random10(hashSeed(seed, s.x * 100, s.z * 100)));
     dirty = true;
   }
   function dropChunk(key3) {
@@ -98518,6 +100263,28 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
         ids2.push(id2);
       }
       naturalFrom.set(key3, { entry, ids: ids2 });
+      naturalAdded = true;
+    }
+  }
+  const builtHidden = /* @__PURE__ */ new Set();
+  let naturalAdded = false;
+  function hideUnderBuilt() {
+    for (const id2 of [...builtHidden]) {
+      const item = natural.get(id2);
+      if (!item || !underBuilt(item)) {
+        builtHidden.delete(id2);
+        if (!picked.has(id2)) hideNatural(id2, false);
+      }
+    }
+    for (const c2 of world2.grassClearings || []) {
+      const cx = Math.floor(c2.x / CHUNK6), cz = Math.floor(c2.z / CHUNK6);
+      for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const id2 of naturalByChunk.get(`${cx + i},${cz + j}`) || []) {
+        const item = natural.get(id2);
+        if (item && !builtHidden.has(id2) && underBuilt(item)) {
+          builtHidden.add(id2);
+          hideNatural(id2, true);
+        }
+      }
     }
   }
   const understory = /* @__PURE__ */ new Map(), understoryByChunk = /* @__PURE__ */ new Map(), taken = /* @__PURE__ */ new Set();
@@ -98596,6 +100363,10 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
     for (const [key3, c2] of world2.chunks) if (c2.woodyShrubDone && hostFrom.get(key3)?.chunk !== c2 && byChunk.has(key3)) hostBerries(key3, c2);
     syncNatural();
     syncUnderstory();
+    if (naturalAdded) {
+      naturalAdded = false;
+      if (world2.grassClearings?.length) hideUnderBuilt();
+    }
   }
   function groundTilt2(x, z) {
     const e = 0.45, n = new THREE2.Vector3(height2(x - e, z) - height2(x + e, z), 2 * e, height2(x, z - e) - height2(x, z + e));
@@ -98606,6 +100377,13 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
   const viewerAt = () => world2.playerPos && Number.isFinite(world2.playerPos.x) ? viewer.copy(world2.playerPos) : null;
   const ripe = (item) => !picked.has(item.id);
   const shown = (item) => !item.def.phase || item.def.phase === phase2;
+  let clearingsSeen = -1;
+  function underBuilt(item) {
+    const list2 = world2.grassClearings;
+    if (!list2?.length) return false;
+    for (const c2 of list2) if (Math.abs(item.x - c2.x) < c2.r && Math.abs(item.z - c2.z) < c2.r && Math.hypot(item.x - c2.x, item.z - c2.z) < c2.r - 0.2) return true;
+    return false;
+  }
   function rebuild() {
     dirty = false;
     const counts = /* @__PURE__ */ new Map(), at = viewerAt();
@@ -98635,12 +100413,12 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
     };
     const order = [], shadowNear = SHADOW_NEAR.pickable;
     for (const item of items.values()) {
-      if (!shown(item) || !near(item, item.type) || hostGone(item)) continue;
+      if (!shown(item) || !near(item, item.type) || hostGone(item) || underBuilt(item)) continue;
       if (!ripe(item) && !item.def.keeps) continue;
       order.push(item);
     }
     const dropOrder = [];
-    for (const drop2 of drops.values()) if (near(drop2, "drop")) dropOrder.push(drop2);
+    for (const drop3 of drops.values()) if (near(drop3, "drop")) dropOrder.push(drop3);
     const distanceOf = (o) => at ? Math.hypot(o.x - at.x, o.z - at.z) : 0, byDistance = (a, b) => a.d - b.d;
     for (const o of order) o.d = distanceOf(o);
     for (const o of dropOrder) o.d = distanceOf(o);
@@ -98654,12 +100432,12 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
       const isRipe = ripe(item);
       for (const entry of meshes[item.type] || []) if ((entry.part.always || isRipe) && (entry.part.variant ?? item.variant) === item.variant) putNear(entry, item);
     }
-    for (const drop2 of dropOrder) for (const entry of drop2.q && meshes.arrow ? meshes.arrow : drop2.item === "log" && meshes.woodpile ? meshes.woodpile : meshes.drop) putNear(entry, drop2);
+    for (const drop3 of dropOrder) for (const entry of drop3.q && meshes.arrow ? meshes.arrow : drop3.item === "log" && meshes.woodpile ? meshes.woodpile : meshes.drop) putNear(entry, drop3);
     for (const entries of Object.values(meshes)) for (const entry of entries) {
       entry.mesh.count = counts.get(entry) || 0;
       setShadowPrefix(entry.mesh, shadowCounts.get(entry) || 0);
-      entry.mesh.instanceMatrix.needsUpdate = true;
-      if (entry.mesh.instanceColor) entry.mesh.instanceColor.needsUpdate = true;
+      markShown(entry.mesh.instanceMatrix, entry.mesh.count, 16);
+      if (entry.mesh.instanceColor) markShown(entry.mesh.instanceColor, entry.mesh.count, 3);
     }
     world2.needsFrame = true;
   }
@@ -98680,6 +100458,11 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
       phase2 = currentPhase;
       dirty = true;
     }
+    if ((world2.grassClearingsVersion ?? 0) !== clearingsSeen) {
+      clearingsSeen = world2.grassClearingsVersion ?? 0;
+      dirty = true;
+      hideUnderBuilt();
+    }
     setGlow(phase2 === "night" ? 0.85 : 0);
     if (!dirty) {
       const at = viewerAt();
@@ -98695,7 +100478,7 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
       scanTimer = 2;
       for (const [id2, at] of picked) if (at <= now) {
         picked.delete(id2);
-        hideNatural(id2, false);
+        if (!builtHidden.has(id2)) hideNatural(id2, false);
         if (items.has(id2)) dirty = true;
       }
     }
@@ -98726,15 +100509,15 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
       const key3 = `${cx + i},${cz + j}`;
       for (const id2 of byChunk.get(key3) || []) {
         const item2 = items.get(id2);
-        if (item2 && shown(item2) && ripe(item2) && !hostGone(item2)) consider(item2, "plant");
+        if (item2 && shown(item2) && ripe(item2) && !hostGone(item2) && !underBuilt(item2)) consider(item2, "plant");
       }
       for (const id2 of naturalByChunk.get(key3) || []) {
         const item2 = natural.get(id2);
-        if (item2 && item2.lodRank <= drawnRatio && ripe(item2)) consider(item2, "plant");
+        if (item2 && item2.lodRank <= drawnRatio && ripe(item2) && !underBuilt(item2)) consider(item2, "plant");
       }
-      for (const item2 of understoryByChunk.get(key3) || []) if (!taken.has(item2.id)) consider(item2, "plant");
+      for (const item2 of understoryByChunk.get(key3) || []) if (!taken.has(item2.id) && !underBuilt(item2)) consider(item2, "plant");
     }
-    for (const drop2 of drops.values()) consider(drop2, "drop");
+    for (const drop3 of drops.values()) consider(drop3, "drop");
     if (!best) return null;
     const { item } = best;
     const aim = ray3 ? bestScore : null;
@@ -98742,8 +100525,8 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
     return { survival: true, id: item.id, kind: "plant", type: item.type, name: item.def.name, verb: item.def.verb, x: item.x, y: item.y, z: item.z, distance: best.distance, aim };
   }
   function preview(id2) {
-    const drop2 = drops.get(id2);
-    if (drop2) return { gives: { [drop2.item]: drop2.count }, extra: drop2.extra || {} };
+    const drop3 = drops.get(id2);
+    if (drop3) return { gives: { [drop3.item]: drop3.count }, extra: drop3.extra || {} };
     const item = items.get(id2) || natural.get(id2) || understory.get(id2);
     if (!item || !ripe(item) || !shown(item) || taken.has(id2)) return null;
     return { gives: { ...item.def.gives }, sanity: item.def.sanity || 0, sound: item.def.sound, type: item.type };
@@ -98772,11 +100555,11 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
     }
     world2.forestUnderstory?.remove?.(id2);
   }
-  function drop(item, count2, x, z, extra = {}, pose = null) {
+  function drop2(item, count2, x, z, extra = {}, pose = null) {
     if (!ITEMS[item] || !(count2 > 0)) return null;
-    const id2 = "drop:" + ++dropSerial, rand3 = random9(hashSeed(seed, dropSerial, 77));
+    const id2 = "drop:" + ++dropSerial, rand3 = random10(hashSeed(seed, dropSerial, 77));
     const posed = pose && Array.isArray(pose.q) && pose.q.length === 4 && pose.q.every(Number.isFinite) && Number.isFinite(pose.y);
-    drops.set(id2, { id: id2, item, count: count2, extra, x, y: posed ? pose.y : height2(x, z), z, yaw: rand3() * TAU48, scale: 1, tilt: groundTilt2(x, z), q: posed ? pose.q.slice() : null });
+    drops.set(id2, { id: id2, item, count: count2, extra, x, y: posed ? pose.y : height2(x, z), z, yaw: rand3() * TAU49, scale: 1, tilt: groundTilt2(x, z), q: posed ? pose.q.slice() : null });
     dirty = true;
     return id2;
   }
@@ -98802,7 +100585,7 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
       picked.set(entry[0], entry[1]);
       hideNatural(entry[0], true);
     }
-    for (const d of Array.isArray(data?.drops) ? data.drops : []) if (ITEMS[d?.item] && Number.isFinite(d.x) && Number.isFinite(d.z) && d.count > 0) drop(d.item, Math.floor(d.count), d.x, d.z, d.extra && typeof d.extra === "object" ? d.extra : {}, d.q ? { y: d.y, q: d.q } : null);
+    for (const d of Array.isArray(data?.drops) ? data.drops : []) if (ITEMS[d?.item] && Number.isFinite(d.x) && Number.isFinite(d.z) && d.count > 0) drop2(d.item, Math.floor(d.count), d.x, d.z, d.extra && typeof d.extra === "object" ? d.extra : {}, d.q ? { y: d.y, q: d.q } : null);
     dirty = true;
   }
   function diagnostics() {
@@ -98825,16 +100608,16 @@ function createSurvivalPickables(THREE2, world2, { height: height2, slope: slope
     }
     disposeShapes();
   }
-  return { group, shapes: shapes2, update, nearest: nearest2, preview, pick: pick2, drop, serialize, restore, diagnostics, list, dispose, sync, get phase() {
+  return { group, shapes: shapes2, update, nearest: nearest2, preview, pick: pick2, drop: drop2, serialize, restore, diagnostics, list, dispose, sync, get phase() {
     return phase2;
   } };
 }
 
 // survival-fires.js
 var FIRE_LIGHT = Object.freeze({ min: 2.5, max: 9, fullAt: 0.5, reach: 2.3, intensity: 1.15 });
-var clamp67 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp68 = (x, a, b) => Math.max(a, Math.min(b, x));
 function fireLevel(fuel, maxFuel) {
-  return clamp67(fuel / (maxFuel * FIRE_LIGHT.fullAt), 0, 1);
+  return clamp68(fuel / (maxFuel * FIRE_LIGHT.fullAt), 0, 1);
 }
 function fireRadius(level) {
   return level > 0 ? FIRE_LIGHT.min + (FIRE_LIGHT.max - FIRE_LIGHT.min) * Math.pow(level, 0.6) : 0;
@@ -98913,7 +100696,7 @@ function createSurvivalFires(THREE2, world2, { height: height2, onOut = () => {
     const clearing = { x, z, r: kind === "firepit" ? 1.15 : 0.9 };
     (world2.grassClearings ||= []).push(clearing);
     world2.grassClearingsVersion = (world2.grassClearingsVersion || 0) + 1;
-    return adopt({ id: id2, kind, def, x, y, z, fuel: clamp67(fuel ?? def.startFuel, 0, def.maxFuel), group, visual, light, phase: serial3 * 1.7, clearing });
+    return adopt({ id: id2, kind, def, x, y, z, fuel: clamp68(fuel ?? def.startFuel, 0, def.maxFuel), group, visual, light, phase: serial3 * 1.7, clearing });
   }
   function remove(fire) {
     const index2 = fires.indexOf(fire);
@@ -98959,7 +100742,7 @@ function createSurvivalFires(THREE2, world2, { height: height2, onOut = () => {
   }
   function addFuel(fire, seconds) {
     const before = fire.fuel;
-    fire.fuel = clamp67(fire.fuel + seconds, 0, fire.def.maxFuel);
+    fire.fuel = clamp68(fire.fuel + seconds, 0, fire.def.maxFuel);
     return fire.fuel - before;
   }
   function burning(fire) {
@@ -99033,7 +100816,7 @@ function createSurvivalFires(THREE2, world2, { height: height2, onOut = () => {
   function restore(data) {
     for (const fire of [...fires]) remove(fire);
     const camp2 = fires.find((f15) => f15.landmark);
-    if (camp2 && Number.isFinite(data?.camp)) camp2.fuel = clamp67(data.camp, 0, camp2.def.maxFuel);
+    if (camp2 && Number.isFinite(data?.camp)) camp2.fuel = clamp68(data.camp, 0, camp2.def.maxFuel);
     for (const f15 of Array.isArray(data?.fires) ? data.fires : []) if (FIRES[f15?.kind] && Number.isFinite(f15.x) && Number.isFinite(f15.z)) build(f15.kind, f15.x, f15.z, Number.isFinite(f15.fuel) ? f15.fuel : 0);
   }
   function elapse(seconds) {
@@ -99094,7 +100877,7 @@ var KILN = Object.freeze({
   // The built one: its stones' dome (radius, height), its mouth (+z).
   built: Object.freeze({ radius: 1.02, height: 1.28, mouth: 0.95 })
 });
-var clamp68 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp69 = (x, a, b) => Math.max(a, Math.min(b, x));
 function kilnTime(logs) {
   return KILN.base + KILN.perLog * Math.max(0, logs);
 }
@@ -99116,7 +100899,7 @@ function stepKiln(k, dt) {
 }
 function loadKiln(k, available) {
   if (k.burn > 0 || k.ready > 0) return 0;
-  const n = clamp68(Math.floor(available), 0, KILN.capacity - k.logs);
+  const n = clamp69(Math.floor(available), 0, KILN.capacity - k.logs);
   if (n <= 0 && k.logs <= 0) return 0;
   k.logs += n;
   k.total = k.burn = kilnTime(k.logs);
@@ -99127,6 +100910,7 @@ function kilnVerb(k, logs) {
   if (k.burn > 0) return `焼いている（あと ${Math.ceil(k.burn)} 秒）`;
   return logs > 0 ? `木材を入れて火を入れる（${Math.min(logs, KILN.capacity)} 本）` : "木材を入れて焼く（木材が要る）";
 }
+var KILN_STONE = Object.freeze({ textureMeters: 1.6, bumps: 0.1, cuts: 3, size: 0.95, grey: Object.freeze([0.52, 0.82, 1.4]), tone: Object.freeze([0.65, 1.5]) });
 function kilnGeometries(THREE2, seed = 3) {
   let s = seed >>> 0 || 1;
   const rnd3 = () => {
@@ -99141,32 +100925,20 @@ function kilnGeometries(THREE2, seed = 3) {
       const a = (i + c2 % 2 * 0.5) / n * Math.PI * 2 + (rnd3() - 0.5) * 0.05;
       const front = Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2)));
       if (c2 < 3 && front < 0.42 - c2 * 0.06) continue;
-      const g = new THREE2.DodecahedronGeometry(0.15 + rnd3() * 0.03, 0);
-      g.deleteAttribute("uv");
-      g.scale(1.25 + rnd3() * 0.2, 0.78 + rnd3() * 0.15, 0.9 + rnd3() * 0.2);
+      const size = (0.15 + rnd3() * 0.03) * KILN_STONE.size, g = fieldstone(THREE2, rnd3, [size * (1.25 + rnd3() * 0.2), size * (0.78 + rnd3() * 0.15), size * (0.9 + rnd3() * 0.2)]);
       g.rotateZ((rnd3() - 0.5) * 0.3);
       g.rotateX(-phi * 0.9);
       g.rotateY(Math.PI / 2 - a);
       g.translate(Math.cos(a) * r, y, Math.sin(a) * r);
-      const tone = 0.08 + rnd3() * 0.12, warm = (rnd3() - 0.3) * 0.045, soot2 = c2 > courses - 3 ? 0.6 : 1 - 0.3 * Math.max(0, 1 - front / 0.9) * (c2 < 4 ? 1 : 0);
-      const col = new Float32Array(g.attributes.position.count * 3);
-      for (let k = 0; k < col.length; k += 3) {
-        col[k] = (tone + warm * 1.4) * soot2;
-        col[k + 1] = (tone + warm * 0.6) * soot2;
-        col[k + 2] = (tone * 0.86 - warm * 0.2) * soot2;
-      }
-      g.setAttribute("color", new THREE2.BufferAttribute(col, 3));
-      stones.push(g);
+      const k = KILN_STONE.tone[0] + rnd3() * (KILN_STONE.tone[1] - KILN_STONE.tone[0]), warm = (rnd3() - 0.35) * 0.3, soot2 = c2 > courses - 3 ? 0.6 : 1 - 0.3 * Math.max(0, 1 - front / 0.9) * (c2 < 4 ? 1 : 0);
+      stones.push(stoneColour(THREE2, g, k * soot2, warm));
     }
   }
   for (const k of [-1, 1]) {
-    const g = new THREE2.BoxGeometry(0.42, 0.14, 0.26);
-    g.deleteAttribute("uv");
+    const g = fieldstone(THREE2, rnd3, [0.23, 0.075, 0.13]);
     g.rotateZ(k * 0.32);
     g.translate(k * 0.17, 0.62, R * 0.93);
-    const col = new Float32Array(g.attributes.position.count * 3).fill(0.16);
-    g.setAttribute("color", new THREE2.BufferAttribute(col, 3));
-    stones.push(g);
+    stones.push(stoneColour(THREE2, g, 0.75, 0));
   }
   const inner = new THREE2.SphereGeometry(R * 0.9, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2);
   inner.deleteAttribute("uv");
@@ -99199,15 +100971,90 @@ function kilnGeometries(THREE2, seed = 3) {
   }
   return { stones: mergeColoured(THREE2, stones), soot: mergeColoured(THREE2, soot) };
 }
+function stoneColour(THREE2, g, k, warm) {
+  const [r, gg, b] = KILN_STONE.grey, col = new Float32Array(g.attributes.position.count * 3);
+  for (let q = 0; q < col.length; q += 3) {
+    col[q] = k * r * (1 + warm);
+    col[q + 1] = k * gg * (1 + warm * 0.4);
+    col[q + 2] = k * b * (1 - warm * 0.6);
+  }
+  g.setAttribute("color", new THREE2.BufferAttribute(col, 3));
+  return g;
+}
+function fieldstone(THREE2, rnd3, scale5) {
+  const g = new THREE2.IcosahedronGeometry(1, 1), p2 = g.attributes.position, dir = () => {
+    const z = rnd3() * 2 - 1, t = rnd3() * Math.PI * 2, q = Math.sqrt(1 - z * z);
+    return [q * Math.cos(t), q * Math.sin(t), z];
+  };
+  const waves = Array.from({ length: 4 }, () => [...dir(), 1.5 + rnd3() * 2, rnd3() * 6.28]), cuts = Array.from({ length: KILN_STONE.cuts }, () => [...dir(), 0.62 + rnd3() * 0.2]);
+  for (let i = 0; i < p2.count; i++) {
+    let x = p2.getX(i), y = p2.getY(i), z = p2.getZ(i), d = 0;
+    for (const [wx, wy, wz, k, ph] of waves) d += Math.sin((x * wx + y * wy + z * wz) * k + ph);
+    const m = 1 + KILN_STONE.bumps * d / waves.length * 1.6;
+    x *= m;
+    y *= m;
+    z *= m;
+    for (const [nx, ny, nz, o] of cuts) {
+      const h = x * nx + y * ny + z * nz - o;
+      if (h > 0) {
+        x -= nx * h;
+        y -= ny * h;
+        z -= nz * h;
+      }
+    }
+    p2.setXYZ(i, x * scale5[0], Math.max(y, -0.8) * scale5[1], z * scale5[2]);
+  }
+  smoothNormals(THREE2, g);
+  boxUV(THREE2, g, rnd3);
+  return g;
+}
+function smoothNormals(THREE2, g) {
+  const p2 = g.attributes.position, sum = /* @__PURE__ */ new Map(), key3 = (i) => Math.round(p2.getX(i) * 1e5) + "," + Math.round(p2.getY(i) * 1e5) + "," + Math.round(p2.getZ(i) * 1e5);
+  const a = new THREE2.Vector3(), b = new THREE2.Vector3(), c2 = new THREE2.Vector3(), n = new THREE2.Vector3();
+  for (let i = 0; i < p2.count; i += 3) {
+    a.fromBufferAttribute(p2, i);
+    b.fromBufferAttribute(p2, i + 1);
+    c2.fromBufferAttribute(p2, i + 2);
+    n.subVectors(c2, b).cross(a.sub(b));
+    for (let k = 0; k < 3; k++) {
+      const id2 = key3(i + k), v = sum.get(id2);
+      if (v) v.add(n);
+      else sum.set(id2, n.clone());
+    }
+  }
+  const out2 = new Float32Array(p2.count * 3);
+  for (let i = 0; i < p2.count; i++) {
+    const v = sum.get(key3(i)).clone().normalize();
+    out2[i * 3] = v.x;
+    out2[i * 3 + 1] = v.y;
+    out2[i * 3 + 2] = v.z;
+  }
+  g.setAttribute("normal", new THREE2.BufferAttribute(out2, 3));
+}
+function boxUV(THREE2, g, rnd3) {
+  const p2 = g.attributes.position, uv = new Float32Array(p2.count * 2), T2 = KILN_STONE.textureMeters, ou = rnd3() * 7, ov = rnd3() * 7;
+  for (let i = 0; i < p2.count; i += 3) {
+    const ax = p2.getX(i + 1) - p2.getX(i), ay = p2.getY(i + 1) - p2.getY(i), az = p2.getZ(i + 1) - p2.getZ(i), bx = p2.getX(i + 2) - p2.getX(i), by = p2.getY(i + 2) - p2.getY(i), bz = p2.getZ(i + 2) - p2.getZ(i);
+    const nx = Math.abs(ay * bz - az * by), ny = Math.abs(az * bx - ax * bz), nz = Math.abs(ax * by - ay * bx);
+    for (let k = 0; k < 3; k++) {
+      const x = p2.getX(i + k), y = p2.getY(i + k), z = p2.getZ(i + k), [u, v] = nx >= ny && nx >= nz ? [z, y] : ny >= nz ? [x, z] : [x, y];
+      uv[(i + k) * 2] = u / T2 + ou;
+      uv[(i + k) * 2 + 1] = v / T2 + ov;
+    }
+  }
+  g.setAttribute("uv", new THREE2.BufferAttribute(uv, 2));
+}
 function mergeColoured(THREE2, parts) {
-  const flat = parts.map((g) => g.index ? g.toNonIndexed() : g);
+  const flat = parts.map((g) => g.index ? g.toNonIndexed() : g), withUV = flat.every((g) => g.attributes.uv), withNormal = flat.every((g) => g.attributes.normal);
   let n = 0;
   for (const g of flat) n += g.attributes.position.count;
-  const pos2 = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  const pos2 = new Float32Array(n * 3), col = new Float32Array(n * 3), uv = withUV ? new Float32Array(n * 2) : null, nor = withNormal ? new Float32Array(n * 3) : null;
   let o = 0;
   for (const g of flat) {
     pos2.set(g.attributes.position.array, o * 3);
     col.set(g.attributes.color.array, o * 3);
+    if (uv) uv.set(g.attributes.uv.array, o * 2);
+    if (nor) nor.set(g.attributes.normal.array, o * 3);
     o += g.attributes.position.count;
   }
   for (const g of parts) g.dispose();
@@ -99215,7 +101062,9 @@ function mergeColoured(THREE2, parts) {
   const out2 = new THREE2.BufferGeometry();
   out2.setAttribute("position", new THREE2.BufferAttribute(pos2, 3));
   out2.setAttribute("color", new THREE2.BufferAttribute(col, 3));
-  out2.computeVertexNormals();
+  if (uv) out2.setAttribute("uv", new THREE2.BufferAttribute(uv, 2));
+  if (nor) out2.setAttribute("normal", new THREE2.BufferAttribute(nor, 3));
+  else out2.computeVertexNormals();
   out2.computeBoundingSphere();
   return out2;
 }
@@ -99249,7 +101098,7 @@ function createKilnEffects(THREE2, world2) {
   smokeGeo.boundingSphere = new THREE2.Sphere(new THREE2.Vector3(0, 2, 0), 6);
   const shown = /* @__PURE__ */ new Map();
   let frame3 = 0;
-  function make(id2) {
+  function make2(id2) {
     const group = new THREE2.Group();
     group.name = "kiln-burning:" + id2;
     const glow = new THREE2.Mesh(glowGeo, glowMat);
@@ -99262,13 +101111,13 @@ function createKilnEffects(THREE2, world2) {
     world2.scene.add(group);
     return { group, glow, smoke, seen: 0 };
   }
-  const warm = make("warm");
+  const warm = make2("warm");
   warm.group.position.set(0, -1e4, 0);
   world2.prepareShaders?.(warm.group);
   function set2(id2, { mouth, crown }) {
     let e = shown.get(id2);
     if (!e) {
-      e = make(id2);
+      e = make2(id2);
       shown.set(id2, e);
     }
     e.seen = frame3;
@@ -99313,10 +101162,10 @@ var RACK = Object.freeze({
   width: 1.8,
   pole: 1.46
 });
-var clamp69 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp70 = (x, a, b) => Math.max(a, Math.min(b, x));
 function createRackState(data = null) {
   const pieces = [];
-  for (const p2 of Array.isArray(data?.pieces) ? data.pieces : []) if (RACK.dries[p2?.id] && pieces.length < RACK.capacity) pieces.push({ id: p2.id, t: clamp69(Number.isFinite(p2.t) ? p2.t : 0, 0, RACK.time) });
+  for (const p2 of Array.isArray(data?.pieces) ? data.pieces : []) if (RACK.dries[p2?.id] && pieces.length < RACK.capacity) pieces.push({ id: p2.id, t: clamp70(Number.isFinite(p2.t) ? p2.t : 0, 0, RACK.time) });
   return { pieces };
 }
 function serializeRack(r) {
@@ -99361,11 +101210,20 @@ function rackLeft(r, rate = 1) {
   for (const p2 of r.pieces) left = Math.max(left, RACK.time - p2.t);
   return rate > 0 ? left / rate : Infinity;
 }
+function rackNext(r, rate = 1) {
+  let left = Infinity;
+  for (const p2 of r.pieces) if (!pieceDry(p2)) left = Math.min(left, RACK.time - p2.t);
+  return rate > 0 && Number.isFinite(left) ? left / rate : left === Infinity ? 0 : Infinity;
+}
+function rackTimes(r, rate = 1) {
+  const next = Math.ceil(rackNext(r, rate)), last2 = Math.ceil(rackLeft(r, rate));
+  return next > 0 && last2 - next >= 3 ? `次は ${next} 秒・全部は ${last2} 秒` : `${last2} 秒`;
+}
 function rackVerb(r, carried, rate = 1) {
   const ready = rackReady(r), raw = Object.keys(RACK.dries).reduce((n, id2) => n + (carried?.[id2] || 0), 0);
   if (ready > 0) return `干した物を取る（${ready}）` + (raw > 0 ? "・掛ける" : "");
   if (raw > 0 && rackSpace(r) > 0) return `肉や魚を掛ける（${Math.min(raw, rackSpace(r))}）`;
-  if (r.pieces.length) return rate > 0 ? `干している（あと ${Math.ceil(rackLeft(r, rate))} 秒）` : "雨で乾かない（タープの下なら乾く）";
+  if (r.pieces.length) return rate > 0 ? `干している（あと ${rackTimes(r, rate)}）` : "雨で乾かない（タープの下なら乾く）";
   return "生肉や川魚を掛けて干す（持っていない）";
 }
 var PIECE_TINTS = Object.freeze({ meat: Object.freeze([[1, 1, 1], [0.3, 0.6, 0.35]]), fish: Object.freeze([[1, 1, 1], [0.78, 0.55, 0.36]]) });
@@ -99429,7 +101287,7 @@ function rackPieceGeometries(THREE2, poleRadius = 0.036) {
     body2.deleteAttribute("uv");
     body2.scale(1, 1, 0.42);
     body2.translate(0, top, 0);
-    const shade3 = (g, fn) => {
+    const shade4 = (g, fn) => {
       const p2 = g.attributes.position, c2 = new Float32Array(p2.count * 3);
       for (let i = 0; i < p2.count; i++) {
         const [r, gg, b] = fn(p2.getX(i), p2.getY(i), p2.getZ(i));
@@ -99440,7 +101298,7 @@ function rackPieceGeometries(THREE2, poleRadius = 0.036) {
       g.setAttribute("color", new THREE2.BufferAttribute(c2, 3));
       return g;
     };
-    shade3(body2, (x) => {
+    shade4(body2, (x) => {
       const back = Math.max(0, Math.min(1, 0.5 + x / 0.09));
       return [0.44 - 0.26 * back, 0.47 - 0.24 * back, 0.46 - 0.2 * back];
     });
@@ -99448,15 +101306,15 @@ function rackPieceGeometries(THREE2, poleRadius = 0.036) {
     const tail = new THREE2.ExtrudeGeometry(lobes, { depth: 6e-3, bevelEnabled: false });
     tail.deleteAttribute("uv");
     tail.translate(0, top - 4e-3, -3e-3);
-    shade3(tail, (x, y) => [0.26 + (y - top) * 1.5, 0.3 + (y - top) * 1.5, 0.32 + (y - top) * 1.5]);
+    shade4(tail, (x, y) => [0.26 + (y - top) * 1.5, 0.3 + (y - top) * 1.5, 0.32 + (y - top) * 1.5]);
     const loop2 = new THREE2.TorusGeometry(poleRadius + 6e-3, 6e-3, 4, 10);
     loop2.deleteAttribute("uv");
     loop2.rotateY(Math.PI / 2);
-    shade3(loop2, () => [0.8, 0.72, 0.55]);
+    shade4(loop2, () => [0.8, 0.72, 0.55]);
     const tie = new THREE2.CylinderGeometry(5e-3, 5e-3, -top - poleRadius + 0.01, 4, 1);
     tie.deleteAttribute("uv");
     tie.translate(0, (top - poleRadius) / 2, 0);
-    shade3(tie, () => [0.8, 0.72, 0.55]);
+    shade4(tie, () => [0.8, 0.72, 0.55]);
     return mergeNonIndexed(THREE2, [body2, tail, loop2, tie]);
   })();
   return { meat, fish };
@@ -99498,7 +101356,7 @@ function showRackPieces(THREE2, meshes, r) {
   r.pieces.forEach((piece, i) => {
     const mesh2 = meshes[piece.id];
     if (!mesh2) return;
-    const dry = clamp69(piece.t / RACK.time, 0, 1), s = pieceSlot(i, dry);
+    const dry = clamp70(piece.t / RACK.time, 0, 1), s = pieceSlot(i, dry);
     _m3.e.set(piece.id === "fish" ? s.swing : 0, piece.id === "fish" ? s.yaw : s.yaw * 0.3, piece.id === "fish" ? 0 : s.swing * 0.5);
     _m3.q.setFromEuler(_m3.e);
     _m3.p.set(s.x, s.y, s.z);
@@ -99517,7 +101375,481 @@ function showRackPieces(THREE2, meshes, r) {
     mesh2.visible = mesh2.count > 0;
   }
 }
-var rackShowKey = (r) => r.pieces.map((p2) => p2.id[0] + Math.floor(clamp69(p2.t / RACK.time, 0, 1) * 10)).join("");
+var rackShowKey = (r) => r.pieces.map((p2) => p2.id[0] + Math.floor(clamp70(p2.t / RACK.time, 0, 1) * 10)).join("");
+
+// survival-livewell.js
+var LIVEWELL = Object.freeze({
+  // Its staves' radius at the foot and the rim (m), its height, where its water stands, how many staves.
+  foot: 0.4,
+  rim: 0.47,
+  height: 0.6,
+  water: 0.52,
+  staves: 16,
+  slots: 8,
+  // How many of each are seen in it at most.
+  shown: Object.freeze({ fish: 3, crab: 3, frog: 2 })
+});
+var TAU50 = Math.PI * 2;
+function livewellGeometries(THREE2) {
+  const L4 = LIVEWELL, parts = [];
+  let s = 11;
+  const rnd3 = () => {
+    s = s * 1664525 + 1013904223 >>> 0;
+    return s / 4294967296;
+  };
+  for (let i = 0; i < L4.staves; i++) {
+    const a0 = i / L4.staves * TAU50 + 35e-4, a1 = (i + 1) / L4.staves * TAU50 - 35e-4, shade4 = 0.8 + rnd3() * 0.3, top = L4.height - rnd3() * 0.025;
+    const ring2 = (a, y) => {
+      const k = y / L4.height, bulge = Math.sin(k * Math.PI) * 0.018, r = L4.foot + (L4.rim - L4.foot) * k + bulge;
+      return [Math.sin(a) * r, y, Math.cos(a) * r];
+    };
+    const pos2 = [], col = [];
+    const quad = (p0, p1, p2, p3, c2) => {
+      pos2.push(...p0, ...p1, ...p2, ...p0, ...p2, ...p3);
+      for (let k = 0; k < 6; k++) col.push(...c2);
+    };
+    const outer = [0.5 * shade4, 0.33 * shade4, 0.19 * shade4], inner = [0.28 * shade4, 0.19 * shade4, 0.11 * shade4], edge2 = [0.58 * shade4, 0.42 * shade4, 0.27 * shade4];
+    const ys = [0, top * 0.5, top], thick = 0.025;
+    for (let k = 0; k < 2; k++) {
+      const [ya, yb] = [ys[k], ys[k + 1]];
+      quad(ring2(a0, ya), ring2(a1, ya), ring2(a1, yb), ring2(a0, yb), outer);
+      const ia = ring2(a0, ya).map((v, j) => j === 1 ? v : v * (1 - thick / L4.foot)), ib = ring2(a1, ya).map((v, j) => j === 1 ? v : v * (1 - thick / L4.foot));
+      const ic = ring2(a1, yb).map((v, j) => j === 1 ? v : v * (1 - thick / L4.rim)), id2 = ring2(a0, yb).map((v, j) => j === 1 ? v : v * (1 - thick / L4.rim));
+      quad(ib, ia, id2, ic, inner);
+    }
+    const o0 = ring2(a0, top), o1 = ring2(a1, top), i0 = o0.map((v, j) => j === 1 ? v : v * (1 - thick / L4.rim)), i1 = o1.map((v, j) => j === 1 ? v : v * (1 - thick / L4.rim));
+    quad(o0, o1, i1, i0, edge2);
+    const g = new THREE2.BufferGeometry();
+    g.setAttribute("position", new THREE2.Float32BufferAttribute(pos2, 3));
+    g.setAttribute("color", new THREE2.Float32BufferAttribute(col, 3));
+    g.computeVertexNormals();
+    parts.push(g);
+  }
+  {
+    const g = new THREE2.CircleGeometry(L4.foot - 0.02, L4.staves);
+    g.rotateX(-Math.PI / 2);
+    g.translate(0, 0.04, 0);
+    g.deleteAttribute("uv");
+    const n = g.attributes.position.count;
+    g.setAttribute("color", new THREE2.Float32BufferAttribute(new Array(n * 3).fill(0.13), 3));
+    parts.push(g.toNonIndexed());
+    g.dispose();
+  }
+  const staves = merge(THREE2, parts);
+  const hoops = [];
+  for (const y of [0.13, 0.45]) {
+    const k = y / L4.height, r = L4.foot + (L4.rim - L4.foot) * k + Math.sin(k * Math.PI) * 0.018 + 0.012;
+    const g = new THREE2.TorusGeometry(r, 0.014, 5, 32);
+    g.rotateX(Math.PI / 2);
+    g.translate(0, y, 0);
+    g.deleteAttribute("uv");
+    hoops.push(g.toNonIndexed());
+    g.dispose();
+  }
+  const rope = merge(THREE2, hoops.map((g) => {
+    const n = g.attributes.position.count;
+    g.setAttribute("color", new THREE2.Float32BufferAttribute(new Array(n * 3).fill(1), 3));
+    return g;
+  }));
+  const water = new THREE2.CircleGeometry(L4.rim - 0.03, 24);
+  water.rotateX(-Math.PI / 2);
+  water.translate(0, L4.water, 0);
+  return { staves, rope, water };
+}
+function merge(THREE2, parts) {
+  let n = 0;
+  for (const g of parts) n += g.attributes.position.count;
+  const pos2 = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  let o = 0;
+  for (const g of parts) {
+    if (!g.attributes.normal) g.computeVertexNormals();
+    pos2.set(g.attributes.position.array, o * 3);
+    nor.set(g.attributes.normal.array, o * 3);
+    col.set(g.attributes.color.array, o * 3);
+    o += g.attributes.position.count;
+    g.dispose();
+  }
+  const out2 = new THREE2.BufferGeometry();
+  out2.setAttribute("position", new THREE2.BufferAttribute(pos2, 3));
+  out2.setAttribute("normal", new THREE2.BufferAttribute(nor, 3));
+  out2.setAttribute("color", new THREE2.BufferAttribute(col, 3));
+  out2.computeBoundingSphere();
+  return out2;
+}
+function livewellShown(tub, counts, time, out2 = { fish: [], shore: [] }) {
+  const L4 = LIVEWELL, { x, y, z, yaw: yaw2 = 0, seed = 0 } = tub;
+  const at = (r, a, h) => ({ x: x + Math.sin(a + yaw2) * r, y: y + h, z: z + Math.cos(a + yaw2) * r });
+  const fish = Math.min(L4.shown.fish, counts.fish_live || 0), crabs = Math.min(L4.shown.crab, counts.crab || 0), frogs = Math.min(L4.shown.frog, counts.frog || 0);
+  for (let i = 0; i < fish; i++) {
+    const dir = (i + seed) % 2 ? 1 : -1, a = time * (0.55 + i * 0.12) * dir + i * 2.1 + seed, r = 0.2 + 0.06 * Math.sin(time * 0.3 + i), p2 = at(r, a, L4.water - 0.14 - i * 0.07);
+    out2.fish.push({ kind: i % 2 ? "carp" : "trout", ...p2, yaw: a + yaw2 + dir * Math.PI / 2, size: 0.2 + i * 0.025, bend: -dir * 0.1 });
+  }
+  for (let i = 0; i < crabs; i++) {
+    const a = i * 2.2 + seed * 1.7, p2 = at(0.17 + i % 2 * 0.08, a, 0.05);
+    out2.shore.push({ kind: "crab", ...p2, yaw: a + yaw2 + 1.2 + Math.sin(time * 0.2 + i) * 0.4, size: 0.1 + i % 2 * 0.015 });
+  }
+  for (let i = 0; i < frogs; i++) {
+    const a = Math.PI * 0.75 + i * 1.9 + seed, p2 = at(L4.rim - 0.02, a, L4.height + 2e-3);
+    out2.shore.push({ kind: "frog", ...p2, yaw: a + yaw2 + Math.PI, size: 0.075 });
+  }
+  return out2;
+}
+
+// survival-traps.js
+var TRAPS = Object.freeze({
+  // Seconds of daylight (the game's clock) before one is taken, as far as the trees round it allow.
+  time: Object.freeze({ bird: Object.freeze([140, 400]), squirrel: Object.freeze([180, 480]) }),
+  // Nothing comes while someone stands this near (m); the daylight they come in (the sky's 0..1).
+  near: 13,
+  daylight: 0.3,
+  // What a trap wants round it: a bird trap two trees (or more) within 14 m, a squirrel trap a tall tree within 10 m.
+  habitat: Object.freeze({ bird: Object.freeze({ r: 14, trees: 2, h: 0 }), squirrel: Object.freeze({ r: 10, trees: 1, h: 8 }) }),
+  // The bird trap's box: its side, layers, the lift of its front when set (rad).
+  box: Object.freeze({ side: 0.46, layers: 8, step: 0.03, stick: 0.011, lift: 0.36 }),
+  // The squirrel trap: its length, width, height; the door's travel.
+  crate: Object.freeze({ length: 0.74, width: 0.26, height: 0.25, door: 0.25 }),
+  // The cage: its radius, height, the perch's height, how many of each are seen in it.
+  // v145 (the user: "小鳥やリスのかごは見やすいように目線の高さになるような作りにして"): on a stand, its floor `stand` m up -
+  // the birds on the perch about the eyes' height, the squirrels just under it.
+  cage: Object.freeze({ radius: 0.31, height: 0.64, perch: 0.3, slots: 6, shown: Object.freeze({ bird: 3, squirrel: 2 }), stand: 1.12 })
+});
+var TAU51 = Math.PI * 2;
+var BARK = [0.17, 0.12, 0.075];
+var BARK2 = [0.22, 0.16, 0.1];
+var BOARD = [0.4, 0.29, 0.17];
+var ROPE = [0.42, 0.35, 0.22];
+var BERRY = [0.5, 0.05, 0.08];
+function stick2(THREE2, a, b, r, colour, sides = 5) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], len3 = Math.hypot(dx, dy, dz) || 1e-4;
+  const g = new THREE2.CylinderGeometry(r * 0.88, r, len3, sides, 1, false).toNonIndexed();
+  g.deleteAttribute("uv");
+  const q = new THREE2.Quaternion().setFromUnitVectors(new THREE2.Vector3(0, 1, 0), new THREE2.Vector3(dx / len3, dy / len3, dz / len3));
+  g.applyQuaternion(q);
+  g.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
+  return coloured(THREE2, g, colour);
+}
+function box4(THREE2, w, h, d, x, y, z, colour) {
+  const g = new THREE2.BoxGeometry(w, h, d).toNonIndexed();
+  g.deleteAttribute("uv");
+  g.translate(x, y, z);
+  return coloured(THREE2, g, colour);
+}
+function ball(THREE2, r, x, y, z, colour) {
+  const g = new THREE2.IcosahedronGeometry(r, 1);
+  g.deleteAttribute("uv");
+  g.translate(x, y, z);
+  return coloured(THREE2, g, colour);
+}
+function coloured(THREE2, g, colour) {
+  const n = g.attributes.position.count, c2 = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) c2.set(colour, i * 3);
+  g.setAttribute("color", new THREE2.BufferAttribute(c2, 3));
+  return g;
+}
+function merge2(THREE2, parts) {
+  let n = 0;
+  for (const g of parts) n += g.attributes.position.count;
+  const pos2 = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  let o = 0;
+  for (const g of parts) {
+    if (!g.attributes.normal) g.computeVertexNormals();
+    pos2.set(g.attributes.position.array, o * 3);
+    nor.set(g.attributes.normal.array, o * 3);
+    col.set(g.attributes.color.array, o * 3);
+    o += g.attributes.position.count;
+    g.dispose();
+  }
+  const out2 = new THREE2.BufferGeometry();
+  out2.setAttribute("position", new THREE2.BufferAttribute(pos2, 3));
+  out2.setAttribute("normal", new THREE2.BufferAttribute(nor, 3));
+  out2.setAttribute("color", new THREE2.BufferAttribute(col, 3));
+  out2.computeBoundingSphere();
+  return out2;
+}
+function shade3(colour, rnd3, k = 0.18) {
+  const f15 = 1 - k / 2 + rnd3() * k;
+  return colour.map((c2) => c2 * f15);
+}
+function random11(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = s * 1664525 + 1013904223 >>> 0;
+    return s / 4294967296;
+  };
+}
+function trapGeometries(THREE2) {
+  const B2 = TRAPS.box, C3 = TRAPS.crate, K = TRAPS.cage, rnd3 = random11(29);
+  const sticks = [];
+  for (let l = 0; l < B2.layers; l++) {
+    const inset = l * 0.02, y = B2.stick + l * B2.step, lo = inset, hi = B2.side - inset, over = 0.03;
+    for (const at of [lo + B2.stick, hi - B2.stick]) {
+      const wob = (rnd3() - 0.5) * 0.01;
+      if (l % 2 === 0) sticks.push(stick2(THREE2, [lo - over - B2.side / 2, y, at + wob], [hi + over - B2.side / 2, y + wob, at - wob], B2.stick * (0.85 + rnd3() * 0.3), shade3(rnd3() < 0.5 ? BARK : BARK2, rnd3)));
+      else sticks.push(stick2(THREE2, [at + wob - B2.side / 2, y, lo - over], [at - wob - B2.side / 2, y + wob, hi + over], B2.stick * (0.85 + rnd3() * 0.3), shade3(rnd3() < 0.5 ? BARK : BARK2, rnd3)));
+    }
+  }
+  const top = B2.stick + (B2.layers - 1) * B2.step + B2.stick * 1.6, tin = (B2.layers - 1) * 0.02;
+  for (let k = 0; k < 5; k++) {
+    const z = tin + 0.02 + k * (B2.side - 2 * tin - 0.04) / 4;
+    sticks.push(stick2(THREE2, [tin - B2.side / 2 - 0.01, top, z], [B2.side / 2 - tin + 0.01, top, z + (rnd3() - 0.5) * 0.01], B2.stick * 0.8, shade3(BARK2, rnd3)));
+  }
+  for (const [x, z] of [[-1, 0], [1, 0], [-1, 1], [1, 1]]) for (const l of [1, 3]) sticks.push(ball(THREE2, 0.012, x * (B2.side / 2 - l * 0.02 - 0.012), B2.stick + l * B2.step + 5e-3, z ? B2.side - l * 0.02 - 0.012 : l * 0.02 + 0.012, ROPE));
+  const boxGeo = merge2(THREE2, sticks);
+  const prop2 = merge2(THREE2, [stick2(THREE2, [0, 0, 0], [0, 1, 0], 9e-3, BARK2), stick2(THREE2, [-0.03, 0.78, 0], [0.03, 0.82, 0], 6e-3, BARK)]);
+  const bait = merge2(THREE2, [ball(THREE2, 0.012, -0.03, 0.012, 0.02, BERRY), ball(THREE2, 0.011, 0.02, 0.011, -0.01, BERRY), ball(THREE2, 0.012, 0, 0.012, 0.04, shade3(BERRY, rnd3)), ball(THREE2, 0.01, -0.05, 0.01, -0.02, BERRY)]);
+  const L4 = C3.length, W4 = C3.width, H = C3.height, crate = [];
+  crate.push(box4(THREE2, W4 + 0.02, 0.02, L4, 0, 0.01, 0, shade3(BOARD, rnd3)), box4(THREE2, W4 + 0.03, 0.02, L4 + 0.02, 0, H, 0, shade3(BOARD, rnd3)), box4(THREE2, W4, H, 0.02, 0, H / 2, -L4 / 2 + 0.01, shade3(BOARD, rnd3, 0.1)));
+  for (const side2 of [-1, 1]) {
+    crate.push(stick2(THREE2, [side2 * W4 / 2, 0.02, -L4 / 2], [side2 * W4 / 2, 0.02, L4 / 2], 0.01, shade3(BARK, rnd3)), stick2(THREE2, [side2 * W4 / 2, H - 0.01, -L4 / 2], [side2 * W4 / 2, H - 0.01, L4 / 2], 0.01, shade3(BARK, rnd3)));
+    for (let k = 0; k <= 9; k++) {
+      const z = -L4 / 2 + 0.03 + k * (L4 - 0.06) / 9;
+      crate.push(stick2(THREE2, [side2 * W4 / 2, 0.02, z], [side2 * W4 / 2, H - 0.01, z + (rnd3() - 0.5) * 6e-3], 75e-4, shade3(BARK2, rnd3)));
+    }
+    crate.push(stick2(THREE2, [side2 * (W4 / 2 + 0.012), 0, L4 / 2 - 0.015], [side2 * (W4 / 2 + 0.012), H + C3.door + 0.04, L4 / 2 - 0.015], 9e-3, shade3(BARK, rnd3)));
+  }
+  crate.push(stick2(THREE2, [-W4 / 2 - 0.02, H + C3.door + 0.03, L4 / 2 - 0.015], [W4 / 2 + 0.02, H + C3.door + 0.03, L4 / 2 - 0.015], 8e-3, shade3(BARK, rnd3)));
+  crate.push(ball(THREE2, 0.016, 0, 0.035, -L4 / 2 + 0.08, [0.38, 0.24, 0.1]));
+  const crateGeo = merge2(THREE2, crate);
+  const door = merge2(THREE2, [box4(THREE2, W4 - 0.01, H - 0.02, 0.016, 0, (H - 0.02) / 2, 0, shade3(BOARD, rnd3, 0.1)), box4(THREE2, W4 - 0.04, 0.02, 0.022, 0, H - 0.05, 0, shade3(BARK, rnd3))]);
+  const cage = [], R = K.radius, Hc = K.height, ribs = 12, curve = (t) => {
+    const a = t * Math.PI / 2;
+    return t < 0.6 ? [R, 0.03 + t / 0.6 * (Hc * 0.58)] : [R * Math.cos((t - 0.6) / 0.4 * Math.PI / 2), 0.03 + Hc * 0.58 + Math.sin((t - 0.6) / 0.4 * Math.PI / 2) * Hc * 0.42];
+  };
+  for (let i = 0; i < ribs; i++) {
+    const a = i / ribs * TAU51, steps = 7;
+    for (let k = 0; k < steps; k++) {
+      const [r0, y0] = curve(k / steps), [r1, y1] = curve((k + 1) / steps);
+      cage.push(stick2(THREE2, [Math.cos(a) * r0, y0, Math.sin(a) * r0], [Math.cos(a) * r1, y1, Math.sin(a) * r1], 75e-4, shade3(BARK2, rnd3, 0.12), 4));
+    }
+  }
+  for (const t of [0, 0.25, 0.5, 0.72, 0.86]) {
+    const [r, y] = curve(t), n = 24;
+    for (let k = 0; k < n; k++) {
+      const a0 = k / n * TAU51, a1 = (k + 1) / n * TAU51;
+      cage.push(stick2(THREE2, [Math.cos(a0) * (r + 6e-3), y, Math.sin(a0) * (r + 6e-3)], [Math.cos(a1) * (r + 6e-3), y, Math.sin(a1) * (r + 6e-3)], t ? 65e-4 : 0.011, shade3(t ? BARK : BARK2, rnd3, 0.1), 4));
+    }
+  }
+  {
+    const g = new THREE2.CylinderGeometry(R + 0.01, R + 0.02, 0.03, 24, 1, false).toNonIndexed();
+    g.deleteAttribute("uv");
+    g.translate(0, 0.015, 0);
+    cage.push(coloured(THREE2, g, shade3(BOARD, rnd3, 0.05)));
+  }
+  cage.push(stick2(THREE2, [-R * 0.92, K.perch, 0.02], [R * 0.92, K.perch, -0.02], 0.011, shade3(BARK, rnd3)));
+  {
+    const n = 10;
+    for (let k = 0; k < n; k++) {
+      const a0 = k / n * TAU51, a1 = (k + 1) / n * TAU51;
+      cage.push(stick2(THREE2, [Math.cos(a0) * 0.035, Hc + 0.045 + Math.sin(a0) * 0.035, 0], [Math.cos(a1) * 0.035, Hc + 0.045 + Math.sin(a1) * 0.035, 0], 6e-3, ROPE, 4));
+    }
+  }
+  for (const g of cage) g.translate(0, K.stand, 0);
+  const T2 = K.stand, leg = 0.29, foot = 0.34;
+  for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) cage.push(stick2(THREE2, [sx * foot, 0, sz * foot], [sx * leg, T2 - 0.035, sz * leg], 0.022, shade3(BARK2, rnd3, 0.12), 7));
+  for (const y of [0.32, T2 - 0.2]) {
+    const k = (leg - foot) * (y / T2) + foot;
+    for (const [a, b] of [[[-1, -1], [1, -1]], [[1, -1], [1, 1]], [[1, 1], [-1, 1]], [[-1, 1], [-1, -1]]]) cage.push(stick2(THREE2, [a[0] * k, y, a[1] * k], [b[0] * k, y + (rnd3() - 0.5) * 0.01, b[1] * k], 0.013, shade3(BARK, rnd3), 5));
+  }
+  cage.push(box4(THREE2, 0.74, 0.035, 0.74, 0, T2 - 0.0175, 0, shade3(BOARD, rnd3, 0.06)));
+  const cageGeo = merge2(THREE2, cage);
+  return { bird: { box: boxGeo, prop: prop2, bait }, squirrel: { crate: crateGeo, door }, cage: cageGeo };
+}
+function poseTrap(parts, sprung) {
+  const B2 = TRAPS.box, C3 = TRAPS.crate;
+  if (parts.hinge) {
+    parts.hinge.rotation.x = sprung ? 0 : -B2.lift;
+    const front = B2.side, lift = Math.sin(B2.lift) * front;
+    if (sprung) {
+      parts.prop.position.set(0.1, 0.01, B2.side / 2 + 0.06);
+      parts.prop.rotation.set(Math.PI / 2, 0, 0.45, "YXZ");
+      parts.prop.scale.set(1, lift + 0.02, 1);
+    } else {
+      parts.prop.position.set(0, 0, -B2.side / 2 + Math.cos(B2.lift) * front - 0.015);
+      parts.prop.rotation.set(-0.08, 0, 0);
+      parts.prop.scale.set(1, lift + 0.02, 1);
+    }
+  }
+  if (parts.door) parts.door.position.set(0, sprung ? 0 : C3.door, C3.length / 2 - 0.015);
+}
+function trapShown(trap, caught, out2 = []) {
+  if (!caught) return out2;
+  const { x, y, z, yaw: yaw2 = 0 } = trap, kind = caught.kind;
+  if (kind === "bird") out2.push({ kind: "bird", x: x + Math.sin(yaw2) * 0.02, y: y + 5e-3, z: z + Math.cos(yaw2) * 0.02, yaw: yaw2 + (caught.turn ?? 0.6), look: caught.look ?? 0, scale: 0.8 });
+  else out2.push({ kind: "squirrel", x, y: y + 0.02, z, yaw: yaw2 + (caught.turn ?? 0) * 0.3, crouch: true });
+  return out2;
+}
+function cageShown(cage, counts, looks = [], out2 = []) {
+  const K = TRAPS.cage, { x, y, z, yaw: yaw2 = 0 } = cage, at = (lx, ly, lz) => ({ x: x + Math.cos(yaw2) * lx + Math.sin(yaw2) * lz, y: y + K.stand + ly, z: z - Math.sin(yaw2) * lx + Math.cos(yaw2) * lz });
+  const birds = Math.min(K.shown.bird, counts.bird || 0), squirrels = Math.min(K.shown.squirrel, counts.squirrel || 0);
+  for (let i = 0; i < birds; i++) {
+    const lx = (i - (birds - 1) / 2) * 0.17;
+    out2.push({ kind: "bird", ...at(lx, K.perch + 0.012, 0), yaw: yaw2 + (i % 2 ? Math.PI : 0) + (i - 1) * 0.25, look: looks[i] ?? i % 4, scale: 0.72 });
+  }
+  for (let i = 0; i < squirrels; i++) {
+    const lz = squirrels > 1 ? i ? 0.12 : -0.12 : 0.02;
+    out2.push({ kind: "squirrel", ...at(i ? -0.06 : 0.07, 0.03, lz), yaw: yaw2 + (i ? 2.6 : 0.5) });
+  }
+  return out2;
+}
+
+// survival-piles.js
+var PILES = Object.freeze({
+  logpile: Object.freeze({ item: "log", slots: 4, shown: 33 }),
+  rockpile: Object.freeze({ item: "rocks", slots: 3, shown: 46 }),
+  twigpile: Object.freeze({ item: "twigs", slots: 3, shown: 15 })
+});
+var pileCapacity = (kind) => PILES[kind].slots * (ITEMS[PILES[kind].item]?.stack ?? 20);
+function pileShown(kind, count2) {
+  if (!(count2 > 0)) return 0;
+  const P = PILES[kind];
+  return Math.max(1, Math.min(P.shown, Math.ceil(count2 / pileCapacity(kind) * P.shown)));
+}
+var TAU52 = Math.PI * 2;
+var BARK3 = [0.16, 0.11, 0.07];
+var BARK22 = [0.21, 0.15, 0.09];
+var WOOD = [0.55, 0.41, 0.25];
+var ROPE2 = [0.42, 0.35, 0.22];
+function random12(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = s * 1664525 + 1013904223 >>> 0;
+    return s / 4294967296;
+  };
+}
+var hash15 = (i, k) => {
+  const h = Math.sin(i * 127.1 + k * 311.7) * 43758.5453;
+  return h - Math.floor(h);
+};
+function coloured2(THREE2, g, colour) {
+  const n = g.attributes.position.count, c2 = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) c2.set(typeof colour === "function" ? colour(i, g) : colour, i * 3);
+  g.setAttribute("color", new THREE2.BufferAttribute(c2, 3));
+  return g;
+}
+function stick3(THREE2, a, b, r, colour, sides = 6) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], len3 = Math.hypot(dx, dy, dz) || 1e-4;
+  const g = new THREE2.CylinderGeometry(r * 0.9, r, len3, sides, 1, false).toNonIndexed();
+  g.deleteAttribute("uv");
+  g.applyQuaternion(new THREE2.Quaternion().setFromUnitVectors(new THREE2.Vector3(0, 1, 0), new THREE2.Vector3(dx / len3, dy / len3, dz / len3)));
+  g.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
+  return coloured2(THREE2, g, colour);
+}
+function merge3(THREE2, parts, { uv = false } = {}) {
+  let n = 0;
+  for (const g of parts) n += g.attributes.position.count;
+  const pos2 = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3), tex = uv ? new Float32Array(n * 2) : null;
+  let o = 0;
+  for (const g of parts) {
+    if (!g.attributes.normal) g.computeVertexNormals();
+    pos2.set(g.attributes.position.array, o * 3);
+    nor.set(g.attributes.normal.array, o * 3);
+    col.set(g.attributes.color.array, o * 3);
+    if (tex && g.attributes.uv) tex.set(g.attributes.uv.array, o * 2);
+    o += g.attributes.position.count;
+    g.dispose();
+  }
+  const out2 = new THREE2.BufferGeometry();
+  out2.setAttribute("position", new THREE2.BufferAttribute(pos2, 3));
+  out2.setAttribute("normal", new THREE2.BufferAttribute(nor, 3));
+  out2.setAttribute("color", new THREE2.BufferAttribute(col, 3));
+  if (tex) out2.setAttribute("uv", new THREE2.BufferAttribute(tex, 2));
+  out2.computeBoundingSphere();
+  return out2;
+}
+function stoneGeometry(THREE2, seed, size = 0.13) {
+  const rnd3 = random12(seed * 977 + 5), g = new THREE2.IcosahedronGeometry(1, 1), p2 = g.attributes.position, v = new THREE2.Vector3();
+  const sx = size * (0.9 + rnd3() * 0.4), sy = size * (0.55 + rnd3() * 0.25), sz = size * (0.8 + rnd3() * 0.35), cuts = [];
+  for (let k = 0; k < 3; k++) {
+    const a = rnd3() * TAU52, b = (rnd3() - 0.3) * 1.2;
+    cuts.push([Math.cos(a) * Math.cos(b), Math.sin(b), Math.sin(a) * Math.cos(b), 0.7 + rnd3() * 0.2]);
+  }
+  for (let i = 0; i < p2.count; i++) {
+    v.fromBufferAttribute(p2, i);
+    for (const [cx, cy, cz, d] of cuts) {
+      const t = v.x * cx + v.y * cy + v.z * cz;
+      if (t > d) v.addScaledVector({ x: cx, y: cy, z: cz }, d - t);
+    }
+    const wob = 1 + (hash15(i % 12 + seed, 3) - 0.5) * 0.12;
+    p2.setXYZ(i, v.x * sx * wob, Math.max(v.y * sy * wob, -sy * 0.7), v.z * sz * wob);
+  }
+  g.computeVertexNormals();
+  const uv = new Float32Array(p2.count * 2), n = g.attributes.normal;
+  for (let i = 0; i < p2.count; i++) {
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i)), x = p2.getX(i) + seed * 0.37, y = p2.getY(i), z = p2.getZ(i) + seed * 0.19, s = 1 / 1.6;
+    uv[i * 2] = (ay > ax && ay > az ? x : ax > az ? z : x) * s;
+    uv[i * 2 + 1] = (ay > ax && ay > az ? z : y) * s;
+  }
+  g.setAttribute("uv", new THREE2.BufferAttribute(uv, 2));
+  const tone = 0.55 + rnd3() * 0.3, warm = rnd3() * 0.06;
+  return coloured2(THREE2, g, () => [tone + warm, tone + warm * 0.5, tone]);
+}
+function pileGeometries(THREE2) {
+  const rnd3 = random12(41);
+  const frame3 = [];
+  for (const z of [-0.26, 0.26]) frame3.push(stick3(THREE2, [-0.62, 0.045, z], [0.62, 0.045, z + (rnd3() - 0.5) * 0.02], 0.045, BARK22, 7));
+  for (const x of [-0.55, 0.55]) for (const z of [-0.3, 0.3]) frame3.push(stick3(THREE2, [x, 0, z], [x + (rnd3() - 0.5) * 0.03, 0.78, z * 0.96], 0.028, BARK3, 6));
+  const logpileFrame = merge3(THREE2, frame3);
+  const log = new THREE2.CylinderGeometry(0.062, 0.066, 0.8, 10, 1, false).toNonIndexed();
+  log.deleteAttribute("uv");
+  log.rotateX(Math.PI / 2);
+  coloured2(THREE2, log, (i, g) => {
+    const nz = Math.abs(g.attributes.normal.getZ(i));
+    if (nz > 0.9) {
+      const r = Math.hypot(g.attributes.position.getX(i), g.attributes.position.getY(i)) / 0.066;
+      return WOOD.map((c2) => c2 * (r > 0.85 ? 0.6 : 1 - 0.15 * Math.sin(r * 18) ** 2));
+    }
+    return BARK3.map((c2) => c2 * (0.85 + 0.3 * hash15(i, 7)));
+  });
+  const ring2 = [];
+  for (let k = 0; k < 11; k++) {
+    const a = k / 11 * TAU52 + rnd3() * 0.2, s = stoneGeometry(THREE2, 300 + k, 0.12);
+    s.scale(1.15, 0.7, 1.15);
+    s.rotateY(rnd3() * TAU52);
+    s.translate(Math.cos(a) * 0.58, 0.04, Math.sin(a) * 0.58);
+    ring2.push(s);
+  }
+  const rockpileFrame = merge3(THREE2, ring2, { uv: true });
+  const rock = stoneGeometry(THREE2, 77, 0.12);
+  const bearers = [stick3(THREE2, [-0.32, 0.03, -0.3], [-0.3, 0.03, 0.3], 0.03, BARK22), stick3(THREE2, [0.32, 0.03, -0.3], [0.3, 0.03, 0.3], 0.03, BARK22)];
+  const twigpileFrame = merge3(THREE2, bearers);
+  const sheaf = [];
+  for (let k = 0; k < 11; k++) {
+    const a = k / 11 * TAU52 * 1.618, r = 0.018 + 0.022 * Math.sqrt((k + 0.5) / 11), x = Math.cos(a) * r, y = Math.sin(a) * r, bow2 = (rnd3() - 0.5) * 0.02;
+    sheaf.push(stick3(THREE2, [x + bow2, y, -0.37 - rnd3() * 0.04], [x - bow2, y + (rnd3() - 0.5) * 0.01, 0.37 + rnd3() * 0.04], 75e-4 + rnd3() * 4e-3, rnd3() < 0.5 ? BARK3 : BARK22, 5));
+  }
+  for (const z of [-0.2, 0.2]) {
+    const t = new THREE2.TorusGeometry(0.044, 7e-3, 5, 14).toNonIndexed();
+    t.deleteAttribute("uv");
+    t.translate(0, 0, z);
+    sheaf.push(coloured2(THREE2, t, ROPE2));
+  }
+  const bundle2 = merge3(THREE2, sheaf);
+  return { logpile: { frame: logpileFrame, piece: log }, rockpile: { frame: rockpileFrame, piece: rock }, twigpile: { frame: twigpileFrame, piece: bundle2 } };
+}
+var rockSlots = (() => {
+  const layers = [[[0, 1], [0.15, 6], [0.29, 9], [0.42, 12]], [[0, 1], [0.13, 5], [0.26, 8]], [[0, 1], [0.11, 4]]], out2 = [];
+  layers.forEach((rings3, layer) => rings3.forEach(([r, n], ring2) => {
+    for (let k = 0; k < n; k++) out2.push({ layer, r, a: k / n * TAU52 + layer * 0.7 + ring2 * 1.3 });
+  }));
+  return out2.map((o, i) => {
+    const a = o.a + (hash15(i, 1) - 0.5) * 0.25, r = o.r * (0.92 + hash15(i, 2) * 0.16), y = 0.05 + o.layer * 0.085;
+    return { x: Math.cos(a) * r, y, z: Math.sin(a) * r, rx: (hash15(i, 3) - 0.5) * 0.5, ry: hash15(i, 4) * TAU52, rz: (hash15(i, 5) - 0.5) * 0.5, s: 0.8 + hash15(i, 6) * 0.45, key: r + y * 1.6 };
+  }).sort((p2, q) => p2.key - q.key);
+})();
+function pileSlot(kind, i) {
+  if (kind === "logpile") {
+    let row2 = 0, k2 = i;
+    while (k2 >= (row2 % 2 ? 6 : 7)) {
+      k2 -= row2 % 2 ? 6 : 7;
+      row2++;
+    }
+    const n = row2 % 2 ? 6 : 7, x = (k2 - (n - 1) / 2) * 0.134 + (hash15(i, 1) - 0.5) * 0.01;
+    return { x, y: 0.09 + 0.066 + row2 * 0.118, z: (hash15(i, 2) - 0.5) * 0.06, rx: 0, ry: (hash15(i, 3) - 0.5) * 0.06, rz: hash15(i, 4) * TAU52, s: 0.92 + hash15(i, 5) * 0.14 };
+  }
+  if (kind === "rockpile") return rockSlots[Math.min(i, rockSlots.length - 1)];
+  const layer = Math.floor(i / 3), k = i % 3, across2 = layer % 2 === 1, off = (k - 1) * 0.105 + (hash15(i, 1) - 0.5) * 0.015;
+  return { x: across2 ? 0 : off, y: 0.06 + 0.045 + layer * 0.085, z: across2 ? off : 0, rx: 0, ry: (across2 ? Math.PI / 2 : 0) + (hash15(i, 2) - 0.5) * 0.12, rz: hash15(i, 3) * TAU52, s: 0.95 + hash15(i, 4) * 0.1 };
+}
 
 // survival-stations.js
 var STATIONS = Object.freeze({
@@ -99532,9 +101864,21 @@ var STATIONS = Object.freeze({
   // v138: the charcoal kiln (survival-kiln.js): a dome of fieldstones, its mouth toward the one who set it down.
   kiln: Object.freeze({ name: "炭焼きの窯", reach: KILN.reach, radius: 1.15, height: 1.3, size: Object.freeze([2.2, 2.2]) }),
   // v138: the drying rack (survival-rack.js): two crossed-pole trestles and a pole across, the pieces hung from it.
-  rack: Object.freeze({ name: "乾燥棚", reach: RACK.reach, radius: 0.95, height: 1.7, size: Object.freeze([RACK.width, 0.9]) })
+  rack: Object.freeze({ name: "乾燥棚", reach: RACK.reach, radius: 0.95, height: 1.7, size: Object.freeze([RACK.width, 0.9]) }),
+  // v143: the live tub (survival-livewell.js): live crabs, frogs and fish kept alive in it.
+  livewell: Object.freeze({ name: "生け簀", reach: 2.6, radius: 0.55, height: LIVEWELL.height, size: Object.freeze([1, 1]), slots: LIVEWELL.slots }),
+  // v144: the traps for the small birds and the squirrels, and the cage they are kept in (survival-traps.js).
+  birdtrap: Object.freeze({ name: "鳥のわな", reach: 2.2, radius: 0.36, height: 0.32, size: Object.freeze([0.5, 0.5]) }),
+  squirreltrap: Object.freeze({ name: "リスのわな", reach: 2.2, radius: 0.42, height: 0.52, size: Object.freeze([0.34, 0.8]) }),
+  cage: Object.freeze({ name: "かご", reach: 2.6, radius: 0.42, height: TRAPS.cage.stand + TRAPS.cage.height + 0.08, size: Object.freeze([0.8, 0.8]), slots: TRAPS.cage.slots }),
+  // v145: the piles (survival-piles.js): each a store of its one thing, stacked up as high as it holds.
+  logpile: Object.freeze({ name: "木材置き場", reach: 2.8, radius: 0.7, height: 0.8, size: Object.freeze([1.3, 0.7]), slots: PILES.logpile.slots, pile: "log" }),
+  rockpile: Object.freeze({ name: "石置き場", reach: 2.6, radius: 0.66, height: 0.5, size: Object.freeze([1.3, 1.3]), slots: PILES.rockpile.slots, pile: "rocks" }),
+  twigpile: Object.freeze({ name: "枝置き場", reach: 2.6, radius: 0.48, height: 0.55, size: Object.freeze([0.8, 0.9]), slots: PILES.twigpile.slots, pile: "twigs" })
 });
-var clamp70 = (x, a, b) => Math.max(a, Math.min(b, x));
+var KEEPS = Object.freeze({ livewell: Object.freeze(["crab", "frog", "fish"]), cage: Object.freeze(["bird", "squirrel"]) });
+var keeps = (kind, id2) => !!KEEPS[kind] && ITEMS[id2]?.kind === "live" && KEEPS[kind].includes(ITEMS[id2].live.creature);
+var clamp71 = (x, a, b) => Math.max(a, Math.min(b, x));
 function createSurvivalStations(THREE2, world2, { height: height2, fires = null } = {}) {
   const list = [];
   let serial3 = 0, disposed = false;
@@ -99557,7 +101901,7 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
     g.translate(x, y, z);
     return g;
   }
-  function merge(parts) {
+  function merge4(parts) {
     let n = 0, idx = 0;
     for (const g of parts) {
       n += g.attributes.position.count;
@@ -99594,7 +101938,7 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
     p2.push(plank2(0.5, 0.05, D - 0.3, 0.85, -W4 / 2 + 0.45, 0.55, 0));
     p2.push(plank2(0.16, 0.16, 0.55, 0.7, -W4 / 2 + 0.38, 0.64, -0.1, 0, 0, 0), plank2(0.16, 0.16, 0.5, 0.74, -W4 / 2 + 0.55, 0.64, 0.12, 0.3, 0, 0));
     p2.push(plank2(0.05, 0.05, 0.42, 0.88, 0.35, H + 0.03, 0.12, 0.5));
-    return merge(p2);
+    return merge4(p2);
   })();
   const benchStone = (() => {
     const g = new THREE2.DodecahedronGeometry(0.085, 0);
@@ -99618,9 +101962,9 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
     }
     p2.push(plank2(CW - 0.06, 0.04, CD - 0.06, 0.7, 0, 0.04, 0));
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) p2.push(plank2(0.07, h, 0.07, 0.72, sx * (CW / 2 - 0.02), h / 2, sz * (CD / 2 - 0.02)));
-    return merge(p2);
+    return merge4(p2);
   })();
-  const chestLid = merge([plank2(CW + 0.02, LID * 0.45, CD + 0.02, 0.95, 0, LID * 0.22, CD / 2), plank2(CW + 0.02, LID * 0.45, CD * 0.7, 0.9, 0, LID * 0.66, CD / 2, 0, 0, 0)]);
+  const chestLid = merge4([plank2(CW + 0.02, LID * 0.45, CD + 0.02, 0.95, 0, LID * 0.22, CD / 2), plank2(CW + 0.02, LID * 0.45, CD * 0.7, 0.9, 0, LID * 0.66, CD / 2, 0, 0, 0)]);
   const chestBands = (() => {
     const p2 = [];
     for (const sx of [-0.3, 0.3]) {
@@ -99635,7 +101979,13 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
     p2.push(new THREE2.BoxGeometry(0.08, 0.1, 0.02).translate(0, LID * 0.3, CD + 0.022));
     return mergePlain(p2);
   })();
-  const kilnGeo = kilnGeometries(THREE2), kilnStone = new THREE2.MeshStandardMaterial({ name: "kiln-stone", vertexColors: true, roughness: 0.93 }), kilnSoot = new THREE2.MeshStandardMaterial({ name: "kiln-soot", vertexColors: true, roughness: 1 });
+  const rockMaps = world2.terrainMaterial?.userData?.maps, rockPhotos = !!(rockMaps?.cliff && rockMaps?.cliffN);
+  const kilnGeo = kilnGeometries(THREE2), kilnStone = new THREE2.MeshStandardMaterial({
+    name: "kiln-stone",
+    vertexColors: true,
+    roughness: rockPhotos ? 0.97 : 0.93,
+    ...rockPhotos ? { map: rockMaps.cliff, normalMap: rockMaps.cliffN, roughnessMap: rockMaps.cliffR || null, normalScale: new THREE2.Vector2(0.85, 0.85), envMapIntensity: 0.65 } : {}
+  }), kilnSoot = new THREE2.MeshStandardMaterial({ name: "kiln-soot", vertexColors: true, roughness: 1 });
   function pole(a, b, r, tone, seed) {
     const A3 = new THREE2.Vector3(...a), B2 = new THREE2.Vector3(...b), dir = B2.clone().sub(A3), len3 = dir.length();
     const g = new THREE2.CylinderGeometry(r * 0.82, r, len3, 7, 3);
@@ -99661,9 +102011,13 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
       p2.push(plank2(0.1, 0.08, 0.1, 0.45, x, top, 0));
     }
     p2.push(pole([-W4 / 2, top, 0], [W4 / 2, top, 0], 0.036, 1, 9));
-    return merge(p2);
+    return merge4(p2);
   })();
   const rackPieceGeo = rackPieceGeometries(THREE2), rackPieceMat = new THREE2.MeshStandardMaterial({ name: "rack-piece", vertexColors: true, roughness: 0.62 });
+  const tubGeo = livewellGeometries(THREE2), tubWood = new THREE2.MeshStandardMaterial({ name: "livewell-wood", vertexColors: true, roughness: 0.86 }), tubRope = new THREE2.MeshStandardMaterial({ name: "livewell-rope", color: 12163683, roughness: 0.92 });
+  const tubWater = new THREE2.MeshStandardMaterial({ name: "livewell-water", color: 2379868, roughness: 0.06, metalness: 0, transparent: true, opacity: 0.72, depthWrite: false });
+  const trapGeo = trapGeometries(THREE2);
+  const pileGeo = pileGeometries(THREE2), pileBounds = new THREE2.Sphere(new THREE2.Vector3(0, 0.4, 0), 1.1);
   const rackBounds = new THREE2.Sphere(new THREE2.Vector3(0, RACK.pole - 0.2, 0), RACK.width / 2 + 0.2);
   function rackPieces(group) {
     const meshes = {};
@@ -99690,7 +102044,7 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
       }
       if (g.attributes.uv) g.deleteAttribute("uv");
     }
-    return merge(parts.map((g) => g.index ? g : g));
+    return merge4(parts.map((g) => g.index ? g : g));
   }
   const tentModel = () => world2.stories?.kit?.get?.(STATIONS.tent.model) || null;
   function dressTent(group, template3) {
@@ -99715,7 +102069,7 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
       group.add(m);
       return m;
     };
-    let lid = null, pieces = null;
+    let lid = null, pieces = null, trap = null, pile = null;
     if (kind === "tent") {
       const t = tentModel();
       if (t) dressTent(group, t);
@@ -99729,6 +102083,43 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
     } else if (kind === "rack") {
       add4(rackFrame, wood);
       pieces = rackPieces(group);
+    } else if (kind === "livewell") {
+      add4(tubGeo.staves, tubWood);
+      add4(tubGeo.rope, tubRope);
+      const w = add4(tubGeo.water, tubWater);
+      w.castShadow = false;
+      w.renderOrder = 1;
+      w.name = "livewell-water";
+    } else if (kind === "birdtrap") {
+      const hinge = new THREE2.Group();
+      hinge.position.set(0, 0, -TRAPS.box.side / 2);
+      group.add(hinge);
+      const b = new THREE2.Mesh(trapGeo.bird.box, wood);
+      b.castShadow = b.receiveShadow = true;
+      b.name = "birdtrap-box";
+      hinge.add(b);
+      const prop2 = add4(trapGeo.bird.prop, wood);
+      prop2.name = "birdtrap-prop";
+      add4(trapGeo.bird.bait, wood).castShadow = false;
+      trap = { hinge, prop: prop2 };
+      poseTrap(trap, false);
+    } else if (kind === "squirreltrap") {
+      add4(trapGeo.squirrel.crate, wood);
+      const door = add4(trapGeo.squirrel.door, wood);
+      door.name = "squirreltrap-door";
+      trap = { door };
+      poseTrap(trap, false);
+    } else if (kind === "cage") add4(trapGeo.cage, wood).name = "cage";
+    else if (PILES[kind]) {
+      const mat2 = kind === "rockpile" ? kilnStone : wood;
+      add4(pileGeo[kind].frame, mat2);
+      pile = new THREE2.InstancedMesh(pileGeo[kind].piece, mat2, PILES[kind].shown);
+      pile.name = kind + "-pieces";
+      pile.count = 0;
+      pile.castShadow = pile.receiveShadow = true;
+      pile.boundingSphere = pileBounds.clone();
+      pile.instanceMatrix.setUsage(THREE2.DynamicDrawUsage);
+      group.add(pile);
     } else if (world2.ruins?.chestLidded?.getObjectByName(CHEST_LID)) {
       const model = world2.ruins.chestLidded.clone(true);
       model.scale.setScalar(STATIONS.chest.scale);
@@ -99744,26 +102135,43 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
       lw.castShadow = lb2.castShadow = true;
       lid.add(lw, lb2);
     }
-    return { group, lid, pieces };
+    return { group, lid, pieces, trap, pile };
   }
-  const templates = ["workbench", "chest", "kiln", "rack"].map((kind) => {
+  const templates = ["workbench", "chest", "kiln", "rack", "livewell", "birdtrap", "squirreltrap", "cage", "logpile", "rockpile", "twigpile"].map((kind) => {
     const t = makeMesh2(kind, 0, -1e4, 0, 0);
     t.group.visible = false;
     world2.scene.add(t.group);
     return t;
   });
   showRackPieces(THREE2, templates[3].pieces, { pieces: [{ id: "meat", t: 0 }, { id: "fish", t: 0 }] });
+  for (const t of templates) if (t.pile) {
+    t.pile.count = 1;
+    t.pile.setMatrixAt(0, new THREE2.Matrix4());
+  }
   for (const t of templates) world2.prepareShaders?.(t.group);
-  function build(kind, x, z, yaw2 = 0, { id: id2 = kind + ":" + Date.now().toString(36) + ":" + ++serial3, items = null, kiln = null, rack = null } = {}) {
+  function build(kind, x, z, yaw2 = 0, { id: id2 = kind + ":" + Date.now().toString(36) + ":" + ++serial3, items = null, kiln = null, rack = null, trap = null } = {}) {
     const def = STATIONS[kind];
     if (!def) return null;
-    const y = height2(x, z), { group, lid, pieces } = makeMesh2(kind, x, z, y, yaw2);
+    const y = height2(x, z), { group, lid, pieces, trap: trapParts, pile } = makeMesh2(kind, x, z, y, yaw2);
     world2.scene.add(group);
     world2.prepareShaders?.(group, { hide: true });
     const st = { id: id2, kind, def, x, y, z, yaw: yaw2, group, lid, open: 0, opening: false, clearing: { x, z, r: def.radius + 0.45 } };
     (world2.grassClearings ||= []).push(st.clearing);
     world2.grassClearingsVersion = (world2.grassClearingsVersion || 0) + 1;
-    if (kind === "chest") st.store = items ? restoreInventory(items, def.slots) : createInventory(def.slots);
+    if (kind === "chest" || kind === "livewell" || kind === "cage" || def.pile) st.store = items ? restoreInventory(items, def.slots) : createInventory(def.slots);
+    if (def.pile) {
+      st.store.accepts = (id3) => id3 === def.pile;
+      st.pileMesh = pile;
+      st.pileShown = -1;
+      syncPile(st);
+    }
+    if (KEEPS[kind]) st.store.accepts = (id3) => keeps(kind, id3);
+    if (trapParts) {
+      st.trap = { caught: trap?.caught ?? null, timer: Number.isFinite(trap?.timer) ? trap.timer : null, habitat: Number.isFinite(trap?.habitat) ? trap.habitat : null };
+      st.trapParts = trapParts;
+      st.trapShown = !!st.trap.caught;
+      poseTrap(trapParts, st.trapShown);
+    }
     if (kind === "kiln") st.kiln = createKilnState(kiln);
     if (kind === "rack") {
       st.rack = createRackState(rack);
@@ -99780,6 +102188,7 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
     list.splice(i, 1);
     st.group.removeFromParent();
     for (const m of Object.values(st.pieces || {})) m.dispose();
+    st.pileMesh?.dispose();
     const c2 = world2.grassClearings?.indexOf(st.clearing) ?? -1;
     if (c2 >= 0) {
       world2.grassClearings.splice(c2, 1);
@@ -99804,7 +102213,21 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
     return { ok: true, y };
   }
   const ghostMat = new THREE2.MeshBasicMaterial({ color: 10216330, transparent: true, opacity: 0.42, depthWrite: false });
-  const ghosts = { workbench: makeMesh2("workbench", 0, 0, 0, 0).group, chest: makeMesh2("chest", 0, 0, 0, 0).group, kiln: makeMesh2("kiln", 0, 0, 0, 0).group, rack: makeMesh2("rack", 0, 0, 0, 0).group };
+  const ghosts = {
+    /* v145 */
+    logpile: makeMesh2("logpile", 0, 0, 0, 0).group,
+    rockpile: makeMesh2("rockpile", 0, 0, 0, 0).group,
+    twigpile: makeMesh2("twigpile", 0, 0, 0, 0).group,
+    workbench: makeMesh2("workbench", 0, 0, 0, 0).group,
+    chest: makeMesh2("chest", 0, 0, 0, 0).group,
+    kiln: makeMesh2("kiln", 0, 0, 0, 0).group,
+    rack: makeMesh2("rack", 0, 0, 0, 0).group,
+    livewell: makeMesh2("livewell", 0, 0, 0, 0).group,
+    /* v144 */
+    birdtrap: makeMesh2("birdtrap", 0, 0, 0, 0).group,
+    squirreltrap: makeMesh2("squirreltrap", 0, 0, 0, 0).group,
+    cage: makeMesh2("cage", 0, 0, 0, 0).group
+  };
   for (const g of Object.values(ghosts)) {
     g.traverse((o) => {
       if (o.isMesh) {
@@ -99894,6 +102317,21 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
     }
     return dressed;
   }
+  const pileMatrix = new THREE2.Matrix4(), pileQ = new THREE2.Quaternion(), pileE = new THREE2.Euler(), pileP = new THREE2.Vector3(), pileS = new THREE2.Vector3();
+  function syncPile(st) {
+    const n = countItem(st.store, st.def.pile), shown = pileShown(st.kind, n);
+    if (shown === st.pileShown) return;
+    st.pileShown = shown;
+    for (let i = 0; i < shown; i++) {
+      const o = pileSlot(st.kind, i);
+      pileE.set(o.rx, o.ry, o.rz);
+      pileQ.setFromEuler(pileE);
+      st.pileMesh.setMatrixAt(i, pileMatrix.compose(pileP.set(o.x, o.y, o.z), pileQ, pileS.setScalar(o.s)));
+    }
+    st.pileMesh.count = shown;
+    st.pileMesh.instanceMatrix.needsUpdate = true;
+    world2.needsFrame = true;
+  }
   function syncRack(st) {
     const key3 = rackShowKey(st.rack);
     if (key3 === st.rackKey) return;
@@ -99904,10 +102342,17 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
   function update(dt) {
     dressTents();
     for (const s of list) if (s.rack) syncRack(s);
+    for (const s of list) if (s.pileMesh) syncPile(s);
+    for (const s of list) if (s.trap && s.trapShown !== !!s.trap.caught) {
+      s.trapShown = !!s.trap.caught;
+      poseTrap(s.trapParts, s.trapShown);
+      s.group.updateMatrixWorld(true);
+      world2.needsFrame = true;
+    }
     for (const s of list) if (s.lid) {
       const want = s.opening ? 1 : 0;
       if (s.open !== want) {
-        s.open = clamp70(s.open + (want ? dt * 3.2 : -dt * 4), 0, 1);
+        s.open = clamp71(s.open + (want ? dt * 3.2 : -dt * 4), 0, 1);
         s.lid.rotation.x = lidAngle(s.open);
         s.lid.updateMatrixWorld(true);
         world2.needsFrame = true;
@@ -99915,12 +102360,15 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
     }
     for (const p2 of lids) {
       const u = p2.userData;
-      u.open = clamp70(u.open + (u.want ? dt * 3.2 : -dt * 4), 0, 1);
+      u.open = clamp71(u.open + (u.want ? dt * 3.2 : -dt * 4), 0, 1);
       p2.rotation.x = lidAngle(u.open);
       p2.updateMatrix();
       p2.updateMatrixWorld(true);
       world2.needsFrame = true;
-      if (u.open === u.want) lids.delete(p2);
+      if (u.open === u.want) {
+        lids.delete(p2);
+        if (!u.want) u.onShut?.();
+      }
     }
   }
   function collide(previous, next, radius = 0.23) {
@@ -99936,11 +102384,11 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
     return { x, z };
   }
   function serialize() {
-    return list.map((s) => ({ kind: s.kind, id: s.id, x: +s.x.toFixed(2), z: +s.z.toFixed(2), yaw: +s.yaw.toFixed(3), ...s.store ? { items: serializeInventory(s.store) } : {}, ...s.kiln ? { kiln: serializeKiln(s.kiln) } : {}, ...s.rack ? { rack: serializeRack(s.rack) } : {} }));
+    return list.map((s) => ({ kind: s.kind, id: s.id, x: +s.x.toFixed(2), z: +s.z.toFixed(2), yaw: +s.yaw.toFixed(3), ...s.store ? { items: serializeInventory(s.store) } : {}, ...s.kiln ? { kiln: serializeKiln(s.kiln) } : {}, ...s.rack ? { rack: serializeRack(s.rack) } : {}, ...s.trap ? { trap: { caught: s.trap.caught, timer: s.trap.timer, habitat: s.trap.habitat } } : {} }));
   }
   function restore(data) {
     for (const s of [...list]) remove(s);
-    for (const d of Array.isArray(data) ? data : []) if (STATIONS[d?.kind] && Number.isFinite(d.x) && Number.isFinite(d.z)) build(d.kind, d.x, d.z, Number.isFinite(d.yaw) ? d.yaw : 0, { id: d.id, items: d.items, kiln: d.kiln, rack: d.rack });
+    for (const d of Array.isArray(data) ? data : []) if (STATIONS[d?.kind] && Number.isFinite(d.x) && Number.isFinite(d.z)) build(d.kind, d.x, d.z, Number.isFinite(d.yaw) ? d.yaw : 0, { id: d.id, items: d.items, kiln: d.kiln, rack: d.rack, trap: d.trap });
   }
   function dispose() {
     if (disposed) return;
@@ -99949,10 +102397,14 @@ function createSurvivalStations(THREE2, world2, { height: height2, fires = null 
     for (const t of templates) {
       t.group.removeFromParent();
       for (const m of Object.values(t.pieces || {})) m.dispose();
+      t.pile?.dispose();
     }
     tentWarm?.removeFromParent();
     for (const g of Object.values(ghosts)) g.removeFromParent();
-    for (const g of [benchWood, benchStone, chestBody, chestLid, chestBands, lidBands, kilnGeo.stones, kilnGeo.soot, rackFrame, rackPieceGeo.meat, rackPieceGeo.fish]) g.dispose();
+    for (const g of [benchWood, benchStone, chestBody, chestLid, chestBands, lidBands, kilnGeo.stones, kilnGeo.soot, rackFrame, rackPieceGeo.meat, rackPieceGeo.fish, tubGeo.staves, tubGeo.rope, tubGeo.water, trapGeo.bird.box, trapGeo.bird.prop, trapGeo.bird.bait, trapGeo.squirrel.crate, trapGeo.squirrel.door, trapGeo.cage, ...Object.values(pileGeo).flatMap((o) => [o.frame, o.piece])]) g.dispose();
+    tubWood.dispose();
+    tubRope.dispose();
+    tubWater.dispose();
     wood.dispose();
     metal.dispose();
     ghostMat.dispose();
@@ -100003,8 +102455,8 @@ var TARP = Object.freeze({
   wrap: 0.06,
   drops: Object.freeze({ hide: 2, rope: 1 })
 });
-var clamp71 = (x, a, b) => Math.max(a, Math.min(b, x));
-var tieHeight = (h) => clamp71(Math.round(h / TARP.tieStep) * TARP.tieStep, TARP.tieRange[0], TARP.tieRange[1]);
+var clamp72 = (x, a, b) => Math.max(a, Math.min(b, x));
+var tieHeight = (h) => clamp72(Math.round(h / TARP.tieStep) * TARP.tieStep, TARP.tieRange[0], TARP.tieRange[1]);
 var trunkCache = /* @__PURE__ */ new WeakMap();
 function trunkRingsOf(family) {
   if (!family) return null;
@@ -100037,7 +102489,7 @@ function trunkSection(info, y) {
   let ly = (y - m[13]) / sy;
   for (let k = 0; k < 4; k++) {
     const c3 = centre(ly), w = at(c3[0], c3[1], c3[2]);
-    ly = clamp71(ly + (y - w[1]) / sy, t.ys[0], top);
+    ly = clamp72(ly + (y - w[1]) / sy, t.ys[0], top);
   }
   const [i, f15] = ringSpan(t, ly), a = t.rings.start + i * t.stride, b = a + t.stride, c2 = centre(ly), mid = at(c2[0], c2[1], c2[2]), outline = [];
   let r = 0;
@@ -100103,7 +102555,7 @@ function createSurvivalTarps(THREE2, world2, { height: height2, onFall = () => {
   const cloth = new THREE2.MeshStandardMaterial({ name: "tarp-hide", vertexColors: true, roughness: 0.82, side: THREE2.DoubleSide });
   const cord = new THREE2.MeshStandardMaterial({ name: "tarp-rope", color: 12163683, roughness: 0.9 });
   function sheet(ring2) {
-    const k = clamp71(Math.round(Math.sqrt(ringArea(ring2)) / TARP.hide), 2, 5), n = k * 4, pos2 = [], col = [], idx = [];
+    const k = clamp72(Math.round(Math.sqrt(ringArea(ring2)) / TARP.hide), 2, 5), n = k * 4, pos2 = [], col = [], idx = [];
     for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) {
       const u = i / n, v = j / n, p2 = tarpPoint(ring2, u, v);
       pos2.push(p2.x, p2.y, p2.z);
@@ -100154,7 +102606,7 @@ function createSurvivalTarps(THREE2, world2, { height: height2, onFall = () => {
     return merged;
   }
   function roofOf(ring2) {
-    const n = clamp71(Math.round(Math.sqrt(ringArea(ring2)) / 2), TARP.roofGrid[0], TARP.roofGrid[1]), tris = [];
+    const n = clamp72(Math.round(Math.sqrt(ringArea(ring2)) / 2), TARP.roofGrid[0], TARP.roofGrid[1]), tris = [];
     const at = (i, j) => tarpPoint(ring2, i / n, j / n);
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
       const a = at(i, j), b = at(i + 1, j), c2 = at(i, j + 1), d = at(i + 1, j + 1);
@@ -100229,12 +102681,12 @@ function createSurvivalTarps(THREE2, world2, { height: height2, onFall = () => {
     }
     return out2;
   }
-  const treeOf = (o) => ({ id: o.id, x: o.x, z: o.z, y: groundAt(o.x, o.z), r: clamp71((o.collisionRadius ?? TARP.trunk * 2) * TARP.trunkShare, 0.1, 0.5) });
+  const treeOf = (o) => ({ id: o.id, x: o.x, z: o.z, y: groundAt(o.x, o.z), r: clamp72((o.collisionRadius ?? TARP.trunk * 2) * TARP.trunkShare, 0.1, 0.5) });
   function withTrunk(t) {
     if (!Number.isFinite(t.tie)) return t;
     const y = Number.isFinite(t.y) ? t.y : groundAt(t.x, t.z), info = t.id != null ? world2.proceduralTrees?.info?.(t.id) : null, section = info ? trunkSection(info, y + t.tie) : null;
     if (!section) return { ...t, y, outline: null };
-    return { ...t, y, cx: section.x, cz: section.z, r: clamp71(section.r, 0.04, 0.9), outline: section.outline };
+    return { ...t, y, cx: section.x, cz: section.z, r: clamp72(section.r, 0.04, 0.9), outline: section.outline };
   }
   function axisHeight(ray3, x, z) {
     const wx = ray3.ox - x, wz = ray3.oz - z, along = ray3.dx * wx + ray3.dy * ray3.oy + ray3.dz * wz, denom = 1 - ray3.dy * ray3.dy;
@@ -100405,7 +102857,222 @@ function mergeGeometries2(THREE2, parts) {
   return out2;
 }
 
+// survival-critters.js
+var CRITTERS = Object.freeze({
+  // Chances of taking one in the hand: walking up to it, and softly or standing still.
+  catch: Object.freeze({ crab: Object.freeze([0.5, 0.85]), frog: Object.freeze([0.3, 0.7]), fish: Object.freeze([0.2, 0.55]) }),
+  meat: Object.freeze({ crab: "crab_meat", frog: "frog_meat", fish: "fish", bird: "bird_meat", squirrel: "squirrel_meat" }),
+  live: Object.freeze({ crab: "crab", frog: "frog", fish: "fish_live", bird: "bird", squirrel: "squirrel" }),
+  names: Object.freeze({ crab: "カニ", frog: "カエル", fish: "魚", bird: "小鳥", squirrel: "リス" }),
+  // How often the bag and the stores are looked over for those that died (s); how far tubs are shown (m).
+  every: 1,
+  shown: 60
+});
+var creatureOf = (kind) => kind === "crab" || kind === "frog" || kind === "bird" || kind === "squirrel" ? kind : "fish";
+var trapKind = (st) => st.kind === "birdtrap" ? "bird" : "squirrel";
+function createSurvivalCritters({ world: world2, state: state2, give, toast: toast2 = () => {
+}, sound: sound2 = () => {
+}, player, stations, onHandAction = () => {
+}, random: random13 = Math.random }) {
+  let lookIn = 0, time = 0;
+  const systemOf = (hit2) => hit2?.from === "shore" ? world2.shoreLife : hit2?.from === "forest" ? world2.forestLife : world2.islandFish;
+  function target(px, pz, ray3) {
+    if (world2.inDungeon || !ray3) return null;
+    let hit2 = null;
+    for (const [from, sys] of [["shore", world2.shoreLife], ["fish", world2.islandFish], ["forest", world2.forestLife]]) {
+      const h = sys?.aimed?.(px, pz, ray3) ?? null;
+      if (h && (!hit2 || h.aim < hit2.aim)) hit2 = { ...h, from };
+    }
+    if (!hit2) return null;
+    const kind = creatureOf(hit2.kind), name = CRITTERS.names[kind];
+    return { survival: true, kind: "critter", creature: kind, hit: hit2, name: hit2.alive ? name : `${name}の亡骸`, verb: hit2.alive ? "手でつかまえる" : `拾う（${ITEMS[CRITTERS.meat[kind]].name}）`, distance: hit2.distance, aim: hit2.aim };
+  }
+  const quietNow = () => {
+    const m = world2.player?.userData?.motion || {};
+    return !!m.soft || (m.speed || 0) < 1.8;
+  };
+  function interact2(t) {
+    const hit2 = t?.hit, kind = t?.creature, sys = systemOf(hit2);
+    if (!hit2 || !kind || !sys) return false;
+    const name = CRITTERS.names[kind];
+    if (!hit2.alive) {
+      const item2 = CRITTERS.meat[kind];
+      if (!roomFor(state2.inventory, item2)) {
+        sound2("full");
+        toast2("持ち物がいっぱいだ。", name);
+        return false;
+      }
+      if (!sys.take(hit2)) return false;
+      give({ [item2]: 1 }, { label: "拾った" });
+      onHandAction("gather");
+      sound2("pickBerry", { gain: 0.7 });
+      return true;
+    }
+    const item = CRITTERS.live[kind];
+    if (!roomFor(state2.inventory, item)) {
+      sound2("full");
+      toast2("持ち物がいっぱいだ。", name);
+      return false;
+    }
+    const quiet = quietNow(), chance2 = CRITTERS.catch[kind][quiet ? 1 : 0];
+    onHandAction("gather");
+    if (random13() < chance2 && sys.take(hit2)) {
+      give({ [item]: 1 }, { label: "つかまえた" });
+      sound2(kind === "fish" ? "swimStroke" : "pickBerry", { gain: 0.7 });
+      return true;
+    }
+    sys.startle(hit2, player());
+    sound2("deny", { gain: 0.5 });
+    toast2(`${name}に逃げられた。` + (quiet ? "" : "C を押したまま、そっと近づくとつかまえやすい。"), name);
+    return false;
+  }
+  function dispatch(index2) {
+    const slot = state2.inventory.slots[index2], def = ITEMS[slot?.id];
+    if (def?.kind !== "live") return false;
+    const into = def.live.into;
+    takeAt(state2.inventory, index2, 1);
+    give({ [into]: 1 }, { label: null });
+    onHandAction("use");
+    sound2("pickStone", { gain: 0.5, rate: 0.8 });
+    toast2(`${ITEMS[into].name}にした。`, def.name);
+    return true;
+  }
+  function release(id2, count2, x, z) {
+    const def = ITEMS[id2];
+    if (def?.kind !== "live") return 0;
+    let n = 0;
+    for (let i = 0; i < count2; i++) {
+      const jx = x + (i ? (random13() - 0.5) * 0.8 : 0), jz = z + (i ? (random13() - 0.5) * 0.8 : 0);
+      const c2 = def.live.creature, ok = c2 === "fish" ? world2.islandFish?.release?.(jx, jz) : c2 === "bird" || c2 === "squirrel" ? world2.forestLife?.letGo?.(c2, jx, jz, player()) : world2.shoreLife?.release?.(c2, jx, jz, player());
+      if (!ok) break;
+      n++;
+    }
+    return n;
+  }
+  function dieIn(inv, inBag) {
+    const died = {};
+    inv.slots.forEach((slot, i) => {
+      const def = ITEMS[slot?.id];
+      if (def?.kind !== "live" || (freshness(slot, state2.clock) ?? 1) > 0) return;
+      const n = slot.count;
+      takeAt(inv, i, n);
+      const left = addItem(inv, def.live.into, n, state2.clock);
+      if (left > 0 && inBag) {
+        const p2 = player();
+        give({ [def.live.into]: left }, { label: null, at: p2 });
+      }
+      died[slot.id] = (died[slot.id] || 0) + n;
+    });
+    return died;
+  }
+  function step(dt) {
+    time += dt;
+    lookIn -= dt;
+    const keepers = stations.list.filter((s) => KEEPS[s.kind] && s.store);
+    for (const k of keepers) for (const slot of k.store.slots) if (ITEMS[slot?.id]?.kind === "live") slot.spoilAt = state2.clock + spoilSpan(slot.id);
+    const p2 = player();
+    for (const s of stations.list) if (s.trap) stepTrap(s, dt, p2);
+    if (lookIn <= 0) {
+      lookIn = CRITTERS.every;
+      const died = dieIn(state2.inventory, true);
+      for (const s of stations.list) if (s.store && !KEEPS[s.kind]) dieIn(s.store, false);
+      const said = Object.entries(died).map(([id2, n]) => `${ITEMS[id2].name}${n > 1 ? ` ×${n}` : ""}`);
+      if (said.length) toast2(`${said.join("・")}が弱って死んだ。肉にして持っている。生け簀に入れておけば生きている。`, "持ち物");
+    }
+    show(keepers);
+  }
+  function habitatAt2(kind, x, z) {
+    const H = TRAPS.habitat[kind];
+    let count2 = 0, known = false;
+    for (let kz = Math.floor((z - H.r) / 64); kz <= Math.floor((z + H.r) / 64); kz++) for (let kx = Math.floor((x - H.r) / 64); kx <= Math.floor((x + H.r) / 64); kx++) {
+      const chunk = world2.chunks?.get?.(kx + "," + kz);
+      if (!chunk || chunk.preparing) continue;
+      known = true;
+      for (const t of chunk.trees || []) if (!world2.removed?.has(t.id) && (t.h ?? 0) >= H.h && Math.hypot(t.x - x, t.z - z) < H.r) count2++;
+    }
+    return known ? Math.min(1, count2 / H.trees) : null;
+  }
+  const between3 = ([a, b]) => a + random13() * (b - a);
+  function stepTrap(st, dt, p2) {
+    const t = st.trap, kind = trapKind(st);
+    if (t.caught) return;
+    if (t.habitat === null) {
+      const h = habitatAt2(kind, st.x, st.z);
+      if (h === null) return;
+      t.habitat = h;
+    }
+    if (!(t.habitat > 0)) return;
+    if (t.timer === null) t.timer = between3(TRAPS.time[kind]) / t.habitat;
+    if ((world2.dayNight?.state?.daylight ?? 1) < TRAPS.daylight || p2 && Math.hypot(st.x - p2.x, st.z - p2.z) < TRAPS.near) return;
+    t.timer -= dt;
+    if (t.timer <= 0) {
+      t.caught = { kind, look: kind === "bird" ? Math.floor(random13() * 4) : 0, turn: +(random13() * Math.PI * 2).toFixed(2) };
+      t.timer = null;
+    }
+  }
+  function tendTrap(st) {
+    const t = st.trap, kind = trapKind(st), name = CRITTERS.names[kind];
+    if (t.caught) {
+      const item = CRITTERS.live[t.caught.kind];
+      if (!roomFor(state2.inventory, item)) {
+        sound2("full");
+        toast2("持ち物がいっぱいだ。", st.def.name);
+        return false;
+      }
+      give({ [item]: 1 }, { label: "わなから" });
+      t.caught = null;
+      t.timer = null;
+      onHandAction("gather");
+      sound2("knockWood", { gain: 0.5 });
+      toast2(`${name}がかかっていた。わなを仕掛け直した。かごに入れておけば生きている。`, st.def.name);
+      return true;
+    }
+    if (t.habitat === null) t.habitat = habitatAt2(kind, st.x, st.z);
+    toast2(t.habitat !== null && !(t.habitat > 0) ? kind === "bird" ? "ここには小鳥が来そうにない。木の多い所に仕掛けよう。" : "ここにはリスが来そうにない。大きな木のそばに仕掛けよう。" : `まだ何もかかっていない。わなから離れて、しばらく待とう（${name}は昼に来る）。`, st.def.name);
+    return false;
+  }
+  const trapState = (st) => st.trap?.caught ? `${CRITTERS.names[st.trap.caught.kind]}がかかっている` : "仕掛けてある";
+  function view(dt) {
+    time += dt;
+    show(stations.list.filter((s) => KEEPS[s.kind] && s.store));
+  }
+  const shownLists = { fish: [], shore: [], forest: [] };
+  function show(keepers) {
+    shownLists.fish.length = 0;
+    shownLists.shore.length = 0;
+    shownLists.forest.length = 0;
+    const p2 = player();
+    if (!world2.inDungeon && p2) {
+      for (const k of keepers) {
+        if (Math.hypot(k.x - p2.x, k.z - p2.z) > CRITTERS.shown) continue;
+        const counts = {};
+        for (const slot of k.store.slots) if (slot) counts[slot.id] = (counts[slot.id] || 0) + slot.count;
+        if (k.kind === "livewell") livewellShown({ x: k.x, y: k.y, z: k.z, yaw: k.yaw, seed: k.seed ??= Math.floor(random13() * 5) }, counts, time, shownLists);
+        else cageShown({ x: k.x, y: k.y, z: k.z, yaw: k.yaw }, counts, k.looks ??= [0, 1, 2, 3].map(() => Math.floor(random13() * 4)), shownLists.forest);
+      }
+      for (const s of stations.list) if (s.trap?.caught && Math.hypot(s.x - p2.x, s.z - p2.z) <= CRITTERS.shown) trapShown({ x: s.x, y: s.y, z: s.z, yaw: s.yaw }, s.trap.caught, shownLists.forest);
+    }
+    world2.islandFish?.setKept?.(shownLists.fish);
+    world2.shoreLife?.setKept?.(shownLists.shore);
+    world2.forestLife?.setKept?.(shownLists.forest);
+  }
+  return {
+    target,
+    interact: interact2,
+    dispatch,
+    release,
+    step,
+    view,
+    dieIn,
+    /* v144 */
+    tendTrap,
+    trapState,
+    habitatAt: habitatAt2
+  };
+}
+
 // survival-game.js
+var HAMMER = Object.freeze({ blows: 3, reach: 2.8, forget: 6 });
 var PHASE_RATE = Object.freeze(Object.fromEntries(SURVIVAL_DAY.phases.map((p2) => [p2.name, p2.minutes / p2.seconds / (1440 / 3600)])));
 var HAND_DAMAGE = 6;
 var TENT_REST = Object.freeze({ rate: 10, health: 0.28, sanity: 0.38, hunger: 0.6, ready: 45, wake: 25, fed: 15, hungry: 8 });
@@ -100433,7 +103100,7 @@ function findBases(tents, hearths, reach = BASE3.reach) {
   });
   return bases;
 }
-var clamp72 = (x, a, b) => Math.max(a, Math.min(b, x));
+var clamp73 = (x, a, b) => Math.max(a, Math.min(b, x));
 var signed = (n) => (n > 0 ? "+" : "−") + Math.abs(Math.round(n));
 function effectText(effect = {}) {
   return [["hunger", "空腹"], ["health", "体力"], ["sanity", "正気"]].filter(([key3]) => Math.round(effect[key3] || 0)).map(([key3, label]) => `${label} ${signed(effect[key3])}`).join(" · ");
@@ -100495,8 +103162,9 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     if (Math.hypot(x - p2.x, z - p2.z) < 40) toast2("張っていた木が倒れて、タープが外れた。皮と縄はその場に落ちている。", "タープ");
   } });
   if (saved2?.tarps) tarps.restore(saved2.tarps);
+  const critters = createSurvivalCritters({ world: world2, state: state2, give: (...a) => give(...a), toast: (...a) => toast2(...a), sound: (...a) => sound2(...a), player, stations, onHandAction: (a) => onHandAction(a) });
   const WET = { rise: 4, dry: 0.5, fire: 4, sanity: 0.025 };
-  let wet = Number.isFinite(saved2?.wet) ? clamp72(saved2.wet, 0, 100) : 0;
+  let wet = Number.isFinite(saved2?.wet) ? clamp73(saved2.wet, 0, 100) : 0;
   const kilnFx = createKilnEffects(THREE2, world2), kilnSites = [], savedKilnSites = saved2?.kilnSites && typeof saved2.kilnSites === "object" ? { ...saved2.kilnSites } : {};
   function findKilnSites() {
     if (kilnSites.length || !world2.smallLandmarks?.catalog) return;
@@ -100564,7 +103232,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
         return false;
       }
       if (r.pieces.length) {
-        toast2(rate > 0 ? `干している。あと ${Math.ceil(rackLeft(r, rate))} 秒ほどで干し上がる。` : "雨で乾かない。タープの下に立てた棚なら、雨でも乾く。", name);
+        toast2(rate > 0 ? `干している。あと ${rackTimes(r, rate)}ほどで干し上がる。` : "雨で乾かない。タープの下に立てた棚なら、雨でも乾く。", name);
         return false;
       }
       sound2("deny");
@@ -100573,7 +103241,9 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     }
     const said = [];
     if (tookAny) said.push(`${driedText(took)} を取った`);
-    if (hungAny) said.push(`${Object.entries(hung).map(([id2, n]) => `${ITEMS[id2].name} ×${n}`).join("・")} を掛けた` + (rate > 0 ? `（${Math.ceil(rackLeft(r, rate))} 秒ほどで干し上がる）` : "（雨の中では乾かない）"));
+    const before = r.pieces.length - Object.values(hung).reduce((a, b) => a + b, 0), older = r.pieces.slice(0, before).filter((p2) => p2.t < RACK.time);
+    const olderLeft = older.length ? Math.ceil(Math.max(...older.map((p2) => RACK.time - p2.t)) / rate) : 0;
+    if (hungAny) said.push(`${Object.entries(hung).map(([id2, n]) => `${ITEMS[id2].name} ×${n}`).join("・")} を掛けた` + (rate > 0 ? `（${Math.ceil(rackLeft(r, rate))} 秒ほどで干し上がる` + (olderLeft ? `。先に掛けた分はあと ${olderLeft} 秒）` : "）") : "（雨の中では乾かない）"));
     onHandAction("gather");
     sound2(hungAny ? "knockWood" : "pickStone", { gain: 0.6 });
     toast2(said.join("。") + "。", name);
@@ -100713,6 +103383,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
       survivalClock(state2.clock, clock2);
       pickables.update(dt, state2.clock, clock2.phase);
       fires.update(0, world2.time ?? 0, world2.dayNight?.state?.daylight ?? 0);
+      critters.view(dt);
       if (placing) updatePlacing();
       syncHeld();
       return;
@@ -100737,13 +103408,13 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
       if (p2.swimming || p2.underwater) wet = 100;
       else if (rain > 0.02 && !covered) wet = Math.min(100, wet + WET.rise * rain * dt);
       else wet = Math.max(0, wet - WET.dry * (light.lit && !inCave ? WET.fire : 1) * dt);
-      if (wet > 50) state2.vitals.sanity = clamp72(state2.vitals.sanity - WET.sanity * (wet / 100) * dt, 0, VITALS.max);
+      if (wet > 50) state2.vitals.sanity = clamp73(state2.vitals.sanity - WET.sanity * (wet / 100) * dt, 0, VITALS.max);
     }
     if (resting) {
       const v4 = state2.vitals;
-      v4.health = clamp72(v4.health + TENT_REST.health * dt, 0, VITALS.max);
-      v4.sanity = clamp72(v4.sanity + TENT_REST.sanity * dt, 0, VITALS.max);
-      v4.hunger = clamp72(v4.hunger - rates.hunger * dt * (1 - TENT_REST.hunger), 0, VITALS.max);
+      v4.health = clamp73(v4.health + TENT_REST.health * dt, 0, VITALS.max);
+      v4.sanity = clamp73(v4.sanity + TENT_REST.sanity * dt, 0, VITALS.max);
+      v4.hunger = clamp73(v4.hunger - rates.hunger * dt * (1 - TENT_REST.hunger), 0, VITALS.max);
     }
     const event = p2.dead ? null : advanceDarkness(state2.darkness, dt, dark);
     if (event === "warn") {
@@ -100774,6 +103445,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     stepKilns(dt);
     stepRacks(dt);
     tarps.update(dt);
+    critters.step(dt);
     if (resting) restWatch(hostile);
     if (placing) updatePlacing();
     syncHeld();
@@ -100786,6 +103458,10 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
   }
   let remains2 = null;
   function target(px, pz, yaw2, ray3 = null) {
+    const base = targetOthers(px, pz, yaw2, ray3), critter = critters.target(px, pz, ray3);
+    return critter && (!base || !(base.aim <= critter.aim)) ? critter : base;
+  }
+  function targetOthers(px, pz, yaw2, ray3 = null) {
     const body2 = remains2?.nearest(px, pz, yaw2, ray3) ?? null;
     if (world2.inDungeon) return body2;
     const found = pickables.nearest(px, pz, yaw2, ray3);
@@ -100793,7 +103469,9 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     const st = stations.aimed(px, pz, 2.6, ray3);
     if (st && (!plant || (ray3 ? st.aim < plant.aim : st.distance < plant.distance + 0.3))) {
       const s = st.station;
-      return { survival: true, kind: "station", station: s, name: s.def.name + (s.store ? `（${s.store.slots.filter(Boolean).length}/${s.store.slots.length}）` : s.rack ? `（${s.rack.pieces.length}/${RACK.capacity}）` : ""), verb: s.kind === "chest" ? "開ける" : s.kind === "tent" ? "休む" : s.kind === "kiln" ? kilnVerb(s.kiln, countItem(state2.inventory, "log")) : s.kind === "rack" ? rackVerb(s.rack, rawCarried(), s.rackRate ?? 1) : "作業台で作る", distance: st.distance, aim: ray3 ? st.aim : null };
+      const pileOf = s.def.pile, carried = pileOf ? countItem(state2.inventory, pileOf) : 0;
+      if (pileOf) return { survival: true, kind: "station", station: s, name: `${s.def.name}（${countItem(s.store, pileOf)}/${pileCapacity(s.kind)}）`, verb: carried ? `積む（${ITEMS[pileOf].name} ×${carried}）` : "開ける", distance: st.distance, aim: ray3 ? st.aim : null };
+      return { survival: true, kind: "station", station: s, name: s.def.name + (s.store ? `（${s.store.slots.filter(Boolean).length}/${s.store.slots.length}）` : s.rack ? `（${s.rack.pieces.length}/${RACK.capacity}）` : s.trap ? `（${critters.trapState(s)}）` : ""), verb: s.kind === "chest" || s.kind === "livewell" || s.kind === "cage" ? "開ける" : s.trap ? s.trap.caught ? "取り出す" : "様子を見る" : s.kind === "tent" ? "休む" : s.kind === "kiln" ? kilnVerb(s.kiln, countItem(state2.inventory, "log")) : s.kind === "rack" ? rackVerb(s.rack, rawCarried(), s.rackRate ?? 1) : "作業台で作る", distance: st.distance, aim: ray3 ? st.aim : null };
     }
     const ks = aimedKilnSite(px, pz, ray3);
     if (ks && (!plant || (ray3 ? ks.aim < plant.aim : ks.distance < plant.distance + 0.3))) {
@@ -100931,10 +103609,13 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
       if (t.station.kind === "tent") return rest2(t.station);
       if (t.station.kind === "kiln") return tendKiln(t.station.kiln, t.station.def.name);
       if (t.station.kind === "rack") return tendRack(t.station);
-      if (t.station.kind === "chest") openChest(t.station);
+      if (t.station.trap) return critters.tendTrap(t.station);
+      if (t.station.def.pile) return tendPile(t.station);
+      if (t.station.kind === "chest" || t.station.kind === "livewell" || t.station.kind === "cage") openChest(t.station);
       else openBench(t.station);
       return true;
     }
+    if (t.kind === "critter") return critters.interact(t);
     return false;
   }
   function eat(index2) {
@@ -101031,6 +103712,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
       return false;
     }
     if (def.kind === "food") return eat(index2);
+    if (def.kind === "live") return critters.dispatch(index2);
     if (def.kind === "heal") {
       if (state2.vitals.health >= VITALS.max) {
         toast2("体力は十分だ。", def.name);
@@ -101074,9 +103756,24 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     toast2(def.fuel ? "火のそばで E を押すと、燃料としてくべられる。" : `${def.name}は、そのままでは使えない。`, def.name);
     return false;
   }
-  function drop(all = false) {
+  function drop2(all = false) {
     const index2 = state2.inventory.selected, slot = held2();
     if (!slot) return false;
+    if (ITEMS[slot.id]?.kind === "live") {
+      const p0 = player(), n = critters.release(slot.id, all ? slot.count : 1, p0.x - Math.sin(p0.yaw) * 1.1, p0.z - Math.cos(p0.yaw) * 1.1);
+      if (n > 0) {
+        takeAt(state2.inventory, index2, n);
+        onHandAction("drop");
+        sound2("drop");
+        toast2(`${ITEMS[slot.id]?.name ?? ""} ×${n} を放した。`.replace("生きた", ""), "持ち物");
+        syncHeld();
+        return true;
+      }
+      if (ITEMS[slot.id].live.creature === "fish") {
+        toast2("魚は水辺で、水の方を向いて Q で放す。", ITEMS[slot.id].name);
+        return false;
+      }
+    }
     const taken = takeAt(state2.inventory, index2, all ? slot.count : 1), p2 = player(), extra = {};
     for (const key3 of ["uses", "burn", "spoilAt"]) if (Number.isFinite(taken[key3])) extra[key3] = taken[key3];
     pickables.drop(taken.id, taken.count, p2.x - Math.sin(p2.yaw) * 0.9, p2.z - Math.cos(p2.yaw) * 0.9, extra);
@@ -101175,7 +103872,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
   }
   function updatePlacing() {
     if (placing.trees) return updateTarpPlacing();
-    const p2 = player(), kind = placing.recipe.place, st = STATIONS[kind], reach = clamp72(p2.pitch > 0.12 ? 1.62 / Math.tan(p2.pitch) : 3.4, 1.7 + (st ? st.radius : 0), 3.6 + (st ? st.radius : 0));
+    const p2 = player(), kind = placing.recipe.place, st = STATIONS[kind], reach = clamp73(p2.pitch > 0.12 ? 1.62 / Math.tan(p2.pitch) : 3.4, 1.7 + (st ? st.radius : 0), 3.6 + (st ? st.radius : 0));
     placing.x = p2.x - Math.sin(p2.yaw) * reach;
     placing.z = p2.z - Math.cos(p2.yaw) * reach;
     placing.yaw = p2.yaw;
@@ -101277,7 +103974,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
       onHandAction("craft");
       sound2("craft");
       sound2("knockWood", { gain: 0.8 });
-      toast2(kind === "workbench" ? "作業台を置いた。そばで Tab（または E）を押すと、ここでしか作れない物が作れる。" : kind === "tent" ? "テントを立てた。そばで焚き火を燃やして、E で休める。" : kind === "kiln" ? `炭焼きの窯を作った。木材を持って E で入れて火を入れると、炭になる（一度に ${KILN.capacity} 本まで）。` : kind === "rack" ? `乾燥棚を立てた。生肉や川魚を持って E で掛けると、干し肉・干し魚になる（${RACK.capacity} つまで）。雨の中では乾かない（タープの下なら乾く）。火のそばだと早く乾く。` : "収納箱を置いた。E で開けて物をしまえる。", first ? "初めて作った" : recipe.name);
+      toast2(kind === "workbench" ? "作業台を置いた。そばで Tab（または E）を押すと、ここでしか作れない物が作れる。" : kind === "tent" ? "テントを立てた。そばで焚き火を燃やして、E で休める。" : kind === "kiln" ? `炭焼きの窯を作った。木材を持って E で入れて火を入れると、炭になる（一度に ${KILN.capacity} 本まで）。` : kind === "livewell" ? "生け簀を置いた。E で開けて、生きたカニ・カエル・魚を入れておける（中ではずっと生きている）。" : kind === "cage" ? "かごを置いた。E で開けて、生きた小鳥やリスを入れておける（中ではずっと生きている）。" : STATIONS[kind]?.pile ? `${STATIONS[kind].name}を作った。${ITEMS[STATIONS[kind].pile].name}を持って E で積める（持っていない時は E で開けて取り出す）。` : kind === "birdtrap" || kind === "squirreltrap" ? trapPlaced(kind) : kind === "rack" ? `乾燥棚を立てた。生肉や川魚を持って E で掛けると、干し肉・干し魚になる（${RACK.capacity} つまで）。雨の中では乾かない（タープの下なら乾く）。火のそばだと早く乾く。` : "収納箱を置いた。E で開けて物をしまえる。", first ? "初めて作った" : recipe.name);
     } else {
       fires.build(kind, placing.x, placing.z);
       cancelPlacing();
@@ -101288,6 +103985,101 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     save2();
     return true;
   }
+  function tendPile(st) {
+    const id2 = st.def.pile, name = ITEMS[id2].name;
+    if (!countItem(state2.inventory, id2)) {
+      openChest(st);
+      return true;
+    }
+    let moved = 0;
+    for (let i = 0; i < state2.inventory.slots.length; i++) if (state2.inventory.slots[i]?.id === id2) moved += moveStack(state2.inventory, i, st.store);
+    if (!moved) {
+      sound2("full");
+      toast2(`${st.def.name}はいっぱいだ（${pileCapacity(st.kind)}）。`, st.def.name);
+      return false;
+    }
+    onHandAction("drop");
+    sound2(id2 === "rocks" ? "pickStone" : "knockWood", { gain: 0.7 });
+    toast2(`${name}を ${moved} 積んだ（${countItem(st.store, id2)}/${pileCapacity(st.kind)}）。` + (countItem(state2.inventory, id2) ? " 入りきらない分は持ったまま。" : ""), st.def.name);
+    syncHeld();
+    save2();
+    return true;
+  }
+  function hammerStrike({ eye, yaw: yaw2, pitch: pitch2 = 0 } = {}) {
+    if (!eye || world2.inDungeon) return false;
+    const ray3 = { ox: eye.x, oy: eye.y, oz: eye.z, dx: -Math.sin(yaw2) * Math.cos(pitch2), dy: -Math.sin(pitch2), dz: -Math.cos(yaw2) * Math.cos(pitch2) };
+    const st = stations.aimed(eye.x, eye.z, HAMMER.reach, ray3), fire = fires.aimed(eye.x, eye.z, HAMMER.reach, ray3);
+    const hit2 = st && (!fire || st.aim <= fire.aim) ? st.station : fire?.fire ?? null;
+    if (!hit2) return false;
+    const name = hit2.def?.name ?? "焚き火", now = state2.clock;
+    if (hit2.landmark) {
+      sound2("deny");
+      toast2("これは壊せない。", name);
+      return true;
+    }
+    if (!(now - (hit2.hammeredAt ?? -Infinity) < HAMMER.forget)) hit2.hammered = 0;
+    hit2.hammered = (hit2.hammered || 0) + 1;
+    hit2.hammeredAt = now;
+    const at = { x: hit2.x, y: (hit2.y ?? 0) + 0.4, z: hit2.z };
+    world2.burst?.(at, hit2.kind === "rockpile" || hit2.kind === "kiln" || hit2.kind === "firepit" ? 9210499 : 10123858, 7);
+    sound2(hit2.kind === "rockpile" || hit2.kind === "kiln" || hit2.kind === "firepit" ? "knockStone" : "knockWood", { gain: 0.9 });
+    if (hit2.hammered < HAMMER.blows) {
+      toast2(`${name}を叩いた（あと ${HAMMER.blows - hit2.hammered} 回で壊れる）。`, "ハンマー");
+      return true;
+    }
+    takeDown(hit2, !!st && hit2 === st.station);
+    return true;
+  }
+  function takeDown(hit2, isStation) {
+    const name = hit2.def?.name ?? "焚き火", back = {}, stacks = [];
+    const add4 = (id2, n, extra = {}) => {
+      if (ITEMS[id2] && n > 0) {
+        back[id2] = (back[id2] || 0) + n;
+        stacks.push([id2, n, extra]);
+      }
+    };
+    const recipe = RECIPES.find((r) => r.place === hit2.kind);
+    if (isStation) {
+      for (const [id2, n] of Object.entries(recipe?.needs || {})) add4(id2, n);
+      for (const slot of hit2.store?.slots || []) if (slot) {
+        const extra = {};
+        for (const key3 of ["uses", "burn", "spoilAt"]) if (Number.isFinite(slot[key3])) extra[key3] = slot[key3];
+        add4(slot.id, slot.count, extra);
+      }
+      if (hit2.kiln) {
+        if (!(hit2.kiln.burn > 0)) add4("log", hit2.kiln.logs);
+        add4("charcoal", hit2.kiln.ready);
+      }
+      for (const p2 of hit2.rack?.pieces || []) add4(p2.t >= RACK.time ? RACK.dries[p2.id] : p2.id === "fish" ? "fish" : "meat", 1);
+      if (hit2.trap?.caught) add4(critterItem(hit2.trap.caught.kind), 1);
+      stations.remove(hit2);
+    } else {
+      if (hit2.kind === "firepit") add4("rocks", recipe?.needs?.rocks ?? 0);
+      fires.remove(hit2);
+    }
+    world2.burst?.({ x: hit2.x, y: (hit2.y ?? 0) + 0.3, z: hit2.z }, 10123858, 16);
+    onHandAction("use");
+    sound2("logBreak", { gain: 0.9 });
+    let spilled = false;
+    for (const [id2, n, extra] of stacks) {
+      const left = addItem(state2.inventory, id2, n, state2.clock, extra);
+      if (left > 0) {
+        spilled = true;
+        pickables.drop(id2, left, hit2.x + (Math.random() - 0.5) * 0.8, hit2.z + (Math.random() - 0.5) * 0.8, extra);
+      }
+    }
+    if (stacks.length) learn(Object.keys(back));
+    toast2(`${name}を壊した。` + (stacks.length ? Object.entries(back).map(([id2, n]) => `${ITEMS[id2].name} ×${n}`).join("・") + " が戻った。" + (spilled ? "（持ちきれない分はその場に）" : "") : ""), "ハンマー");
+    syncHeld();
+    save2();
+  }
+  const critterItem = (kind) => ({ bird: "bird", squirrel: "squirrel" })[kind] ?? null;
+  function trapPlaced(kind) {
+    const st = stations.list[stations.list.length - 1], h = st?.trap ? critters.habitatAt(kind === "birdtrap" ? "bird" : "squirrel", st.x, st.z) : null;
+    if (st?.trap && h !== null) st.trap.habitat = h;
+    const what = kind === "birdtrap" ? "小鳥" : "リス";
+    return h !== null && !(h > 0) ? `わなを仕掛けたが、ここには${what}が来そうにない（${kind === "birdtrap" ? "木の多い所" : "大きな木のそば"}に仕掛けよう）。` : `わなを仕掛けた。離れてしばらくすると、昼のうちに${what}がかかる（E で取り出す）。`;
+  }
   function cancelPlacing() {
     placing = null;
     fires.hideGhost();
@@ -101297,6 +104089,12 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
   function moveStack(from, index2, to) {
     const slot = from.slots[index2];
     if (!slot) return 0;
+    if (to.accepts && !to.accepts(slot.id)) {
+      const owner2 = stations.list.find((s) => s.store === to), kind = owner2?.kind;
+      sound2("deny");
+      toast2(kind === "cage" ? "かごには、生きた小鳥・リスだけ入れられる。" : owner2?.def?.pile ? `${owner2.def.name}には、${ITEMS[owner2.def.pile].name}だけ積める。` : "生け簀には、生きたカニ・カエル・魚だけ入れられる。", owner2?.def?.name ?? "生け簀");
+      return 0;
+    }
     const taken = takeAt(from, index2, slot.count), extra = {};
     for (const key3 of ["uses", "burn", "spoilAt"]) if (Number.isFinite(taken[key3])) extra[key3] = taken[key3];
     const left = addItem(to, taken.id, taken.count, state2.clock, extra);
@@ -101385,7 +104183,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
       /* v138 */
       wet,
       shade: darknessShade(state2.darkness),
-      mind: clamp72((VITALS.lowSanity - state2.vitals.sanity) / VITALS.lowSanity, 0, 1),
+      mind: clamp73((VITALS.lowSanity - state2.vitals.sanity) / VITALS.lowSanity, 0, 1),
       dark,
       torchLit,
       lit: light.lit
@@ -101434,13 +104232,16 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     stationNear,
     moveStack,
     learn,
+    /* v145 */
+    hammerStrike,
+    tendPile,
     known: () => known,
     step,
     idle,
     target,
     interact: interact2,
     use,
-    drop,
+    drop: drop2,
     select: select2,
     cycle,
     craft: craft2,
@@ -101450,6 +104251,8 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
     tarps,
     finishPlacing,
     undoPlacing,
+    /* v143 */
+    critters,
     /* v139 */
     get freeCraft() {
       return freeCraft;
@@ -101462,7 +104265,7 @@ function createSurvivalGame({ THREE: THREE2, world: world2, saved: saved2 = null
       return wet;
     },
     setWet: (v) => {
-      wet = clamp72(+v || 0, 0, 100);
+      wet = clamp73(+v || 0, 0, 100);
     },
     // v113: the tent's rest (begun from its E; ended by input or a blow: game.js).
     rest: rest2,
@@ -101567,10 +104370,10 @@ function createSurvivalHud(root2, { onSelect = () => {
   const status = el("div", "sv-status", root2);
   const meters = el("div", "sv-meters", status), meterParts = {};
   for (const key3 of ["health", "hunger", "sanity"]) {
-    const box4 = el("div", "sv-meter " + key3, meters);
-    box4.title = METER_NAMES[key3];
-    box4.innerHTML = `<svg viewBox="0 0 50 50" aria-hidden="true"><circle class="track" cx="25" cy="25" r="21"/><circle class="fill" cx="25" cy="25" r="21" stroke-dasharray="${CIRCUMFERENCE.toFixed(2)}" transform="rotate(-90 25 25)"/><g transform="translate(13 13)" fill="currentColor">${METER_ICONS[key3]}</g></svg><b>100</b><i class="trend"></i>`;
-    meterParts[key3] = { box: box4, fill: box4.querySelector(".fill"), value: box4.querySelector("b"), trend: box4.querySelector(".trend"), last: null };
+    const box5 = el("div", "sv-meter " + key3, meters);
+    box5.title = METER_NAMES[key3];
+    box5.innerHTML = `<svg viewBox="0 0 50 50" aria-hidden="true"><circle class="track" cx="25" cy="25" r="21"/><circle class="fill" cx="25" cy="25" r="21" stroke-dasharray="${CIRCUMFERENCE.toFixed(2)}" transform="rotate(-90 25 25)"/><g transform="translate(13 13)" fill="currentColor">${METER_ICONS[key3]}</g></svg><b>100</b><i class="trend"></i>`;
+    meterParts[key3] = { box: box5, fill: box5.querySelector(".fill"), value: box5.querySelector("b"), trend: box5.querySelector(".trend"), last: null };
   }
   const clock2 = el("div", "sv-clock", status);
   const phases = SURVIVAL_DAY.phases;
@@ -101675,7 +104478,7 @@ function createSurvivalHud(root2, { onSelect = () => {
         part2.meterFill.style.width = `${Math.round(value * 100)}%`;
         part2.meterFill.style.background = f15 !== null ? f15 >= 0.5 ? "#8fc46a" : f15 >= 0.2 ? "#d8b44a" : "#cf5b42" : w > 0.3 ? "#d9d2bd" : "#d98a4a";
       }
-      part2.node.title = def.name + (f15 !== null ? f15 >= 0.5 ? "（新鮮）" : f15 >= 0.2 ? "（古くなってきた）" : "（腐りかけ）" : "");
+      part2.node.title = def.name + (f15 !== null ? def.kind === "live" ? f15 >= 0.5 ? "（元気）" : f15 >= 0.2 ? "（弱ってきた）" : "（死にかけ）" : f15 >= 0.5 ? "（新鮮）" : f15 >= 0.2 ? "（古くなってきた）" : "（腐りかけ）" : "");
     }
   }
   function update(view) {
@@ -102269,18 +105072,18 @@ function createRagdoll(THREE2, model, spec, { height: height2, push: push2 = nul
     links.push({ name, bone: bone2, h, a });
   }
   const sticks = [];
-  const stick2 = (i, j, stiffness = 1, minOnly = false, minScale = 1) => {
+  const stick4 = (i, j, stiffness = 1, minOnly = false, minScale = 1) => {
     if (i < 0 || j < 0 || i === j) return;
     sticks.push({ i, j, rest: P[i].distanceTo(P[j]) * minScale, stiffness, minOnly });
   };
-  for (const l of links) stick2(l.h, l.a);
+  for (const l of links) stick4(l.h, l.a);
   const trunk = spec.trunk.map(headOf).filter((i) => i >= 0);
-  for (let i = 0; i < trunk.length; i++) for (let j = i + 1; j < trunk.length; j++) stick2(trunk[i], trunk[j], 0.9);
+  for (let i = 0; i < trunk.length; i++) for (let j = i + 1; j < trunk.length; j++) stick4(trunk[i], trunk[j], 0.9);
   const aimOf = new Map(links.map((l) => [l.h, l.a]));
   const firm = new Set(spec.firm || []);
   for (const l of links) {
     const next = aimOf.get(l.a);
-    if (next !== void 0 && !(trunkSet.has(l.name) && trunk.includes(next))) stick2(l.h, next, firm.has(l.name) ? 0.8 : 0.5, true, firm.has(l.name) ? 0.82 : 0.55);
+    if (next !== void 0 && !(trunkSet.has(l.name) && trunk.includes(next))) stick4(l.h, next, firm.has(l.name) ? 0.8 : 0.5, true, firm.has(l.name) ? 0.82 : 0.55);
   }
   const depth = (bone2) => {
     let d = 0;
@@ -102830,7 +105633,7 @@ function createSurvivalArrows(THREE2, world2, { height: height2, pickables, targ
     return axisHit(o.x, o.z, r, ground - 0.5, ground + r * 0.85);
   };
   let rand3 = 1;
-  const random10 = () => {
+  const random13 = () => {
     rand3 = rand3 * 16807 % 2147483647;
     return rand3 / 2147483647;
   };
@@ -102916,7 +105719,7 @@ function createSurvivalArrows(THREE2, world2, { height: height2, pickables, targ
     if (info.kind === "creature") {
       hit2(info.target, Math.round(f15.damage * (0.45 + 0.55 * power)), point5, info, dir);
       sound2("arrowHitFlesh", { position: point5 });
-      if (random10() < 0.6) lie(point5.x + (random10() - 0.5) * 0.6, point5.z + (random10() - 0.5) * 0.6, dir);
+      if (random13() < 0.6) lie(point5.x + (random13() - 0.5) * 0.6, point5.z + (random13() - 0.5) * 0.6, dir);
       return;
     }
     if (info.kind === "water") {
@@ -102926,7 +105729,7 @@ function createSurvivalArrows(THREE2, world2, { height: height2, pickables, targ
     }
     if (info.kind === "rock") {
       sound2("arrowHitStone", { position: point5 });
-      if (random10() < 0.3) return;
+      if (random13() < 0.3) return;
       tmp.copy(dir).multiplyScalar(-0.4);
       lie(point5.x + tmp.x, point5.z + tmp.z, dir);
       return;
@@ -102943,8 +105746,8 @@ function createSurvivalArrows(THREE2, world2, { height: height2, pickables, targ
     sound2(info.kind === "ground" ? "arrowHitGround" : "arrowHitWood", { position: point5 });
   }
   function lie(x, z, along) {
-    const yaw2 = Math.atan2(-along.z, along.x) + (random10() - 0.5) * 0.9, y = height2(x, z) + 6e-3;
-    q.setFromAxisAngle(tmp.set(0, 1, 0), yaw2).multiply(new THREE2.Quaternion().setFromAxisAngle(xAxis, (random10() - 0.5) * 1.2));
+    const yaw2 = Math.atan2(-along.z, along.x) + (random13() - 0.5) * 0.9, y = height2(x, z) + 6e-3;
+    q.setFromAxisAngle(tmp.set(0, 1, 0), yaw2).multiply(new THREE2.Quaternion().setFromAxisAngle(xAxis, (random13() - 0.5) * 1.2));
     pickables.drop("arrow", 1, x, z, {}, { y, q: q.toArray() });
   }
   function draw() {
@@ -103018,7 +105821,7 @@ function createSurvivalArrows(THREE2, world2, { height: height2, pickables, targ
 }
 
 // survival-gear.js
-var clamp73 = (v, a, b) => v < a ? a : v > b ? b : v;
+var clamp74 = (v, a, b) => v < a ? a : v > b ? b : v;
 var GEAR = Object.freeze({
   net: Object.freeze({ speed: 15, lift: 3.2, gravity: 9.8, life: 2.2, reach: 3.2, hold: 7, bossHold: 2.6, catchRadius: 1.25 }),
   breath: Object.freeze({ seconds: 30, charm: 3, refill: 7, damage: 5, every: 1.5 }),
@@ -103029,7 +105832,7 @@ function netTexture(THREE2, size = 128) {
   const data = new Uint8Array(size * size * 4), cells = 8;
   for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) {
     const u = i / size * cells, v = j / size * cells, a = Math.abs((u + v) % 1 - 0.5), b = Math.abs((u - v + 64) % 1 - 0.5);
-    const cord = Math.max(1 - clamp73((0.5 - a) / 0.07, 0, 1), 1 - clamp73((0.5 - b) / 0.07, 0, 1)), k = (j * size + i) * 4;
+    const cord = Math.max(1 - clamp74((0.5 - a) / 0.07, 0, 1), 1 - clamp74((0.5 - b) / 0.07, 0, 1)), k = (j * size + i) * 4;
     data[k] = 225;
     data[k + 1] = 228;
     data[k + 2] = 238;
@@ -103068,7 +105871,7 @@ function createGear(THREE2, { sound: sound2 = () => {
     flying.push({ mesh: mesh2, v: new THREE2.Vector3(dir.x * GEAR.net.speed, dir.y * GEAR.net.speed + GEAR.net.lift, dir.z * GEAR.net.speed), age: 0, spin: Math.random() * 6 });
     sound2("swingClub", { rate: 0.75, gain: 0.7 });
   }
-  const sizeOf = (e) => clamp73((e.combatRadius || 1) * 1.15 * (e.boss ? 0.8 : 1), 0.7, 6);
+  const sizeOf = (e) => clamp74((e.combatRadius || 1) * 1.15 * (e.boss ? 0.8 : 1), 0.7, 6);
   function entangle(point5, targets) {
     let caught = 0, immune = 0;
     for (const e of targets) {
@@ -103173,8 +105976,8 @@ function createGear(THREE2, { sound: sound2 = () => {
 }
 
 // survival-raft.js
-var clamp74 = (v, a, b) => v < a ? a : v > b ? b : v;
-var TAU49 = Math.PI * 2;
+var clamp75 = (v, a, b) => v < a ? a : v > b ? b : v;
+var TAU53 = Math.PI * 2;
 var RAFT = Object.freeze({
   speed: 3.2,
   sprint: 4.6,
@@ -103286,7 +106089,7 @@ function createRaft(THREE2, { sound: sound2 = () => {
     if (!state2.active) return out2;
     state2.t += dt;
     state2.shove = Math.max(0, state2.shove - dt * 0.8);
-    const want = clamp74(Math.hypot(ix, iz), 0, 1), sp = sprint ? RAFT.sprint : RAFT.speed, k = 1 - Math.exp(-dt * RAFT.response);
+    const want = clamp75(Math.hypot(ix, iz), 0, 1), sp = sprint ? RAFT.sprint : RAFT.speed, k = 1 - Math.exp(-dt * RAFT.response);
     state2.vx += (ix * sp - state2.vx) * k;
     state2.vz += (iz * sp - state2.vz) * k;
     let nx = state2.x + state2.vx * dt, nz = state2.z + state2.vz * dt;
@@ -103298,8 +106101,8 @@ function createRaft(THREE2, { sound: sound2 = () => {
     const speed = Math.hypot(state2.vx, state2.vz);
     if (speed > 0.3) {
       const a = Math.atan2(state2.vx, state2.vz), d = Math.atan2(Math.sin(a - state2.yaw), Math.cos(a - state2.yaw));
-      if (Math.abs(d) < Math.PI * 0.6) state2.yaw += clamp74(d, -RAFT.turn * dt, RAFT.turn * dt);
-      else state2.yaw += clamp74(Math.atan2(Math.sin(a + Math.PI - state2.yaw), Math.cos(a + Math.PI - state2.yaw)), -RAFT.turn * dt, RAFT.turn * dt);
+      if (Math.abs(d) < Math.PI * 0.6) state2.yaw += clamp75(d, -RAFT.turn * dt, RAFT.turn * dt);
+      else state2.yaw += clamp75(Math.atan2(Math.sin(a + Math.PI - state2.yaw), Math.cos(a + Math.PI - state2.yaw)), -RAFT.turn * dt, RAFT.turn * dt);
     }
     const w = floats(nx, nz, state2.yaw, waterAt, RAFT.depth * 0.7);
     if (w) {
@@ -103347,7 +106150,7 @@ function createRaft(THREE2, { sound: sound2 = () => {
   function shove(strength = 1, from = null) {
     if (!state2.active) return;
     state2.shove = Math.min(1.2, state2.shove + 0.6 * strength);
-    const a = from ? Math.atan2(state2.x - from.x, state2.z - from.z) : Math.random() * TAU49;
+    const a = from ? Math.atan2(state2.x - from.x, state2.z - from.z) : Math.random() * TAU53;
     state2.vx += Math.sin(a) * 3 * strength;
     state2.vz += Math.cos(a) * 3 * strength;
   }
@@ -103577,20 +106380,20 @@ function mountCraftPanel(container, { survival: survival2, onCraft, sound: sound
       ${s.visible && st.length ? `<dl class="cr-stats">${st.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : ""}
       <ul class="cr-needs">${needs}</ul>${stationLine}
       <button type="button" class="cr-make" ${s.can ? "" : "disabled"}><span>${esc(label)}</span></button>`;
-    const make = detail.querySelector(".cr-make");
-    make.addEventListener("pointerdown", (event) => {
+    const make2 = detail.querySelector(".cr-make");
+    make2.addEventListener("pointerdown", (event) => {
       if (event.button !== 0 || !s.can) return;
       event.preventDefault();
       heldDown = true;
       start2(r.id);
     });
-    make.addEventListener("keydown", (event) => {
+    make2.addEventListener("keydown", (event) => {
       if ((event.key === "Enter" || event.key === " ") && !event.repeat && s.can) {
         event.preventDefault();
         start2(r.id);
       }
     });
-    make.addEventListener("keyup", (event) => {
+    make2.addEventListener("keyup", (event) => {
       if (event.key === "Enter" || event.key === " ") stop();
     });
   }
@@ -103670,7 +106473,8 @@ function mountCraftPanel(container, { survival: survival2, onCraft, sound: sound
     h.fill.setAttribute("stroke-dashoffset", RING.toFixed(1));
     sound2("uiSelect", { gain: 0.15 });
   }
-  container.addEventListener("click", (event) => {
+  const onClick = (event) => {
+    if (disposed) return;
     const t = event.target.closest("[data-tab]");
     if (t) {
       heldDown = false;
@@ -103689,7 +106493,8 @@ function mountCraftPanel(container, { survival: survival2, onCraft, sound: sound
       sound2("uiSelect", { gain: 0.14 });
       render();
     }
-  });
+  };
+  container.addEventListener("click", onClick);
   render();
   return { refresh: render, dispose() {
     disposed = true;
@@ -103697,6 +106502,7 @@ function mountCraftPanel(container, { survival: survival2, onCraft, sound: sound
     cancelAnimationFrame(raf);
     window.removeEventListener("pointerup", up7, true);
     window.removeEventListener("pointercancel", up7, true);
+    container.removeEventListener("click", onClick);
     container.innerHTML = "";
   } };
 }
@@ -103718,7 +106524,8 @@ function mountChestPanel(container, { chest, inventory, now = () => 0, move, sou
     store.innerHTML = chest.store.slots.map((s, i) => cell(s, i, "store")).join("");
     bag.innerHTML = inventory.slots.map((s, i) => cell(s, i, "bag")).join("");
   }
-  container.addEventListener("click", (event) => {
+  const onClick = (event) => {
+    if (disposed) return;
     const all = event.target.closest("[data-all]");
     if (all) {
       let moved2 = 0;
@@ -103743,10 +106550,12 @@ function mountChestPanel(container, { chest, inventory, now = () => 0, move, sou
     sound2(moved ? "pickTwig" : "full", { gain: 0.5 });
     render();
     onChange();
-  });
+  };
+  container.addEventListener("click", onClick);
   render();
   return { refresh: render, dispose() {
     disposed = true;
+    container.removeEventListener("click", onClick);
     container.innerHTML = "";
   } };
 }
@@ -103787,6 +106596,140 @@ function createLookFilter({ now = () => performance.now(), min = LOOK_FILTER.min
     last2 = -Infinity;
   }
   return { accept, reset, stats: () => ({ ...stats3 }) };
+}
+
+// shader-probe.js
+var SHADER_PROBE = Object.freeze({
+  // The materials measured, by name, and what is left out of each (only where the source has it).
+  targets: Object.freeze([
+    Object.freeze({ name: "clouded-blue-mineral", label: "蒼輝石", variants: ["base", "noLocal", "oneLocal", "noClearcoat", "noClearcoatNoLocal", "noFlat", "noEnv", "noShadows", "noSun", "base"] }),
+    Object.freeze({ name: "weathered-host-matrix", label: "蒼輝石の母岩", variants: ["base"] }),
+    Object.freeze({ name: "WaterSurface", label: "水面", variants: ["base", "fixedLoops", "noLocal"] }),
+    Object.freeze({ name: /^Procedural rock/, label: "岩（くらべる用）", variants: ["base", "noLocal"] })
+  ]),
+  labels: Object.freeze({
+    base: "そのまま",
+    noLocal: "松明・焚き火の光の繰り返しなし",
+    oneLocal: "松明・焚き火の光を 1 つだけ",
+    noClearcoat: "表面のつや（クリアコート）なし",
+    noClearcoatNoLocal: "つやなし＋光の繰り返しなし",
+    noFlat: "面ごとの法線なし",
+    noEnv: "周りの映り込みなし",
+    noShadows: "影なし",
+    noSun: "木陰・雲の影の光なし",
+    fixedLoops: "反射の回数を決まった数で（v143 まで）"
+  }),
+  // The longest wait for one program (then it is given up on).
+  timeoutMs: 12e4
+});
+var drop = (source2, line) => source2.split("\n").filter((l) => l.trim() !== line).join("\n");
+function shaderProbeVariants(ids2, vs, fs) {
+  const out2 = [];
+  const local2 = (source2, n) => source2.replace(/landLight<\d+;/, `landLight<${n};`);
+  const has = {
+    local: /landLight<\d+;/.test(fs),
+    clearcoat: fs.includes("#define USE_CLEARCOAT"),
+    flat: fs.includes("#define FLAT_SHADED"),
+    env: fs.includes("#define USE_ENVMAP"),
+    shadows: fs.includes("#define USE_SHADOWMAP"),
+    sun: fs.includes("#define getDirectionalLightInfo landSunDirectionalInfo"),
+    ssr: /uniform\s+int\s+uSSRSteps\s*;/.test(fs)
+  };
+  for (const id2 of ids2) {
+    if (id2 === "base") out2.push({ id: id2, vs, fs });
+    else if (id2 === "noLocal" && has.local) out2.push({ id: id2, vs, fs: local2(fs, 0) });
+    else if (id2 === "oneLocal" && has.local) out2.push({ id: id2, vs, fs: local2(fs, 1) });
+    else if (id2 === "noClearcoat" && has.clearcoat) out2.push({ id: id2, vs: drop(vs, "#define USE_CLEARCOAT"), fs: drop(fs, "#define USE_CLEARCOAT") });
+    else if (id2 === "noClearcoatNoLocal" && has.clearcoat && has.local) out2.push({ id: id2, vs: drop(vs, "#define USE_CLEARCOAT"), fs: local2(drop(fs, "#define USE_CLEARCOAT"), 0) });
+    else if (id2 === "noFlat" && has.flat) out2.push({ id: id2, vs: drop(vs, "#define FLAT_SHADED"), fs: drop(fs, "#define FLAT_SHADED") });
+    else if (id2 === "noEnv" && has.env) out2.push({ id: id2, vs: drop(vs, "#define USE_ENVMAP"), fs: drop(fs, "#define USE_ENVMAP") });
+    else if (id2 === "noShadows" && has.shadows) out2.push({ id: id2, vs: drop(vs, "#define USE_SHADOWMAP"), fs: drop(fs, "#define USE_SHADOWMAP") });
+    else if (id2 === "noSun" && has.sun) out2.push({ id: id2, vs, fs: drop(fs, "#define getDirectionalLightInfo landSunDirectionalInfo") });
+    else if (id2 === "fixedLoops" && has.ssr) out2.push({ id: id2, vs, fs: fs.replace(/uniform\s+int\s+uSSRSteps\s*;/, "const int uSSRSteps = 32;").replace(/int\s+count\s*=\s*min\(\s*uFoamEmitterCount\s*,\s*8\s*\)\s*;/, "const int count = 8;") });
+  }
+  return out2;
+}
+function programSources(renderer, material2) {
+  const gl = renderer.getContext(), program = renderer.properties.get(material2)?.currentProgram;
+  if (!program?.vertexShader || !program?.fragmentShader) return null;
+  const vs = gl.getShaderSource(program.vertexShader), fs = gl.getShaderSource(program.fragmentShader);
+  return vs && fs ? { vs, fs } : null;
+}
+var mark = (source2, tag) => /^#version[^\n]*\n/.test(source2) ? source2.replace(/^(#version[^\n]*\n)/, `$1// probe ${tag}
+`) : `// probe ${tag}
+${source2}`;
+var wait2 = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+async function make(gl, parallel, vs, fs, tag, timeoutMs) {
+  const started = performance.now(), v = gl.createShader(gl.VERTEX_SHADER), f15 = gl.createShader(gl.FRAGMENT_SHADER), p2 = gl.createProgram();
+  try {
+    gl.shaderSource(v, mark(vs, tag));
+    gl.compileShader(v);
+    gl.shaderSource(f15, mark(fs, tag));
+    gl.compileShader(f15);
+    gl.attachShader(p2, v);
+    gl.attachShader(p2, f15);
+    gl.linkProgram(p2);
+    if (parallel) while (!gl.getProgramParameter(p2, parallel.COMPLETION_STATUS_KHR)) {
+      if (performance.now() - started > timeoutMs) return { ms: performance.now() - started, ok: false, log: "timeout" };
+      await wait2(5);
+    }
+    const ok = !!gl.getProgramParameter(p2, gl.LINK_STATUS), ms = performance.now() - started;
+    return { ms, ok, log: ok ? "" : String(gl.getProgramInfoLog(p2) || gl.getShaderInfoLog(f15) || gl.getShaderInfoLog(v) || "").slice(0, 400) };
+  } finally {
+    gl.deleteProgram(p2);
+    gl.deleteShader(v);
+    gl.deleteShader(f15);
+  }
+}
+function findMaterial(scene, name) {
+  let found = null;
+  scene?.traverse?.((o) => {
+    if (found) return;
+    for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (m && (name instanceof RegExp ? name.test(m.name || "") : m.name === name)) {
+      found = m;
+      return;
+    }
+  });
+  return found;
+}
+async function probeShaders({ renderer, scenes = [], onStep = () => {
+}, targets = SHADER_PROBE.targets } = {}) {
+  const gl = renderer.getContext(), parallel = gl.getExtension("KHR_parallel_shader_compile"), info = gl.getExtension("WEBGL_debug_renderer_info");
+  const env = { ua: navigator.userAgent, gpu: String(info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)), parallel: !!parallel };
+  const jobs = [];
+  for (const target of targets) {
+    let material2 = null;
+    for (const scene of scenes) {
+      material2 = findMaterial(scene, target.name);
+      if (material2) break;
+    }
+    const sources = material2 && programSources(renderer, material2);
+    if (!sources) {
+      jobs.push({ target, missing: true });
+      continue;
+    }
+    for (const variant of shaderProbeVariants(target.variants, sources.vs, sources.fs)) jobs.push({ target, material: material2, variant });
+  }
+  const results = [], session = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  for (let i = 0; i < jobs.length; i++) {
+    const { target, material: material2, variant, missing } = jobs[i], label = target.label, name = String(material2?.name || target.name);
+    if (missing) {
+      results.push({ target: String(target.name), label, variant: null, ms: null, ok: false, log: "まだ作られていない" });
+      onStep({ i, n: jobs.length, result: results.at(-1) });
+      continue;
+    }
+    onStep({ i, n: jobs.length, label, variant: variant.id });
+    await wait2(60);
+    const r = await make(gl, parallel, variant.vs, variant.fs, `${session}-${i}`, SHADER_PROBE.timeoutMs);
+    results.push({ target: name, label, variant: variant.id, variantLabel: SHADER_PROBE.labels[variant.id] || variant.id, ms: Math.round(r.ms), ok: r.ok, log: r.log, fsLength: variant.fs.length });
+    onStep({ i: i + 1, n: jobs.length, result: results.at(-1) });
+  }
+  return { env, results };
+}
+function shaderProbeText({ env, results } = {}) {
+  const lines = [`ブラウザ: ${env?.ua || "?"}`, `GPU: ${env?.gpu || "?"}${env?.parallel ? "（裏で作れる）" : ""}`];
+  for (const r of results || []) lines.push(r.variant === null ? `${r.label}: ${r.log}` : `${r.label} / ${r.variantLabel}: ${(r.ms / 1e3).toFixed(2)} 秒${r.ok ? "" : "（失敗: " + (r.log || "").split("\n")[0].slice(0, 80) + "）"}`);
+  return lines.join("\n");
 }
 
 // dev-bridge.js
@@ -104008,7 +106951,7 @@ async function uploadCanvas(canvas2, quality = 0.85) {
 
 // game.js
 var $ = (s) => document.querySelector(s);
-var clamp75 = three_module_exports.MathUtils.clamp;
+var clamp76 = three_module_exports.MathUtils.clamp;
 var STORE3 = "kumarim-survival-v1";
 var PREFS = "kumarim-settings-v1";
 var touchDevice = matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
@@ -104174,7 +107117,15 @@ function underMapState() {
   return underExplored ??= createUnderExplored(plan2.interior(), state.underExplored);
 }
 var underExplored2 = null;
-var TOOL_SOUNDS = Object.freeze({ lead: 0.2, swing: { axe: "swingAxe", pickaxe: "swingPick", club: "swingClub", torch: "swingTorch", hand: "swingHand" }, hit: { axe: "hitAxe", pickaxe: "hitPick", club: "hitClub", torch: "hitTorch", hand: "hitPunch" } });
+var TOOL_SOUNDS = Object.freeze({ lead: 0.2, swing: {
+  axe: "swingAxe",
+  pickaxe: "swingPick",
+  club: "swingClub",
+  torch: "swingTorch",
+  hand: "swingHand",
+  /* v145 */
+  hammer: "swingClub"
+}, hit: { axe: "hitAxe", pickaxe: "hitPick", club: "hitClub", torch: "hitTorch", hand: "hitPunch", hammer: "hitClub" } });
 var audio = new GameAudio(settings);
 var soundContext = createWorldSoundContext({ height, biome, riverX });
 var rings2 = [];
@@ -104357,7 +107308,7 @@ function updateVerticalMotion(dt) {
     }
   }
   if (nextY <= floor) {
-    landingImpact = clamp75(-verticalVelocity / 9, 0, 1);
+    landingImpact = clamp76(-verticalVelocity / 9, 0, 1);
     landingTime = 0.22;
     landSerial++;
     swimming.reset();
@@ -104371,7 +107322,7 @@ function updateVerticalMotion(dt) {
 }
 if (saved?.view) {
   if (Number.isFinite(saved.view.yaw)) yaw = saved.view.yaw;
-  if (Number.isFinite(saved.view.pitch)) pitch = clamp75(saved.view.pitch, -1.25, 1.25);
+  if (Number.isFinite(saved.view.pitch)) pitch = clamp76(saved.view.pitch, -1.25, 1.25);
 }
 function toast(message, label = "旅の記録") {
   hitchRecorder?.note(label + ": " + message);
@@ -105114,6 +108065,11 @@ function attack() {
   updateHUD();
 }
 function resolveStrike() {
+  if (survival.heldDef?.()?.tool?.action === "hammer" && survival.hammerStrike?.({ eye: { x: pos.x, y: pos.y + 1.66, z: pos.z }, yaw, pitch })) {
+    survival.wearHeld();
+    updateHUD();
+    return;
+  }
   const heldTool = survival.heldDef?.()?.tool, harvest = world.toolHarvesting?.strike({ serial: attackSerial, tool: swingTool, eye: { x: pos.x, y: pos.y + 1.66, z: pos.z }, yaw, pitch, power: heldTool?.power || 1, tier: heldTool?.tier || 1 });
   if (harvest && ["hit", "harvested"].includes(harvest.status)) {
     survival.wearHeld();
@@ -105158,6 +108114,11 @@ function resolveStrike() {
       struck = true;
       if (blow.dealt > 0) hitStop = Math.max(hitStop, 0.045);
     }
+  }
+  if (!world.inDungeon) {
+    const eye = { x: pos.x, y: pos.y + 1.66, z: pos.z }, body2 = world.shoreLife?.strike?.({ eye, yaw }) || world.islandFish?.strike?.({ eye, yaw }) || /* v144 */
+    world.forestLife?.strike?.({ eye, yaw });
+    if (body2) struck = true;
   }
   if (struck) {
     survival.wearHeld();
@@ -105821,7 +108782,7 @@ function interact() {
   } else if (o.type === "content" && o.action === "loot" && survival) {
     const kept = survival.containers.get(o.id);
     if (kept) {
-      openContainer({ def: kept.def, store: kept.store, lidPivot: null });
+      openContainer({ def: kept.def, store: kept.store, lidPivot: o.openLid?.() ?? null });
       return;
     }
     const result = world.content?.invoke(o, { player: pos, now: playTime });
@@ -105832,11 +108793,16 @@ function interact() {
     }
     const items = {};
     for (const [key3, n] of Object.entries(result.reward || {})) if (CONTENT_ITEMS[key3] && n > 0) items[CONTENT_ITEMS[key3]] = (items[CONTENT_ITEMS[key3]] || 0) + n;
-    const box4 = survival.container(o.id, { name: o.name || result.label || "小箱", items: result.kind === "loot" ? items : null });
+    const box5 = survival.container(o.id, { name: o.name || result.label || "小箱", items: result.kind === "loot" ? items : null });
     state.removed.delete(o.id);
     if (result.discover) discover(result.discover.name);
     if (result.kind === "loot") sound("chest");
-    openContainer({ def: box4.def, store: box4.store, lidPivot: null }, { quiet: result.kind === "loot" });
+    openContainer({
+      def: box5.def,
+      store: box5.store,
+      /* v142: the lid of a chest at a camp or a landmark lifted (story-builder.js openLid) */
+      lidPivot: o.openLid?.() ?? null
+    }, { quiet: result.kind === "loot" });
     save();
   } else if (o.type === "content") {
     const result = world.content?.invoke(o, { player: pos, now: playTime });
@@ -105870,13 +108836,13 @@ function interact() {
       toast("遺跡の番人をすべて倒すと封印が解ける。", "封じられた宝箱");
       return;
     }
-    const first = !survival.containers.has(o.id), box4 = survival.container(o.id, { name: o.name || "宝箱", items: o.loot || { shard: o.caveId === "moonveil" ? 3 : 1, salve: 2, crystal: 5 } });
+    const first = !survival.containers.has(o.id), box5 = survival.container(o.id, { name: o.name || "宝箱", items: o.loot || { shard: o.caveId === "moonveil" ? 3 : 1, salve: 2, crystal: 5 } });
     if (first) {
       sound("chest");
       world.burst(o.mesh.position, 15716227, 35);
       discover(o.discover || "星の記憶");
     }
-    openContainer({ def: box4.def, store: box4.store, lidPivot: o.mesh?.getObjectByName?.(CHEST_LID) || null }, { quiet: first });
+    openContainer({ def: box5.def, store: box5.store, lidPivot: o.mesh?.getObjectByName?.(CHEST_LID) || null }, { quiet: first });
     save();
   } else {
     if (o.type === "herb") {
@@ -106320,6 +109286,8 @@ function movePlayer(dt) {
   if (gliding) speed = Math.max(speed, 7.2);
   if (!isSwimming) speed *= wadingSpeed(feetWaterDepth(world, pos.x, pos.z, pos.y, world.inDungeon ? pos.y : height(pos.x, pos.z)));
   if (attackTime > 0) speed *= 0.25;
+  const soft = !isSwimming && !sprint && !gliding && (keys.has("KeyC") || keys.has("ControlLeft") || keys.has("ControlRight"));
+  if (soft) speed *= 0.42;
   if (playTime < webbedUntil) speed *= 0.42;
   if (!isSwimming && inLava()) speed *= 0.5;
   if (bow.drawing) speed *= 0.55;
@@ -106413,7 +109381,38 @@ function movePlayer(dt) {
   invincible = Math.max(0, invincible - dt);
   hurtTime = Math.max(0, hurtTime - dt);
   world.player.rotation.x = 0;
-  world.player.userData.motion = { moving, sprint, speed: actualSpeed, swimming: swimming.state.active, underwater: swimming.state.underwater, swimPhase: swimming.state.phase % 1, swimEffort: swimming.state.effort, turn, attack: attackTime > 0, attackSerial, attackDuration, attackElapsed: attackDuration - attackTime, combo: hitCombo, gaitPhase, stepLength: sprint ? SPRINT_STEP_LENGTH : WALK_STEP_LENGTH, grounded, verticalSpeed: verticalVelocity, jumpSerial, landSerial, jumpTime, landingTime, landingImpact, hurt: hurtTime, dead: false, bowAim: bow.aim, bowDraw: bow.draw, bowArrow: bow.drawing, bowShot: bow.shot };
+  world.player.userData.motion = {
+    moving,
+    sprint,
+    /* v143 */
+    soft,
+    speed: actualSpeed,
+    swimming: swimming.state.active,
+    underwater: swimming.state.underwater,
+    swimPhase: swimming.state.phase % 1,
+    swimEffort: swimming.state.effort,
+    turn,
+    attack: attackTime > 0,
+    attackSerial,
+    attackDuration,
+    attackElapsed: attackDuration - attackTime,
+    combo: hitCombo,
+    gaitPhase,
+    stepLength: sprint ? SPRINT_STEP_LENGTH : WALK_STEP_LENGTH,
+    grounded,
+    verticalSpeed: verticalVelocity,
+    jumpSerial,
+    landSerial,
+    jumpTime,
+    landingTime,
+    landingImpact,
+    hurt: hurtTime,
+    dead: false,
+    bowAim: bow.aim,
+    bowDraw: bow.draw,
+    bowArrow: bow.drawing,
+    bowShot: bow.shot
+  };
 }
 var lastFeetDepth = 0;
 function playerWaterRipples(verticalBefore) {
@@ -106421,7 +109420,7 @@ function playerWaterRipples(verticalBefore) {
   if (world.inDungeon || !water?.splash) return;
   const depth = feetWaterDepth(world, pos.x, pos.z, pos.y, height(pos.x, pos.z));
   if (depth > 0.04 && lastFeetDepth <= 0.02) {
-    const impact = clamp75(-verticalBefore / 7, 0, 1);
+    const impact = clamp76(-verticalBefore / 7, 0, 1);
     water.splash(pos.x, pos.z, 0.55 + 0.65 * impact, -0.08 - 0.32 * impact);
   }
   lastFeetDepth = depth;
@@ -106438,7 +109437,7 @@ function strokeRipple(effort) {
   const water = world.realisticWater;
   if (world.inDungeon || !water?.splash || swimming.state.underwater) return;
   const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
-  water.splash(pos.x + fx * 0.6, pos.z + fz * 0.6, 0.5, -0.06 - 0.07 * clamp75(effort || 0, 0, 1));
+  water.splash(pos.x + fx * 0.6, pos.z + fz * 0.6, 0.5, -0.06 - 0.07 * clamp76(effort || 0, 0, 1));
 }
 function surface3() {
   if (world.inDungeon) return feetWaterDepth(world, pos.x, pos.z, pos.y, pos.y) > 0.035 ? "Water" : "Stone";
@@ -107182,15 +110181,15 @@ function pickTarget() {
     }
   }
   const shown = nearest ? type + "\n" + key3 + "\n" + nearest.name + "\n" + !!aimed : "";
-  const box4 = $("#interaction");
-  if (shown === shownTarget && box4.classList.contains("hidden") === !nearest) return;
+  const box5 = $("#interaction");
+  if (shown === shownTarget && box5.classList.contains("hidden") === !nearest) return;
   shownTarget = shown;
   if (nearest) {
     $("#interactType").textContent = type;
     $("#interaction kbd").textContent = key3;
     $("#interactName").textContent = nearest.name;
-    box4.classList.remove("hidden");
-  } else box4.classList.add("hidden");
+    box5.classList.remove("hidden");
+  } else box5.classList.add("hidden");
   $("#aim")?.classList.toggle("targeted", !!aimed);
 }
 function updateHUD() {
@@ -107278,7 +110277,7 @@ function openPanel(type) {
   const content = $("#panelContent");
   if (type === "inventory") type = "craft";
   const benchHere = !!survival?.stationNear?.("workbench");
-  const titles = { craft: benchHere ? ["作業台で", "つくる"] : ["草と枝と石から", "つくる"], chest: ["しまっておく", openChestStation?.def?.name || "収納箱"], map: ["古い道と、まだ見ぬ地平", "KUMARIM"], settings: ["あなたの旅に合わせて", "設定"], help: ["旅人の手引き", "操作ガイド"], journal: ["探索の記録", "島の情報"] };
+  const titles = { craft: benchHere ? ["作業台で", "つくる"] : ["草と枝と石から", "つくる"], chest: [openChestStation?.kind === "livewell" || openChestStation?.kind === "cage" ? "生かしておく" : "しまっておく", openChestStation?.def?.name || "収納箱"], map: ["古い道と、まだ見ぬ地平", "KUMARIM"], settings: ["あなたの旅に合わせて", "設定"], help: ["旅人の手引き", "操作ガイド"], journal: ["探索の記録", "島の情報"] };
   if (type === "map" && world.inDungeon && world.currentCave?.caveId === "underworld") titles.map = ["闇の底に広がる大空洞", "地下世界"];
   $("#panelEyebrow").textContent = titles[type][0];
   $("#panelTitle").textContent = titles[type][1];
@@ -107309,7 +110308,7 @@ function openPanel(type) {
       bases: survival?.bases?.() || []
     });
   } else if (type === "settings") {
-    content.innerHTML = `<section class="settings-group"><h3>グラフィック</h3><div class="settings-row"><label for="quality">全体のグラフィック<small id="qualityNote"></small></label><select id="quality"><option value="ultra">最高画質</option><option value="high">高画質</option><option value="balanced">標準</option><option value="low">軽量</option></select></div><details class="settings-details" id="graphicsDetails"${settingsOpen.graphics ? " open" : ""}><summary>詳細設定</summary><div data-slot="sky-quality"></div><div class="settings-row"><label for="skyCadence">空と雲の描き直し<small>雲・空の見え方・水に映る空を描き直す間隔です。間をあけるほど軽くなります（雲はゆっくり流れ、描き直しの間はなめらかにつながるので、見た目はほとんど変わりません）</small></label><select id="skyCadence"><option value="4">4 フレームに 1 回（おすすめ）</option><option value="3">3 フレームに 1 回</option><option value="2">2 フレームに 1 回（v114.2 まで）</option></select></div><div class="settings-row"><label for="plantTrample">草や草花が体でしなる・踏み跡<small>歩くと草・シダ・葦が体に押されてしなり、通った所は踏み分けた跡が残って数十秒で起き上がります（鹿も）</small></label><select id="plantTrample"><option value="on">オン</option><option value="off">オフ（v115.1 まで）</option></select></div><div class="settings-row"><label for="footprints">足跡<small>砂浜・雪・ぬかるみ・灰の上に足跡が残り、数分で消えます（波打ち際はすぐ）</small></label><select id="footprints"><option value="on">オン</option><option value="off">オフ（v115.1 まで）</option></select></div><div class="settings-row"><label for="groundBounce">地面の照り返しの色<small>物の下側や横に当たる、地面からの照り返しの色です。草原は緑、砂浜は暖かく、雪は白く明るく、水辺は青みがかります</small></label><select id="groundBounce"><option value="local">その場所の地面の色</option><option value="even">一律（v115.1 まで）</option></select></div><div class="settings-row"><label for="terrainShade">谷や崖の陰影<small>谷・沢・崖の足元・入り江の奥を、空の光が届きにくい分だけ暗くします</small></label><select id="terrainShade"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="eyeAdapt">明るさに目が慣れる<small>暗い所では少しずつ明るく見え、明るい所に出るとまぶしさがゆっくり引きます（夜と洞窟の暗さは保ちます）</small></label><select id="eyeAdapt"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="lightShafts">光の筋（木漏れ日）<small>森の中で、葉の隙間から差す日の光が、空気の中に筋になって見えます（全体のグラフィックが「軽量」では出ません）</small></label><select id="lightShafts"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="bloom">ブルーム（光のにじみ）<small>空・水のきらめき・火・水晶など、明るい所の光がやわらかくにじみます（全体のグラフィックが「軽量」では出ません）</small></label><select id="bloom"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="grade">色の仕上げ<small>映画のように、明るい所をほんのり暖かく、暗い所をほんのり涼しい色にします（夕方と夜は控えめ。全体のグラフィックが「軽量」では出ません）</small></label><select id="grade"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="grain">フィルムの粒子<small>ごく薄い粒子をのせて、カメラで撮ったような質感にします（好みで。全体のグラフィックが「軽量」では出ません）</small></label><select id="grain"><option value="off">オフ</option><option value="on">オン</option></select></div><div class="settings-row"><label for="haze">島の空気<small>遠くの海と景色を、地平線に近いほど白っぽくかすませます（朝は濃く低く、昼に向けて晴れていきます。全体のグラフィックが「軽量」では出ません）</small></label><select id="haze"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="crownLight">木の日なたと日陰<small>木の茂みの日の当たる側を明るく、内側と反対側を暗くし、遠くの地面にも木の影の模様を落とします（木の形ごとに読み込み中に計算したものを使います）</small></label><select id="crownLight"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="renderResolution">描画解像度<small>3D映像の精細さと描画負荷</small></label><select id="renderResolution">${RESOLUTION_PRESETS.map((p2) => `<option value="${p2.value}">${p2.label}</option>`).join("")}</select></div><p class="panel-copy resolution-note"><span id="renderResolutionValue" aria-live="polite"></span><br>画面の縦横比を保って描画します。文字や操作パネルの大きさは変わりません。</p><div class="settings-row"><label for="frameRate">フレームレート上限<small>滑らかさとCPU・GPUの負荷を調整</small></label><select id="frameRate">${FRAME_RATE_PRESETS.map((p2) => `<option value="${p2.value}">${p2.label}</option>`).join("")}</select></div><p class="panel-copy">設定値は上限です。実際のFPSは画面のリフレッシュレートと処理性能に応じて変わります。</p><div class="craft-actions"><button class="outline-button" type="button" id="graphicsPresetReset">全体のグラフィックのおすすめに戻す</button></div></details></section><section class="settings-group"><h3>音</h3><div class="settings-row"><label for="volume">全体の音量</label><input id="volume" type="range" min="0" max="1" step=".05" value="${settings.volume}"></div>${[["effects", "効果音"], ["ambience", "自然・環境音"]].map(([key3, label]) => `<div class="settings-row"><label for="${key3}">${label}</label><input id="${key3}" type="range" min="0" max="1" step=".05" value="${settings[key3]}"></div>`).join("")}</section><section class="settings-group"><h3>操作</h3><div class="settings-row"><label for="fov">視野の広さ<small>主観視点の見える範囲</small></label><input id="fov" type="range" min="55" max="85" step="1" value="${settings.fov}"></div><div class="settings-row"><label for="sensitivity">視点の感度</label><input id="sensitivity" type="range" min=".2" max="1.6" step=".1" value="${settings.sensitivity}"></div></section><section class="settings-group"><h3>記録</h3><p class="panel-copy">島の記録は、このブラウザに自動で保存されます。閉じたあとも「つづきから」で再開できます。倒れると、その島の記録は消えます。</p><div class="craft-actions"><button class="outline-button" id="saveButton">記録する</button><button class="outline-button" id="fullscreenButton">全画面表示</button><button class="outline-button" id="guideButton">操作ガイド</button></div></section><section class="settings-group"><h3>止まった時の記録</h3><p class="panel-copy" id="hitchLogStatus"></p><div class="craft-actions"><button class="outline-button" type="button" id="hitchLogCopy">止まった記録をコピー</button></div><textarea id="hitchLogText" readonly hidden style="width:100%;min-height:180px;margin-top:8px;font:11px/1.5 monospace;background:rgba(0,0,0,.35);color:inherit;border:1px solid rgba(255,255,255,.18);border-radius:6px;padding:8px"></textarea></section><section class="settings-group"><h3>ロードの記録</h3><p class="panel-copy" id="loadTimingStatus"></p><pre id="loadTimingList" style="white-space:pre-wrap;margin:6px 0 8px;font:11px/1.6 monospace;max-height:220px;overflow:auto;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:8px"></pre><div class="craft-actions"><button class="outline-button" type="button" id="loadTimingCopy">ロードの記録をコピー</button></div></section><div data-slot="world-reset"></div><details class="settings-details debug-settings" id="debugSettings"${settingsOpen.debug ? " open" : ""}><summary>デバッグ（確認用）</summary><p class="panel-copy">開発中に見た目や動きを確かめるための設定です。</p><section class="craft-block"><h3>動き・体力・クラフト・明かり</h3><div class="settings-row"><label for="debugFly">自由移動<small>見ている方へ飛んで動きます（W・A・S・D、Space で上、C か Ctrl で下、Shift で速く）。木・岩・建物を通り抜け、地面より下には行きません。地下世界では岩の中も通り抜けられ、オフにすると近くの床に降ります。プレイ中に F8 でも切り替えます</small></label><select id="debugFly"><option value="off">オフ</option><option value="on">オン</option></select></div><div class="settings-row"><label for="debugGod">無敵<small>体力が減らず、倒れません（空腹と正気は今までどおり減ります）。プレイ中に F9 でも切り替えます</small></label><select id="debugGod"><option value="off">オフ</option><option value="on">オン</option></select></div><div class="settings-row"><label for="debugCraft">材料なしでクラフト<small>材料がなくても作れます（材料は減らず、かまどの燃料も使いません）。まだ作り方を知らない物も全部出ます。作業台やかまどが要る物は、今までどおりそのそばで作ります</small></label><select id="debugCraft"><option value="off">オフ</option><option value="on">オン</option></select></div><div class="settings-row"><label for="debugLight">明かり<small>まわりを明るくして、地下や夜の様子を確かめます。「松明くらい」は自分のまわりを松明を持った時と同じくらいに、「広く明るく」は遠くまで明るくします（地下では空気の明るさを上げて霧を薄くします）。見え方だけで、闇の危険はそのままです。プレイ中に F7 でも切り替えます</small></label><select id="debugLight"><option value="off">オフ</option><option value="torch">松明を持つ</option><option value="wide">広く明るく</option></select></div><p class="panel-copy">どれも記録には残らず、ページを開き直すとオフに戻ります。</p></section><section class="craft-block"><h3>場所の確認</h3><div class="settings-row"><label for="debugPlaces">すべての場所を表示<small>地下の入口・縦穴・島の目印・探索場所・物語の場所・橋・滝・巨獣の住処を、見つけていなくても地図（M）に表示します（画面には出しません）。地下世界では、その層の場所すべてと地図の全体を表示します。地図の一覧から選ぶと、その場所のそばへ移動できます</small></label><select id="debugPlaces"><option value="off">オフ</option><option value="on">オン</option></select></div><p class="panel-copy" id="debugPlacesNote"></p></section><section class="craft-block"><h3>正気度（ホラーの確認）</h3><div class="settings-row"><label for="debugSanity">正気度 <b id="debugSanityValue">100</b><small>動かすと、その値になります。50 未満で空耳、30 未満で影の幻、15 未満で襲ってくる影（8 未満で 2 体）、10 未満でまれに目の前の影と視界のちらつきが出ます</small></label><input id="debugSanity" type="range" min="0" max="100" step="1" value="100"></div><div class="settings-row"><label for="debugMindHold">正気度を固定<small>オンにすると、上の値のまま減りも増えもしません（0 で固定すると体力が減り続けます。無敵と一緒に使えます）</small></label><select id="debugMindHold"><option value="off">オフ</option><option value="on">オン</option></select></div><p class="panel-copy">すぐに出す（設定を閉じて 1 秒後に出ます。影は地上だけです。襲ってくる影は、正気度が 15 以上なら 12 にしてから出します）</p><div class="craft-actions" style="flex-wrap:wrap;flex-direction:row;margin-top:8px"><button class="outline-button" type="button" data-horror="phantom">空耳</button><button class="outline-button" type="button" data-horror="watcher">影の幻</button><button class="outline-button" type="button" data-horror="behind">後ろの影</button><button class="outline-button" type="button" data-horror="stalker">襲ってくる影</button><button class="outline-button" type="button" data-horror="scare">目の前の影</button></div><p class="panel-copy" id="debugHorrorNote"></p></section><div data-slot="time"></div><div data-slot="weather"></div><div data-slot="water"></div>${treeTierOptionsHtml(settings.quality, settings.treeTiers)}<section class="craft-block"><h3>パフォーマンス</h3><div class="settings-row"><label for="performanceDisplay">パフォーマンス表示<small>プレイ中のFPSや描画負荷を表示</small></label><select id="performanceDisplay"><option value="off">非表示</option><option value="basic">FPSのみ</option><option value="detail">詳細</option></select></div><p class="panel-copy">詳細ではCPU・GPUの処理時間、描画回数、三角形数などを表示します。GPU使用率ではありません。GPU計測に対応しない環境では「非対応」と表示されます。</p><div data-slot="diagnostics"></div></section></details><details class="asset-credits"><summary>素材クレジット</summary><p>地面・針葉樹・樹皮・環境光: <a href="https://polyhaven.com" target="_blank" rel="noreferrer">Poly Haven</a> (CC0)<br>鹿: CDmir / TinyWorlds (CC0)<br>描画: Three.js (MIT)<br>守護者: Čestmír Dammer (CC0)。広葉樹・松・下草・倒木・岩・石造遺跡・宝箱の出典は<a href="./ATTRIBUTION-environment.txt" target="_blank" rel="noreferrer">環境素材のクレジット</a>をご覧ください。</p><p>効果音: Kenney / qubodup (CC0)。風: Jonathan Shaw (InspectorJ) / AntumDeluge (CC BY 3.0)。川: Antoine Goumain (CC BY 4.0)。水場の足音: Blender Foundation (CC BY 3.0)、泳ぐ音: Peludo (CC0)。<a href="./audio/ATTRIBUTION.txt" target="_blank" rel="noreferrer">音素材の出典・ライセンス</a>。<a href="./audio/SOUNDSCAPE-ATTRIBUTION.txt" target="_blank" rel="noreferrer">追加した自然音の出典・ライセンス</a>。素材は音量・ループ・形式を調整。波・夜の虫・葉擦れ・草・小川・滝の音と、風・水・焚き火の音響補完、ジャンプ・被弾の追加モーションは本作向けに制作。</p></details>`;
+    content.innerHTML = `<section class="settings-group"><h3>グラフィック</h3><div class="settings-row"><label for="quality">全体のグラフィック<small id="qualityNote"></small></label><select id="quality"><option value="ultra">最高画質</option><option value="high">高画質</option><option value="balanced">標準</option><option value="low">軽量</option></select></div><details class="settings-details" id="graphicsDetails"${settingsOpen.graphics ? " open" : ""}><summary>詳細設定</summary><div data-slot="sky-quality"></div><div class="settings-row"><label for="skyCadence">空と雲の描き直し<small>雲・空の見え方・水に映る空を描き直す間隔です。間をあけるほど軽くなります（雲はゆっくり流れ、描き直しの間はなめらかにつながるので、見た目はほとんど変わりません）</small></label><select id="skyCadence"><option value="4">4 フレームに 1 回（おすすめ）</option><option value="3">3 フレームに 1 回</option><option value="2">2 フレームに 1 回（v114.2 まで）</option></select></div><div class="settings-row"><label for="plantTrample">草や草花が体でしなる・踏み跡<small>歩くと草・シダ・葦が体に押されてしなり、通った所は踏み分けた跡が残って数十秒で起き上がります（鹿も）</small></label><select id="plantTrample"><option value="on">オン</option><option value="off">オフ（v115.1 まで）</option></select></div><div class="settings-row"><label for="footprints">足跡<small>砂浜・雪・ぬかるみ・灰の上に足跡が残り、数分で消えます（波打ち際はすぐ）</small></label><select id="footprints"><option value="on">オン</option><option value="off">オフ（v115.1 まで）</option></select></div><div class="settings-row"><label for="groundBounce">地面の照り返しの色<small>物の下側や横に当たる、地面からの照り返しの色です。草原は緑、砂浜は暖かく、雪は白く明るく、水辺は青みがかります</small></label><select id="groundBounce"><option value="local">その場所の地面の色</option><option value="even">一律（v115.1 まで）</option></select></div><div class="settings-row"><label for="terrainShade">谷や崖の陰影<small>谷・沢・崖の足元・入り江の奥を、空の光が届きにくい分だけ暗くします</small></label><select id="terrainShade"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="eyeAdapt">明るさに目が慣れる<small>暗い所では少しずつ明るく見え、明るい所に出るとまぶしさがゆっくり引きます（夜と洞窟の暗さは保ちます）</small></label><select id="eyeAdapt"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="lightShafts">光の筋（木漏れ日）<small>森の中で、葉の隙間から差す日の光が、空気の中に筋になって見えます（全体のグラフィックが「軽量」では出ません）</small></label><select id="lightShafts"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="bloom">ブルーム（光のにじみ）<small>空・水のきらめき・火・水晶など、明るい所の光がやわらかくにじみます（全体のグラフィックが「軽量」では出ません）</small></label><select id="bloom"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="grade">色の仕上げ<small>映画のように、明るい所をほんのり暖かく、暗い所をほんのり涼しい色にします（夕方と夜は控えめ。全体のグラフィックが「軽量」では出ません）</small></label><select id="grade"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="grain">フィルムの粒子<small>ごく薄い粒子をのせて、カメラで撮ったような質感にします（好みで。全体のグラフィックが「軽量」では出ません）</small></label><select id="grain"><option value="off">オフ</option><option value="on">オン</option></select></div><div class="settings-row"><label for="haze">島の空気<small>遠くの海と景色を、地平線に近いほど白っぽくかすませます（朝は濃く低く、昼に向けて晴れていきます。全体のグラフィックが「軽量」では出ません）</small></label><select id="haze"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="crownLight">木の日なたと日陰<small>木の茂みの日の当たる側を明るく、内側と反対側を暗くし、遠くの地面にも木の影の模様を落とします（木の形ごとに読み込み中に計算したものを使います）</small></label><select id="crownLight"><option value="on">オン</option><option value="off">オフ</option></select></div><div class="settings-row"><label for="renderResolution">描画解像度<small>3D映像の精細さと描画負荷</small></label><select id="renderResolution">${RESOLUTION_PRESETS.map((p2) => `<option value="${p2.value}">${p2.label}</option>`).join("")}</select></div><p class="panel-copy resolution-note"><span id="renderResolutionValue" aria-live="polite"></span><br>画面の縦横比を保って描画します。文字や操作パネルの大きさは変わりません。</p><div class="settings-row"><label for="frameRate">フレームレート上限<small>滑らかさとCPU・GPUの負荷を調整</small></label><select id="frameRate">${FRAME_RATE_PRESETS.map((p2) => `<option value="${p2.value}">${p2.label}</option>`).join("")}</select></div><p class="panel-copy">設定値は上限です。実際のFPSは画面のリフレッシュレートと処理性能に応じて変わります。</p><div class="craft-actions"><button class="outline-button" type="button" id="graphicsPresetReset">全体のグラフィックのおすすめに戻す</button></div></details></section><section class="settings-group"><h3>音</h3><div class="settings-row"><label for="volume">全体の音量</label><input id="volume" type="range" min="0" max="1" step=".05" value="${settings.volume}"></div>${[["effects", "効果音"], ["ambience", "自然・環境音"]].map(([key3, label]) => `<div class="settings-row"><label for="${key3}">${label}</label><input id="${key3}" type="range" min="0" max="1" step=".05" value="${settings[key3]}"></div>`).join("")}</section><section class="settings-group"><h3>操作</h3><div class="settings-row"><label for="fov">視野の広さ<small>主観視点の見える範囲</small></label><input id="fov" type="range" min="55" max="85" step="1" value="${settings.fov}"></div><div class="settings-row"><label for="sensitivity">視点の感度</label><input id="sensitivity" type="range" min=".2" max="1.6" step=".1" value="${settings.sensitivity}"></div></section><section class="settings-group"><h3>記録</h3><p class="panel-copy">島の記録は、このブラウザに自動で保存されます。閉じたあとも「つづきから」で再開できます。倒れると、その島の記録は消えます。</p><div class="craft-actions"><button class="outline-button" id="saveButton">記録する</button><button class="outline-button" id="fullscreenButton">全画面表示</button><button class="outline-button" id="guideButton">操作ガイド</button></div></section><section class="settings-group"><h3>止まった時の記録</h3><p class="panel-copy" id="hitchLogStatus"></p><div class="craft-actions"><button class="outline-button" type="button" id="hitchLogCopy">止まった記録をコピー</button></div><textarea id="hitchLogText" readonly hidden style="width:100%;min-height:180px;margin-top:8px;font:11px/1.5 monospace;background:rgba(0,0,0,.35);color:inherit;border:1px solid rgba(255,255,255,.18);border-radius:6px;padding:8px"></textarea></section><section class="settings-group"><h3>ロードの記録</h3><p class="panel-copy" id="loadTimingStatus"></p><pre id="loadTimingList" style="white-space:pre-wrap;margin:6px 0 8px;font:11px/1.6 monospace;max-height:220px;overflow:auto;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:8px"></pre><div class="craft-actions"><button class="outline-button" type="button" id="loadTimingCopy">ロードの記録をコピー</button></div></section><div data-slot="world-reset"></div><details class="settings-details debug-settings" id="debugSettings"${settingsOpen.debug ? " open" : ""}><summary>デバッグ（確認用）</summary><p class="panel-copy">開発中に見た目や動きを確かめるための設定です。</p><section class="craft-block"><h3>シェーダーの作成時間（v146）</h3><p class="panel-copy" id="shaderProbeStatus">蒼輝石・水面・岩のシェーダーを、そのままの形と一部を外した形で作り直して、かかる時間を測ります（Firefox で蒼輝石と水面の準備に時間がかかる原因を探すためです）。測っている間は画面が止まることがあります（Firefox では 1〜3 分ほど）。結果は止まった記録と一緒に保存されます。</p><div class="craft-actions"><button class="outline-button" type="button" id="shaderProbeRun">測る</button></div><pre id="shaderProbeText" hidden style="white-space:pre-wrap;margin:6px 0 8px;font:11px/1.6 monospace;max-height:220px;overflow:auto;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:8px"></pre></section><section class="craft-block"><h3>動き・体力・クラフト・明かり</h3><div class="settings-row"><label for="debugFly">自由移動<small>見ている方へ飛んで動きます（W・A・S・D、Space で上、C か Ctrl で下、Shift で速く）。木・岩・建物を通り抜け、地面より下には行きません。地下世界では岩の中も通り抜けられ、オフにすると近くの床に降ります。プレイ中に F8 でも切り替えます</small></label><select id="debugFly"><option value="off">オフ</option><option value="on">オン</option></select></div><div class="settings-row"><label for="debugGod">無敵<small>体力が減らず、倒れません（空腹と正気は今までどおり減ります）。プレイ中に F9 でも切り替えます</small></label><select id="debugGod"><option value="off">オフ</option><option value="on">オン</option></select></div><div class="settings-row"><label for="debugCraft">材料なしでクラフト<small>材料がなくても作れます（材料は減らず、かまどの燃料も使いません）。まだ作り方を知らない物も全部出ます。作業台やかまどが要る物は、今までどおりそのそばで作ります</small></label><select id="debugCraft"><option value="off">オフ</option><option value="on">オン</option></select></div><div class="settings-row"><label for="debugLight">明かり<small>まわりを明るくして、地下や夜の様子を確かめます。「松明くらい」は自分のまわりを松明を持った時と同じくらいに、「広く明るく」は遠くまで明るくします（地下では空気の明るさを上げて霧を薄くします）。見え方だけで、闇の危険はそのままです。プレイ中に F7 でも切り替えます</small></label><select id="debugLight"><option value="off">オフ</option><option value="torch">松明を持つ</option><option value="wide">広く明るく</option></select></div><p class="panel-copy">どれも記録には残らず、ページを開き直すとオフに戻ります。</p></section><section class="craft-block"><h3>場所の確認</h3><div class="settings-row"><label for="debugPlaces">すべての場所を表示<small>地下の入口・縦穴・島の目印・探索場所・物語の場所・橋・滝・巨獣の住処を、見つけていなくても地図（M）に表示します（画面には出しません）。地下世界では、その層の場所すべてと地図の全体を表示します。地図の一覧から選ぶと、その場所のそばへ移動できます</small></label><select id="debugPlaces"><option value="off">オフ</option><option value="on">オン</option></select></div><p class="panel-copy" id="debugPlacesNote"></p></section><section class="craft-block"><h3>正気度（ホラーの確認）</h3><div class="settings-row"><label for="debugSanity">正気度 <b id="debugSanityValue">100</b><small>動かすと、その値になります。50 未満で空耳、30 未満で影の幻、15 未満で襲ってくる影（8 未満で 2 体）、10 未満でまれに目の前の影と視界のちらつきが出ます</small></label><input id="debugSanity" type="range" min="0" max="100" step="1" value="100"></div><div class="settings-row"><label for="debugMindHold">正気度を固定<small>オンにすると、上の値のまま減りも増えもしません（0 で固定すると体力が減り続けます。無敵と一緒に使えます）</small></label><select id="debugMindHold"><option value="off">オフ</option><option value="on">オン</option></select></div><p class="panel-copy">すぐに出す（設定を閉じて 1 秒後に出ます。影は地上だけです。襲ってくる影は、正気度が 15 以上なら 12 にしてから出します）</p><div class="craft-actions" style="flex-wrap:wrap;flex-direction:row;margin-top:8px"><button class="outline-button" type="button" data-horror="phantom">空耳</button><button class="outline-button" type="button" data-horror="watcher">影の幻</button><button class="outline-button" type="button" data-horror="behind">後ろの影</button><button class="outline-button" type="button" data-horror="stalker">襲ってくる影</button><button class="outline-button" type="button" data-horror="scare">目の前の影</button></div><p class="panel-copy" id="debugHorrorNote"></p></section><div data-slot="time"></div><div data-slot="weather"></div><div data-slot="water"></div>${treeTierOptionsHtml(settings.quality, settings.treeTiers)}<section class="craft-block"><h3>パフォーマンス</h3><div class="settings-row"><label for="performanceDisplay">パフォーマンス表示<small>プレイ中のFPSや描画負荷を表示</small></label><select id="performanceDisplay"><option value="off">非表示</option><option value="basic">FPSのみ</option><option value="detail">詳細</option></select></div><p class="panel-copy">詳細ではCPU・GPUの処理時間、描画回数、三角形数などを表示します。GPU使用率ではありません。GPU計測に対応しない環境では「非対応」と表示されます。</p><div data-slot="diagnostics"></div></section></details><details class="asset-credits"><summary>素材クレジット</summary><p>地面・針葉樹・樹皮・環境光: <a href="https://polyhaven.com" target="_blank" rel="noreferrer">Poly Haven</a> (CC0)<br>鹿: CDmir / TinyWorlds (CC0)<br>描画: Three.js (MIT)<br>守護者: Čestmír Dammer (CC0)。広葉樹・松・下草・倒木・岩・石造遺跡・宝箱の出典は<a href="./ATTRIBUTION-environment.txt" target="_blank" rel="noreferrer">環境素材のクレジット</a>をご覧ください。</p><p>効果音: Kenney / qubodup (CC0)。風: Jonathan Shaw (InspectorJ) / AntumDeluge (CC BY 3.0)。川: Antoine Goumain (CC BY 4.0)。水場の足音: Blender Foundation (CC BY 3.0)、泳ぐ音: Peludo (CC0)。<a href="./audio/ATTRIBUTION.txt" target="_blank" rel="noreferrer">音素材の出典・ライセンス</a>。<a href="./audio/SOUNDSCAPE-ATTRIBUTION.txt" target="_blank" rel="noreferrer">追加した自然音の出典・ライセンス</a>。素材は音量・ループ・形式を調整。波・夜の虫・葉擦れ・草・小川・滝の音と、風・水・焚き火の音響補完、ジャンプ・被弾の追加モーションは本作向けに制作。</p></details>`;
     const slot = (name) => content.querySelector(`[data-slot="${name}"]`);
     const skyRow = appendSkyQualityOptions(slot("sky-quality"), { quality: settings.skyQuality, onChanged: (quality) => {
       world.setSkyQuality(quality);
@@ -107518,17 +110517,43 @@ function openPanel(type) {
         }
       };
     }
+    $("#shaderProbeRun").onclick = async () => {
+      const button = $("#shaderProbeRun"), status = $("#shaderProbeStatus"), text2 = $("#shaderProbeText");
+      if (shaderProbeBusy || !world?.renderer) return;
+      shaderProbeBusy = true;
+      button.disabled = true;
+      text2.hidden = false;
+      text2.textContent = "";
+      status.textContent = "測っています…";
+      try {
+        const out2 = await probeShaders({ renderer: world.renderer, scenes: [world.scene], onStep: (step) => {
+          if (!button.isConnected) return;
+          if (step.result) text2.textContent += shaderProbeText({ results: [step.result] }).split("\n").slice(2).join("\n") + "\n";
+          status.textContent = `測っています… ${step.i}/${step.n}` + (step.label ? `（${step.label}）` : "");
+        } });
+        const saved2 = await hitchLog?.store?.("shader-probes", `${hitchLog.session}-${++shaderProbeSaves}`, { v: gameVersion(), saved: (/* @__PURE__ */ new Date()).toISOString(), ...out2 });
+        if (button.isConnected) {
+          text2.textContent = shaderProbeText(out2);
+          status.textContent = saved2 ? "測り終えました（結果は保存しました。Claude が読めます）。" : "測り終えました（このページでは保存できないので、下の文字をコピーしてチャットに貼り付けてください）。";
+        }
+      } catch (error) {
+        if (button.isConnected) status.textContent = "測れませんでした: " + String(error?.message || error).slice(0, 120);
+      } finally {
+        shaderProbeBusy = false;
+        if (button.isConnected) button.disabled = false;
+      }
+    };
     $("#hitchLogCopy").onclick = async () => {
       const text2 = hitchLog?.text() || "記録はまだありません。", button = $("#hitchLogCopy");
       try {
         await navigator.clipboard.writeText(text2);
         button.textContent = "コピーしました（チャットに貼り付けてください）";
       } catch {
-        const box4 = $("#hitchLogText");
-        box4.hidden = false;
-        box4.value = text2;
-        box4.focus();
-        box4.select();
+        const box5 = $("#hitchLogText");
+        box5.hidden = false;
+        box5.value = text2;
+        box5.focus();
+        box5.select();
         button.textContent = "下の文字を選んでコピーしてください（Ctrl+C / ⌘+C）";
       }
     };
@@ -107843,7 +110868,7 @@ function devTeleport({ x, z, yaw: a, pitch: p2, lift = 0, instant = false } = {}
   velocity.set(0, 0, 0);
   pos.set(x, height(x, z), z);
   if (Number.isFinite(a)) yaw = a;
-  if (Number.isFinite(p2)) pitch = clamp75(p2, -1.25, 1.25);
+  if (Number.isFinite(p2)) pitch = clamp76(p2, -1.25, 1.25);
   world.stream(x, z, !!instant);
   devHoverY = null;
   resetVerticalMotion();
@@ -108104,7 +111129,7 @@ function devCommands() {
         world.eyeY = void 0;
       }
       if (Number.isFinite(a)) yaw = a;
-      if (Number.isFinite(p2)) pitch = clamp75(p2, -1.25, 1.25);
+      if (Number.isFinite(p2)) pitch = clamp76(p2, -1.25, 1.25);
       return prepare2 ? world.dungeonController.prepareAround(pos.x, pos.z, 60).then(() => ({ x: pos.x, y: pos.y, z: pos.z, stats: world.dungeonController.stats() })) : { x: pos.x, y: pos.y, z: pos.z };
     },
     /* v104: the underworld's map: walk these points (seen, found) and open the map. */
@@ -108138,7 +111163,7 @@ function devCommands() {
     underworld: () => ({ plan: world.underworldPlan?.stats, mouths: world.caveMouths?.stats(), runtime: world.underworld?.stats() ?? null, inDungeon: world.inDungeon, area: world.dungeonController?.area?.() ?? null }),
     look: ({ yaw: a, pitch: p2 }) => {
       if (Number.isFinite(a)) yaw = a;
-      if (Number.isFinite(p2)) pitch = clamp75(p2, -1.25, 1.25);
+      if (Number.isFinite(p2)) pitch = clamp76(p2, -1.25, 1.25);
       return { yaw, pitch };
     },
     time: ({ minute }) => {
@@ -108293,6 +111318,8 @@ function restoreGpuDebugCamera(token2) {
   }
 }
 var gpuBenchmarkSaves = 0;
+var shaderProbeSaves = 0;
+var shaderProbeBusy = false;
 function saveGpuBenchmark(report) {
   if (!report || report.status !== "complete" || !hitchLog?.store) return;
   void hitchLog.store("gpu-benchmarks", `${hitchLog.session}-${++gpuBenchmarkSaves}`, {
@@ -108365,7 +111392,7 @@ async function goToBenchPlace(place, { onProgress = () => {
     pos.x = place.x;
     pos.z = place.z;
     yaw = place.yaw;
-    pitch = clamp75(place.pitch, -1.25, 1.25);
+    pitch = clamp76(place.pitch, -1.25, 1.25);
   };
   put2();
   pos.y = height(place.x, place.z);
@@ -108462,7 +111489,7 @@ function openGpuDebug() {
   const pending = (async () => {
     await Promise.allSettled([previousClose, previousLoad]);
     if (!gpuDebugWanted || epoch !== gpuDebugEpoch) return null;
-    const { createGpuDebugRuntime } = await import("./chunk-OOQT66CP.js");
+    const { createGpuDebugRuntime } = await import("./chunk-LNM4UIKI.js");
     if (!gpuDebugWanted || epoch !== gpuDebugEpoch) return null;
     const runtime = await createGpuDebugRuntime({ world, host: gpuDebugHost(), onClose: () => closeGpuDebug({ resume: true }) });
     if (!gpuDebugWanted || epoch !== gpuDebugEpoch) {
@@ -108590,7 +111617,7 @@ canvas.addEventListener("pointermove", (e) => {
   const dx = e.clientX - lastPointer.x, dy = e.clientY - lastPointer.y;
   camMoved += Math.abs(dx) + Math.abs(dy);
   yaw -= dx * 6e-3 * settings.sensitivity;
-  pitch = clamp75(pitch + dy * 35e-4 * settings.sensitivity, -1.25, 1.25);
+  pitch = clamp76(pitch + dy * 35e-4 * settings.sensitivity, -1.25, 1.25);
   lastPointer = { x: e.clientX, y: e.clientY };
 });
 var lookFilter = createLookFilter();
@@ -108623,16 +111650,16 @@ canvas.addEventListener("mousemove", (e) => {
   mouseInside = true;
   if (cameraDragging) camMoved += Math.abs(dx) + Math.abs(dy);
   yaw -= dx * 32e-4 * settings.sensitivity;
-  pitch = clamp75(pitch + dy * 27e-4 * settings.sensitivity, -1.25, 1.25);
+  pitch = clamp76(pitch + dy * 27e-4 * settings.sensitivity, -1.25, 1.25);
 });
 window.addEventListener("pointerup", (e) => {
   if (e.button === 0) mouseAttackHeld = false;
 });
 window.addEventListener("mousemove", (e) => {
   if (!hoverLook || document.pointerLockElement === canvas || cameraDragging || e.sourceCapabilities?.firesTouchEvents || !active() || gpuDebugBlocksInput()) return;
-  const dx = clamp75(e.movementX || 0, -90, 90), dy = clamp75(e.movementY || 0, -90, 90);
+  const dx = clamp76(e.movementX || 0, -90, 90), dy = clamp76(e.movementY || 0, -90, 90);
   yaw -= dx * 32e-4 * settings.sensitivity;
-  pitch = clamp75(pitch + dy * 27e-4 * settings.sensitivity, -1.25, 1.25);
+  pitch = clamp76(pitch + dy * 27e-4 * settings.sensitivity, -1.25, 1.25);
 });
 canvas.addEventListener("pointerup", (e) => {
   if (!cameraDragging || e.pointerId !== pointerId) return;
@@ -109017,9 +112044,14 @@ try {
       const list = dragon && dragon.alive && dragon.active && !world.inDungeon ? [...entityList(), dragon.arrowTarget] : entityList();
       if (undead && !world.inDungeon) list.push(undead.arrowTarget);
       if (horror && !world.inDungeon) list.push(horror.arrowTarget);
+      if (!world.inDungeon) {
+        if (world.shoreLife) list.push(world.shoreLife.arrowTarget);
+        if (world.islandFish?.arrowTarget) list.push(world.islandFish.arrowTarget);
+        if (world.forestLife?.arrowTarget) list.push(world.forestLife.arrowTarget);
+      }
       return list;
     },
-    hit: (target, amount, point5, info, dir) => target.horrorTarget ? horror?.arrowHit(info, amount, dir) : target.undeadTarget ? undead?.arrowHit(info, amount, dir) : target.dragonTarget ? dragonBlowFeedback(target.struck(amount, info, dir)) : damageEnemy(target, amount),
+    hit: (target, amount, point5, info, dir) => target.critterTarget ? (target.critterTarget === "fish" ? world.islandFish : target.critterTarget === "forest" ? world.forestLife : world.shoreLife)?.arrowHit?.(info) : target.horrorTarget ? horror?.arrowHit(info, amount, dir) : target.undeadTarget ? undead?.arrowHit(info, amount, dir) : target.dragonTarget ? dragonBlowFeedback(target.struck(amount, info, dir)) : damageEnemy(target, amount),
     sound: (name, options) => sound(name, options),
     removed: state.removed,
     /* v113: where it strikes, heard. */
@@ -109135,6 +112167,7 @@ try {
   }
   world.forestLife?.setEvents({ sound });
   world.islandFish?.setEvents({ sound });
+  world.shoreLife?.setEvents({ sound });
   world.underworldEvents = {
     sound,
     damage: (amount, cause) => damagePlayer(amount, cause),
@@ -109205,7 +112238,7 @@ try {
     undergroundAtStart = null;
     if (world.inDungeon) world.exitDungeon();
   });
-  world.fieldOfView = clamp75(settings.fov || 68, 55, 85);
+  world.fieldOfView = clamp76(settings.fov || 68, 55, 85);
   resetVerticalMotion();
   world.player.rotation.y = -2.9;
   world.camera.position.set(pos.x + Math.sin(yaw) * 10, pos.y + 4.5, pos.z + 10);
