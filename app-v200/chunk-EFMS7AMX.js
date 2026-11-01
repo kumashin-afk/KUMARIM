@@ -1,15 +1,4 @@
 import {
-  GLTFLoader,
-  MODEL_PACK_ACTIVE,
-  gltfJsonToGlb,
-  mergeGeometries,
-  mergeVertices
-} from "./chunk-YI3JHP7M.js";
-import {
-  createHitchRecorder,
-  createRenderDiagnostics
-} from "./chunk-6MEZDFF6.js";
-import {
   COAST_BOULDERS,
   DISTANT_SEA,
   FAR_COAST,
@@ -121,7 +110,14 @@ import {
   waterFirstGeometry,
   waterFirstPlan,
   yieldTask
-} from "./chunk-JAHX26BK.js";
+} from "./chunk-IJV27YEE.js";
+import {
+  GLTFLoader,
+  MODEL_PACK_ACTIVE,
+  gltfJsonToGlb,
+  mergeGeometries,
+  mergeVertices
+} from "./chunk-YI3JHP7M.js";
 import {
   boundsOf,
   clamp,
@@ -154,24 +150,47 @@ import {
   sampleIslandBiome,
   stepMeadowWind,
   worldModel
-} from "./chunk-7BT4KW6E.js";
+} from "./chunk-IX7HCQFX.js";
 import {
+  ACTIVE_WORLD_SEED,
+  WORLD_SEED_KEY,
+  parseWorldSeed,
+  randomWorldSeed
+} from "./chunk-CMCVKAGC.js";
+import {
+  createHitchRecorder,
+  createRenderDiagnostics
+} from "./chunk-6MEZDFF6.js";
+import {
+  KEYS,
+  NET,
   RESOLUTION_PRESETS,
+  SEALED,
   calculateRenderResolution,
-  normalizeResolution
-} from "./chunk-TYFAO7B2.js";
+  cleanName,
+  clearGuestBoot,
+  context2d,
+  createNetSession,
+  findRoom,
+  getLoadingAtlas,
+  normalizeResolution,
+  normalizeRoomCode,
+  normalizeServer,
+  playerKey,
+  readGuestBoot,
+  rejectReason,
+  roomServer,
+  sealedPage,
+  skipTitleOnce,
+  store,
+  transportFor
+} from "./chunk-D5HN32JZ.js";
 import {
   LOADING_STAGES,
   LOADING_STAGES_UNDERGROUND,
   createLoadingProgress,
   getStartupLoadingProgress
 } from "./chunk-3VPLHZQF.js";
-import {
-  ACTIVE_WORLD_SEED,
-  WORLD_SEED_KEY,
-  parseWorldSeed,
-  randomWorldSeed
-} from "./chunk-LJZWUHHS.js";
 import {
   CROWN_LIGHT,
   CROWN_LIGHT_STRENGTH,
@@ -19880,14 +19899,6 @@ function onEnter(input, commit2) {
     event.preventDefault();
     commit2();
   });
-}
-
-// canvas-2d.js
-var CANVAS_2D = { cpu: true };
-var canvas2dOptions = () => CANVAS_2D.cpu ? { willReadFrequently: true } : void 0;
-function context2d(canvas2) {
-  const options = canvas2dOptions();
-  return options ? canvas2.getContext("2d", options) : canvas2.getContext("2d");
 }
 
 // pmrem-programs.js
@@ -79460,7 +79471,7 @@ function frozenPoints(r) {
   return 1;
 }
 function createChunkPlanClient(world2, options = {}) {
-  const { seed, data } = options, makeWorker = options.makeWorker || (typeof Worker === "function" ? () => new Worker(new URL("./chunk-plan-worker-ERXA3WVJ.js", import.meta.url), { type: "module" }) : null);
+  const { seed, data } = options, makeWorker = options.makeWorker || (typeof Worker === "function" ? () => new Worker(new URL("./chunk-plan-worker-GY4Z3AM4.js", import.meta.url), { type: "module" }) : null);
   if (!chunkPlanState.enabled || !makeWorker || !(options.makeWorker || chunkPlanWanted())) return null;
   let worker2 = null, ready = false, failed = false, nextId = 1;
   const jobs = /* @__PURE__ */ new Map(), stats3 = { posted: 0, done: 0, failed: 0, cancelled: 0, waits: 0, raced: 0, localFirst: 0, overtook: 0, used: 0, mismatch: 0, stale: 0, ahead: 0, adopted: 0, postMs: 0, maxPostMs: 0, workerMs: 0, maxWorkerMs: 0, readyMs: 0, error: "" };
@@ -103039,7 +103050,7 @@ function woodyAnchors(record2, height2, count2 = 20) {
 }
 function createPickableShapes(THREE3, { world: world2 = null, wind = true } = {}) {
   let meadow = null;
-  const windReady = wind && typeof document !== "undefined" ? import("./chunk-RXOH4ZT4.js").then((m) => {
+  const windReady = wind && typeof document !== "undefined" ? import("./chunk-N6EKNSGO.js").then((m) => {
     meadow = m;
   }, () => {
   }) : Promise.resolve();
@@ -109309,470 +109320,6 @@ function appendTimeOptions(container, { getMinute, setMinute, flowing = true, on
   return section;
 }
 
-// net-session.js
-var NET = Object.freeze({
-  maxPlayers: 4,
-  rate: 20,
-  heartbeat: 1,
-  timeout: 15,
-  hello: 1,
-  joinWait: 8,
-  colors: Object.freeze([14263361, 6269139, 9421930, 13856607]),
-  codeChars: "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-});
-function roomCode(random13 = Math.random) {
-  let s = "";
-  for (let i = 0; i < 6; i++) s += NET.codeChars[Math.floor(random13() * NET.codeChars.length) % NET.codeChars.length];
-  return s;
-}
-function normalizeRoomCode(text2) {
-  const s = String(text2 ?? "").toUpperCase().replace(/[\s-]/g, "");
-  return s.length === 6 && [...s].every((c) => NET.codeChars.includes(c)) ? s : null;
-}
-function cleanName(text2, fallback = "旅人") {
-  const s = String(text2 ?? "").replace(/[\u0000-\u001f<>&"'`\\]/g, "").trim().slice(0, 12);
-  return s || fallback;
-}
-var randomId = (random13) => Array.from({ length: 12 }, () => "abcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(random13() * 36) % 36]).join("");
-function createNetSession({ version, transport, now = () => performance.now() / 1e3, random: random13 = Math.random, selfId = randomId(random13) } = {}) {
-  let role = "off", code = null, link = null, hostId = null, self = null, welcomeWith = null, beat = -Infinity, joining = null, hostSeen = 0, joinKey = "";
-  const peers = /* @__PURE__ */ new Map(), listeners = /* @__PURE__ */ new Map();
-  const emit = (event, ...args) => {
-    for (const fn of [...listeners.get(event) ?? []]) {
-      try {
-        fn(...args);
-      } catch (e) {
-        console.error("[net]", e);
-      }
-    }
-  };
-  const on = (event, fn) => {
-    if (!listeners.has(event)) listeners.set(event, /* @__PURE__ */ new Set());
-    listeners.get(event).add(fn);
-    return () => listeners.get(event)?.delete(fn);
-  };
-  const info = (p2) => ({ id: p2.id, name: p2.name, slot: p2.slot, color: p2.color });
-  const roster = () => [self, ...peers.values()].filter(Boolean).filter((p2) => p2.slot >= 0).map(info).sort((a, b) => a.slot - b.slot);
-  function host({ name, code: wanted = null, welcome = null } = {}) {
-    leave(true);
-    code = normalizeRoomCode(wanted) ?? roomCode(random13);
-    link = transport(code, selfId);
-    if (!link) {
-      code = null;
-      return null;
-    }
-    role = "host";
-    hostId = selfId;
-    welcomeWith = welcome;
-    self = { id: selfId, name: cleanName(name), slot: 0, color: NET.colors[0] };
-    link.onMessage(atHost);
-    beat = -Infinity;
-    emit("roster", roster());
-    return code;
-  }
-  function freeSlot() {
-    for (let s = 1; s < NET.maxPlayers; s++) if (![...peers.values()].some((p2) => p2.slot === s)) return s;
-    return -1;
-  }
-  function atHost(from, m) {
-    if (!m || typeof m !== "object" || role !== "host") return;
-    if (m.t === "hello") {
-      if (m.version !== version) {
-        link.send(from, { t: "reject", reason: "version", version });
-        return;
-      }
-      let p3 = peers.get(from);
-      if (!p3) {
-        const slot = freeSlot();
-        if (slot < 0) {
-          link.send(from, { t: "reject", reason: "full" });
-          return;
-        }
-        p3 = { id: from, key: String(m.key ?? "").slice(0, 40), name: cleanName(m.name), slot, color: NET.colors[slot], seen: now(), state: null };
-        peers.set(from, p3);
-        emit("join", p3);
-      }
-      p3.seen = now();
-      let extra = {};
-      try {
-        extra = welcomeWith?.(p3, m) ?? {};
-      } catch (e) {
-        console.error("[net]", e);
-      }
-      link.send(from, { ...extra, t: "welcome", id: from, slot: p3.slot, color: p3.color, host: info(self), players: roster() });
-      sendRoster();
-      return;
-    }
-    const p2 = peers.get(from);
-    if (!p2) {
-      if (m.t !== "bye") link.send(from, { t: "gone" });
-      return;
-    }
-    p2.seen = now();
-    if (m.t === "s") {
-      p2.state = m.s;
-      emit("state", p2, m.s);
-      if (!m.d) {
-        for (const q of peers.values()) if (q.id !== from) link.send(q.id, { t: "s", id: from, s: m.s });
-      }
-    } else if (m.t === "bye") drop2(from, "left");
-    else if (m.t !== "hb") emit("message", p2, m);
-  }
-  function sendRoster() {
-    if (role === "host") link.send("*", { t: "roster", players: roster() });
-    emit("roster", roster());
-  }
-  function drop2(id2, reason) {
-    const p2 = peers.get(id2);
-    if (!p2) return;
-    peers.delete(id2);
-    emit("leave", p2, reason);
-    if (role === "host") sendRoster();
-  }
-  function join(wanted, { name, key: key3 = "", wait: wait3 = NET.joinWait } = {}) {
-    leave(true);
-    code = normalizeRoomCode(wanted);
-    if (!code) return Promise.resolve({ rejected: "code" });
-    link = transport(code, selfId);
-    if (!link) {
-      code = null;
-      return Promise.resolve({ rejected: "unsupported" });
-    }
-    role = "joining";
-    self = { id: selfId, name: cleanName(name), slot: -1, color: 16777215 };
-    joinKey = String(key3).slice(0, 40);
-    link.onMessage(atGuest);
-    return new Promise((resolve) => {
-      const hello = () => link?.send("*", { t: "hello", version, name: self.name, key: String(key3).slice(0, 40) });
-      joining = { resolve, hello, started: now(), wait: wait3, next: now() + NET.hello };
-      hello();
-    });
-  }
-  function finishJoin(result) {
-    const j = joining;
-    joining = null;
-    j?.resolve(result);
-  }
-  function atGuest(from, m) {
-    if (!m || typeof m !== "object") return;
-    if (role === "joining") {
-      if (m.t === "welcome" && m.id === selfId) {
-        role = "guest";
-        hostId = from;
-        self = { ...self, slot: m.slot, color: m.color };
-        hostSeen = now();
-        beat = -Infinity;
-        setRoster(m.players);
-        finishJoin(m);
-      } else if (m.t === "reject") {
-        finishJoin({ rejected: m.reason, version: m.version });
-        leave(true);
-      }
-      return;
-    }
-    if (role === "guest" && m.t === "s" && m.d && from !== hostId) {
-      const p2 = peers.get(from);
-      if (p2) {
-        p2.state = m.s;
-        emit("state", p2, m.s);
-      }
-      return;
-    }
-    if (role !== "guest" || from !== hostId) return;
-    hostSeen = now();
-    if (m.t === "gone") {
-      link.send(hostId, { t: "hello", version, name: self.name, key: joinKey });
-      return;
-    }
-    if (m.t === "welcome") {
-      if (m.id === selfId) {
-        self = { ...self, slot: m.slot, color: m.color };
-        setRoster(m.players);
-      }
-      return;
-    }
-    if (m.t === "s") {
-      const p2 = peers.get(m.id ?? from);
-      if (p2) {
-        p2.state = m.s;
-        emit("state", p2, m.s);
-      }
-    } else if (m.t === "roster") setRoster(m.players);
-    else if (m.t === "clock") emit("clock", m);
-    else if (m.t === "end") {
-      const reason = m.reason || "closed";
-      leave(true);
-      emit("end", reason);
-    } else if (m.t !== "hb") emit("message", peers.get(hostId), m);
-  }
-  function setRoster(list) {
-    const ids2 = /* @__PURE__ */ new Set();
-    for (const r of Array.isArray(list) ? list : []) {
-      if (!r || !r.id || r.id === selfId) continue;
-      ids2.add(r.id);
-      let p2 = peers.get(r.id);
-      if (!p2) {
-        p2 = { id: r.id, name: cleanName(r.name), slot: r.slot | 0, color: r.color | 0, state: null, seen: now() };
-        peers.set(r.id, p2);
-        emit("join", p2);
-      } else {
-        p2.name = cleanName(r.name);
-        p2.slot = r.slot | 0;
-        p2.color = r.color | 0;
-      }
-    }
-    for (const id2 of [...peers.keys()]) if (!ids2.has(id2)) drop2(id2, "left");
-    emit("roster", roster());
-  }
-  let lastTick = -Infinity;
-  function update() {
-    const t = now();
-    if (t - lastTick > 2 && Number.isFinite(lastTick)) {
-      hostSeen = Math.max(hostSeen, t);
-      for (const p2 of peers.values()) p2.seen = Math.max(p2.seen, t);
-    }
-    lastTick = t;
-    if (role === "joining" && joining) {
-      if (t - joining.started > joining.wait) {
-        finishJoin({ rejected: "none" });
-        leave(true);
-      } else if (t >= joining.next) {
-        joining.next = t + NET.hello;
-        joining.hello();
-      }
-      return;
-    }
-    if (role !== "host" && role !== "guest") return;
-    if (t - beat >= NET.heartbeat) {
-      beat = t;
-      link.send(role === "host" ? "*" : hostId, { t: "hb" });
-    }
-    if (role === "host") {
-      for (const p2 of [...peers.values()]) if (t - p2.seen > NET.timeout) drop2(p2.id, "timeout");
-    } else if (t - hostSeen > NET.timeout) {
-      leave(true);
-      emit("end", "lost");
-    }
-  }
-  function sendState(s) {
-    if (role === "host") link.send("*", { t: "s", id: selfId, s });
-    else if (role === "guest") link.send("*", { t: "s", s, d: 1 });
-  }
-  function sendClock(m) {
-    if (role === "host") link.send("*", { ...m, t: "clock" });
-  }
-  function send(m, to = "*") {
-    if (role === "host") link.send(to, m);
-    else if (role === "guest") link.send(hostId, m);
-  }
-  function leave(quiet = false, reason = "closed") {
-    if (link) {
-      if (!quiet) {
-        if (role === "host") link.send("*", { t: "end", reason });
-        else if (role === "guest") link.send(hostId, { t: "bye" });
-      }
-      link.close();
-    }
-    const was = [...peers.values()];
-    link = null;
-    peers.clear();
-    role = "off";
-    code = null;
-    hostId = null;
-    welcomeWith = null;
-    if (joining) finishJoin({ rejected: "cancelled" });
-    for (const p2 of was) emit("leave", p2, "closed");
-    if (was.length) emit("roster", roster());
-  }
-  return {
-    host,
-    join,
-    leave,
-    update,
-    sendState,
-    sendClock,
-    send,
-    on,
-    players: roster,
-    peers: () => [...peers.values()],
-    get role() {
-      return role;
-    },
-    get code() {
-      return code;
-    },
-    get selfId() {
-      return selfId;
-    },
-    get hostId() {
-      return hostId;
-    },
-    get self() {
-      return self;
-    },
-    get active() {
-      return role === "host" || role === "guest";
-    }
-  };
-}
-
-// net-transport.js
-function createLocalTransport(room, selfId, { Channel = globalThis.BroadcastChannel } = {}) {
-  if (typeof Channel !== "function") return null;
-  const channel = new Channel("kumarim-room:" + room);
-  let handler = null, closed = false;
-  channel.onmessage = (event) => {
-    const m = event?.data;
-    if (closed || !m || m.from === selfId || m.to !== "*" && m.to !== selfId) return;
-    try {
-      handler?.(m.from, m.d);
-    } catch (error) {
-      console.error("[net]", error);
-    }
-  };
-  return {
-    kind: "local",
-    send(to, d) {
-      if (!closed) channel.postMessage({ from: selfId, to, d });
-    },
-    onMessage(fn) {
-      handler = fn;
-    },
-    close() {
-      if (closed) return;
-      closed = true;
-      channel.onmessage = null;
-      channel.close();
-    }
-  };
-}
-var RELAY = Object.freeze({ chunk: 12e4, queue: 600, retry: Object.freeze([500, 8e3]) });
-function normalizeServer(text2) {
-  try {
-    const u = new URL(String(text2 ?? "").trim());
-    if (u.protocol === "https:") u.protocol = "wss:";
-    else if (u.protocol === "http:") u.protocol = "ws:";
-    if (u.protocol !== "wss:" && u.protocol !== "ws:") return null;
-    u.search = "";
-    u.hash = "";
-    return u.toString().replace(/\/+$/, "");
-  } catch {
-    return null;
-  }
-}
-function createRelayTransport(server, { WebSocketImpl = globalThis.WebSocket, onStatus = null } = {}) {
-  const base = normalizeServer(server);
-  if (!base || typeof WebSocketImpl !== "function") return null;
-  return (room, selfId) => {
-    let socket = null, handler = null, closed = false, queue = [], tries = 0, timer = null, serial3 = 0;
-    const pieces = /* @__PURE__ */ new Map(), url = `${base}/room/${room}?id=${encodeURIComponent(selfId)}`;
-    const status = (s, detail) => {
-      try {
-        onStatus?.(s, detail);
-      } catch {
-      }
-    };
-    function connect() {
-      if (closed) return;
-      const ws = socket = new WebSocketImpl(url);
-      status("connecting");
-      ws.onopen = () => {
-        if (socket !== ws) return;
-        tries = 0;
-        status("open");
-        const q = queue;
-        queue = [];
-        for (const line2 of q) ws.send(line2);
-      };
-      ws.onmessage = (event) => {
-        const text2 = typeof event.data === "string" ? event.data : "", cut = text2.indexOf("\n");
-        if (cut < 1) return;
-        let d;
-        try {
-          d = JSON.parse(text2.slice(cut + 1));
-        } catch {
-          return;
-        }
-        receive(text2.slice(0, cut), d);
-      };
-      ws.onclose = (event) => {
-        if (socket !== ws) return;
-        socket = null;
-        if (closed) return;
-        status("lost", event?.code);
-        if (event?.code === 4e3) return;
-        const wait3 = Math.min(RELAY.retry[1], RELAY.retry[0] * 2 ** tries++);
-        timer = setTimeout(connect, wait3);
-      };
-      ws.onerror = () => {
-      };
-    }
-    function receive(from, d) {
-      if (d && d.t === "~") {
-        const key3 = from + ":" + d.id;
-        let p2 = pieces.get(key3);
-        if (!p2) {
-          if (!(d.n > 1 && d.n < 200)) return;
-          p2 = { n: d.n, got: 0, s: [] };
-          pieces.set(key3, p2);
-        }
-        if (p2.s[d.i] === void 0 && d.i >= 0 && d.i < p2.n) {
-          p2.s[d.i] = String(d.s);
-          p2.got++;
-        }
-        if (p2.got < p2.n) return;
-        pieces.delete(key3);
-        try {
-          d = JSON.parse(p2.s.join(""));
-        } catch {
-          return;
-        }
-      }
-      try {
-        handler?.(from, d);
-      } catch (error) {
-        console.error("[net]", error);
-      }
-    }
-    function line(to, text2) {
-      const l = to + "\n" + text2;
-      if (socket?.readyState === 1) socket.send(l);
-      else if (queue.length < RELAY.queue) queue.push(l);
-    }
-    connect();
-    return {
-      kind: "relay",
-      send(to, d) {
-        if (closed) return;
-        const text2 = JSON.stringify(d);
-        if (text2.length <= RELAY.chunk) {
-          line(to, text2);
-          return;
-        }
-        const id2 = ++serial3, n = Math.ceil(text2.length / RELAY.chunk);
-        for (let i = 0; i < n; i++) line(to, JSON.stringify({ t: "~", id: id2, i, n, s: text2.slice(i * RELAY.chunk, (i + 1) * RELAY.chunk) }));
-      },
-      onMessage(fn) {
-        handler = fn;
-      },
-      close() {
-        closed = true;
-        clearTimeout(timer);
-        const ws = socket;
-        socket = null;
-        queue = [];
-        try {
-          ws?.close(1e3, "bye");
-        } catch {
-        }
-      },
-      get open() {
-        return socket?.readyState === 1;
-      }
-    };
-  };
-}
-
 // remote-players.js
 var MOTION = Object.freeze({ moving: 1, sprint: 2, crouch: 4, swim: 8, attack: 16, dead: 32, airborne: 64 });
 var REMOTE = Object.freeze({ delay: 0.12, keep: 8, stride: 1.45, snap: 12 });
@@ -110004,88 +109551,8 @@ function createRemotePlayers(THREE3, { scene } = {}) {
   }, group };
 }
 
-// net-config.js
-var ROOM_SERVER = "https://kumarim-room.nyantarou0606.workers.dev";
-
 // multiplayer.js
-var BOOT = "kumarim-mp-v1";
-var NAME = "kumarim-player-name";
-var KEY2 = "kumarim-player-key";
-var SERVER = "kumarim-room-server";
-var NOTE = "kumarim-mp-note";
-var store = (s, k, v) => {
-  try {
-    if (v === void 0) return s?.getItem(k) ?? null;
-    if (v === null) s?.removeItem(k);
-    else s?.setItem(k, v);
-  } catch {
-  }
-  return null;
-};
-function roomServer(local2 = globalThis.localStorage) {
-  return normalizeServer(store(local2, SERVER)) ?? normalizeServer(ROOM_SERVER);
-}
-function transportFor(server, onStatus = null) {
-  return server ? createRelayTransport(server, { onStatus }) : createLocalTransport;
-}
-var sealedPage = () => /(^|\.)(claude\.ai|claudeusercontent\.com|anthropic\.com)$/.test(globalThis.location?.hostname || "");
-var SEALED = "このページ（claude.ai）からは外のサーバーにつなげないので、ここでは同じブラウザの窓どうしだけでつながります。別のパソコンとは GitHub Pages の KUMARIM で遊んでください。";
 var STATE = Object.freeze({ still: 0.5, move: 0.01, turn: 0.01 });
-async function joinInvite({ version, location: location2 = globalThis.location, history = globalThis.history, storage = { local: globalThis.localStorage, session: globalThis.sessionStorage } } = {}) {
-  const params = new URLSearchParams(location2?.search || ""), code = normalizeRoomCode(params.get("join"));
-  if (!params.has("join")) return null;
-  const given = normalizeServer(params.get("server"));
-  if (given) store(storage.local, SERVER, given);
-  params.delete("join");
-  params.delete("server");
-  const rest2 = params.toString();
-  try {
-    history?.replaceState?.(null, "", location2.pathname + (rest2 ? "?" + rest2 : "") + (location2.hash || ""));
-  } catch {
-  }
-  if (!code) {
-    store(storage.session, NOTE, "招待リンクの部屋コードが読めなかった。");
-    return { error: "code" };
-  }
-  const server = sealedPage() ? null : given ?? roomServer(storage.local);
-  let link = "idle";
-  const session = createNetSession({ version, transport: transportFor(server, (s) => {
-    link = s;
-  }) });
-  const timer = setInterval(() => session.update(), 250);
-  const name = cleanName(store(storage.local, NAME)), key3 = store(storage.local, KEY2) || "";
-  const w = await session.join(code, { name, key: key3 });
-  clearInterval(timer);
-  if (w.rejected || !Number.isSafeInteger(w.seed)) {
-    session.leave(true);
-    store(storage.session, NOTE, rejectReason(w, server, link));
-    return { error: w.rejected || "seed" };
-  }
-  store(storage.session, BOOT, JSON.stringify({ role: "guest", code, seed: w.seed, world: w.world || {}, pos: w.pos || null, host: w.host?.name || "", name, server: server || null }));
-  session.leave(true);
-  location2.reload();
-  return new Promise(() => {
-  });
-}
-function rejectReason(w, server, link) {
-  if (w.rejected === "version") return `ホストのゲームの版（${w.version}）が違う。同じ版で入ろう。`;
-  if (w.rejected === "full") return `部屋がいっぱい（${NET.maxPlayers} 人まで）。`;
-  if (w.rejected === "none" && server && link !== "open") return sealedPage() ? "このページ（claude.ai）からは、つなぎ先のサーバーにつなげない。GitHub Pages の KUMARIM で入ろう。" : "つなぎ先のサーバーにつながらなかった。つなぎ先とネットの接続を確かめよう。";
-  if (w.rejected === "none") return server ? "部屋が見つからなかった。部屋コードとつなぎ先を確かめよう。" : "部屋が見つからなかった（つなぎ先が決まっていないので、同じブラウザの窓どうしだけ）。";
-  if (w.rejected === "code") return "部屋コードは 6 文字（英字と数字）。";
-  return "部屋に入れなかった。";
-}
-function readGuestBoot(session = globalThis.sessionStorage) {
-  try {
-    const b = JSON.parse(store(session, BOOT));
-    return b && b.role === "guest" && normalizeRoomCode(b.code) && Number.isSafeInteger(b.seed) ? b : null;
-  } catch {
-    return null;
-  }
-}
-function clearGuestBoot(session = globalThis.sessionStorage) {
-  store(session, BOOT, null);
-}
 function guestSaved(boot, seed) {
   const p2 = boot?.pos;
   return { ...boot?.world || {}, version: 4, seed, position: p2 && Number.isFinite(p2.x) && Number.isFinite(p2.z) ? { x: p2.x + 0.8, y: p2.y, z: p2.z + 0.8, inDungeon: false } : void 0 };
@@ -110105,13 +109572,9 @@ function createMultiplayer(THREE3, { world: world2, version, hooks: hooks2, tran
   })(room, id2)) });
   const others = createRemotePlayers(THREE3, { scene: world2.scene });
   (world2.lateStandIns ??= []).push(() => others.standIns());
-  let key3 = store(storage.local, KEY2);
-  if (!key3) {
-    key3 = Math.random().toString(36).slice(2, 12);
-    store(storage.local, KEY2, key3);
-  }
-  let name = cleanName(store(storage.local, NAME)), sendIn = 0, clockIn = 0, rejoined = false, status = store(storage.session, NOTE) || "", mounted = /* @__PURE__ */ new Set(), lastSent = null, stillFor = 0;
-  store(storage.session, NOTE, null);
+  const key3 = playerKey(storage.local);
+  let name = cleanName(store(storage.local, KEYS.name)), sendIn = 0, clockIn = 0, rejoined = false, status = store(storage.session, KEYS.note) || "", mounted = /* @__PURE__ */ new Set(), lastSent = null, stillFor = 0;
+  store(storage.session, KEYS.note, null);
   const say = (text2, title = "みんなで") => hooks2.toast?.(text2, title);
   const timer = setInterval(() => session.update(), 250);
   session.on("join", (p2) => {
@@ -110157,6 +109620,11 @@ function createMultiplayer(THREE3, { world: world2, version, hooks: hooks2, tran
     hooks2.setRoom(false);
     refresh();
   }
+  function openAsked() {
+    if (store(storage.session, KEYS.host) !== "1") return null;
+    store(storage.session, KEYS.host, null);
+    return boot ? null : open();
+  }
   async function join(text2) {
     const code = normalizeRoomCode(text2);
     if (!code) {
@@ -110172,22 +109640,15 @@ function createMultiplayer(THREE3, { world: world2, version, hooks: hooks2, tran
     server = roomServer(storage.local);
     status = `部屋 ${code} をさがしている……`;
     refresh();
-    const w = await session.join(code, { name, key: key3 });
-    if (w.rejected) {
-      status = rejectReason(w, server, link);
+    const found = await findRoom({ version, code, name, storage });
+    if (found.error) {
+      status = found.text;
       refresh();
       return false;
     }
-    if (!Number.isSafeInteger(w.seed)) {
-      session.leave();
-      status = "部屋の島を受け取れなかった。";
-      refresh();
-      return false;
-    }
-    store(storage.session, BOOT, JSON.stringify({ role: "guest", code, seed: w.seed, world: w.world || {}, pos: w.pos || null, host: w.host?.name || "", name, server: server || null }));
-    session.leave(true);
     status = `部屋 ${code} の島を読み込む……`;
     refresh();
+    skipTitleOnce(storage.session);
     hooks2.reload();
     return true;
   }
@@ -110203,9 +109664,12 @@ function createMultiplayer(THREE3, { world: world2, version, hooks: hooks2, tran
     }
     if (w.seed !== boot.seed) {
       console.warn("[みんなで] ホストの島が変わった:", boot.seed, "->", w.seed);
-      store(storage.session, BOOT, JSON.stringify({ ...boot, seed: w.seed, world: w.world || {}, pos: w.pos || null }));
+      store(storage.session, KEYS.boot, JSON.stringify({ ...boot, seed: w.seed, world: w.world || {}, pos: w.pos || null }));
       say("ホストの島が変わった。読み込み直す。");
-      setTimeout(() => hooks2.reload(), 1200);
+      setTimeout(() => {
+        skipTitleOnce(storage.session);
+        hooks2.reload();
+      }, 1200);
       return;
     }
     hooks2.setRoom(true);
@@ -110218,6 +109682,7 @@ function createMultiplayer(THREE3, { world: world2, version, hooks: hooks2, tran
   function backHome() {
     session.leave();
     clearGuestBoot(storage.session);
+    skipTitleOnce(storage.session);
     hooks2.reload();
   }
   function update(dt) {
@@ -110247,7 +109712,7 @@ function createMultiplayer(THREE3, { world: world2, version, hooks: hooks2, tran
   }
   function setName(text2) {
     name = cleanName(text2);
-    store(storage.local, NAME, name);
+    store(storage.local, KEYS.name, name);
   }
   const esc2 = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const swatch = (c) => `<i style="display:inline-block;width:.7em;height:.7em;border-radius:50%;background:#${(c >>> 0).toString(16).padStart(6, "0").slice(-6)};margin-right:.4em"></i>`;
@@ -110282,7 +109747,7 @@ function createMultiplayer(THREE3, { world: world2, version, hooks: hooks2, tran
     }
     const t = String(text2 ?? "").trim();
     if (!t) {
-      store(storage.local, SERVER, null);
+      store(storage.local, KEYS.server, null);
       server = roomServer(storage.local);
       status = server ? "つなぎ先をゲームの標準に戻した。" : "つなぎ先をなしにした（同じブラウザの窓どうし）。";
       refresh();
@@ -110294,7 +109759,7 @@ function createMultiplayer(THREE3, { world: world2, version, hooks: hooks2, tran
       refresh();
       return false;
     }
-    store(storage.local, SERVER, n);
+    store(storage.local, KEYS.server, n);
     server = n;
     status = "つなぎ先を決めた。";
     refresh();
@@ -110365,39 +109830,24 @@ function createMultiplayer(THREE3, { world: world2, version, hooks: hooks2, tran
     mounted.add(render);
     return () => mounted.delete(render);
   }
-  const FIELD = "background:rgba(10,16,20,.55);border:1px solid rgba(239,237,206,.3);color:#efedce;padding:4px 7px;border-radius:4px;font:inherit";
   function mountTitle(container) {
     const box5 = document.createElement("div");
     box5.className = "intro-multiplayer";
-    box5.style.cssText = "margin:10px 0 0;font-size:12px;line-height:1.7;opacity:.9";
     const render = () => {
-      if (boot) box5.innerHTML = `<p>部屋 ${esc2(boot.code)}（${esc2(boot.host || "ホスト")}の島）に入ります。島に降り立つと合流します。 <button class="outline-button" data-mp="home" style="margin-left:6px">やめて自分の島へ</button></p>`;
-      else box5.innerHTML = `<p style="margin:0 0 4px">みんなで遊ぶ：部屋コードで入る（部屋は島に降りてから Esc の設定で作れます）${server ? "" : sealedPage() ? "・このページでは同じブラウザの窓どうし" : "・つなぎ先が決まっていないので同じブラウザの窓どうし"}</p><input id="mpTitleName" type="text" maxlength="12" value="${esc2(name)}" placeholder="名前" style="width:7em;${FIELD}"> <input id="mpTitleCode" type="text" maxlength="7" placeholder="部屋コード" autocomplete="off" spellcheck="false" style="width:7em;text-transform:uppercase;${FIELD}"> <button class="outline-button" data-mp="join">入る</button><p data-mp-status style="margin:4px 0 0">${esc2(status)}</p>`;
+      if (boot) box5.innerHTML = `<p>部屋 <b>${esc2(boot.code)}</b>（${esc2(boot.host || "ホスト")}の島）に入ります。島に降り立つと合流します。</p><button class="outline-button" data-mp="home">やめて自分の島へ</button>`;
+      else if (session.role === "host") box5.innerHTML = `<p>部屋コード <b class="intro-room-code">${esc2(session.code)}</b>　${sealedPage() ? "同じブラウザの窓から入れます。" : server ? `招待リンクを友達に送ると、開くだけで入れます。${linkText()}` : "同じブラウザの窓から入れます。"}</p>${server ? `<button class="outline-button" data-mp="copy">招待リンクをコピー</button>` : ""}<p data-mp-status>${esc2(status)}</p>`;
+      else box5.innerHTML = "";
+      box5.hidden = !box5.innerHTML;
       for (const b of box5.querySelectorAll("[data-mp]")) b.onclick = () => {
         if (b.dataset.mp === "home") backHome();
-        else {
-          setName(box5.querySelector("#mpTitleName")?.value ?? name);
-          join(box5.querySelector("#mpTitleCode")?.value);
-        }
+        else if (b.dataset.mp === "copy") copyInvite();
       };
-      box5.querySelector("#mpTitleCode")?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          setName(box5.querySelector("#mpTitleName")?.value ?? name);
-          join(e.target.value);
-        }
-      });
-    };
-    const refreshTitle = () => {
-      const st = box5.querySelector("[data-mp-status]");
-      if (st) st.textContent = status;
-      else render();
     };
     render();
     container.append(box5);
-    mounted.add(refreshTitle);
+    mounted.add(render);
     return () => {
-      mounted.delete(refreshTitle);
+      mounted.delete(render);
       box5.remove();
     };
   }
@@ -110413,6 +109863,7 @@ function createMultiplayer(THREE3, { world: world2, version, hooks: hooks2, tran
   return {
     update,
     open,
+    openAsked,
     close,
     join,
     backHome,
@@ -113533,7 +112984,7 @@ async function settleFrames({
 }
 
 // ui-glyphs.js
-var UI_GLYPHS = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°±²µ·×íČπ–—―’”‥…→↔−∥≈≡≤⋈⌂⌖⌘②─▣▲▼◆◇○◎●◓☀☗☠☼♜♞♣♨⚑⚒⚙✋✓✕✦　、。々〈〉》「」』】〕〜ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちっつづてでとどなにぬねのはばぱひびぴふぶへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわをんゝゞァアィイゥウェエォオカガキギクグケゲコゴサザシジスズセソゾタダチッツテデトドナニネノハバパヒビピフブプベペホボポマミムメモャヤュユョラリルレロヮワンヴヵヶ・ーヽヾ一丁丈三上下不与世丘両並中丸主乏乗乱乳乾了予事二互五井亡交人今仕他付代令以仮仲件任伏伐休会伝伸似位低住体何余作使例供侵係保信個倍倒候値停側備傷傾働像優元先光入全公共具典内円再写冠冬冷凍処凸凹出刃分切刈列初判別利制刺刻削前割力加効動勢包化北匹区十升半協南単印危厚原去参友双反収取受口古叩叫可台右各合吊同名吐向吠含吸吹告呑周味呼命咆和咲品哨哮唸問善喉喪喰営嗅噛器嚇四回因囲図固土在地坂均坑垂型埋域基堰報場塊塗塵境墓増墜墟壁壇壊士声変夕外多夜大天太夫央失奈奉套奥奨女好妻始姿威子字存季守安完宙定宝実宣害家容宿寄密寒寝寧寸対封専射小少尻尽尾屈届屋屍展層山岩岬岸峠峰島崖崩川巡巣工左巨差巻布師帯帰常幅干平幹幻広床底度座庭廃廊延建式弓引弦弧弱張強弾当形彩影役往径待律後徐従得復心必忘応怒思急性怯息悪悲情想意感態慣憶懐成戒戦戸戻所扇手打払扱抑投折抜択押拓招拝拠拡拳拾持指振捕捧捨据掘掛採探接控推掲掻揃描換握揺摘撃撤撮操擦支改攻放故敏敗教散数整敵敷文斉斑料斜斧斬断新方旅旋既日旧早昂昇明易昔星映昼時普景晴晶暖暗暮暴曇曜曲更書替最月有朝期木未末本札朽材束条来杭東松板林枚果枝枠枯架染柱査株核根案桶梁棄棍棒棚森棲椅植楕業楼構様標模横樹橋機欄欠次止正武歩歯死残殴段殺殻母毎毒比毛気水求江池決沈沖沢河油沼沿泉法泡波泳洞流浅浜浮海消涼淡深淵混済渓減渡渦温測湖湿満源準溜溶溺滅滋滑滝滞滴漂漏演漕漢潜潮潰激濁濃濡瀬火灯灰灼炎炭点焚無然焼煙照熊熱熾燃燥燼爆爪片版物特状狂狐狙狩独狭狼猛猟献獣獲率玉王珠現球理環甘生甦用由画界略番異畳疲痕痛発登白的皮皿盛盤目直相省真眠眺眼着睨瞬矢知短石砂砕破硬碑確礎示礼祈祝祭福秒称移程種稲穂積穏穴穹空突窓窟窯立竜端竿笑第等筋筍算箱節範簀簡籠粉粒粗粘精糸約紅紋納素紡索紫細終組経結絞絡統絵絶継続網総緑緒線編縁縄縛縦縫縮繰罠置群羽翠翼者耐耳聖聞聲肉肌肩育背胞胴胸能脂脇脈脚脳腐腕腰腹膏膚膜臓自致舞色芯花苔若英茂茶茸草荒荷落葉葦蒼蓋蔽薄薙薪薬虫虹蛇蛛蜘蜥蜴蝕蝶行街衝表衰袋袖被裂装裏裕補襲要覆見視覗覚覧親観角解触言計討記設訳診詠試詰詳認誓語誤説読誰調諦警護谷象負貫貼資質赤走起超越足距跡跪路跳踏蹴身車軌軟転軸軽較載輝輪轢辺辻込近返迫迷追退送逃逆透途這通速造連進遅遊過道達違遠遣適遮選遺避部郭郷都配重野量金針釣鈍鉄鉱銀銅鋭錐錬録鍾鎮鏡鐘長門閉開間関闇防降限除陰陸険陽階隔隙際障隠隣集雑離雨雪雫雰雲雷電震霜霞霧露靄青静非面靴音韻響頂頃項順須頭頼題顎顔類風飛食飢飼飾養餌首香駆騎験驚骨骸高魔魚鮮鱗鳥鳴鶏鷲鹿黄黒鼓鼻︎！（）＋，．／３４：；＝？ｃ｝～";
+var UI_GLYPHS = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°±²µ·×íČπ–—―’”‥…→↔−∥≈≡≤⋈⌂⌖⌘②─▣▲▼◆◇○◎●◓☀☗☠☼♜♞♣♨⚑⚒⚙✋✓✕✦　、。々〈〉》「」』】〕〜ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちっつづてでとどなにぬねのはばぱひびぴふぶへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわをんゝゞァアィイゥウェエォオカガキギクグケゲコゴサザシジスズセソゾタダチッツテデトドナニネノハバパヒビピフブプベペホボポマミムメモャヤュユョラリルレロヮワンヴヵヶ・ーヽヾ一丁丈三上下不与世丘両並中丸主乏乗乱乳乾了予事二互五井亡交人今仕他付代令以仮仲件任伏伐休会伝伸似位低住体何余作使例供侵係保信個倍倒候値停側備傷傾働像優元先光入全公共具典内円再写冠冬冷凍処凸凹出刃分切刈列初判別利制刺刻削前割力加効動勢包化北匹区十升半協南単印危厚原去参友双反収取受口古叩叫可台右各合吊同名吐向吠含吸吹告呑周味呼命咆和咲品哨哮唸問善喉喪喰営嗅噛器嚇四回因囲図固土在地坂均坑垂型埋域基堰報場塊塗塵境墓増墜墟壁壇壊士声変夕外多夜大天太夫央失奈奉套奥奨女好妻始姿威子字存季守安完宙定宝実宣害家容宿寄密寒寝寧寸対封専射小少尻尽尾屈届屋屍展層山岩岬岸峠峰島崖崩川巡巣工左巨差巻布師帯帰常幅干平幹幻広床底度座庭廃廊延建式弓引弦弧弱張強弾当形彩影役往径待律後徐従得復心必忘応怒思急性怯息悪悲情想意感態慣憶懐成戒戦戸戻所扇手打払扱抑投折抜択押拓招拝拠拡拳拾持指挟振捕捧捨据掘掛採探接控推掲掻揃描換握揺摘撃撤撮操擦支改攻放故敏敗教散数整敵敷文斉斑料斜斧斬断新方旅旋既日旧早昂昇明易昔星映昼時普景晴晶暖暗暮暴曇曜曲更書替最月有朝期木未末本札朽材束条来杭東松板林枚果枝枠枯架染柱査株核根案桶梁棄棍棒棚森棲椅植楕業楼構様標模横樹橋機欄欠次止正武歩歯死残殴段殺殻母毎毒比毛気水求江池決沈沖沢河油沼沿泉法泡波泳洞流浅浜浮海消涼淡深淵混済渓減渡渦温測湖湿満源準溜溶溺滅滋滑滝滞滴漂漏演漕漢潜潮潰激濁濃濡瀬火灯灰灼炎炭点焚無然焼煙照熊熱熾燃燥燼爆爪片版物特状狂狐狙狩独狭狼猛猟献獣獲率玉王珠現球理環甘生甦用由画界略番異畳疲痕痛発登白的皮皿盛盤目直相省真眠眺眼着睨瞬矢知短石砂砕破硬碑確礎示礼祈祝祭福秒称移程種稲穂積穏穴穹空突窓窟窯立竜端竿笑第等筋筍算箱節範簀簡籠粉粒粗粘精糸約紅紋納素紡索紫細終組経結絞絡統絵絶継続網総緑緒線編縁縄縛縦縫縮繰罠置群羽翠翼者耐耳聖聞聲肉肌肩育背胞胴胸能脂脇脈脚脳腐腕腰腹膏膚膜臓自致舞色芯花苔若英茂茶茸草荒荷落葉葦蒼蓋蔽薄薙薪薬虫虹蛇蛛蜘蜥蜴蝕蝶行街衝表衰袋袖被裂装裏裕補襲要覆見視覗覚覧親観角解触言計討記設訳診詠試詰詳認誓語誤説読誰調諦警護谷象負貫貼資質赤走起超越足距跡跪路跳踏蹴身車軌軟転軸軽較載輝輪轢辺辻込近返迫迷追退送逃逆透途這通速造連進遅遊過道達違遠遣適遮選遺避部郭郷都配重野量金針釣鈍鉄鉱銀銅鋭錐錬録鍾鎮鏡鐘長門閉開間関闇防降限除陰陸険陽階隔隙際障隠隣集雑離雨雪雫雰雲雷電震霜霞霧露靄青静非面靴音韻響頂頃項順須頭頼題顎顔類風飛食飢飼飾養餌首香駆騎験驚骨骸高魔魚鮮鱗鳥鳴鶏鷲鹿黄黒鼓鼻︎！（）＋，．／３４：；＝？ｃ｝～";
 
 // shader-probe.js
 var SHADER_PROBE = Object.freeze({
@@ -114716,7 +114167,6 @@ try {
 if (saved?.version !== 4 || saved?.seed !== ACTIVE_WORLD_SEED) saved = null;
 var guestBoot = readGuestBoot();
 if (guestBoot) saved = guestSaved(guestBoot, ACTIVE_WORLD_SEED);
-if (!guestBoot) await joinInvite({ version: gameVersion() });
 settings.skyQuality = normalizeSkyQuality(settings.skyQuality, touchDevice ? "low" : "high");
 settings.resolution = normalizeResolution(settings.resolution);
 settings.weather = normalizeWeatherMode(settings.weather);
@@ -116063,6 +115513,7 @@ function newIsland() {
   keys.clear();
   touchAttackHeld = false;
   audio.suspend();
+  skipTitleOnce();
   location.reload();
 }
 function attack() {
@@ -120408,6 +119859,7 @@ function resetWorldSave(value) {
   keys.clear();
   touchAttackHeld = false;
   audio.suspend();
+  skipTitleOnce();
   location.reload();
 }
 function tick(now) {
@@ -120666,6 +120118,12 @@ function stopStartupObservers() {
   detachStartupManager();
 }
 try {
+  try {
+    const at = savedRestore?.mode === "outdoor" ? savedRestore : savedRestore?.dungeon?.returnPose ?? pos;
+    getLoadingAtlas()?.island({ island: islandTerrain, heightAt: mapHeight, biomeAt: (x, z, y) => biome(x, z, y).id, waterAt: (x, z, y) => hydrology.waterAt(x, z, y), rivers: waterFirstPlan.rivers, start: { x: at.x, z: at.z } });
+  } catch (error) {
+    console.warn("[atlas]", error);
+  }
   await new Promise((r) => setTimeout(r, 50));
   startupProgress.begin("assets", { detail: "画像・モデルを読み込み、展開しています" });
   const loadingManager = three_module_exports.DefaultLoadingManager, previousProgress = loadingManager.onProgress, previousAssetError = loadingManager.onError;
@@ -120888,6 +120346,10 @@ try {
     clearInterval(startupCountTimer);
     startupCountTimer = null;
     reportPlaces();
+    try {
+      getLoadingAtlas()?.places(knownMapPlaces(world.landmarks, contentMarkers, state.discovered));
+    } catch {
+    }
     startupProgress.end("poi", "周辺の探索場所を準備しました");
     startupProgress.begin("distant", { detail: "開始地点から見える遠方の森を準備しています" });
     await prepareInitialDistantForest(world, (progress) => startupProgress.report("distant", { completed: progress.completed, total: progress.total }));
@@ -121170,6 +120632,11 @@ try {
   resetFrameClock();
   loadingWatchDone = true;
   requestAnimationFrame(tick);
+  try {
+    mp?.openAsked();
+  } catch (error) {
+    console.warn("[みんなで]", error);
+  }
   Object.defineProperty(window, "kumarim", { value: { getGpuDebugSnapshot: () => gpuDebugRuntime?.snapshot() ?? { enabled: false, loading: !!gpuDebugLoad, closing: !!gpuDebugClosing }, getOcclusionDiagnostics: () => world.occlusion?.stats(), setOcclusionEnabled: (enabled) => {
     world.occlusion?.setEnabled(enabled);
     world.needsFrame = true;

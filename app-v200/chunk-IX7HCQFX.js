@@ -1,6 +1,6 @@
 import {
   ACTIVE_WORLD_SEED
-} from "./chunk-LJZWUHHS.js";
+} from "./chunk-CMCVKAGC.js";
 import {
   Vector2,
   Vector4,

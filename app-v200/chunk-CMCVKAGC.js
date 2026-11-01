@@ -35,7 +35,9 @@ var ACTIVE_WORLD_SEED = readWorldSeed();
 
 export {
   WORLD_SEED_KEY,
+  DEFAULT_WORLD_SEED,
   parseWorldSeed,
+  readWorldSeed,
   randomWorldSeed,
   ACTIVE_WORLD_SEED
 };

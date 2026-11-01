@@ -29,7 +29,7 @@ self.onmessage = async ({ data: msg }) => {
       globalThis.__EW_WORLD_SEED = msg.seed;
       globalThis.__EW_WORLD_DATA = msg.data;
       const t0 = performance.now();
-      core = await import("./chunk-DEOERZKE.js");
+      core = await import("./chunk-SWJU2KIN.js");
       globalThis.__EW_WORLD_DATA = void 0;
       self.postMessage({ type: "ready", ms: performance.now() - t0 });
     } catch (error) {

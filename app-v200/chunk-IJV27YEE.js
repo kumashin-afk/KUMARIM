@@ -14,7 +14,7 @@ import {
   meadowUniforms,
   sampleIslandBiome,
   worldModel
-} from "./chunk-7BT4KW6E.js";
+} from "./chunk-IX7HCQFX.js";
 import {
   Box3,
   BufferAttribute,
