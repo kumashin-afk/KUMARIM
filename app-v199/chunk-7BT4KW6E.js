@@ -1,15 +1,15 @@
 import {
   ACTIVE_WORLD_SEED
-} from "./chunk-UWU2KGE2.js";
+} from "./chunk-LJZWUHHS.js";
 import {
   Vector2,
   Vector4,
   three_module_exports
-} from "./chunk-PH5TGXXA.js";
+} from "./chunk-HBXKLBXO.js";
 import {
   WORKER_NAMES,
   reportWorker
-} from "./chunk-HGFZA34L.js";
+} from "./chunk-Z77F3JAE.js";
 import {
   ISLAND_FRAME,
   START,
@@ -122,6 +122,8 @@ function generateInWorker(seed, onProgress) {
 }
 async function loadWorldData(seed, { onProgress = null, useCache = true } = {}) {
   const started = performance.now();
+  const shared = globalThis.__EW_WORLD_DATA;
+  if (shared && validWorldData(shared, seed)) return { data: shared, source: "shared", ms: Math.round(performance.now() - started) };
   if (useCache) {
     const cached = await readCached(seed);
     if (cached) return { data: cached, source: "cache", ms: Math.round(performance.now() - started) };

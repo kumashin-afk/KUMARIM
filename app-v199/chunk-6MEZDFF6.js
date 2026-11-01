@@ -24,7 +24,13 @@ var PERF = Object.freeze({
   bucketMs: 3e4,
   keep: 60,
   // Frame times kept for the percentiles (a half minute at 400 a second).
-  maxFrames: 12e3
+  maxFrames: 12e3,
+  // v192 (120 fps: a frame every 8.3 ms): a frame later than this missed its turn (ms) - the frames before such gaps told
+  // apart from the others (their update, their drawing, their steps), and the steps they spent most more on kept.
+  missMs: 10.5,
+  missTop: 6,
+  // v194: a frame's uploads counted as large past this (bytes).
+  bigUpload: 512 * 1024
 });
 var GL_TIMED = Object.freeze({
   tex: Object.freeze(["texImage2D", "texSubImage2D", "texStorage2D", "compressedTexImage2D", "compressedTexSubImage2D", "texImage3D", "texSubImage3D", "texStorage3D", "compressedTexImage3D", "compressedTexSubImage3D", "generateMipmap", "copyTexSubImage2D"]),
@@ -77,7 +83,9 @@ var WORLD_PHASES = Object.freeze([
   ["updateSunShafts", "光の筋"],
   ["updateIslandHaze", "かすみ"],
   ["updateVolumetricLight", "木漏れ日"],
-  ["bursts.update", "火花"]
+  ["bursts.update", "火花"],
+  // v169: the bears (the trial page's; game.js keeps them on the world for this - their own update outside the world's).
+  ["bearForest.update", "クマ"]
 ]);
 var PHASE = /* @__PURE__ */ Symbol("hitchPhase");
 var short = (url) => {
@@ -108,13 +116,40 @@ var texBytes = (args) => {
 };
 function createHitchRecorder(renderer, { now = () => performance.now(), page = globalThis.window, context = null, sample = null, threshold = HITCH.threshold, later = (fn, ms) => globalThis.setTimeout(fn, ms), timing = true, bucketMs = PERF.bucketMs, gpuFrames = null } = {}) {
   const hitches = [], frames = [], notes = [], listeners = /* @__PURE__ */ new Set(), restores = [], perfList = [], perfListeners = /* @__PURE__ */ new Set();
+  const menuStops = [];
   const stats = { frames: 0, playMs: 0, stops: 0, over: HITCH.buckets.map(() => 0) };
   let started = now(), serial = 0, disposed = false;
   let lastScreen = null, acc = newAccumulator(), prev = newAccumulator(), lastRaf = null, frameStart = null, lapAt = null, renderStart = null, lastUpdateMs = null, lastRenderMs = null;
   let lastPrograms = programCount(), lastTextures = textureCount(), lastHeap = heap(), observer = null;
   let bucket = newBucket();
   function newBucket() {
-    return { frames: 0, ms: 0, gaps: [], upd: 0, nUpd: 0, ren: 0, nRen: 0, phases: /* @__PURE__ */ new Map() };
+    return {
+      frames: 0,
+      ms: 0,
+      gaps: [],
+      upd: 0,
+      nUpd: 0,
+      ren: 0,
+      nRen: 0,
+      phases: /* @__PURE__ */ new Map(),
+      /* v192 */
+      late: newSide(),
+      early: newSide()
+    };
+  }
+  function newSide() {
+    return {
+      n: 0,
+      upd: 0,
+      ren: 0,
+      phases: /* @__PURE__ */ new Map(),
+      /* v194 */
+      buf: 0,
+      bufMs: 0,
+      tex: 0,
+      sync: 0,
+      big: 0
+    };
   }
   function perfFrame(gap) {
     const b = bucket;
@@ -130,6 +165,16 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
       b.nRen++;
     }
     for (const [k, v] of acc.phases) b.phases.set(k, (b.phases.get(k) || 0) + v);
+    const side = gap > PERF.missMs ? b.late : b.early;
+    side.n++;
+    side.upd += Number.isFinite(lastUpdateMs) ? lastUpdateMs : 0;
+    side.ren += Number.isFinite(lastRenderMs) ? lastRenderMs : 0;
+    side.buf += acc.buf[2];
+    side.bufMs += acc.buf[1];
+    side.tex += acc.tex[2];
+    side.sync += acc.sync[1];
+    if (acc.buf[2] + acc.tex[2] > PERF.bigUpload) side.big++;
+    for (const [k, v] of acc.phases) side.phases.set(k, (side.phases.get(k) || 0) + v);
     if (b.ms >= bucketMs) closeBucket();
   }
   function closeBucket() {
@@ -144,13 +189,23 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
       ms: [q(0.5), q(0.9), q(0.99), round1(g[g.length - 1])],
       upd: b.nUpd ? round2(b.upd / b.nUpd) : null,
       ren: b.nRen ? round2(b.ren / b.nRen) : null,
-      ph: [...b.phases].sort((x, y) => y[1] - x[1]).slice(0, 8).map(([k, v]) => [k, round2(v / b.frames)])
+      ph: [...b.phases].sort((x, y) => y[1] - x[1]).slice(0, 8).map(([k, v]) => [k, round2(v / b.frames)]),
+      /* v192 */
+      late: lateOf(b, round2)
     };
     const more = typeof sample === "function" ? safely(sample) : null;
     if (more) Object.assign(entry, more);
     perfList.push(entry);
     if (perfList.length > PERF.keep) perfList.shift();
     for (const fn of perfListeners) safely(() => fn(entry));
+  }
+  function lateOf(b, round2) {
+    const L = b.late, E = b.early, avg = (side, v) => side.n ? round2(v / side.n) : null;
+    const steps = /* @__PURE__ */ new Set([...L.phases.keys(), ...E.phases.keys()]);
+    const ph = [...steps].map((k) => [k, avg(L, L.phases.get(k) || 0), avg(E, E.phases.get(k) || 0)]).filter(([, l, e]) => l !== null).sort((x, y) => y[1] - (y[2] ?? 0) - (x[1] - (x[2] ?? 0))).slice(0, PERF.missTop);
+    const kb = (side, v) => side.n ? Math.round(v / side.n / 1024 * 10) / 10 : null;
+    const gl2 = { buf: [kb(L, L.buf), kb(E, E.buf)], bufMs: [avg(L, L.bufMs), avg(E, E.bufMs)], tex: [kb(L, L.tex), kb(E, E.tex)], sync: [avg(L, L.sync), avg(E, E.sync)], big: [L.big, E.big] };
+    return { share: b.frames ? round2(L.n / b.frames) : 0, upd: [avg(L, L.upd), avg(E, E.upd)], ren: [avg(L, L.ren), avg(E, E.ren)], ph, gl: gl2 };
   }
   function newAccumulator() {
     return {
@@ -167,7 +222,9 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
       firstTargetNames: [],
       /* v134 */
       geo: [0, 0, 0],
-      geoNames: []
+      geoNames: [],
+      /* v169 */
+      syncWorst: null
     };
   }
   function programCount() {
@@ -180,8 +237,12 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     const m = page?.performance?.memory;
     return m && Number.isFinite(m.usedJSHeapSize) ? m.usedJSHeapSize / 1048576 : null;
   }
+  const phaseSums = /* @__PURE__ */ new Map();
   function addPhase(label, ms) {
-    if (ms > 0) acc.phases.set(label, (acc.phases.get(label) || 0) + ms);
+    if (ms > 0) {
+      acc.phases.set(label, (acc.phases.get(label) || 0) + ms);
+      phaseSums.set(label, (phaseSums.get(label) || 0) + ms);
+    }
   }
   function replace(obj, name, wrapper) {
     const own = Object.prototype.hasOwnProperty.call(obj, name), original = obj[name];
@@ -194,6 +255,7 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
   }
   const gl = timing ? safely(() => renderer?.getContext?.()) : null;
   const glTotals = { tex: [0, 0, 0], buf: [0, 0, 0], shader: [0, 0], sync: [0, 0] };
+  const syncBy = Object.fromEntries(GL_TIMED.sync.map((n) => [n, [0, 0]]));
   if (gl) for (const [kind, names] of Object.entries(GL_TIMED)) for (const name of names) {
     const original = gl[name];
     if (typeof original !== "function") continue;
@@ -208,6 +270,12 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
         a[1] += ms;
         g[0]++;
         g[1] += ms;
+        if (kind === "sync") {
+          const by = syncBy[name];
+          by[0]++;
+          by[1] += ms;
+          if (!acc.syncWorst || ms > acc.syncWorst[1]) acc.syncWorst = [name, ms];
+        }
         if (buffer) {
           const b = bufferBytes(name, arguments);
           a[2] += b;
@@ -358,14 +426,35 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     }
     return id;
   }
+  function drawName(object, material, geometry, renderer2 = null, scene = null, max = 40) {
+    let name = object?.name || material?.name || "";
+    if (!name) {
+      const type = material?.type || "?", hint = material?.isShaderMaterial || material?.isRawShaderMaterial ? "{" + Object.keys(material.uniforms || {}).slice(0, 3).join(",") + "}" : "[" + (object?.parent?.name || geometry?.name || material?.map?.name || material?.map?.image?.src?.split?.("/").pop() || (object?.parent?.type ?? "")) + "]";
+      name = type + hint;
+    }
+    if (renderer2) {
+      const t = scene ? safely(() => renderer2.getRenderTarget?.()) : null;
+      const where = scene === null ? "影" : t ? t.texture?.name || `${t.width}x${t.height}` : "画面";
+      const attrs = Object.keys(geometry?.attributes || {}).filter((k) => k !== "position").slice(0, 4).join(",");
+      name = name.slice(0, max) + "→" + String(where).slice(0, 18) + (attrs ? "(" + attrs + ")" : "");
+      return name.slice(0, max + 50);
+    }
+    return String(name).slice(0, max);
+  }
   const props = renderer?.properties;
   if (props && typeof renderer.renderBufferDirect === "function") {
     const draw = renderer.renderBufferDirect;
+    const lastDraw = /* @__PURE__ */ new WeakMap();
     safely(() => replace(renderer, "renderBufferDirect", function(camera, scene, geometry, material, object) {
       const result = draw.apply(this, arguments);
       if (disposed) return result;
       try {
         const program = props.get(material)?.currentProgram;
+        if (object) {
+          const was = lastDraw.get(object), target = scene === null ? null : this.getRenderTarget?.() ?? null;
+          if (was !== void 0 && was.program === program && was.geometry === geometry && was.target === target && was.shadow === (scene === null)) return result;
+          if (program && geometry && !(object.isInstancedMesh && object.count === 0)) lastDraw.set(object, { program, geometry, target, shadow: scene === null });
+        }
         if (program && geometry && !(object?.isInstancedMesh && object.count === 0)) {
           noteGeometry(geometry, object, material);
           const flags = (object?.isInstancedMesh ? 1 : 0) + (object?.instanceColor ? 2 : 0) + (object?.isSkinnedMesh ? 4 : 0);
@@ -373,7 +462,7 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
           if (!pairs.has(key)) {
             pairs.add(key);
             acc.first++;
-            const name = String(object?.name || material?.name || material?.type || "?").slice(0, 40);
+            const name = drawName(object, material, geometry, this, scene, 40);
             if (acc.firstNames.length < 8 && !acc.firstNames.includes(name)) acc.firstNames.push(name);
             noteFirst(name);
           }
@@ -383,7 +472,7 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
             acc.firstTarget++;
             if (acc.firstTargetNames.length < 8) {
               const t = kind === 1 ? null : safely(() => this.getRenderTarget?.());
-              const name = String(object?.name || material?.name || material?.type || "?").slice(0, 32) + "→" + (kind === 1 ? "影" : t ? (t.texture?.name || `${t.width}x${t.height}`).slice(0, 24) : "画面");
+              const name = drawName(object, material, geometry, null, null, 32) + "→" + (kind === 1 ? "影" : t ? (t.texture?.name || `${t.width}x${t.height}`).slice(0, 24) : "画面");
               if (!acc.firstTargetNames.includes(name)) acc.firstTargetNames.push(name);
             }
           }
@@ -485,11 +574,22 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     return n;
   }
   function note(label) {
-    notes.push({ at: now(), label: String(label).slice(0, 48) });
+    const text = String(label).slice(0, 48);
+    notes.push({ at: now(), label: text });
     if (notes.length > 24) notes.shift();
+    try {
+      const name = "KUMARIM " + text;
+      globalThis.performance?.mark?.(name);
+      globalThis.performance?.clearMarks?.(name);
+    } catch {
+    }
   }
   function frame(rafTime, screen = null) {
     if (disposed) return;
+    if (page?.document?.hidden === true) {
+      suspend();
+      return;
+    }
     const at = now(), programs = programCount(), textures = textureCount(), mb = heap();
     const gap = lastRaf !== null && Number.isFinite(rafTime) && rafTime > lastRaf ? rafTime - lastRaf : null;
     if (gap !== null && gap >= threshold) pollFences();
@@ -539,7 +639,7 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     frameStart = lapAt = renderStart = null;
   }
   function glOf(a) {
-    return { tex: [a.tex[0], round1(a.tex[1]), Math.round(a.tex[2] / 1024)], buf: [a.buf[0], round1(a.buf[1]), Math.round(a.buf[2] / 1024)], shader: [a.shader[0], round1(a.shader[1])], sync: [a.sync[0], round1(a.sync[1])] };
+    return { tex: [a.tex[0], round1(a.tex[1]), Math.round(a.tex[2] / 1024)], buf: [a.buf[0], round1(a.buf[1]), Math.round(a.buf[2] / 1024)], shader: [a.shader[0], round1(a.shader[1])], sync: [a.sync[0], round1(a.sync[1])], ...a.syncWorst && a.syncWorst[1] >= 5 ? { syncWorst: [a.syncWorst[0], round1(a.syncWorst[1])] } : {} };
   }
   function record(gap, at, programs, textures, mb, screen = null) {
     const begin = at - gap, a = acc;
@@ -598,7 +698,11 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
       h.laf = matched.length ? [matched.reduce((n, f) => n + f.ms, 0), matched.reduce((n, f) => n + f.blocking, 0), matched.length] : null;
       h.lafRender = matched.length ? [matched.reduce((n, f) => n + (f.style || 0), 0), matched.reduce((n, f) => n + (f.render || 0), 0)] : null;
       h.lafFrames = matched.length ? matched.slice(0, 4).map((f) => [Math.round(f.start - h.begin), f.ms, f.blocking, f.scriptMs ?? null, f.wait ?? null, f.style || 0, f.render || 0]) : null;
-      h.gpuFrames = typeof gpuFrames === "function" ? safely(() => (gpuFrames() || []).filter((g) => g.at >= h.begin - 250 && g.at <= h.at + 30).slice(-4).map((g) => [Math.round(g.at - h.begin), g.ms === null ? g.kind : Math.round(g.ms)])) : null;
+      h.gpuFrames = typeof gpuFrames === "function" ? safely(() => pickGpuFrames((gpuFrames() || []).filter((g) => g.at >= h.begin - 250 && g.at <= h.at + 30)).map((g) => {
+        const e = [Math.round(g.at - h.begin), g.ms === null ? g.kind : Math.round(g.ms)];
+        if (g.parts) e.push(Object.fromEntries(Object.entries(g.parts).map(([k, v]) => [k, Math.round(v * 10) / 10])));
+        return e;
+      })) : null;
       h.pageChanges = pageChanges.filter((c) => c.at >= h.begin - 2e3 && c.at <= h.at).slice(-8).map((c) => [Math.round(h.at - c.at), c.text + (c.more ? " (+" + c.more + ")" : "")]);
       h.settled = true;
       const gpuBusy = !!h.gpu && (h.gpu.done === null || h.gpu.done > HITCH.idle);
@@ -608,11 +712,18 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
         stats.stops = Math.max(0, stats.stops - 1);
         stats.menuWaits = (stats.menuWaits || 0) + 1;
         h.dropped = true;
+        menuStops.push({ t: h.t, ms: h.ms, scr: h.screen, act: h.action, dom: h.pageChanges, laf: h.lafFrames, gpu: h.gpu, gpuIn: h.gpuFrames, scripts: (h.scripts || []).slice(0, 2) });
+        if (menuStops.length > 16) menuStops.shift();
         return;
       }
       for (const fn of listeners) safely(() => fn(h));
     };
     if (safely(() => later(settle, HITCH.settleMs)) === null) settle();
+  }
+  function pickGpuFrames(list) {
+    if (list.length <= 4) return list;
+    const keep = new Set([...list].sort((a, b) => (b.ms ?? 1e9) - (a.ms ?? 1e9)).slice(0, 4));
+    return list.filter((g) => keep.has(g));
   }
   function framesFor(h) {
     return frames.filter((f) => f.end >= h.begin - 50 && f.start <= h.at + 50);
@@ -638,6 +749,9 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     }
     if (h.gpuFrames?.length) {
       const long = h.gpuFrames.filter(([, v]) => typeof v === "number").reduce((m, [, v]) => Math.max(m, v), 0), lost = h.gpuFrames.some(([, v]) => typeof v === "string");
+      const where = h.gpuFrames.find((e) => e[1] === long && e[2])?.[2], part = where ? Object.entries(where).sort((a, b) => b[1] - a[1])[0] : null;
+      const PART = { world: "世界の描画", hands: "手と道具", after: "描画の後（シェーダー・テクスチャの先送り）" };
+      if (part && long >= h.ms * 0.5) parts.push(`いちばん長かったのは ${PART[part[0]] || part[0]} ${Math.round(part[1])} ms`);
       parts.push(long >= h.ms * 0.5 ? `ゲームの描画の GPU 時間 ${long} ms（描画の中で止まった）` : lost && !long ? "ゲームの描画の GPU 時間は取れず" : `ゲームの描画の GPU 時間は ${long} ms（止まったのは描画の外）`);
     }
     if (h.pageChanges?.length) parts.push("直前のページの変化: " + h.pageChanges.slice(-3).map(([ms2, t]) => `${t} ${ms2}ms前`).join("・"));
@@ -724,6 +838,17 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     listeners.clear();
     perfListeners.clear();
   }
+  const doc = page?.document;
+  if (typeof doc?.addEventListener === "function") {
+    const onVisibility = () => {
+      if (doc.hidden) {
+        suspend();
+        stats.hiddenSkips = (stats.hiddenSkips || 0) + 1;
+      }
+    };
+    doc.addEventListener("visibilitychange", onVisibility);
+    restores.push(() => doc.removeEventListener("visibilitychange", onVisibility));
+  }
   const since = (at = now()) => round1((at - started) / 1e3);
   return {
     note,
@@ -740,8 +865,24 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
     onPerf,
     dispose,
     since,
+    /* v186 */
+    phaseTotals: () => Object.fromEntries(phaseSums),
+    /* v188 */
+    menuStops: () => menuStops.slice(),
     /* v138 */
-    glTotals: () => ({ bufCalls: glTotals.buf[0], bufMs: glTotals.buf[1], bufKB: glTotals.buf[2] / 1024, texCalls: glTotals.tex[0], texMs: glTotals.tex[1], texKB: glTotals.tex[2] / 1024, shaderCalls: glTotals.shader[0], syncCalls: glTotals.sync[0], syncMs: glTotals.sync[1] }),
+    glTotals: () => ({
+      bufCalls: glTotals.buf[0],
+      bufMs: glTotals.buf[1],
+      bufKB: glTotals.buf[2] / 1024,
+      texCalls: glTotals.tex[0],
+      texMs: glTotals.tex[1],
+      texKB: glTotals.tex[2] / 1024,
+      shaderCalls: glTotals.shader[0],
+      syncCalls: glTotals.sync[0],
+      syncMs: glTotals.sync[1],
+      /* v157 */
+      ...Object.fromEntries(Object.entries(syncBy).flatMap(([n, [c, ms]]) => [["sync_" + n + "Calls", c], ["sync_" + n + "Ms", ms]]))
+    }),
     hitches,
     frames,
     entries: () => hitches,
@@ -758,6 +899,7 @@ function createHitchRecorder(renderer, { now = () => performance.now(), page = g
 var SAMPLE_LIMIT = 60;
 var QUERY_LIMIT = 4;
 var QUERY_TIMEOUT_MS = 5e3;
+var SECTION_QUERY_LIMIT = 16;
 var PEAK_HOLD_MS = 4e3;
 function peak() {
   let value = null, at = -Infinity;
@@ -804,6 +946,7 @@ function classifyRenderer(name) {
 function createRenderDiagnostics(renderer, { enabled = false, now = () => performance.now(), page = globalThis.window, document = globalThis.document, gpuScope = "render", onFrame, onGpu, getTag, hitches: sharedHitches = null } = {}) {
   if (!enabled) return { enabled: false, gpuFrames: () => [], beginFrame() {
   }, beginRender() {
+  }, section() {
   }, endFrame() {
   }, suspend() {
   }, resetSamples() {
@@ -813,13 +956,18 @@ function createRenderDiagnostics(renderer, { enabled = false, now = () => perfor
   }, note() {
   }, snapshot: () => ({ enabled: false }) };
   const canvas = renderer.domElement, gl = renderer.getContext(), update = series(), submission = series(), interval = series(), gpu = series(), framePeak = peak(), updatePeak = peak(), submissionPeak = peak();
-  const recentGpu = [], noteGpu = (at, ms, kind = "ok") => {
-    recentGpu.push({ at, ms, kind });
-    if (recentGpu.length > 32) recentGpu.shift();
+  const GPU_KEEP_MS = 4e3, GPU_KEEP_MAX = 2048, recentGpu = [], noteGpu = (at, ms, kind = "ok", parts = null) => {
+    recentGpu.push(parts ? { at, ms, kind, parts } : { at, ms, kind });
+    if (recentGpu.length >= GPU_KEEP_MAX || recentGpu.length >= 256 && at - recentGpu[0].at > GPU_KEEP_MS * 1.5) {
+      let i = 0;
+      while (i < recentGpu.length - 1 && (at - recentGpu[i].at > GPU_KEEP_MS || recentGpu.length - i > GPU_KEEP_MAX / 2)) i++;
+      recentGpu.splice(0, i);
+    }
   };
   let disposed = false, lost = false, ext, backend = null, frame = null, active = null, pending = [], lastRaf = null, lastCpuAt = null, lastGpuAt = null, state = "waiting", gpuState = "waiting", completed = 0, skipped = 0;
   const ownHitches = !sharedHitches, hitches = sharedHitches || createHitchRecorder(renderer, { now, page, timing: false });
   const observeFrame = typeof onFrame === "function", observeGpu = typeof onGpu === "function", tagged = observeFrame || observeGpu;
+  const sectioned = gpuScope === "render" && !observeGpu, queryLimit = sectioned ? SECTION_QUERY_LIMIT : QUERY_LIMIT;
   let nextFrameId = 0;
   function emitGpuReset(reason) {
     if (observeGpu) safely2(() => onGpu({ type: "reset", reason, at: now() }));
@@ -914,6 +1062,11 @@ function createRenderDiagnostics(renderer, { enabled = false, now = () => perfor
           resetGpu("disjoint");
           return false;
         }
+        if (item.group && Number.isFinite(ns) && ns >= 0) {
+          sectionResult(item, ns / 1e6);
+          if (disposed || lost) return false;
+          continue;
+        }
         if (Number.isFinite(ns) && ns >= 0) {
           noteGpu(item.at, ns / 1e6);
           if (ns < 1e9) gpu.add(ns / 1e6);
@@ -960,7 +1113,7 @@ function createRenderDiagnostics(renderer, { enabled = false, now = () => perfor
     if (gpuScope === "frame") beginQuery(frame.start);
   }
   function beginQuery(at) {
-    if (frame.canTime && pending.length + (active ? 1 : 0) < QUERY_LIMIT) {
+    if (frame.canTime && pending.length + (active ? 1 : 0) < queryLimit) {
       if (safely2(() => gl.getParameter(ext.GPU_DISJOINT_EXT))) {
         resetGpu("disjoint");
         return;
@@ -974,6 +1127,12 @@ function createRenderDiagnostics(renderer, { enabled = false, now = () => perfor
               active.frameId = frame.frameId;
               active.tag = frame.tag;
             }
+            if (sectioned) {
+              frame.group ??= { at, parts: [], expected: 0, ended: false, missed: !!frame.missedSection };
+              frame.group.expected++;
+              active.group = frame.group;
+              active.section = frame.section || "world";
+            }
             gl.beginQuery(ext.TIME_ELAPSED_EXT, query);
             if (!gpu.count()) gpuState = "pending";
           } else gpuState = "unavailable";
@@ -982,6 +1141,42 @@ function createRenderDiagnostics(renderer, { enabled = false, now = () => perfor
         resetGpu("unavailable");
       }
     } else if (frame.canTime) skipped++;
+  }
+  function section(name) {
+    if (!sectioned || !frame || disposed || lost || frame.renderStart === null) return;
+    if (active) {
+      try {
+        gl.endQuery(ext.TIME_ELAPSED_EXT);
+        pending.push(active);
+        active = null;
+      } catch {
+        resetGpu("unavailable");
+        return;
+      }
+    } else frame.missedSection = true;
+    frame.section = name;
+    beginQuery(now());
+    if (!active) frame.missedSection = true;
+    if (frame.group && frame.missedSection) frame.group.missed = true;
+  }
+  function sectionResult(item, ms) {
+    const g = item.group;
+    g.parts.push([item.section, ms]);
+    lastGpuAt = Math.max(lastGpuAt ?? -Infinity, item.at);
+    gpuState = "ready";
+    finishGroup(g);
+  }
+  function finishGroup(g) {
+    if (!g.ended || g.done || g.parts.length < g.expected) return;
+    g.done = true;
+    const parts = {};
+    let total = 0;
+    for (const [name, ms] of g.parts) {
+      parts[name] = (parts[name] || 0) + ms;
+      total += ms;
+    }
+    noteGpu(g.at, total, "ok", parts);
+    if (!g.missed && total < 1e3) gpu.add(total);
   }
   function beginRender() {
     if (!frame || frame.renderStart !== null) return;
@@ -1014,6 +1209,11 @@ function createRenderDiagnostics(renderer, { enabled = false, now = () => perfor
       } catch {
         resetGpu("unavailable");
       }
+    }
+    if (frame.group) {
+      if (frame.missedSection) frame.group.missed = true;
+      frame.group.ended = true;
+      finishGroup(frame.group);
     }
     if (observeFrame && frame && !disposed && !lost) {
       const item = frame;
@@ -1127,7 +1327,7 @@ function createRenderDiagnostics(renderer, { enabled = false, now = () => perfor
     const text = parent?.querySelector(".render-diagnostics-readout");
     if (text) text.textContent = formatRenderDiagnostics(snapshot(), hitches.report());
   }
-  return { enabled: true, gpuFrames: () => recentGpu.slice(), beginFrame, beginRender, endFrame, suspend, resetSamples, dispose, snapshot, appendSettings, refreshSettings, note: (label) => safely2(() => hitches.note(label)), hitchReport: () => hitches.report() };
+  return { enabled: true, gpuFrames: () => recentGpu.slice(), beginFrame, beginRender, section, endFrame, suspend, resetSamples, dispose, snapshot, appendSettings, refreshSettings, note: (label) => safely2(() => hitches.note(label)), hitchReport: () => hitches.report() };
 }
 function formatRenderDiagnostics(s, hitchReport = "") {
   if (!s.enabled) return "描画診断は無効です。";

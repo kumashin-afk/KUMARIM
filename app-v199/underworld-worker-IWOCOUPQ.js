@@ -4,9 +4,11 @@ import {
   buildPitRock,
   buildUnderworldBlock,
   createUnderworldField,
-  generateAbyss,
   rockTransfers
-} from "./chunk-3ERKUAXH.js";
+} from "./chunk-MP7SMVQ3.js";
+import {
+  generateAbyss
+} from "./chunk-2OXLF6NH.js";
 import "./chunk-MLKGABMK.js";
 
 // underworld-worker.js

@@ -1,7 +1,7 @@
 import {
   WORKER_NAMES,
   reportWorker
-} from "./chunk-HGFZA34L.js";
+} from "./chunk-Z77F3JAE.js";
 
 // ocean-domain.js
 var DEFAULT_SEGMENTS = 96;
@@ -308,7 +308,7 @@ function createOceanDomain(THREE, body, island) {
       return;
     }
     try {
-      worker = new globalThis.Worker(new URL("./ocean-domain-worker-327JTUGO.js", import.meta.url), { type: "module" });
+      worker = new globalThis.Worker(new URL("./ocean-domain-worker-DL4ZFNXZ.js", import.meta.url), { type: "module" });
       worker.onmessage = (event) => {
         if (disposed || workerFailed) return;
         const message = event.data;

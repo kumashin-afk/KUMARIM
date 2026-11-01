@@ -1,7 +1,7 @@
 import {
   WORLD_PHASES,
   createRenderDiagnostics
-} from "./chunk-H3XAN2VW.js";
+} from "./chunk-6MEZDFF6.js";
 import {
   Box3,
   Color,
@@ -11,7 +11,7 @@ import {
   Sphere,
   Vector3,
   Vector4
-} from "./chunk-PH5TGXXA.js";
+} from "./chunk-HBXKLBXO.js";
 import "./chunk-MLKGABMK.js";
 
 // gpu-debug-metrics.js
@@ -778,14 +778,31 @@ function normalizeGpuDebugFlags(value = {}) {
 }
 var GPU_BENCHMARK_REBUILDS = Object.freeze(["shadows-off", "post-off", "fog-off", "terrain-half", "terrain-quarter", "waterReflection-off", "waterRefraction-off"]);
 var GPU_BENCHMARK_MOTION = Object.freeze({ turn: 0.22 });
+var GPU_BENCHMARK_MANUAL = Object.freeze(["pixels-1", "pixels-1.5", "pixels-device"]);
+var GPU_BENCHMARK_WALK_OFF = Object.freeze(["trees", "grass", "rocks", "waterSurface", "transparent"]);
 function benchmarkPlan(states) {
-  const plan = states.filter((s) => !GPU_BENCHMARK_REBUILDS.includes(s.id)), base = plan.find((s) => s.id === "baseline");
-  return base ? [
+  const kept = states.filter((s) => s.id === "baseline" || !GPU_BENCHMARK_REBUILDS.includes(s.id) && !GPU_BENCHMARK_MANUAL.includes(s.id) && !s.same && s.available !== false && s.effective !== false), base = kept.find((s) => s.id === "baseline");
+  if (!base) return kept;
+  const between = (n2) => ({ ...base, id: "baseline-mid", label: `基準（間 ${n2}）`, between: true, notes: [] }), others = kept.filter((s) => s !== base), plan = [base];
+  others.forEach((s, i) => {
+    plan.push(s);
+    if (i < others.length - 1) plan.push(between(i + 1));
+  });
+  const walkNote = "前へ歩き続け、ゆっくり向きを変えます（視点はプレイ中と同じく体に付いて動きます）。毎回、同じ場所から歩き始めます。";
+  const walk = (n2) => ({ ...base, id: "walk", label: n2 ? `歩きながら（すべて有効・${n2} 回目）` : "歩きながら（すべて有効）", motion: "walk", ...n2 > 1 ? { between: true } : {}, notes: n2 > 1 ? [] : [...base.notes || [], walkNote] });
+  const walking = [walk(1)];
+  let n = 1;
+  for (const key of GPU_BENCHMARK_WALK_OFF) {
+    const st = kept.find((s) => s.id === key + "-off");
+    if (!st) continue;
+    walking.push({ ...st, id: "walk-" + key + "-off", label: `歩きながら・${GPU_DEBUG_LABELS[key]}：無効`, motion: "walk", notes: [] }, walk(++n));
+  }
+  return [
     ...plan,
     { ...base, id: "baseline-end", label: "基準（最後にもう一度）", notes: [...base.notes || [], "最初の基準と同じ状態です。最初の基準との差は、測っている間に起きた変化です。"] },
-    { ...base, id: "walk", label: "歩きながら（すべて有効）", motion: "walk", notes: [...base.notes || [], "前へ歩き続け、ゆっくり向きを変えます（視点はプレイ中と同じく体に付いて動きます）。"] },
+    ...walking,
     { ...base, id: "run", label: "走りながら（すべて有効）", motion: "run", notes: [...base.notes || [], "前へ走り続け、ゆっくり向きを変えます。"] }
-  ] : plan;
+  ];
 }
 function makeGpuBenchmarkStates(capabilities = {}) {
   const baseline = { id: "baseline", label: "基準：すべて有効・現在の解像度", flags: { ...GPU_DEBUG_DEFAULT_FLAGS }, available: true, effective: true, notes: ["現在の画質で利用できる機能が基準です。画質設定は変更しません。"] };
@@ -793,9 +810,43 @@ function makeGpuBenchmarkStates(capabilities = {}) {
     const cap = capabilities[key];
     return { id, label, flags: { ...GPU_DEBUG_DEFAULT_FLAGS, [key]: value }, available: cap !== false && cap?.available !== false, effective: cap !== false && cap?.available !== false && cap?.effective !== false, notes: cap?.notes ? [...cap.notes] : cap?.reason ? [String(cap.reason)] : [] };
   };
-  return [baseline, ...GPU_DEBUG_BOOLEAN_KEYS.map((key) => make(`${key}-off`, key, false, `${GPU_DEBUG_LABELS[key]}：無効`)), make("terrain-half", "terrainDistance", 0.5, "地形の表示距離：50%"), make("terrain-quarter", "terrainDistance", 0.25, "地形の表示距離：25%"), make("pixels-1", "pixelRatio", 1, "描画ピクセル比：1"), make("pixels-1.5", "pixelRatio", 1.5, "描画ピクセル比：1.5"), make("pixels-device", "pixelRatio", "device", "描画ピクセル比：端末の値")];
+  return [baseline, ...GPU_DEBUG_BOOLEAN_KEYS.map((key) => make(`${key}-off`, key, false, `${GPU_DEBUG_LABELS[key]}：無効`)), make("terrain-half", "terrainDistance", 0.5, "地形の表示距離：50%"), make("terrain-quarter", "terrainDistance", 0.25, "地形の表示距離：25%"), ...[["pixels-1", 1, "描画ピクセル比：1"], ["pixels-1.5", 1.5, "描画ピクセル比：1.5"], ["pixels-device", "device", "描画ピクセル比：端末の値"]].map(([id, value, label]) => {
+    const s = make(id, "pixelRatio", value, label), px = capabilities.pixels;
+    if (px && Number.isFinite(px.current) && Math.abs((value === "device" ? px.device : value) - px.current) < 0.01) s.same = true;
+    return s;
+  })];
 }
 var stat2 = () => ({ sum: 0, max: 0, count: 0 });
+var GPU_BENCHMARK_STEADY = Object.freeze({ ms: 0.35, share: 0.04 });
+function compareRows(rows) {
+  const standing = (r) => r && (r.id === "baseline" || r.id === "baseline-mid" || r.id === "baseline-end"), walking = (r) => r && r.id === "walk", val = (r, k) => k === "gpu" ? r?.gpu?.elapsedMs : r?.frame?.avgMs;
+  return rows.map((row, i) => {
+    if (standing(row) || !row.complete) return row;
+    const kindWalk = !!row.motion && row.id !== "walk" && row.id !== "run", isBase = kindWalk ? walking : standing;
+    if (walking(row) && rows.slice(0, i).some(walking)) return row;
+    let before = null, after = null;
+    for (let j = i - 1; j >= 0; j--) if (isBase(rows[j]) && rows[j].complete) {
+      before = rows[j];
+      break;
+    }
+    if (!row.motion || kindWalk) {
+      for (let j = i + 1; j < rows.length; j++) if (isBase(rows[j]) && rows[j].complete) {
+        after = rows[j];
+        break;
+      }
+    }
+    const refs = [before, after].filter(Boolean);
+    if (!refs.length) return row;
+    const mean3 = (k2) => {
+      const v = refs.map((r) => val(r, k2)).filter(Number.isFinite);
+      return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+    };
+    const g = mean3("gpu"), f = mean3("frame"), rg = val(row, "gpu"), rf = val(row, "frame");
+    const spread = (k2) => refs.length < 2 ? null : Number.isFinite(val(before, k2)) && Number.isFinite(val(after, k2)) ? Math.abs(val(before, k2) - val(after, k2)) : null;
+    const k = Number.isFinite(g) ? "gpu" : "frame", s = spread(k), base = k === "gpu" ? g : f;
+    return { ...row, vs: { gpuMs: Number.isFinite(rg) && Number.isFinite(g) ? rg - g : null, frameMs: Number.isFinite(rf) && Number.isFinite(f) ? rf - f : null, baseGpuMs: g, baseFrameMs: f, beforeGpuMs: val(before, "gpu") ?? null, afterGpuMs: after ? val(after, "gpu") ?? null : null, spreadMs: s, steady: s === null ? null : s <= Math.max(GPU_BENCHMARK_STEADY.ms, (base || 0) * GPU_BENCHMARK_STEADY.share) } };
+  });
+}
 function intervalShape(list) {
   if (!list?.length) return { p50Ms: null, p90Ms: null, at120: null };
   const s = [...list].sort((a, b) => a - b), q = (f) => s[Math.min(s.length - 1, Math.floor(f * s.length))];
@@ -811,15 +862,31 @@ function add2(target, value) {
 var mean2 = (s) => s.count ? s.sum / s.count : null;
 var maximum2 = (s) => s.count ? s.max : null;
 var nextRun = 0;
-function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState, freeze = () => void 0, restore = () => {
-}, setTag = () => {
-}, onProgress = () => {
-}, onResults = () => {
-}, now = () => performance.now(), durationMs = 5e3, warmupMs = 1e3, tailMs = 2e3, metadata = {}, counters = null } = {}) {
+function createGpuDebugBenchmark({
+  states = makeGpuBenchmarkStates(),
+  applyState,
+  freeze = () => void 0,
+  restore = () => {
+  },
+  setTag = () => {
+  },
+  onProgress = () => {
+  },
+  onResults = () => {
+  },
+  now = () => performance.now(),
+  durationMs = 5e3,
+  /* v185 */
+  minDurationMs = 5e3,
+  warmupMs = 1e3,
+  tailMs = 2e3,
+  metadata = {},
+  counters = null
+} = {}) {
   if (typeof applyState !== "function") throw new TypeError("GPU benchmark requires applyState");
   const plan = states.map((s) => ({ ...s, flags: normalizeGpuDebugFlags(s.flags), notes: [...s.notes || []] }));
   if (!plan.length) throw new TypeError("GPU benchmark requires at least one state");
-  const duration = Math.max(5e3, Number.isFinite(durationMs) ? durationMs : 5e3), warmup = Math.max(1e3, Number.isFinite(warmupMs) ? warmupMs : 1e3), tail = Math.max(0, Math.min(5e3, Number.isFinite(tailMs) ? tailMs : 2e3));
+  const duration = Math.max(Number.isFinite(minDurationMs) ? Math.max(1e3, minDurationMs) : 5e3, Number.isFinite(durationMs) ? durationMs : 5e3), warmup = Math.max(1e3, Number.isFinite(warmupMs) ? warmupMs : 1e3), tail = Math.max(0, Math.min(5e3, Number.isFinite(tailMs) ? tailMs : 2e3));
   let phase = "idle", active = false, index = -1, runId = "", startedAt = 0, phaseAt = 0, warmFrames = 0, token, transition = null, finishRequest = null, restoring = false, completion = null, resolveCompletion, report = null, errorText = null;
   let rows = [], rowByTag = /* @__PURE__ */ new Map(), pending = /* @__PURE__ */ new Map(), earlyGpu = /* @__PURE__ */ new Map(), retiredFrames = 0, currentTag = null;
   function tag(value) {
@@ -838,7 +905,7 @@ function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState
     }
   }
   function serializeRow(r) {
-    return { id: r.id, label: r.label, flags: { ...r.flags }, effectiveFlags: r.effectiveFlags ? { ...r.effectiveFlags } : null, available: r.available !== false, effective: r.effective !== false, notes: [...r.notes], metadata: r.metadata || null, startedAt: r.start, finishedAt: r.end, durationMs: r.start === null ? 0 : Math.max(0, (r.end ?? now()) - r.start), warmupMs: r.warmupElapsed, samples: r.samples, complete: r.finished, motion: r.motion || null, main: mainOf(r), perFrame: perFrameOf(r), frame: { avgMs: mean2(r.frame), maxMs: maximum2(r.frame), samples: r.frame.count, fps: mean2(r.frame) > 0 ? 1e3 / mean2(r.frame) : null, ...intervalShape(r.intervals) }, cpu: { updateMs: mean2(r.update), renderMs: mean2(r.render), totalMs: mean2(r.cpu) }, gpu: { elapsedMs: r.invalid ? null : mean2(r.gpu), maxMs: r.invalid ? null : maximum2(r.gpu), samples: r.invalid ? 0 : r.gpu.count, discardedSamples: r.invalid ? r.gpu.count : 0, status: r.invalid ? "disjoint" : r.gpu.count ? r.reasons.size ? "partial" : "measured" : [...r.reasons].at(-1) || "unavailable", unmeasuredFrames: Math.max(0, r.samples - (r.invalid ? 0 : r.gpu.count)), reasons: [...r.reasons] }, draws: { calls: mean2(r.calls), triangles: mean2(r.triangles) }, render: { calls: mean2(r.invokes), meshes: mean2(r.meshes) } };
+    return { id: r.id, label: r.label, ...r.between ? { between: true } : {}, flags: { ...r.flags }, effectiveFlags: r.effectiveFlags ? { ...r.effectiveFlags } : null, available: r.available !== false, effective: r.effective !== false, notes: [...r.notes], metadata: r.metadata || null, startedAt: r.start, finishedAt: r.end, durationMs: r.start === null ? 0 : Math.max(0, (r.end ?? now()) - r.start), warmupMs: r.warmupElapsed, samples: r.samples, complete: r.finished, motion: r.motion || null, main: mainOf(r), perFrame: perFrameOf(r), frame: { avgMs: mean2(r.frame), maxMs: maximum2(r.frame), samples: r.frame.count, fps: mean2(r.frame) > 0 ? 1e3 / mean2(r.frame) : null, ...intervalShape(r.intervals) }, cpu: { updateMs: mean2(r.update), renderMs: mean2(r.render), totalMs: mean2(r.cpu) }, gpu: { elapsedMs: r.invalid ? null : mean2(r.gpu), maxMs: r.invalid ? null : maximum2(r.gpu), samples: r.invalid ? 0 : r.gpu.count, discardedSamples: r.invalid ? r.gpu.count : 0, status: r.invalid ? "disjoint" : r.gpu.count ? r.reasons.size ? "partial" : "measured" : [...r.reasons].at(-1) || "unavailable", unmeasuredFrames: Math.max(0, r.samples - (r.invalid ? 0 : r.gpu.count)), reasons: [...r.reasons] }, draws: { calls: mean2(r.calls), triangles: mean2(r.triangles) }, render: { calls: mean2(r.invokes), meshes: mean2(r.meshes) } };
   }
   function results() {
     return report;
@@ -862,8 +929,9 @@ function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState
     if (!r.counterStart || !r.counterEnd || !(r.samples > 0)) return null;
     const out = {};
     for (const [k, v] of Object.entries(r.counterEnd)) {
-      const a = r.counterStart[k];
-      if (Number.isFinite(v) && Number.isFinite(a)) out[k] = (v - a) / r.samples;
+      const a = r.counterStart[k] ?? /* v186: a step first timed during the row */
+      (k.startsWith("ph:") ? 0 : void 0);
+      if (Number.isFinite(v) && Number.isFinite(a) && (!k.startsWith("ph:") || v - a > 0)) out[k] = (v - a) / r.samples;
     }
     return out;
   }
@@ -885,7 +953,7 @@ function createGpuDebugBenchmark({ states = makeGpuBenchmarkStates(), applyState
       active = false;
       restoring = false;
       phase = finish.status === "complete" ? "complete" : finish.status === "cancelled" ? "cancelled" : "error";
-      report = { version: 1, status: phase, error: errorText, reason: finish.reason || null, startedAt, finishedAt: now(), durationMs: Math.max(0, now() - startedAt), measurementMs: duration, warmupMs: warmup, gpuTailMs: tail, metadata, conditions: "Camera and input held (the walk and run rows: the game's own movement, the walk key held); simulation, time and weather continue. Frame cap and current quality are retained. GPU elapsed is not utilization.", rows: rows.map(serializeRow), retiredFrameAssociations: retiredFrames };
+      report = { version: 1, status: phase, error: errorText, reason: finish.reason || null, startedAt, finishedAt: now(), durationMs: Math.max(0, now() - startedAt), measurementMs: duration, warmupMs: warmup, gpuTailMs: tail, metadata, conditions: "Camera and input held (the walk and run rows: the game's own movement, the walk key held); simulation, time and weather continue. Frame cap and current quality are retained. GPU elapsed is not utilization.", rows: compareRows(rows.map(serializeRow)), retiredFrameAssociations: retiredFrames };
       pending.clear();
       earlyGpu.clear();
       try {
@@ -1114,11 +1182,21 @@ var phaseLabel = {
   cancelled: "計測を中止しました",
   error: "計測を中止しました（エラー）"
 };
-function createGpuDebugUI({ onFlags = () => {
-}, onBenchmark = () => {
-}, onCancel = () => {
-}, onCopy = () => false, onClose = () => {
-}, onBreakdown = null, places = [] } = {}) {
+function createGpuDebugUI({
+  onFlags = () => {
+  },
+  onBenchmark = () => {
+  },
+  onCancel = () => {
+  },
+  onCopy = () => false,
+  onClose = () => {
+  },
+  onBreakdown = null,
+  /* v149 */
+  onDisplayProbe = null,
+  places = []
+} = {}) {
   const panel = node("section");
   panel.className = "gpu-debug-panel";
   panel.dataset.gpuDebug = "panel";
@@ -1155,7 +1233,7 @@ function createGpuDebugUI({ onFlags = () => {
   controlSummary.style.cursor = "pointer";
   controlsDetails.append(controlSummary);
   const controls = /* @__PURE__ */ new Map(), controlNotes = /* @__PURE__ */ new Map();
-  let flags = { ...GPU_DEBUG_DEFAULT_FLAGS }, capabilities = {}, benchmark = {}, results = null, renderedReport = null, destroyed = false, breakdownBusy = false;
+  let flags = { ...GPU_DEBUG_DEFAULT_FLAGS }, capabilities = {}, benchmark = {}, results = null, renderedReport = null, destroyed = false, breakdownBusy = false, displayBusy = false;
   for (const key of GPU_DEBUG_BOOLEAN_KEYS) {
     const line = node("label");
     Object.assign(line.style, { display: "block", padding: "5px 0", borderBottom: "1px solid #ffffff18" });
@@ -1194,7 +1272,7 @@ function createGpuDebugUI({ onFlags = () => {
   setPlaces(places);
   const actions = node("div");
   Object.assign(actions.style, { display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "12px" });
-  const start = button("計測を開始（各 5 秒）", () => invoke(() => onBenchmark(placeSelect.value || "here")));
+  const start = button("計測を開始（各 3 秒・間に基準）", () => invoke(() => onBenchmark(placeSelect.value || "here")));
   start.dataset.gpuDebug = "start";
   const cancel = button("中止", () => invoke(onCancel));
   cancel.dataset.gpuDebug = "cancel";
@@ -1214,6 +1292,11 @@ function createGpuDebugUI({ onFlags = () => {
   if (split) {
     split.dataset.gpuDebug = "breakdown";
     actions.append(split);
+  }
+  const display = typeof onDisplayProbe === "function" ? button("表示の止まりを測る（約 2 分）", () => invoke(onDisplayProbe)) : null;
+  if (display) {
+    display.dataset.gpuDebug = "display-probe";
+    actions.append(display);
   }
   panel.append(actions);
   const conditions = node("p", "視点と操作を固定し、基準から 1 設定ずつ切り替えます。時刻・天候・水の動きは続きます。各条件で準備後に 5 秒以上計測し、終了・中止時に元へ戻します。全 17 条件で約 2 分が目安です。最後に GPU の内訳（約 7 秒）も測ります。");
@@ -1276,7 +1359,33 @@ function createGpuDebugUI({ onFlags = () => {
     if (event.key !== "F3" && event.key !== "F4") event.stopPropagation();
   });
   document.body.append(panel);
-  return { update, showCopyFallback, destroy, showBreakdown, setBreakdownBusy, setPlaces };
+  return {
+    update,
+    showCopyFallback,
+    destroy,
+    showBreakdown,
+    setBreakdownBusy,
+    setPlaces,
+    /* v149 */
+    setDisplayProbeBusy,
+    setHidden,
+    element: panel
+  };
+  function setDisplayProbeBusy(busy, text = "") {
+    displayBusy = !!busy;
+    if (destroyed) return;
+    if (display) {
+      display.disabled = displayBusy || !!benchmark.active;
+      display.textContent = busy ? "表示の止まりを測っています…" : "表示の止まりを測る（約 2 分）";
+    }
+    start.disabled = displayBusy || !!benchmark.active;
+    if (split) split.disabled = displayBusy || breakdownBusy || !!benchmark.active;
+    if (busy) status.textContent = text ? `表示の確認 ${text}` : "表示の確認";
+  }
+  function setHidden(hidden) {
+    if (destroyed) return;
+    panel.style.visibility = hidden ? "hidden" : "";
+  }
   function setPlaces(list) {
     if (destroyed) return;
     const was = placeSelect.value, items = Array.isArray(list) && list.length ? list : [{ id: "here", label: "今いる場所" }];
@@ -1360,12 +1469,14 @@ function createGpuDebugUI({ onFlags = () => {
         note2.textContent = [cap === false || cap?.available === false ? "現在は利用不可" : cap?.effective === false ? "現在の画質・場所では変化なし" : "", ...cap?.notes || [], cap?.reason || ""].filter(Boolean).join(" / ");
       }
     }
-    start.disabled = !!benchmark.active;
+    start.disabled = !!benchmark.active || displayBusy;
     cancel.disabled = !benchmark.active;
     placeSelect.disabled = !!benchmark.active;
-    if (split) split.disabled = !!benchmark.active || breakdownBusy;
+    if (split) split.disabled = !!benchmark.active || breakdownBusy || displayBusy;
+    if (display) display.disabled = !!benchmark.active || displayBusy;
     copy.disabled = !results;
-    if (benchmark.phase === "travel") {
+    if (displayBusy) {
+    } else if (benchmark.phase === "travel") {
       status.textContent = benchmark.label || phaseLabel.travel;
     } else status.textContent = `${phaseLabel[benchmark.phase] || "待機中"}${benchmark.active && benchmark.index >= 0 ? ` ${benchmark.index + 1}/${benchmark.total}：${benchmark.label || ""}` : ""}${benchmark.active && Number.isFinite(benchmark.remainingMs) && benchmark.remainingMs > 0 ? `（この段階はあと ${Math.ceil(benchmark.remainingMs / 1e3)} 秒）` : ""}${benchmark.error ? `：${benchmark.error}` : ""}`;
     if (!results) {
@@ -1387,6 +1498,15 @@ function createGpuDebugUI({ onFlags = () => {
         detail.style.display = "block";
         detail.style.fontWeight = "normal";
         condition.append(detail);
+        if (row.vs) {
+          const sign = (v) => Number.isFinite(v) ? (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v).toFixed(2) : "—";
+          const vs = node("small", `前後の基準との差：GPU ${sign(row.vs.gpuMs)} ms・フレーム ${sign(row.vs.frameMs)} ms${row.vs.steady === false ? "（前後の基準が揺れていました）" : ""}`);
+          vs.style.display = "block";
+          vs.style.fontWeight = "normal";
+          vs.style.color = row.vs.steady === false ? "#e0b26a" : "#9fd3b0";
+          condition.append(vs);
+        }
+        if (row.between) tr.style.opacity = ".62";
         const gpu = tableCell("td", Number.isFinite(row.gpu?.elapsedMs) ? ms(row.gpu.elapsedMs) : row.gpu?.status === "disjoint" ? "計測無効" : "計測不可");
         const gpuCount = node("small", `${row.gpu?.samples ?? 0} 件 / ${gpuStatus(row.gpu?.status)}`);
         gpuCount.style.display = "block";
@@ -1473,6 +1593,7 @@ function breakdownCategory(object, world, cache = null) {
     const parts = name.split(":");
     c = "tree-" + (parts[3] || "?") + ":" + (parts[4] === "1" ? "leaves" : "wood");
   } else if (name.startsWith("rock-pool-shadow:")) c = "rock-shadow";
+  else if (data.shadowMerge && name.startsWith("shadow-merged:")) c = (shortName(name.slice(14)) || "instanced") + "(merged)";
   else if (name.startsWith("rock-pool:")) c = "rock";
   else if (data.isWater) c = "water:" + (shortName(name) || shortName(object.parent?.name) || "body");
   else if (name.startsWith("forest-understory:")) c = "understory:" + (name.split(":")[1] || "?");
@@ -1510,6 +1631,7 @@ function runGpuBreakdown(world, { frames = GPU_BREAKDOWN.frames, maxMs = GPU_BRE
   let segs = null, counts = null, label = null, pass = null, overflow = false, finished = false, resolveReport, cpuAt = 0, frameCpu = 0;
   const phaseTotals = /* @__PURE__ */ new Map(), phaseRunning = /* @__PURE__ */ new Set(), phaseWraps = [], variantTotals = /* @__PURE__ */ new Map(), ways = Array.isArray(variants) && variants.length ? variants.slice() : null;
   const stack = [];
+  const block = 8, wayOf = (i) => ways[Math.floor(i / block) % ways.length], firstOf = (i) => i % block === 0 && Math.floor(i / block) < ways.length;
   const passOf = (scene, camera) => {
     if (scene === world.scene) return camera === world.camera ? "main" : "capture";
     if (atmosphere && scene === atmosphere.scene) return "post:" + (postNames.get(atmosphere.quad?.material) || "other");
@@ -1589,6 +1711,10 @@ function runGpuBreakdown(world, { frames = GPU_BREAKDOWN.frames, maxMs = GPU_BRE
       }
       if (!ok) break;
       pending.shift();
+      if (frame.warm) {
+        for (const s of frame.segs) recycle(s.query);
+        continue;
+      }
       if (frame.variant != null) {
         let v = variantTotals.get(frame.variant);
         if (!v) variantTotals.set(frame.variant, v = { frames: 0, ms: 0, cpu: 0, labels: /* @__PURE__ */ new Map() });
@@ -1643,7 +1769,7 @@ function runGpuBreakdown(world, { frames = GPU_BREAKDOWN.frames, maxMs = GPU_BRE
     overflow = false;
     stack.length = 0;
     phases = /* @__PURE__ */ new Map();
-    const variant = ways ? ways[measured % ways.length] : null;
+    const variant = ways ? wayOf(measured) : null, warm = !!ways && firstOf(measured);
     if (variant !== null) {
       try {
         setVariant?.(variant);
@@ -1657,13 +1783,13 @@ function runGpuBreakdown(world, { frames = GPU_BREAKDOWN.frames, maxMs = GPU_BRE
     } finally {
       end();
       if (segs?.length) {
-        pending.push({ segs, counts, cpu: now() - frameStart, phases, variant });
+        pending.push({ segs, counts, cpu: now() - frameStart, phases, variant, warm });
         measured++;
         if (overflow) overflowFrames++;
       }
       segs = null;
       counts = null;
-      if (measured >= frames || now() - started > maxMs) {
+      if (measured >= frames + (ways ? ways.length : 0) || now() - started > maxMs) {
         measuring = false;
         drainStarted = now();
         if (ways) {
@@ -1855,8 +1981,8 @@ function runGpuBreakdown(world, { frames = GPU_BREAKDOWN.frames, maxMs = GPU_BRE
     }
   } });
 }
-var LEAF_LABELS = /^main:tree-(near|far):leaves/;
-var LEAF_DEPTH_NAMES = Object.freeze({ equal: "先に描く（奥行きが同じ所だけ塗る・今の設定）", write: "先に描く（塗る時も奥行きを書く）", off: "先に描かない（v97.7 まで）" });
+var LEAF_LABELS = /^main:tree-(near|far|far2):leaves/;
+var LEAF_DEPTH_NAMES = Object.freeze({ equal: "先に描く（奥行きが同じ所だけ塗る・今の設定）", nofar2: "先に描く（さらに遠めの木は先に描かない・v149 まで）", write: "先に描く（塗る時も奥行きを書く）", off: "先に描かない（v97.7 まで）" });
 function leafDepthSummary(report) {
   if (!report?.variants) return null;
   const sum = (v, test) => +v.segments.filter((s) => test(s.label)).reduce((a, s) => a + s.ms, 0).toFixed(3);
@@ -1864,7 +1990,7 @@ function leafDepthSummary(report) {
     status: report.status,
     frames: report.usedFrames,
     durationMs: report.durationMs,
-    variants: report.variants.map((v) => ({ name: v.name, frames: v.frames, totalMs: v.totalMs, cpuMs: v.cpuMs, mainMs: v.passes.find((p) => p.pass === "main")?.ms ?? 0, leavesMs: sum(v, (l) => LEAF_LABELS.test(l)), depthFirstMs: sum(v, (l) => /^main:tree-(near|far):leaves-depth-first/.test(l)) }))
+    variants: report.variants.map((v) => ({ name: v.name, frames: v.frames, totalMs: v.totalMs, cpuMs: v.cpuMs, mainMs: v.passes.find((p) => p.pass === "main")?.ms ?? 0, leavesMs: sum(v, (l) => LEAF_LABELS.test(l)), depthFirstMs: sum(v, (l) => /^main:tree-(near|far|far2):leaves-depth-first/.test(l)), far2Ms: sum(v, (l) => /^main:tree-far2:leaves/.test(l)) }))
   };
 }
 var CARD_LABELS = /^main:(local-meadow|meadow|grass|grass_tall)(?::|$)/;
@@ -1878,6 +2004,35 @@ function grassDepthSummary(report) {
     variants: report.variants.map((v) => ({ name: v.name, frames: v.frames, totalMs: v.totalMs, cpuMs: v.cpuMs, mainMs: v.passes.find((p) => p.pass === "main")?.ms ?? 0, cardsMs: sum(v, (l) => CARD_LABELS.test(l)), depthFirstMs: sum(v, (l) => /^main:grass-card-depth-first/.test(l)) }))
   };
 }
+function terrainShadeSummary(report) {
+  if (!report?.variants) return null;
+  const sum = (v, test) => +v.segments.filter((s) => test(s.label)).reduce((a, s) => a + s.ms, 0).toFixed(3);
+  return {
+    status: report.status,
+    frames: report.usedFrames,
+    durationMs: report.durationMs,
+    variants: report.variants.map((v) => ({ name: v.name, frames: v.frames, totalMs: v.totalMs, cpuMs: v.cpuMs, mainMs: v.passes.find((p) => p.pass === "main")?.ms ?? 0, terrainMs: sum(v, (l) => /^main:terrain(-batch)?$/.test(l)) }))
+  };
+}
+var TERRAIN_SHADE_NAMES = {
+  shaded: "地面をいつもどおり描く",
+  plain: "地面を単色で描く（同じ三角形・計測用）",
+  unlit: "光の計算なし（地面の色と凹凸まで・v151）",
+  noParallax: "写真の凹凸の視差なし（v151）",
+  noShadowMap: "太陽の影の地図を読まない（v151）",
+  noGrounding: "木や岩の根元の陰なし（v151）",
+  /* v152 */
+  noFar: "遠くの地面も近くと同じ写真で（遠景の粒と模様なし・v152）",
+  noDetail: "崖と土の細かい写真なし（v152）",
+  noMeadow: "草原の色・そよぎ・つやなし（v152）",
+  noLitter: "落ち葉の写真なし（v152）",
+  noIBL: "空からの映り込みの光なし（v152）",
+  noCanopy: "森の木陰の地図を読まない（v152）",
+  /* v153 */
+  groundingV152: "根元の陰を v152 の計算で（比較用・v153）",
+  /* v155 */
+  exactIBL: "空からの光を v153 までの計算で（比較用・v155）"
+};
 var GRASS_DEPTH_NAMES = { equal: "先に描く（v115〜v116.1）", off: "先に描かない（今の設定・v114.6 までと v117 から）" };
 function formatGpuBreakdown(report, top = 14) {
   if (!report || report.status === "unsupported") return "この環境では GPU の時間を測れません（EXT_disjoint_timer_query_webgl2 がありません）。";
@@ -1893,12 +2048,17 @@ function formatGpuBreakdown(report, top = 14) {
   }
   const ab = report.leafDepthAB;
   if (ab?.variants?.length) {
-    lines.push(`— 木の葉の奥行きを先に描く（${ab.variants.length} 通りを 1 フレームずつ交互に・GPU 合計 / 画面 / 近い木と中くらいの木の葉）—`);
-    for (const v of ab.variants) lines.push(`${v.totalMs.toFixed(2).padStart(6)} / ${v.mainMs.toFixed(2).padStart(5)} / ${v.leavesMs.toFixed(2).padStart(5)} ms  ${LEAF_DEPTH_NAMES[v.name] || v.name}（${v.frames} フレーム）`);
+    lines.push(`— 木の葉の奥行きを先に描く（${ab.variants.length} 通りを 8 フレームずつ交互に・GPU 合計 / 画面 / 木の葉 / うちさらに遠めの木の葉）—`);
+    for (const v of ab.variants) lines.push(`${v.totalMs.toFixed(2).padStart(6)} / ${v.mainMs.toFixed(2).padStart(5)} / ${v.leavesMs.toFixed(2).padStart(5)} / ${(v.far2Ms ?? 0).toFixed(2).padStart(5)} ms  ${LEAF_DEPTH_NAMES[v.name] || v.name}（${v.frames} フレーム）`);
+  }
+  const tab = report.terrainShadeAB;
+  if (tab?.variants?.length) {
+    lines.push(`— 地面の塗りの重さ（${tab.variants.length} 通りを 8 フレームずつ交互に・GPU 合計 / 画面 / 地面）—`);
+    for (const v of tab.variants) lines.push(`${v.totalMs.toFixed(2).padStart(6)} / ${v.mainMs.toFixed(2).padStart(5)} / ${v.terrainMs.toFixed(2).padStart(5)} ms  ${TERRAIN_SHADE_NAMES[v.name] || v.name}（${v.frames} フレーム）`);
   }
   const gab = report.grassDepthAB;
   if (gab?.variants?.length) {
-    lines.push(`— 草の板の奥行きを先に描く（${gab.variants.length} 通りを 1 フレームずつ交互に・GPU 合計 / 画面 / 草の板 / 先に描く分）—`);
+    lines.push(`— 草の板の奥行きを先に描く（${gab.variants.length} 通りを 8 フレームずつ交互に・GPU 合計 / 画面 / 草の板 / 先に描く分）—`);
     for (const v of gab.variants) lines.push(`${v.totalMs.toFixed(2).padStart(6)} / ${v.mainMs.toFixed(2).padStart(5)} / ${v.cardsMs.toFixed(2).padStart(5)} / ${v.depthFirstMs.toFixed(2).padStart(5)} ms  ${GRASS_DEPTH_NAMES[v.name] || v.name}（${v.frames} フレーム）`);
     const t = gab.twins;
     if (t) lines.push(`（先に描く分：${t.twins} 区画のうち近く ${t.shown}・描いた ${t.drawn} / ${t.calls} 回、描かなかった理由 先に描かない ${t.off}・位置 ${t.moved}・上書き ${t.override}・草なし ${t.hidden}・層 ${t.layers}・シェーダー待ち ${t.gate}）`);
@@ -1937,7 +2097,8 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
     }
   }
   async function breakdown({ auto = false } = {}) {
-    if (disposed || closing || breakdownRun) return null;
+    if (disposed || closing || breakdownRun || /* v149 */
+    displayRun) return null;
     if (!auto && benchmark?.snapshot().active) return null;
     if (!auto && typeof host.isActive === "function" && !host.isActive()) {
       lastError = "ゲームが操作可能な状態で計測を開始してください";
@@ -1979,6 +2140,35 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
           world.grassDepthFirst = wasGrass;
         }
       }
+      const tb = world.terrainBatch;
+      if (report?.status === "complete" && typeof tb?.prepareProbes === "function" && tb.mesh && !disposed && !closing) {
+        try {
+          try {
+            host.note?.("地面の計測の準備（計測用のシェーダー）");
+          } catch {
+          }
+          const ways = await tb.prepareProbes((subtree) => world.prepareShaders?.(subtree));
+          if (ways.length > 1 && !disposed && !closing) {
+            breakdownRun = run(world, {
+              frames: 50 * ways.length,
+              /* v153: 13 ways */
+              maxMs: 15e3,
+              drainMs: 2e3,
+              variants: ways,
+              setVariant: (v) => {
+                tb.useProbe(v === "shaded" ? null : v);
+              },
+              onBeginRender
+            });
+            const tab = await breakdownRun;
+            const tsum = terrainShadeSummary(tab);
+            if (tsum) report.terrainShadeAB = tsum;
+          }
+        } catch {
+        } finally {
+          tb.useProbe(null);
+        }
+      }
       if (auto && report?.status === "complete" && typeof host.setBenchmarkMotion === "function" && !disposed && !closing) {
         try {
           host.setBenchmarkMotion("run", GPU_BENCHMARK_MOTION);
@@ -2006,6 +2196,60 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
       refresh(true);
     }
   }
+  let displayRun = null;
+  async function displayProbe() {
+    if (disposed || closing || displayRun || breakdownRun) return null;
+    if (benchmark?.snapshot().active || trip) return null;
+    if (typeof host.isActive === "function" && !host.isActive()) {
+      lastError = "ゲームが操作可能な状態で計測を開始してください";
+      refresh(true);
+      return null;
+    }
+    const run = { stop: false };
+    displayRun = run;
+    ui?.setDisplayProbeBusy?.(true, "");
+    let camera = null;
+    try {
+      const probe = factories.displayProbe || await import("./chunk-3BCKK26D.js");
+      if (disposed || closing || run.stop) return null;
+      host.clearInput?.();
+      host.setBenchmarkActive?.(true);
+      camera = host.freezeCamera?.();
+      cameraToken = camera;
+      held = true;
+      ui?.setHidden?.(true);
+      const report = await probe.runDisplayProbe({
+        gl: world.renderer.getContext(),
+        steps: probe.displayProbeSteps({ doc: document2, panel: ui?.element || null }),
+        doc: document2,
+        now,
+        onStep: (step) => {
+          if (!disposed) ui?.setDisplayProbeBusy?.(true, `${step.done}/${step.total} ${step.label}`);
+        },
+        cancelled: () => run.stop || disposed || closing || typeof host.isActive === "function" && !host.isActive(),
+        note: (label) => {
+          try {
+            host.note?.(label);
+          } catch {
+          }
+        }
+      });
+      if (!disposed) ui?.showBreakdown?.(probe.displayProbeText(report));
+      try {
+        host.onDisplayProbe?.(report);
+      } catch {
+      }
+      return report;
+    } finally {
+      if (displayRun === run) displayRun = null;
+      if (!disposed) {
+        ui?.setHidden?.(false);
+        ui?.setDisplayProbeBusy?.(false);
+      }
+      if (camera !== null) releaseCamera(camera);
+      refresh(true);
+    }
+  }
   const removers = [];
   const water = () => world.realisticWater;
   const waterState = () => water()?.snapshot?.()?.debug || null;
@@ -2018,6 +2262,10 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
     caps.sky = { available: !!scene.capabilities.sky, effective: !world.inDungeon, notes: ["単色背景にして空の更新を停止。既存の照明と環境マップは固定します。"] };
     caps.waterSurface = { available: true, notes: ["水のメッシュだけを非表示にします。波の計算・景色の撮影は続きます。"] };
     caps.fog = { available: true, notes: ["地形・物体の霧。水中の吸収や独立した気象のもやは対象外です。"] };
+    try {
+      caps.pixels = { current: world.renderer.getPixelRatio?.(), device: Number(globalThis.devicePixelRatio ?? 1) };
+    } catch {
+    }
     return caps;
   }
   function metadata() {
@@ -2080,6 +2328,7 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
   }
   function cancel(reason = "user") {
     if (trip && !trip.arrived) tripCancelled = true;
+    if (displayRun) displayRun.stop = true;
     return benchmark?.cancel(reason);
   }
   function releaseCamera(token) {
@@ -2101,6 +2350,9 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
       return createGpuDebugBenchmark({
         now,
         states: benchmarkPlan(makeGpuBenchmarkStates(capabilities())),
+        /* v185: 3 s a row (a baseline between every two) */
+        durationMs: 3e3,
+        minDurationMs: 3e3,
         /* v130: a row's movement (the walk and run rows) told the game first. */
         applyState: (next, state) => {
           try {
@@ -2210,7 +2462,8 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
     });
     async function startBenchmark(placeId = null) {
       if (disposed || closing) return false;
-      if (benchmark.snapshot().active || trip) return false;
+      if (benchmark.snapshot().active || trip || /* v149 */
+      displayRun) return false;
       if (typeof host.isActive === "function" && !host.isActive()) {
         lastError = "ゲームが操作可能な状態で計測を開始してください";
         refresh(true);
@@ -2272,6 +2525,8 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
       onCancel: () => cancel("user"),
       onClose,
       onBreakdown: () => breakdown(),
+      /* v149 */
+      onDisplayProbe: () => displayProbe(),
       onCopy: async (report) => {
         if (!report) return false;
         const text = formatGpuBenchmarkReport(report);
@@ -2296,7 +2551,15 @@ function createGpuDebugRuntime({ world, host = {}, onClose = () => {
       void dispose();
     });
     refresh(true);
-    return { snapshot, setFlags, startBenchmark, cancelBenchmark: cancel, dispose };
+    return {
+      snapshot,
+      setFlags,
+      startBenchmark,
+      cancelBenchmark: cancel,
+      dispose,
+      /* v149 */
+      displayProbe
+    };
   } catch (error) {
     disposed = true;
     const failures = [], attempt = (callback) => {

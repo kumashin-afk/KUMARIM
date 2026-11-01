@@ -1,6 +1,6 @@
 // worker-status.js
 var status = /* @__PURE__ */ new Map();
-var WORKER_NAMES = Object.freeze({ ocean: "海", shatter: "岩", world: "島", trees: "木", paint: "絵" });
+var WORKER_NAMES = Object.freeze({ ocean: "海", shatter: "岩", world: "島", trees: "木", paint: "絵", plan: "区画" });
 function reportWorker(name, ok, detail = "") {
   const known = status.get(name);
   if (known && !known.ok) return;

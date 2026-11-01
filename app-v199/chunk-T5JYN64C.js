@@ -1,7 +1,7 @@
 import {
   WORKER_NAMES,
   reportWorker
-} from "./chunk-HGFZA34L.js";
+} from "./chunk-Z77F3JAE.js";
 
 // rock-fracture-geometry.js
 var MAX_FRACTURE_TRIANGLES = 8e3;
@@ -503,7 +503,7 @@ function shatterRockGeometry(THREE, geometry, { pieces = 8, seed = 1, ground = n
   }
   return { pieces: out, cuts, failures };
 }
-function createRockShatter(THREE, { workerUrl = new URL("./rock-shatter-worker-NZ5YWLZL.js", import.meta.url), onBite = null } = {}) {
+function createRockShatter(THREE, { workerUrl = new URL("./rock-shatter-worker-ZSEPD4D6.js", import.meta.url), onBite = null } = {}) {
   let worker = null, sequence = 0, disposed = false, failed = false;
   const waiting = /* @__PURE__ */ new Map(), rocks = /* @__PURE__ */ new Map();
   const decode = (piece) => {

@@ -2,13 +2,13 @@ import {
   normalizeResolution
 } from "./chunk-TYFAO7B2.js";
 import {
-  ACTIVE_WORLD_SEED
-} from "./chunk-UWU2KGE2.js";
-import {
   LOADING_STAGES_UNDERGROUND,
   getStartupLoadingProgress,
   savedUnderground
 } from "./chunk-3VPLHZQF.js";
+import {
+  ACTIVE_WORLD_SEED
+} from "./chunk-LJZWUHHS.js";
 import "./chunk-MLKGABMK.js";
 
 // game-bootstrap.js
@@ -40,8 +40,8 @@ var session = { get() {
 } };
 try {
   if (!document.hidden) await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
-  if (globalThis.KUMARIM_MODEL_PACK) await import("./chunk-G7NEXZIQ.js");
-  await import("./chunk-LIMHMWHV.js");
+  if (globalThis.KUMARIM_MODEL_PACK) await import("./chunk-QTN5EYW7.js");
+  await import("./chunk-FIYE7FHY.js");
   startup.status = "loaded";
   session.set(null);
 } catch (error) {

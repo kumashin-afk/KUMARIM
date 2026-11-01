@@ -17938,6 +17938,7 @@ var WebGLRenderer = class {
       if (scene === null) scene = _emptyScene;
       const frontFaceCW = object.isMesh && object.matrixWorld.determinant() < 0;
       const program = setProgram(camera, scene, geometry, material, object);
+      globalThis.__onDraw?.(this, scene, geometry, material, object, program);
       state.setMaterial(material, frontFaceCW);
       let index = geometry.index;
       let rangeFactor = 1;
@@ -31606,6 +31607,7 @@ export {
   ZeroFactor,
   OneFactor,
   SrcColorFactor,
+  OneMinusSrcAlphaFactor,
   DstColorFactor,
   LessEqualDepth,
   EqualDepth,
